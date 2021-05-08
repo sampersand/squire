@@ -4,8 +4,6 @@
 #include <stdlib.h>
 
 struct sq_string *sq_string_new2(char *ptr, unsigned length) {
-	assert(strlen(ptr) == length);
-
 	struct sq_string *string = xmalloc(sizeof(struct sq_string));
 
 	string->ptr = ptr;

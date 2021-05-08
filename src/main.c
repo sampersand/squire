@@ -57,6 +57,7 @@ int main() {
   	program.funcs[0] = &main;
 
   	printf("%ld", sq_value_as_number(sq_function_run(&main, NULL)));
+  	return 0;
 }
 
 sq_token sq_next_token(const char **stream);

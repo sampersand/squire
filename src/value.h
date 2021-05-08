@@ -119,6 +119,7 @@ static inline struct sq_function *sq_value_as_function(sq_value value) {
 }
 
 void sq_value_clone(sq_value value);
+void sq_value_dump(sq_value value);
 void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value);
 

@@ -8,10 +8,59 @@
 #define IS_STRING sq_value_is_string
 #define AS_STRING sq_value_as_string
 #define AS_NUMBER sq_value_as_number
+#define AS_STRUCT sq_value_as_struct
 #define AS_INSTANCE sq_value_as_instance
 #define AS_FUNCTION sq_value_as_function
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_STRING(c)->ptr)
+
+void sq_value_dump(sq_value value) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TBOOLEAN:
+		printf("Boolean(%s)", value == SQ_TRUE ? "true" : "false");
+		break;
+	case SQ_TNULL:
+		printf("Null()");
+		break;
+	case SQ_TNUMBER:
+		printf("Number(%ld)", AS_NUMBER(value));
+		break;
+	case SQ_TSTRING:
+		printf("String(%s)", AS_STR(value));
+		break;
+	case SQ_TSTRUCT: {
+		struct sq_struct *struct_ = AS_STRUCT(value);
+		printf("Struct(%s:", struct_->name);
+		for (unsigned i = 0; i < struct_->nfields; ++i) {
+			if (i) printf(", ");
+			printf("'%s'", struct_->fields[i]);
+		}
+		if (!struct_->nfields) printf("<no fields>");
+		printf(")");
+		break;
+	}
+	case SQ_TINSTANCE: {
+		struct sq_instance *instance = AS_INSTANCE(value);
+
+		printf("Instance(%s: ", instance->kind->name);
+		for (unsigned i = 0; i < instance->kind->nfields; ++i) {
+			if (i) printf(", ");
+			printf("'%s'=", instance->kind->fields[i]);
+			sq_value_dump(instance->fields[i]);
+		}
+		if (!instance->kind->nfields) printf("<no fields>");
+		printf(")");
+		break;
+	}
+	case SQ_TFUNCTION: {
+		struct sq_function *function = AS_FUNCTION(value);
+		printf("Function(%s, %d args)", function->name, function->argc);
+		break;
+	}
+	default:
+		printf("<UNDEFINED: %ld>", value);
+	}
+}
 
 void sq_value_clone(sq_value value) {
 	switch (SQ_VTAG(value)) {
@@ -111,7 +160,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 			break;
 
 		struct sq_string *result = sq_string_alloc(
-			AS_STRING(lhs)->length + AS_STRING(rhs)->length
+			AS_STRING(lhs)->length + AS_STRING(rhs)->length + 1
 		);
 
 		strcpy(result->ptr, AS_STR(lhs));
@@ -141,7 +190,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 			break;
 
 		struct sq_string *result = sq_string_alloc(
-			AS_STRING(lhs)->length * AS_NUMBER(rhs)
+			AS_STRING(lhs)->length * AS_NUMBER(rhs) + 1
 		);
 		*result->ptr = '\0';
 
