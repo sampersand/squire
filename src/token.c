@@ -40,6 +40,14 @@ static void strip_whitespace(const char **stream) {
 		&& !isalnum(*(*stream + strlen(str))) && *(*stream + strlen(str)) != '_') {\
 		*stream += strlen(str); token.kind = tkn; return token; }
 
+
+static char tohex(char c) {
+	if (isdigit(c)) return c - '0';
+	if ('a' <= c && c <= 'f') return c - 'a';
+	if ('A' <= c && c <= 'F') return c - 'A';
+	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
+}
+
 sq_token sq_next_token(const char **stream) {
 	strip_whitespace(stream);
 	sq_token token;
@@ -71,13 +79,50 @@ sq_token sq_next_token(const char **stream) {
 		const char *start = ++*stream;
 
 		while (**stream != quote) {
+			if (**stream == '\\') ++*stream;
 			if (!**stream) die("unterminated quote found");
 			++*stream;
 		}
 		++*stream;
 
-		token.string->length = *stream - start;
-		token.string->ptr = strndup(start, token.string->length);
+		token.string->length = *stream - start - 1;
+		char *dst = xmalloc(token.string->length + 1);
+		unsigned ins = 0;
+		char c;
+		const char *src = start;
+		for (unsigned i = 0; ins <= token.string->length; dst[ins++] = c, ++i) {
+		top:
+			c = src[i];
+		printf("%d [%c]\n", token.string->length, c);
+
+			if (c != '\\') continue;
+
+			token.string->length--;
+			if (i == token.string->length) die("unterminated escape sequence");
+			switch (c = src[++i]) {
+			case '\\': break;
+			case '\'': break;
+			case '\"': break;
+			case '\n': ++i; goto top;
+			case 'n': c = '\n'; break;
+			case 't': c = '\t'; break;
+			case 'f': c = '\f'; break;
+			case 'v': c = '\v'; break;
+			case 'r': c = '\r'; break;
+			case 'x':
+				if (src[i+1] == quote || src[i+1] == '\0' ||src[i+2] == quote)
+					die("unterminated escape sequence");
+				c = tohex(src[i+1]) * 16 + tohex(src[i+2]);
+				i+=2;
+				token.string->length-=2;
+				break;
+			default:
+				die("unknown escape character '%1$c' (\\x%1$02x)", c);
+			}
+		}
+		token.string->ptr = xrealloc(dst, token.string->length+1);
+		token.string->ptr[token.string->length] = '\0';
+		printf("%d\n", token.string->length);
 		return token;
 	}
 

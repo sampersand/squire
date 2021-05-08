@@ -6,12 +6,24 @@
 #include "value.h"
 #include <stdio.h>
 
+int main(int a, char **v) {
+	const char*str = v[1];
+	sq_token token;
+
+	while ((token = sq_next_token(&str)).kind != SQ_TK_UNDEFINED) {
+		sq_token_dump(&token);
+		puts("");
+	}
+	return 0;
+}
+
+
 sq_value consts[100];
 union sq_bytecode code[100];
 struct sq_function *funcs[100];
 struct sq_variable globals[100];
 
-int main() {
+int main4() {
 	struct sq_program program;
 	program.nglobals = 1;
 	program.globals = globals;
