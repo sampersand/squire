@@ -5,6 +5,7 @@
 #include <assert.h>
 
 struct sq_string;
+struct sq_struct;
 struct sq_instance;
 struct sq_function;
 
@@ -12,12 +13,13 @@ typedef intptr_t sq_number;
 typedef uintptr_t sq_value;
 
 typedef enum {
-	SQ_VK_BOOLEAN,
-	SQ_VK_NULL,
-	SQ_VK_NUMBER,
-	SQ_VK_STRING,
-	SQ_VK_INSTANCE,
-	SQ_VK_FUNCTION,
+	SQ_TBOOLEAN,
+	SQ_TNULL,
+	SQ_TNUMBER,
+	SQ_TSTRING,
+	SQ_TSTRUCT,
+	SQ_TINSTANCE,
+	SQ_TFUNCTION,
 } sq_vtag;
 
 #define SQ_VSHIFT 3
@@ -25,13 +27,13 @@ typedef enum {
 #define SQ_VMASK(value, kind) ((value) | (kind))
 #define SQ_VTAG(value) ((value) & SQ_VMASK_BITS)
 #define SQ_VUNMASK(value) ((value) & ~SQ_VMASK_BITS)
-#define SQ_TRUE SQ_VMASK((true << SQ_VSHIFT), SQ_VK_BOOLEAN)
-#define SQ_FALSE SQ_VMASK(false, SQ_VK_BOOLEAN)
-#define SQ_NULL SQ_VMASK(0, SQ_VK_NULL)
+#define SQ_TRUE SQ_VMASK((true << SQ_VSHIFT), SQ_TBOOLEAN)
+#define SQ_FALSE SQ_VMASK(false, SQ_TBOOLEAN)
+#define SQ_NULL SQ_VMASK(0, SQ_TNULL)
 
 static inline sq_value sq_value_new_number(sq_number number) {
 	assert((((number) << SQ_VSHIFT) >> SQ_VSHIFT) == number);
-	return SQ_VMASK(((sq_value) number) << SQ_VSHIFT, SQ_VK_NUMBER);
+	return SQ_VMASK(((sq_value) number) << SQ_VSHIFT, SQ_TNUMBER);
 }
 
 static inline sq_value sq_value_new_boolean(bool boolean) {
@@ -40,17 +42,22 @@ static inline sq_value sq_value_new_boolean(bool boolean) {
 
 static inline sq_value sq_value_new_string(struct sq_string *string) {
 	assert(!SQ_VTAG((sq_value) string));
-	return SQ_VMASK((sq_value) string, SQ_VK_STRING);
+	return SQ_VMASK((sq_value) string, SQ_TSTRING);
+}
+
+static inline sq_value sq_value_new_struct(struct sq_struct *struct_) {
+	assert(!SQ_VTAG((sq_value) struct_));
+	return SQ_VMASK((sq_value) struct_, SQ_TSTRUCT);
 }
 
 static inline sq_value sq_value_new_instance(struct sq_instance *instance) {
 	assert(!SQ_VTAG((sq_value) instance));
-	return SQ_VMASK((sq_value) instance, SQ_VK_INSTANCE);
+	return SQ_VMASK((sq_value) instance, SQ_TINSTANCE);
 }
 
 static inline sq_value sq_value_new_function(struct sq_function *function) {
 	assert(!SQ_VTAG((sq_value) function));
-	return SQ_VMASK((sq_value) function, SQ_VK_FUNCTION);
+	return SQ_VMASK((sq_value) function, SQ_TFUNCTION);
 }
 
 static inline bool sq_value_is_null(sq_value value) {
@@ -58,7 +65,7 @@ static inline bool sq_value_is_null(sq_value value) {
 }
 
 static inline bool sq_value_is_number(sq_value value) {
-	return SQ_VTAG(value) == SQ_VK_NUMBER;
+	return SQ_VTAG(value) == SQ_TNUMBER;
 }
 
 static inline bool sq_value_is_boolean(sq_value value) {
@@ -66,15 +73,19 @@ static inline bool sq_value_is_boolean(sq_value value) {
 }
 
 static inline bool sq_value_is_string(sq_value value) {
-	return SQ_VTAG(value) == SQ_VK_STRING;
+	return SQ_VTAG(value) == SQ_TSTRING;
+}
+
+static inline bool sq_value_is_struct(sq_value value) {
+	return SQ_VTAG(value) == SQ_TSTRUCT;
 }
 
 static inline bool sq_value_is_instance(sq_value value) {
-	return SQ_VTAG(value) == SQ_VK_INSTANCE;
+	return SQ_VTAG(value) == SQ_TINSTANCE;
 }
 
 static inline bool sq_value_is_function(sq_value value) {
-	return SQ_VTAG(value) == SQ_VK_FUNCTION;
+	return SQ_VTAG(value) == SQ_TFUNCTION;
 }
 
 static inline sq_number sq_value_as_number(sq_value value) {
@@ -92,6 +103,11 @@ static inline struct sq_string *sq_value_as_string(sq_value value) {
 	return (struct sq_string *) SQ_VUNMASK(value);
 }
 
+static inline struct sq_struct *sq_value_as_struct(sq_value value) {
+	assert(sq_value_is_struct(value));
+	return (struct sq_struct *) SQ_VUNMASK(value);
+}
+
 static inline struct sq_instance *sq_value_as_instance(sq_value value) {
 	assert(sq_value_is_instance(value));
 	return (struct sq_instance *) SQ_VUNMASK(value);
@@ -104,3 +120,17 @@ static inline struct sq_function *sq_value_as_function(sq_value value) {
 
 void sq_value_clone(sq_value value);
 void sq_value_free(sq_value value);
+const char *sq_value_typename(sq_value value);
+
+bool sq_value_not(sq_value lhs);
+bool sq_value_eql(sq_value lhs, sq_value rhs);
+bool sq_value_lth(sq_value lhs, sq_value rhs);
+bool sq_value_gth(sq_value lhs, sq_value rhs);
+sq_value sq_value_add(sq_value lhs, sq_value rhs);
+sq_value sq_value_sub(sq_value lhs, sq_value rhs);
+sq_value sq_value_mul(sq_value lhs, sq_value rhs);
+sq_value sq_value_div(sq_value lhs, sq_value rhs);
+sq_value sq_value_mod(sq_value lhs, sq_value rhs);
+
+struct sq_string *sq_value_to_string(sq_value value);
+struct sq_string *sq_value_to_number(sq_value value);

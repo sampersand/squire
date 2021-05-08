@@ -1,6 +1,6 @@
 #pragma once
 
-typedef enum {
+enum sq_opcode {
 	SQ_OC_UNDEFINED,
 	SQ_OC_SWAP,
 
@@ -10,7 +10,6 @@ typedef enum {
 	SQ_OC_RETURN,
 
 	SQ_OC_EQL,
-	SQ_OC_NEQ,
 	SQ_OC_LTH,
 	SQ_OC_GTH,
 	SQ_OC_ADD,
@@ -30,11 +29,11 @@ typedef enum {
 	SQ_OC_GSTORE, // store a global
 	SQ_OC_ISTORE, // store an instance field
 	SQ_OC_ASTORE, // store an array index
-} sq_opcode;
+};
 
 typedef unsigned sq_index;
 
-typedef union {
-	sq_opcode opcode;
+union sq_bytecode {
+	enum sq_opcode opcode;
 	sq_index index;
-} sq_bytecode;
+};

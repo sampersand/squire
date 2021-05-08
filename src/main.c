@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 sq_value consts[100];
-sq_bytecode code[100];
+union sq_bytecode code[100];
 struct sq_function *funcs[100];
 struct sq_variable globals[100];
 

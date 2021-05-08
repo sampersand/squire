@@ -15,6 +15,11 @@ struct sq_string *sq_string_new2(char *ptr, unsigned length) {
 	return string;
 }
 
+struct sq_string *sq_string_alloc(unsigned length) {
+	return sq_string_new2(xmalloc(length), length);
+}
+
+
 void sq_string_clone(struct sq_string *string) {
 	assert(string->refcount);
 

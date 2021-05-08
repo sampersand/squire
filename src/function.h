@@ -12,7 +12,7 @@ struct sq_function {
 	struct sq_program *program;
 
 	sq_value *consts;
-	sq_bytecode *code;
+	union sq_bytecode *code;
 };
 
 void sq_function_clone(struct sq_function *function);
