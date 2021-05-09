@@ -57,6 +57,7 @@ static void parse_field_names() {
 
 static struct expression *parse_expression(void);
 
+
 static struct variable *parse_variable(void) {
 	GUARD(SQ_TK_IDENT);
 
@@ -69,6 +70,34 @@ static struct variable *parse_variable(void) {
 		var->field = NULL;
 	}
 	return var;
+}
+
+
+static struct function_call *parse_func_call(struct variable *func) {
+	struct expression *args[MAX_ARGC];
+	unsigned arg_count = 0;
+
+	while (take().kind != SQ_TK_RPAREN && arg_count <= MAX_ARGC) {
+		if (last.kind == SQ_TK_UNDEFINED) die("missing rparen for fn call");
+		untake();
+
+		if (!(args[arg_count++] = parse_expression()))
+			die("invalid argument #%d found in function call", arg_count-1);
+
+		if (take().kind != SQ_TK_COMMA) {
+			if (last.kind != SQ_TK_RPAREN)
+				die("missing rparen for fn call");
+			break;
+		}
+	}
+
+	struct function_call *fncall = xmalloc(sizeof(struct function_call));
+	fncall->func = func;
+	fncall->args = memdup(args, sizeof(struct expression *[arg_count]));
+
+	fncall->arglen = arg_count;
+
+	return fncall;
 }
 
 static struct primary *parse_primary() {
@@ -99,12 +128,21 @@ static struct primary *parse_primary() {
 	case SQ_TK_NULL:
 		primary.kind = SQ_PS_PNULL;
 		break;
-	case SQ_TK_IDENT:
+	case SQ_TK_IDENT: {
 		untake();
-		primary.kind = SQ_PS_PVARIABLE;
-		primary.variable = parse_variable();
-		// todo: function call here?
+		struct variable *var = parse_variable();
+		if (take().kind == SQ_TK_LPAREN) {
+			primary.kind = SQ_PS_PPAREN;
+			primary.expr = xmalloc(sizeof(struct expression));
+			primary.expr->kind = SQ_PS_EFNCALL;
+			primary.expr->fncall = parse_func_call(var);
+		} else {
+			untake();
+			primary.kind = SQ_PS_PVARIABLE;
+			primary.variable = var;
+		}
 		break;
+	}
 	default:
 		untake();
 		return NULL;
@@ -241,35 +279,6 @@ static struct eql_expression *parse_eql_expression() {
 	return memdup(&eql, sizeof(struct eql_expression));
 };
 
-static struct function_call *parse_func_call(struct variable *func) {
-	GUARD(SQ_TK_LPAREN);
-
-	struct expression *args[MAX_ARGC];
-	unsigned arg_count = 0;
-
-	while (take().kind != SQ_TK_RPAREN && arg_count <= MAX_ARGC) {
-		if (last.kind == SQ_TK_UNDEFINED) die("missing rparen for fn call");
-		untake();
-
-		if (!(args[arg_count++] = parse_expression()))
-			die("invalid argument #%d found in function call", arg_count-1);
-
-		if (take().kind != SQ_TK_COMMA) {
-			if (last.kind != SQ_TK_RPAREN)
-				die("missing rparen for fn call");
-			break;
-		}
-	}
-
-	struct function_call *fncall = xmalloc(sizeof(struct function_call));
-	fncall->func = func;
-	fncall->args = memdup(args, sizeof(struct expression *[arg_count]));
-
-	fncall->arglen = arg_count;
-
-	return fncall;
-}
-
 static struct assignment *parse_assignment(struct variable *var) {
 	GUARD(SQ_TK_ASSIGN);
 
@@ -300,14 +309,9 @@ static struct expression *parse_expression() {
 	untake();
 
 	if (last.kind == SQ_TK_ASSIGN) {
-		printf("assign\n");
 		expr.kind = SQ_PS_EASSIGN;
 		expr.asgn = parse_assignment(var);
-	} else if (last.kind == SQ_TK_LPAREN) {
-		printf("fncall\n");
-		expr.kind = SQ_PS_EFNCALL;
-		expr.fncall = parse_func_call(var);
-	} else printf("neither\n");
+	}
 
 done:
 

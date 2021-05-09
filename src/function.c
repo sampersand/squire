@@ -95,6 +95,7 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 			case SQ_INT_DUMP: {
 				value = NEXT_LOCAL();
 				sq_value_dump(value);
+				putchar('\n');
 				NEXT_LOCAL() = value;
 				break;
 			}

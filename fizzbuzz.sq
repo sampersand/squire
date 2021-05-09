@@ -9,8 +9,7 @@ while (n < 101) {
 			if (n % 5 == 0) {
 				print("Buzz\n");
 			} else {
-				print(n);
-				print("\n");
+				print(string(n) + "\n");
 			}
 		}
 	};

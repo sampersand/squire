@@ -57,7 +57,7 @@ struct sq_code {
 
 static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
-	// printf("bytecode[%d].opcode=%d\n", code->codelen, opcode);
+	// printf("bytecode[%d].opcode=%x\n", code->codelen, opcode);
 	code->bytecode[code->codelen++].opcode = opcode;
 }
 
@@ -70,9 +70,7 @@ static unsigned set_index(struct sq_code *code, sq_index index) {
 
 static unsigned new_constant(struct sq_code *code, sq_value value) {
 	RESIZE(constcap, constlen, consts, sq_value);
-	// printf("consts[%d]=", code->constlen);
-	// sq_value_dump(value);
-	// puts("");
+	// printf("consts[%d]=", code->constlen); sq_value_dump(value); puts("");
 	code->consts[code->constlen++] = value;
 	return code->constlen - 1;
 }
@@ -84,8 +82,9 @@ static unsigned new_variable(struct sq_code *code, char *var) {
 	for (unsigned i = 0; i < code->varlen; ++i)
 		if (!(strcmp(var, code->variables[i].name))) {
 			free(var);
-			return i;
+			return code->variables[i].index;
 		}
+	// printf("vars[%d]=%s\n", code->varlen, var);
 
 	RESIZE(varcap, varlen, variables, struct var);
 	code->variables[code->varlen].name = var;
@@ -385,18 +384,6 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 }
 
 static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
-	__builtin_dump_struct(expr, &printf);
-	__builtin_dump_struct(expr->asgn, &printf);
-	__builtin_dump_struct(expr->asgn->var, &printf);
-	__builtin_dump_struct(expr->asgn->expr, &printf);
-	__builtin_dump_struct(expr->asgn->expr->math, &printf);
-	__builtin_dump_struct(expr->asgn->expr->math->lhs, &printf);
-	__builtin_dump_struct(expr->asgn->expr->math->lhs->lhs, &printf);
-	__builtin_dump_struct(expr->asgn->expr->math->lhs->lhs->lhs->rhs, &printf);
-	// __builtin_dump_struct(expr->asgn->expr->math->lhs->lhs->lhs, &printf);
-	// __builtin_dump_struct(expr->asgn->expr->math->lhs->lhs->lhs->lhs->rhs, &printf);
-	exit(0);
-
 	unsigned index;
 	switch (expr->kind) {
 	case SQ_PS_EFNCALL:
