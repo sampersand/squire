@@ -1,5 +1,7 @@
 #pragma once
 #include "value.h"
+#define MAX_FIELDS 256
+
 
 struct sq_struct {
 	int refcount;

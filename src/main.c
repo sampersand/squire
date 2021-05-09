@@ -7,7 +7,7 @@
 // #include "value.h"
 // #include <stdio.h>
 
-#include "compile.h"
+#include "program.h"
 
 int main(int a, char **v) {
 	struct sq_program *program = sq_program_compile(v[1]);

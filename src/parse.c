@@ -11,9 +11,6 @@ const char *stream;
 struct sq_token last;
 bool rewound;
 
-#define MAX_ARGC 255
-#define MAX_FIELDS 256
-
 
 static void untake() {
 	assert(!rewound);
@@ -57,67 +54,6 @@ static void parse_field_names() {
 	do { if (take().kind != kind_) { iffalse; } } while(0)
 #define EXPECT(kind_, ...) EXPECTED(kind_, die(__VA_ARGS__))
 #define GUARD(kind_) EXPECTED(kind_, untake(); return NULL)
-
-
-static struct sq_struct *parse_struct() {
-	GUARD(SQ_TK_STRUCT);
-
-	char *name;
-
-	// optional name
-	if (take().kind == SQ_TK_IDENT) {
-		name = last.identifier;
-	} else {
-		untake();
-		name = strdup("<anonymous>");
-	}
-
-	// require a lparen.
-	EXPECT(SQ_TK_LBRACE, "expected '{' before struct fields");
-	parse_field_names();
-	EXPECT(SQ_TK_RBRACE, "expected '}' after struct fields");
-
-	char **fields = memdup(field_names, sizeof(char *[field_name_count]));
-
-	return sq_struct_new(name, field_name_count, fields);
-}
-
-static void parse_function_body(struct sq_function *fn);
-
-static struct sq_function *parse_func() {
-	// 'struct' prefix.
-	GUARD(SQ_TK_FUNC);
-
-	char *name;
-
-	// optional name
-	if (take().kind == SQ_TK_IDENT) {
-		name = last.identifier;
-	} else {
-		untake();
-		name = strdup("<anonymous>");
-	}
-
-	EXPECT(SQ_TK_LPAREN, "expected '(' before func args");
-	parse_field_names();
-	EXPECT(SQ_TK_RPAREN, "expected ')' after func args");
-
-	char **args = memdup(field_names, sizeof(char *[field_name_count]));
-
-	struct sq_function *fn = xmalloc(sizeof(struct sq_function));
-	fn->name = name;
-	fn->refcount = 1;
-	fn->argc = field_name_count;
-	fn->nlocals = 0;
-	fn->nconsts = 0;
-	fn->program = NULL;
-	fn->consts = NULL;
-	fn->code = NULL;
-
-	// parse_function_body(fn);
-
-	return fn;
-}
 
 static struct expression *parse_expression(void);
 
@@ -488,7 +424,7 @@ static struct statements *parse_statements() {
 	bool endl = true;
 	while ((list[len] = parse_statement())) {
 		if (!endl) die("missing `;` between statements");
-		if (++len == cap)
+		if (++len == cap - 1)
 			list = xrealloc(list, sizeof(struct statement *[cap*=2]));
 
 		endl = false;
@@ -497,6 +433,7 @@ static struct statements *parse_statements() {
 		untake(); // as the while statement broke it.
 	}
 
+	list[len++] = NULL;
 
 	struct statements *stmts = xmalloc(sizeof(struct statements));
 	stmts->len = len;

@@ -4,41 +4,15 @@
 #include "shared.h"
 #include <string.h>
 
-// struct sq_variable {
-// 	char *name;
-// 	sq_value value;
-// };
-
-// struct sq_program {
-// 	unsigned nglobals;
-// 	struct sq_variable *globals;
-
-// 	unsigned nfuncs;
-// 	struct sq_function **funcs;
-// };
-
 void sq_program_run(struct sq_program *program) {
-	struct sq_function *main;
+	assert(program->main->argc == 0); // todo: allow for passing cmdline args
 
-	for (unsigned i = 0; i < program->nfuncs; ++i) {
-		main = program->funcs[i];
-
-		if (strcmp("main", main->name))
-			continue;
-
-		// todo: allow for passing command line args?
-		assert(main->argc == 0);
-		sq_value_free(sq_function_run(main, NULL));
-		return;
-	}
-
-	die("no 'main' function found.\n");
+	sq_value_dump(sq_function_run(program->main, NULL));
 }
 
 void sq_program_free(struct sq_program *program) {
 	for (unsigned i = 0; i < program->nglobals; ++i) {
-		free(program->globals[i].name);
-		sq_value_free(program->globals[i].value);
+		sq_value_free(program->globals[i]);
 	}
 
 	free(program->globals);

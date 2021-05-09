@@ -24,45 +24,11 @@ void sq_function_free(struct sq_function *function) {
 
 	free(function->name);
 	free(function->consts);
-	free(function->code);
+	free(function->bytecode);
 	free(function);
 }
 
-
-/*
-typedef enum {
-	SQ_OC_SWAP,
-
-	SQ_OC_JMP,
-	SQ_OC_JMP_FALSE,
-	SQ_OC_CALL,
-	SQ_OC_RETURN,
-
-	SQ_OC_EQL,
-	SQ_OC_NEQ,
-	SQ_OC_LTH,
-	SQ_OC_GTH,
-	SQ_OC_ADD,
-	SQ_OC_SUB,
-	SQ_OC_MUL,
-	SQ_OC_DIV,
-	SQ_OC_MOD,
-	SQ_OC_NOT,
-
-	SQ_OC_INEW, // create a struct instance
-
-	SQ_OC_CLOAD,  // load a constant
-	SQ_OC_GLOAD,  // load a global
-	SQ_OC_ILOAD,  // load an instance field
-	SQ_OC_ALOAD,  // load an array index
-
-	SQ_OC_GSTORE, // store a global
-	SQ_OC_ISTORE, // store an instance field
-	SQ_OC_ASTORE, // store an array index
-	}
-*/
-
-#define ABS_INDEX(idx) (function->code[idx].index)
+#define ABS_INDEX(idx) (function->bytecode[idx].index)
 #define REL_INDEX(idx) ABS_INDEX((idx)+ip)
 #define NEXT_INDEX() ABS_INDEX((ip)++)
 
@@ -80,7 +46,7 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 	unsigned ip = 0;
 
 	while (true) {
-		opcode = function->code[ip++].opcode;
+		opcode = function->bytecode[ip++].opcode;
 		LOG("loaded opcode '%d'", opcode);
 
 		switch (opcode) {
@@ -202,13 +168,13 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 	/*** Globals ***/
 
 		case SQ_OC_GLOAD:
-			value = function->program->globals[NEXT_INDEX()].value;
+			value = function->globals[NEXT_INDEX()];
 			sq_value_clone(value);
 			locals[NEXT_INDEX()] = value;
 			continue;
 
 		case SQ_OC_GSTORE: {
-			sq_value *global = &function->program->globals[NEXT_INDEX()].value;
+			sq_value *global = &function->globals[NEXT_INDEX()];
 			value = locals[NEXT_INDEX()];
 			*global = value;
 			sq_value_clone(value);
