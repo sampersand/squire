@@ -150,8 +150,14 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 			locals[NEXT_INDEX()] = value;
 			continue;
 
+		case SQ_OC_NEG:
+			value = sq_value_neg(locals[NEXT_INDEX()]);
+			sq_value_clone(value);
+			locals[NEXT_INDEX()] = value;
+			continue;
+
 		case SQ_OC_NOT:
-			value = sq_value_not(NEXT_INDEX());
+			value = sq_value_new_boolean(sq_value_not(locals[NEXT_INDEX()]));
 			sq_value_clone(value);
 			locals[NEXT_INDEX()] = value;
 			continue;
@@ -163,6 +169,7 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 			value = function->consts[NEXT_INDEX()];
 			sq_value_clone(value);
 			locals[NEXT_INDEX()] = value;
+			LOG("loaded local '%llu'", value);
 			continue;
 
 	/*** Globals ***/

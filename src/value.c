@@ -23,7 +23,7 @@ void sq_value_dump(sq_value value) {
 		printf("Null()");
 		break;
 	case SQ_TNUMBER:
-		printf("Number(%ld)", AS_NUMBER(value));
+		printf("Number(%lld)", AS_NUMBER(value));
 		break;
 	case SQ_TSTRING:
 		printf("String(%s)", AS_STR(value));
@@ -58,7 +58,7 @@ void sq_value_dump(sq_value value) {
 		break;
 	}
 	default:
-		printf("<UNDEFINED: %ld>", value);
+		printf("<UNDEFINED: %lld>", value);
 	}
 }
 
@@ -102,11 +102,11 @@ const char *sq_value_typename(sq_value value) {
 	}
 }
 
-bool sq_value_not(sq_value lhs) {
-	if (!sq_value_is_boolean(lhs))
-		die("cannot logically negate '%s'", TYPENAME(lhs));
+bool sq_value_not(sq_value arg) {
+	if (!sq_value_is_boolean(arg))
+		die("cannot logically negate '%s'", TYPENAME(arg));
 
-	return lhs == SQ_FALSE;
+	return arg == SQ_FALSE;
 }
 
 bool sq_value_eql(sq_value lhs, sq_value rhs) {
@@ -146,6 +146,13 @@ bool sq_value_gth(sq_value lhs, sq_value rhs) {
 	}
 
 	die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
+}
+
+sq_value sq_value_neg(sq_value arg) {
+	if (!sq_value_is_number(arg))
+		die("cannot numerically negate '%s'", TYPENAME(arg));
+
+	return sq_value_new_number(-AS_NUMBER(arg));
 }
 
 sq_value sq_value_add(sq_value lhs, sq_value rhs) {

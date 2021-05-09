@@ -70,41 +70,168 @@ static unsigned next_local(struct sq_code *code) {
 
 static void compile_struct(struct sq_code *code, struct struct_declaration *sdecl) {
 	(void) code; (void) sdecl;
+	die("todo: compile_struct");
 }
 
 static void compile_func(struct sq_code *code, struct func_declaration *fdecl) {
 	(void) code; (void) fdecl;
+	die("todo: compile_func");
 }
 
 static void compile_if(struct sq_code *code, struct if_statement *ifstmt) {
 	(void) code; (void) ifstmt;
+	die("todo: compile_if");
 }
 
 static void compile_while(struct sq_code *code, struct while_statement *wstmt) {
 	(void) code; (void) wstmt;
+	die("todo: compile_while");
 }
 
 static unsigned compile_expr(struct sq_code *code, struct expression *expr);
 
 static void compile_return(struct sq_code *code, struct return_statement *rstmt) {
-	unsigned local;
+	unsigned result;
 
 	if (!rstmt->value) {
 		set_opcode(code, SQ_OC_CLOAD);
 		set_index(code, new_constant(code, SQ_NULL));
-		set_index(code, local = next_local(code));
+		set_index(code, result = next_local(code));
 		set_opcode(code, SQ_OC_RETURN);
-		set_index(code, local);
+		set_index(code, result);
 	} else {
-		local = compile_expr(code, rstmt->value);
+		result = compile_expr(code, rstmt->value);
 		set_opcode(code, SQ_OC_RETURN);
-		set_index(code, local);
+		set_index(code, result);
+	}
+}
+
+static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
+	unsigned result;
+
+	switch (primary->kind) {
+	case SQ_PS_PPAREN:
+		return compile_expr(code, primary->expr);
+
+	case SQ_PS_PNUMBER:
+		set_opcode(code, SQ_OC_CLOAD);
+		set_index(code, new_constant(code, sq_value_new_number(primary->number)));
+		set_index(code, result = next_local(code));
+		return result;
+
+	case SQ_PS_PSTRING:
+		set_opcode(code, SQ_OC_CLOAD);
+		set_index(code, new_constant(code, sq_value_new_string(primary->string)));
+		set_index(code, result = next_local(code));
+		return result;
+
+	case SQ_PS_PBOOLEAN:
+		set_opcode(code, SQ_OC_CLOAD);
+		set_index(code, new_constant(code, sq_value_new_boolean(primary->boolean)));
+		set_index(code, result = next_local(code));
+		return result;
+
+	case SQ_PS_PNULL:
+		set_opcode(code, SQ_OC_CLOAD);
+		set_index(code, new_constant(code, SQ_NULL));
+		set_index(code, result = next_local(code));
+		return result;
+
+	case SQ_PS_PVARIABLE:
+		die("todo: SQ_PS_PVARIABLE");
+
+	default:
+		bug("unknown primary kind '%d'", primary->kind);
+	}
+}
+
+static unsigned compile_unary(struct sq_code *code, struct unary_expression *unary) {
+	unsigned result, rhs;
+	switch (unary->kind) {
+	case SQ_PS_UNEG:
+		rhs = compile_primary(code, unary->rhs);
+		set_opcode(code, SQ_OC_NEG);
+		set_index(code, rhs);
+		set_index(code, result = next_local(code));
+		return result;
+	case SQ_PS_UNOT:
+		rhs = compile_primary(code, unary->rhs);
+		set_opcode(code, SQ_OC_NOT);
+		set_index(code, rhs);
+		set_index(code, result = next_local(code));
+		return result;
+	case SQ_PS_UPRIMARY:
+		return compile_primary(code, unary->rhs);
+	default:
+		bug("unknown unary kind '%d'", unary->kind);
+	}
+}
+
+static unsigned compile_mul(struct sq_code *code, struct mul_expression *mul) {
+	switch (mul->kind) {
+	case SQ_PS_MMUL:
+		die("todo: SQ_PS_MMUL");
+	case SQ_PS_MDIV:
+		die("todo: SQ_PS_MDIV");
+	case SQ_PS_MMOD:
+		die("todo: SQ_PS_AMOD");
+	case SQ_PS_MUNARY:
+		return compile_unary(code, mul->lhs);
+	default:
+		bug("unknown mul kind '%d'", mul->kind);
+	}
+}
+
+static unsigned compile_add(struct sq_code *code, struct add_expression *add) {
+	switch (add->kind) {
+	case SQ_PS_AADD:
+		die("todo: SQ_PS_AADD");
+	case SQ_PS_ASUB:
+		die("todo: SQ_PS_ASUB");
+	case SQ_PS_AMUL:
+		return compile_mul(code, add->lhs);
+	default:
+		bug("unknown add kind '%d'", add->kind);
+	}
+}
+
+static unsigned compile_cmp(struct sq_code *code, struct cmp_expression *cmp) {
+	switch (cmp->kind) {
+	case SQ_PS_CLTH:
+		die("todo: SQ_PS_CLTH");
+	case SQ_PS_CGTH:
+		die("todo: SQ_PS_CGTH");
+	case SQ_PS_CADD:
+		return compile_add(code, cmp->lhs);
+	default:
+		bug("unknown cmp kind '%d'", cmp->kind);
+	}
+}
+
+static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
+	switch (eql->kind) {
+	case SQ_PS_EEQL:
+		die("todo: SQ_PS_EEQL");
+	case SQ_PS_ENEQ:
+		die("todo: SQ_PS_ENEQ");
+	case SQ_PS_ECMP:
+		return compile_cmp(code, eql->lhs);
+	default:
+		bug("unknown eql kind '%d'", eql->kind);
 	}
 }
 
 static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
-	(void) code; (void) expr;
-	return 0;
+	switch (expr->kind) {
+	case SQ_PS_EFNCALL:
+		die("todo: SQ_PS_EFNCALL");
+	case SQ_PS_EASSIGN:
+		die("todo: SQ_PS_EASSIGN");
+	case SQ_PS_EMATH:
+		return compile_eql(code, expr->math);
+	default:
+		bug("unknown expr kind '%d'", expr->kind);
+	}
 }
 
 static void compile_function(struct sq_function *fn, struct statements *stmts) {

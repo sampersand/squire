@@ -9,8 +9,8 @@ struct sq_struct;
 struct sq_instance;
 struct sq_function;
 
-typedef intptr_t sq_number;
-typedef uintptr_t sq_value;
+typedef int64_t sq_number;
+typedef uint64_t sq_value;
 
 typedef enum {
 	SQ_TBOOLEAN,
@@ -32,7 +32,7 @@ typedef enum {
 #define SQ_NULL SQ_VMASK(0, SQ_TNULL)
 
 static inline sq_value sq_value_new_number(sq_number number) {
-	assert((((number) << SQ_VSHIFT) >> SQ_VSHIFT) == number);
+	assert(number == (((sq_number) (((sq_value) number << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) number) << SQ_VSHIFT, SQ_TNUMBER);
 }
 
@@ -123,10 +123,11 @@ void sq_value_dump(sq_value value);
 void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value);
 
-bool sq_value_not(sq_value lhs);
+bool sq_value_not(sq_value arg);
 bool sq_value_eql(sq_value lhs, sq_value rhs);
 bool sq_value_lth(sq_value lhs, sq_value rhs);
 bool sq_value_gth(sq_value lhs, sq_value rhs);
+sq_value sq_value_neg(sq_value arg);
 sq_value sq_value_add(sq_value lhs, sq_value rhs);
 sq_value sq_value_sub(sq_value lhs, sq_value rhs);
 sq_value sq_value_mul(sq_value lhs, sq_value rhs);

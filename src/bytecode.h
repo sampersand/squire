@@ -18,6 +18,7 @@ enum sq_opcode {
 	SQ_OC_DIV          = 26,
 	SQ_OC_MOD          = 27,
 	SQ_OC_NOT          = 28,
+	SQ_OC_NEG          = 29,
 
 	SQ_OC_CLOAD        = 30, // load a constant
 
