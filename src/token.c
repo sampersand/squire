@@ -100,7 +100,6 @@ struct sq_token sq_next_token(const char **stream) {
 		for (unsigned i = 0; ins <= token.string->length; dst[ins++] = c, ++i) {
 		top:
 			c = src[i];
-		printf("%d [%c]\n", token.string->length, c);
 
 			if (c != '\\') continue;
 
@@ -129,7 +128,6 @@ struct sq_token sq_next_token(const char **stream) {
 		}
 		token.string->ptr = xrealloc(dst, token.string->length+1);
 		token.string->ptr[token.string->length] = '\0';
-		printf("%d\n", token.string->length);
 		return token;
 	}
 

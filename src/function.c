@@ -31,15 +31,20 @@ void sq_function_free(struct sq_function *function) {
 #define ABS_INDEX(idx) (function->bytecode[idx].index)
 #define REL_INDEX(idx) ABS_INDEX((idx)+ip)
 #define NEXT_INDEX() ABS_INDEX((ip)++)
+#define NEXT_LOCAL() locals[NEXT_INDEX()]
 
-#define LOG(fmt, ...) printf(fmt "\n", __VA_ARGS__);
+#ifdef NDEBUG
+// #define LOG(fmt, ...)
+#else
+// #define LOG(fmt, ...) printf(fmt "\n", __VA_ARGS__);
+#endif
 
 sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 	sq_value locals[function->nlocals];
 	sq_value value;
 	enum sq_opcode opcode;
 
-	LOG("starting function '%s'", function->name);
+	// LOG("starting function '%s'", function->name);
 	for (unsigned i = 0; i < function->nlocals; ++i)
 		locals[i] = SQ_NULL;
 
@@ -47,7 +52,7 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 
 	while (true) {
 		opcode = function->bytecode[ip++].opcode;
-		LOG("loaded opcode '%d'", opcode);
+		// LOG("loaded opcode '%02x'", opcode);
 
 		switch (opcode) {
 
@@ -63,103 +68,157 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 			continue;
 		}
 
+		case SQ_OC_MOV: {
+			unsigned idx1 = NEXT_INDEX();
+			unsigned idx2 = NEXT_INDEX();
+			locals[idx2] = locals[idx1];
+			continue;
+		}
+
+		case SQ_OC_INT: {
+			unsigned idx;
+			switch ((idx = NEXT_INDEX())) {
+			case SQ_INT_PRINT: {
+				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				printf("%s", string->ptr);
+				sq_string_free(string);
+				NEXT_LOCAL() = SQ_NULL;
+				break;
+			}
+
+			case SQ_INT_TOSTRING: {
+				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_new_string(string);
+				break;
+			}
+
+			case SQ_INT_DUMP: {
+				value = NEXT_LOCAL();
+				sq_value_dump(value);
+				NEXT_LOCAL() = value;
+				break;
+			}
+
+			case SQ_INT_TONUMBER: {
+				sq_number number = sq_value_to_number(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_new_number(number);
+				break;
+			}
+			
+			default:
+				bug("unknown index: %d", idx);
+			}
+
+			continue;
+		}
+
+		case SQ_OC_NOOP:
+			continue;
+
 
 	/*** Control Flow ***/
 
 		case SQ_OC_JMP:
-			ip = ABS_INDEX(0);
+			ip = REL_INDEX(0);
 			continue;
 
 		case SQ_OC_JMP_FALSE: {
-			value = locals[NEXT_INDEX()];
+			value = NEXT_LOCAL();
 			unsigned dst = NEXT_INDEX();
 
 			if (!sq_value_is_boolean(value))
 				die("can only jump on booleans");
 
-			if (sq_value_as_boolean(value))
+			if (!sq_value_as_boolean(value))
 				ip = dst;
 
 			continue;
 		}
 
 		case SQ_OC_CALL: {
-			sq_value instance_value = locals[NEXT_INDEX()];
+			sq_value instance_value = NEXT_LOCAL();
 			die("todo: SQ_OC_CALL");
 		}
 
 		case SQ_OC_RETURN:
-			value = locals[NEXT_INDEX()];
+			value = NEXT_LOCAL();
 			sq_value_clone(value);
 			goto done;
 
 	/*** Math ***/
 		case SQ_OC_EQL:
-			value = sq_value_new_boolean(sq_value_eql(REL_INDEX(0), REL_INDEX(1)));
+			value = sq_value_new_boolean(sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
+			sq_value_clone(value);
+			continue;
+
+		case SQ_OC_NEQ:
+			value = sq_value_new_boolean(!sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
+			ip += 2;
+			NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_LTH:
-			value = sq_value_new_boolean(sq_value_lth(REL_INDEX(0), REL_INDEX(1)));
+			value = sq_value_new_boolean(sq_value_lth(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_GTH:
-			value = sq_value_new_boolean(sq_value_gth(REL_INDEX(0), REL_INDEX(1)));
+			value = sq_value_new_boolean(sq_value_gth(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_ADD:
 			value = sq_value_add(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_SUB:
-			value = sq_value_sub(REL_INDEX(0), REL_INDEX(1));
+			value = sq_value_sub(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_MUL:
-			value = sq_value_mul(REL_INDEX(0), REL_INDEX(1));
+			value = sq_value_mul(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_DIV:
-			value = sq_value_div(REL_INDEX(0), REL_INDEX(1));
+			value = sq_value_div(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_MOD:
-			value = sq_value_mod(REL_INDEX(0), REL_INDEX(1));
+			value = sq_value_mod(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_NEG:
-			value = sq_value_neg(locals[NEXT_INDEX()]);
+			value = sq_value_neg(NEXT_LOCAL());
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_NOT:
-			value = sq_value_new_boolean(sq_value_not(locals[NEXT_INDEX()]));
+			value = sq_value_new_boolean(sq_value_not(NEXT_LOCAL()));
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 
@@ -168,8 +227,8 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 		case SQ_OC_CLOAD:
 			value = function->consts[NEXT_INDEX()];
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
-			LOG("loaded local '%llu'", value);
+			NEXT_LOCAL() = value;
+			// LOG("loaded local '%llu'", value);
 			continue;
 
 	/*** Globals ***/
@@ -177,12 +236,12 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 		case SQ_OC_GLOAD:
 			value = function->globals[NEXT_INDEX()];
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_GSTORE: {
 			sq_value *global = &function->globals[NEXT_INDEX()];
-			value = locals[NEXT_INDEX()];
+			value = NEXT_LOCAL();
 			*global = value;
 			sq_value_clone(value);
 			continue;
@@ -191,7 +250,7 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 	/*** Struct & Instances ***/
 
 		case SQ_OC_ILOAD: {
-			value = locals[NEXT_INDEX()];
+			value = NEXT_LOCAL();
 
 			if (!sq_value_is_instance(value))
 				die("can only access fields on instances.");
@@ -205,13 +264,13 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 
 			value = *valueptr;
 			sq_value_clone(value);
-			locals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
 			continue;
 
 		}
 
 		case SQ_OC_ISTORE: {
-			sq_value instance_value = locals[NEXT_INDEX()];
+			sq_value instance_value = NEXT_LOCAL();
 
 			if (!sq_value_is_instance(instance_value))
 				die("can only access fields on instances.");
@@ -222,7 +281,7 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 			if (!valueptr)
 				die("unknown field '%s' for type '%s'", field, instance->kind->name);
 
-			value = locals[NEXT_INDEX()];
+			value = NEXT_LOCAL();
 			*valueptr = value;
 			sq_value_clone(value);
 			continue;

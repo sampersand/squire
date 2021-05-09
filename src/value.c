@@ -229,3 +229,59 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 
 	return sq_value_new_number(AS_NUMBER(lhs) % AS_NUMBER(rhs));
 }
+
+struct sq_string *sq_value_to_string(sq_value value) {
+	static struct sq_string truestring = { "true", -1, 4 };
+	static struct sq_string falsestring = { "false", -1, 5 };
+	static struct sq_string nullstring = { "null", -1, 4 };
+
+	switch (SQ_VTAG(value)) {
+	case SQ_TBOOLEAN:
+		return value == SQ_TRUE ? &truestring : &falsestring;
+
+	case SQ_TNULL:
+		return &nullstring;
+
+	case SQ_TNUMBER: {
+		char *buf = xmalloc(40);
+		snprintf(buf, 40, "%lld", AS_NUMBER(value));
+		return sq_string_new(buf);
+	}
+
+	case SQ_TSTRING:
+		sq_string_clone(AS_STRING(value));
+		return AS_STRING(value);
+
+	case SQ_TSTRUCT:
+	case SQ_TINSTANCE:
+	case SQ_TFUNCTION:
+		die("cannot convert %s to a string", TYPENAME(value));
+
+	default:
+		bug("<UNDEFINED: %lld>", value);
+	}
+}
+
+sq_number sq_value_to_number(sq_value value) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TBOOLEAN:
+		return value == SQ_TRUE ? 1 : 0;
+
+	case SQ_TNULL:
+		return 0;
+
+	case SQ_TNUMBER:
+		return AS_NUMBER(value);
+
+	case SQ_TSTRING:
+		return strtoll(AS_STR(value), NULL, 10);
+
+	case SQ_TSTRUCT:
+	case SQ_TINSTANCE:
+	case SQ_TFUNCTION:
+		die("cannot convert %s to a number", TYPENAME(value));
+
+	default:
+		bug("<UNDEFINED: %lld>", value);
+	}
+}

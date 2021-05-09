@@ -71,7 +71,7 @@ struct expression {
 struct function_call {
 	struct variable *func;
 	unsigned arglen;
-	struct expression *args;
+	struct expression **args;
 };
 
 struct assignment {

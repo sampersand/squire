@@ -263,7 +263,8 @@ static struct function_call *parse_func_call(struct variable *func) {
 
 	struct function_call *fncall = xmalloc(sizeof(struct function_call));
 	fncall->func = func;
-	fncall->args = memdup(&args, sizeof(struct expression *[arg_count]));
+	fncall->args = memdup(args, sizeof(struct expression *[arg_count]));
+
 	fncall->arglen = arg_count;
 
 	return fncall;
@@ -299,12 +300,14 @@ static struct expression *parse_expression() {
 	untake();
 
 	if (last.kind == SQ_TK_ASSIGN) {
+		printf("assign\n");
 		expr.kind = SQ_PS_EASSIGN;
 		expr.asgn = parse_assignment(var);
 	} else if (last.kind == SQ_TK_LPAREN) {
+		printf("fncall\n");
 		expr.kind = SQ_PS_EFNCALL;
 		expr.fncall = parse_func_call(var);
-	}
+	} else printf("neither\n");
 
 done:
 
@@ -379,6 +382,7 @@ static struct if_statement *parse_if_statement() {
 	if (take().kind == SQ_TK_ELSE) {
 		if_stmt->iffalse = parse_brace_statements("else");
 	} else {
+		untake();
 		if_stmt->iffalse = NULL;
 	}
 
