@@ -1,0 +1,38 @@
+(* comments start with '#' and go until end of line *)
+program := <stmts>
+stmts := { <item> <endline> } [<item> [<endline>]]
+stmt
+ := <struct-decl>
+  | <func-decl>
+  | <if-stmt>
+  | <while-stmt>
+  | <return-stmt>
+  | <expr>
+endline := ';' | LITERAL_NEWLINE (* note `\` followed by a literal newline is ok. *)
+
+struct-decl := 'struct' [IDENT] '{' <fields> '}'
+func-decl := 'func' [IDENT] '(' <fields> ')' <body>
+fields := {IDENT ','} [IDENT [',']]
+if-stmt := 'if' <expr> <body> {'else' 'if' <expr> <body>} ['else' <body>]
+while-stmt := 'while' <expr> <body>
+return-stmt := 'return' [<stmt>]
+body := '{' <stmts> '}'
+
+expr
+ := <func-call>
+  | <assignment>
+  | <eql-expr>
+
+call-expr := (<variable> | <paren-expr>) '(' <arguments> ')' (* structs are made by calling *)
+arguments := {<expr> ','} [<expr> [',']]
+assignment := <variable> '=' <expr>
+
+eql-expr := <cmp-expr> ['==' <eql-expr>]
+cmp-expr := <add-expr> [('<' | '>') <cmp-expr>]
+add-expr := <mul-expr> [('+' | '-') <add-expr>]
+mul-expr := <primary> [('*' | '/' | '%') <mul-expr>]
+not-expr := ['!' | '-'] <primary> 
+primary := paren-expr | <literal> | <variable>
+paren-expr := '(' <expr> ')'
+literal := NUMBER | STRING | 'true' | 'false' | 'null'
+variable := IDENT {'.' IDENT}

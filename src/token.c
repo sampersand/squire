@@ -48,15 +48,15 @@ static char tohex(char c) {
 	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 
-sq_token sq_next_token(const char **stream) {
+struct sq_token sq_next_token(const char **stream) {
 	strip_whitespace(stream);
-	sq_token token;
+	struct sq_token token;
 
 	if (!**stream) {
 		token.kind = SQ_TK_UNDEFINED;
 		return token;
 	}
-	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDLINE);
+	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
 	if (isdigit(**stream)) {
 		token.kind = SQ_TK_NUMBER;
@@ -70,6 +70,13 @@ sq_token sq_next_token(const char **stream) {
 			die("invalid trailing characters on number literal: %llu%c\n",
 				(long long) token.number, **stream);
 		return token;
+	}
+
+	if (**stream == '\\') {
+		++*stream;
+
+		if (*++*stream != '\n') 
+			die("unexpected '\\' on its own.");
 	}
 
 	if (**stream == '\'' || **stream == '\"') {
@@ -129,6 +136,7 @@ sq_token sq_next_token(const char **stream) {
 	CHECK_FOR_START_KW("struct", SQ_TK_STRUCT);
 	CHECK_FOR_START_KW("func", SQ_TK_FUNC);
 	CHECK_FOR_START_KW("if", SQ_TK_IF);
+	CHECK_FOR_START_KW("while", SQ_TK_WHILE);
 	CHECK_FOR_START_KW("else", SQ_TK_ELSE);
 	CHECK_FOR_START_KW("return", SQ_TK_RETURN);
 	CHECK_FOR_START_KW("true", SQ_TK_TRUE);
@@ -146,14 +154,14 @@ sq_token sq_next_token(const char **stream) {
 		return token;
 	}
 
-	CHECK_FOR_START("{", SQ_TK_LRBACE);
+	CHECK_FOR_START("{", SQ_TK_LBRACE);
 	CHECK_FOR_START("}", SQ_TK_RBRACE);
 	CHECK_FOR_START("(", SQ_TK_LPAREN);
 	CHECK_FOR_START(")", SQ_TK_RPAREN);
 	CHECK_FOR_START("[", SQ_TK_LBRACKET);
 	CHECK_FOR_START("]", SQ_TK_RBRACKET);
-	CHECK_FOR_START(";", SQ_TK_ENDLINE);
-	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDLINE);
+	CHECK_FOR_START(";", SQ_TK_ENDL);
+	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 	CHECK_FOR_START(",", SQ_TK_COMMA);
 	CHECK_FOR_START(".", SQ_TK_DOT);
 
@@ -175,7 +183,7 @@ sq_token sq_next_token(const char **stream) {
 }
 
 
-void sq_token_dump(const sq_token *token) {
+void sq_token_dump(const struct sq_token *token) {
 	switch (token->kind) {
 	case SQ_TK_UNDEFINED: printf("Keyword(undefined)"); break;
 	case SQ_TK_STRUCT: printf("Keyword(struct)"); break;
@@ -190,14 +198,14 @@ void sq_token_dump(const sq_token *token) {
 	case SQ_TK_NUMBER: printf("Number(%lld)", (long long) token->number); break;
 	case SQ_TK_STRING: printf("String(%s)", token->string->ptr); break;
 
-	case SQ_TK_LRBACE: printf("Punct({)"); break;
+	case SQ_TK_LBRACE: printf("Punct({)"); break;
 	case SQ_TK_RBRACE: printf("Punct(})"); break;
 	case SQ_TK_LPAREN: printf("Punct(()"); break;
 	case SQ_TK_RPAREN: printf("Punct())"); break;
 	case SQ_TK_LBRACKET: printf("Punct([)"); break;
 	case SQ_TK_RBRACKET: printf("Punct(])"); break;
-	case SQ_TK_ENDLINE: printf("Punct(;)"); break;
-	case SQ_TK_SOFT_ENDLINE: printf("Punct(\\n)"); break;
+	case SQ_TK_ENDL: printf("Punct(;)"); break;
+	case SQ_TK_SOFT_ENDL: printf("Punct(\\n)"); break;
 	case SQ_TK_COMMA: printf("Punct(,)"); break;
 	case SQ_TK_DOT: printf("Punct(.)"); break;
 

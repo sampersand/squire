@@ -17,12 +17,9 @@
 // 	struct sq_function **funcs;
 // };
 
-struct sq_program *sq_program_parse(const char *stream) {
-	return 0;
-}
-
 void sq_program_run(struct sq_program *program) {
 	struct sq_function *main;
+
 	for (unsigned i = 0; i < program->nfuncs; ++i) {
 		main = program->funcs[i];
 

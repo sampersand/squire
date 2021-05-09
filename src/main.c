@@ -6,14 +6,19 @@
 #include "value.h"
 #include <stdio.h>
 
-int main(int a, char **v) {
-	const char*str = v[1];
-	sq_token token;
+// struct expression;
+struct statements *parse_statements(void);
+extern const char *stream;
 
-	while ((token = sq_next_token(&str)).kind != SQ_TK_UNDEFINED) {
-		sq_token_dump(&token);
-		puts("");
-	}
+int main(int a, char **v) {
+	stream = v[1];
+	struct statements *stmts = parse_statements();
+	__builtin_dump_struct(stmts, &printf);
+	// __builtin_dump_struct(expr, &printf);
+
+	// if (expr == NULL) printf("<NULL>");
+	// else sq_value_dump(sq_value_new_function(expr));
+
 	return 0;
 }
 
@@ -72,7 +77,7 @@ int main4() {
   	return 0;
 }
 
-sq_token sq_next_token(const char **stream);
+struct sq_token sq_next_token(const char **stream);
 
 int main1() {
 	const char*str = "\n\
@@ -114,7 +119,7 @@ func fizzBuzz (max) {	\n\
 	\n\
 fizzBuzz(100)	\n\
 ";
-	sq_token token;
+	struct sq_token token;
 
 
 	while ((token = sq_next_token(&str)).kind != SQ_TK_UNDEFINED) {

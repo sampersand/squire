@@ -3,11 +3,12 @@
 #include "value.h"
 #include "string.h"
 
-typedef enum {
-	SQ_TK_UNDEFINED,
+enum sq_token_kind {
+	SQ_TK_UNDEFINED = 0,
 	SQ_TK_STRUCT,
 	SQ_TK_FUNC,
 	SQ_TK_IF,
+	SQ_TK_WHILE,
 	SQ_TK_ELSE,
 	SQ_TK_RETURN,
 	SQ_TK_TRUE,
@@ -18,14 +19,14 @@ typedef enum {
 	SQ_TK_NUMBER,
 	SQ_TK_STRING,
 
-	SQ_TK_LRBACE,
+	SQ_TK_LBRACE,
 	SQ_TK_RBRACE,
 	SQ_TK_LPAREN,
 	SQ_TK_RPAREN,
 	SQ_TK_LBRACKET,
 	SQ_TK_RBRACKET,
-	SQ_TK_ENDLINE,
-	SQ_TK_SOFT_ENDLINE,
+	SQ_TK_ENDL,
+	SQ_TK_SOFT_ENDL,
 	SQ_TK_COMMA,
 	SQ_TK_DOT,
 
@@ -42,18 +43,18 @@ typedef enum {
 	SQ_TK_AND,
 	SQ_TK_OR,
 	SQ_TK_ASSIGN,
-} sq_tk_kind;
+};
 
 // struct sq_tk_
 
-typedef struct {
-	sq_tk_kind kind;
+struct sq_token {
+	enum sq_token_kind kind;
 	union {
 		sq_number number;
 		struct sq_string *string;
 		char *identifier;
 	};
-} sq_token;
+};
 
-sq_token sq_next_token(const char **stream);
-void sq_token_dump(const sq_token *);
+struct sq_token sq_next_token(const char **stream);
+void sq_token_dump(const struct sq_token *);
