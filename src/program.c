@@ -7,7 +7,7 @@
 void sq_program_run(struct sq_program *program) {
 	assert(program->main->argc == 0); // todo: allow for passing cmdline args
 
-	sq_value_free(sq_function_run(program->main, NULL));
+	sq_value_free(sq_function_run(program->main, 0, NULL));
 }
 
 void sq_program_free(struct sq_program *program) {

@@ -14,4 +14,4 @@ struct sq_function {
 
 void sq_function_clone(struct sq_function *function);
 void sq_function_free(struct sq_function *function);
-sq_value sq_function_run(struct sq_function *function, sq_value *args);
+sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args);

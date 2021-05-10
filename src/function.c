@@ -39,13 +39,17 @@ void sq_function_free(struct sq_function *function) {
 // #define LOG(fmt, ...) printf(fmt "\n", __VA_ARGS__);
 #endif
 
-sq_value sq_function_run(struct sq_function *function, sq_value *args) {
+sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
 	sq_value value;
 	enum sq_opcode opcode;
 
-	// LOG("starting function '%s'", function->name);
-	for (unsigned i = 0; i < function->nlocals; ++i)
+	for (unsigned i = 0; i < argc; ++i) {
+		locals[i] = args[i];
+	}
+
+	// printf("starting function '%s'\n", function->name);
+	for (unsigned i = argc; i < function->nlocals; ++i)
 		locals[i] = SQ_NULL;
 
 	unsigned ip = 0;
@@ -138,7 +142,28 @@ sq_value sq_function_run(struct sq_function *function, sq_value *args) {
 
 		case SQ_OC_CALL: {
 			sq_value instance_value = NEXT_LOCAL();
-			die("todo: SQ_OC_CALL");
+			unsigned argc = NEXT_INDEX();
+
+			sq_value newargs[argc];
+
+			for (unsigned i = 0; i < argc; ++i)
+				newargs[i] = NEXT_LOCAL();
+
+			if (sq_value_is_function(instance_value)) {
+				struct sq_function *fn = sq_value_as_function(instance_value);
+				if (argc != fn->argc)
+					die("argc mismatch (given %d, expected %d) for %s", argc, fn->argc, fn->name);
+				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
+			} else if (sq_value_is_struct(instance_value)) {
+				struct sq_struct *kind = sq_value_as_struct(instance_value);
+				if (argc != kind->nfields)
+					die("fieilds mismatch (given %d, expected %d) for %s", argc, kind->nfields, kind->name);
+				NEXT_LOCAL() = sq_value_new_instance(
+					sq_instance_new(kind, memdup(newargs, sizeof(sq_value[argc]))));
+			} else {
+				die("can only call funcs");
+			}
+			continue;
 		}
 
 		case SQ_OC_RETURN:

@@ -2,39 +2,20 @@
 #include "function.h"
 #include "shared.h"
 #include "parse.h"
+#include "struct.h"
 #include <string.h>
 
 struct sq_program *program;
-
-struct sq_variables {
-	unsigned len, cap;
-	char *names;
-};
-
-struct sq_variables globals;
-
-/*
-struct sq_function {
-	char *name;
-	int refcount; // negative indicates a global function.
-
-	unsigned argc, nlocals, nconsts;
-	struct sq_program *program;
-
-	sq_value *consts;
-	union sq_bytecode *code;
-};
-
-*/
-// struct variable {
-// 	unsigned idx;
-// 	char *name;
-// };
 
 struct var {
 	char *name;
 	unsigned index;
 };
+
+struct {
+	unsigned len, cap;
+	struct var *vars;
+} globals;
 
 struct sq_code {
 	unsigned codecap, codelen;
@@ -52,8 +33,6 @@ struct sq_code {
 #define RESIZE(cap, len, pos, type) \
 	if (code->cap == code->len) \
 		code->pos = xrealloc(code->pos, sizeof(type [code->cap*=2]));
-
-
 
 static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
@@ -78,13 +57,36 @@ static unsigned next_local(struct sq_code *code) {
 	return code->nlocals++;
 }
 
-static unsigned new_variable(struct sq_code *code, char *var) {
-	for (unsigned i = 0; i < code->varlen; ++i)
+// static unsigned new_global(struct sq_code *code, char *name, sq_value value) {
+// 	for (unsigned i = 0; i < globals.len; ++i) {
+// 		if (!strcmp(globals.vars[i].name, name)) {
+// 			globals.vars[i]
+// 		}
+// 	}
+// 	RESIZE(globals.len, globals.cap, globals.vars, struct var);
+
+	// printf("consts[%d]=", code->constlen); sq_value_dump(value); puts("");
+// 	code->consts[code->constlen++] = value;
+// 	return code->constlen - 1;
+// }
+
+static int new_variable(struct sq_code *code, char *var) {
+	for (unsigned i = 0; i < code->varlen; ++i) {
 		if (!(strcmp(var, code->variables[i].name))) {
 			free(var);
 			return code->variables[i].index;
 		}
-	// printf("vars[%d]=%s\n", code->varlen, var);
+	}
+
+	for (unsigned i = 0; i < globals.len; ++i) {
+		if (!(strcmp(var, globals.vars[i].name))) {
+			free(var);
+			return ~i;
+		}
+	}
+
+	// printf("variables[%d]=%s\n", code->varlen, var);
+
 
 	RESIZE(varcap, varlen, variables, struct var);
 	code->variables[code->varlen].name = var;
@@ -96,12 +98,30 @@ static void compile_statements(struct sq_code *code, struct statements *stmts);
 
 static void compile_struct(struct sq_code *code, struct struct_declaration *sdecl) {
 	(void) code; (void) sdecl;
-	die("todo: compile_struct");
+
+	struct sq_struct *struct_ = xmalloc(sizeof(struct sq_struct));
+	struct_->refcount = 1;
+	struct_->nfields = sdecl->nfields;
+	struct_->fields = sdecl->fields;
+	struct_->name = sdecl->name;
+
+	unsigned idx = new_constant(code, sq_value_new_struct(struct_));
+	set_opcode(code, SQ_OC_CLOAD);
+	set_index(code, idx);
+	set_index(code, new_variable(code, strdup(struct_->name)));
+
 }
 
+static struct sq_function *
+compile_function(struct func_declaration *fndecl);
+
 static void compile_func(struct sq_code *code, struct func_declaration *fdecl) {
-	(void) code; (void) fdecl;
-	die("todo: compile_func");
+	struct sq_function *function = compile_function(fdecl);
+	unsigned idx = new_constant(code, sq_value_new_function(function));
+
+	set_opcode(code, SQ_OC_CLOAD);
+	set_index(code, idx);
+	set_index(code, new_variable(code, strdup(function->name)));
 }
 
 static void compile_if(struct sq_code *code, struct if_statement *ifstmt) {
@@ -184,9 +204,16 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		set_index(code, new_constant(code, SQ_NULL));
 		return set_index(code, next_local(code));
 
-	case SQ_PS_PVARIABLE:
+	case SQ_PS_PVARIABLE: {
 		if (primary->variable->field) die("doesnt support setting fields yet");
-		return new_variable(code, primary->variable->name);
+		int index = new_variable(code, primary->variable->name);
+
+		if (0 <= index) return index; // ie it's alocal
+		// it's a global
+		set_opcode(code, SQ_OC_GLOAD);
+		set_index(code, ~index);
+		return set_index(code, next_local(code));
+	}
 
 	default:
 		bug("unknown primary kind '%d'", primary->kind);
@@ -380,11 +407,23 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		return set_index(code, next_local(code));
 	}
 
-	die("todo: function call for arbitraries");
+	unsigned args[MAX_ARGC];
+	for (unsigned i = 0; i < fncall->arglen; ++i)
+		args[i] = compile_expr(code, fncall->args[i]);
+
+	set_opcode(code, SQ_OC_CALL);
+	set_index(code, new_variable(code, fncall->func->name));
+	set_index(code, fncall->arglen);
+	for (unsigned i = 0; i < fncall->arglen; ++i)
+		set_index(code, args[i]);
+
+	return set_index(code, next_local(code));
+
 }
 
 static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 	unsigned index;
+	int variable;
 	switch (expr->kind) {
 	case SQ_PS_EFNCALL:
 		return compile_function_call(code, expr->fncall);
@@ -393,9 +432,17 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 		if (expr->asgn->var->field) die("doesnt support setting fields yet");
 
 		index = compile_expr(code, expr->asgn->expr);
-		set_opcode(code, SQ_OC_MOV);
-		set_index(code, index);
-		return set_index(code, new_variable(code, expr->asgn->var->name));
+		variable = new_variable(code, expr->asgn->var->name);
+		if (0 <= variable) {
+			set_opcode(code, SQ_OC_MOV);
+			set_index(code, index);
+			return set_index(code, variable);
+		} else {
+			set_opcode(code, SQ_OC_GSTORE);
+			set_index(code, ~variable);
+			set_index(code, index);
+			return set_index(code, next_local(code));
+		}
 
 	case SQ_PS_EMATH:
 
@@ -423,34 +470,51 @@ static void compile_statements(struct sq_code *code, struct statements *stmts) {
 	}
 }
 
-static void compile_function(struct sq_function *fn, struct statements *stmts) {
+static struct sq_function *
+compile_function(struct func_declaration *fndecl) {
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
 	code.bytecode = xmalloc(sizeof(union sq_bytecode[code.codecap]));
+
 	code.nlocals = 0;
 	code.constcap = 64;
 	code.constlen = 0;
 	code.consts = xmalloc(sizeof(sq_value [code.constcap]));
-	code.varcap = 16;
-	code.varlen = 0;
-	code.variables = xmalloc(sizeof(struct var [code.varcap]));
 
-	compile_statements(&code, stmts);
+	code.varlen = fndecl->nargs;
+	code.varcap = 16 + code.varlen;
+	code.variables = xmalloc(sizeof(struct var[code.varcap]));
+
+	for (unsigned i = 0; i < fndecl->nargs; ++i) {
+		code.variables[i].name = fndecl->args[i];
+		code.variables[i].index = next_local(&code);
+		// set_opcode(&code, SQ_OC_MOV);
+		// set_index(&code, i);
+		// set_index(&code, code.variables[i].index = next_local(&code));
+	}
+
+	compile_statements(&code, fndecl->body);
 	struct return_statement return_null = { .value = NULL };
 	compile_return(&code, &return_null);
 
+	struct sq_function *fn = xmalloc(sizeof(struct sq_function));
+
+	fn->refcount = 1;
+	fn->name = fndecl->name;
+	fn->argc = fndecl->nargs;
 	fn->bytecode = code.bytecode;
 	fn->consts = code.consts;
 	fn->nconsts = code.constlen;
 	fn->nlocals = code.nlocals;
+	fn->globals = 0; // todo
+
+	return fn;
 }
 
-struct sq_program *sq_program_compile(const char *stream) {
-	struct statements *statements = sq_parse_statements(stream);
-
-	globals.len = 0;
-	globals.names = xmalloc(sizeof(char *[globals.cap = 16]));
+struct sq_program *sq_program_compile(const char *stream, unsigned argc, char **argv) {
+	globals.len = globals.cap = 0;
+	globals.vars = xmalloc(sizeof(struct var[globals.cap = 16]));
 
 	program = xmalloc(sizeof(struct sq_program));
 	program->nglobals = 0;
@@ -458,14 +522,14 @@ struct sq_program *sq_program_compile(const char *stream) {
 	program->nfuncs = 0;
 	program->funcs = NULL;
 
-	struct sq_function *main = program->main = xmalloc(sizeof(struct sq_function));
-	main->name = strdup("main");
-	main->refcount = 1;
-	main->argc = 0;
-	main->nlocals = 0;
-	main->nconsts = 0;
+	struct func_declaration maindecl = {
+		.name = strdup("main"),
+		.nargs = argc, // todo: pass commandline arguments
+		.args = argv,
+		.body = sq_parse_statements(stream)
+	};
 
-	compile_function(main, statements);
+	program->main = compile_function(&maindecl);
 
 	return program;
 }
