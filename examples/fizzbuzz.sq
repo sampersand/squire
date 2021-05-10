@@ -1,0 +1,18 @@
+
+n = 1;
+while (n < 101) {
+	if (n % 15 == 0) {
+		print("FizzBuzz\n")
+	} else {
+		if (n % 3 == 0) {
+			print("Fizz\n");
+		} else {
+			if (n % 5 == 0) {
+				print("Buzz\n");
+			} else {
+				print(string(n) + "\n");
+			}
+		}
+	};
+	n = n + 1
+}
