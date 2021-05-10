@@ -133,6 +133,7 @@ struct sq_token sq_next_token(const char **stream) {
 
 	CHECK_FOR_START_KW("struct", SQ_TK_STRUCT);
 	CHECK_FOR_START_KW("func", SQ_TK_FUNC);
+	CHECK_FOR_START_KW("global", SQ_TK_GLOBAL);
 	CHECK_FOR_START_KW("if", SQ_TK_IF);
 	CHECK_FOR_START_KW("while", SQ_TK_WHILE);
 	CHECK_FOR_START_KW("else", SQ_TK_ELSE);
@@ -186,6 +187,7 @@ void sq_token_dump(const struct sq_token *token) {
 	case SQ_TK_UNDEFINED: printf("Keyword(undefined)"); break;
 	case SQ_TK_STRUCT: printf("Keyword(struct)"); break;
 	case SQ_TK_FUNC: printf("Keyword(func)"); break;
+	case SQ_TK_GLOBAL: printf("Keyword(global)"); break;
 	case SQ_TK_IF: printf("Keyword(if)"); break;
 	case SQ_TK_ELSE: printf("Keyword(else)"); break;
 	case SQ_TK_RETURN: printf("Keyword(return)"); break;

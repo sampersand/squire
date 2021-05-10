@@ -26,6 +26,7 @@ void sq_string_clone(struct sq_string *string) {
 }
 
 void sq_string_free(struct sq_string *string) {
+	return;
 	assert(string->refcount);
 
 	if (string->refcount < 0 || !--string->refcount)

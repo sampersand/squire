@@ -15,6 +15,7 @@ void sq_function_clone(struct sq_function *function) {
 }
 
 void sq_function_free(struct sq_function *function) {
+	return;
 	assert(function->refcount);
 
 	if (function->refcount < 0 || !--function->refcount)
@@ -82,26 +83,27 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 		case SQ_OC_INT: {
 			unsigned idx;
+			struct sq_string *string;
+
 			switch ((idx = NEXT_INDEX())) {
 			case SQ_INT_PRINT: {
-				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				string = sq_value_to_string(NEXT_LOCAL());
 				printf("%s", string->ptr);
 				sq_string_free(string);
 				NEXT_LOCAL() = SQ_NULL;
 				break;
 			}
-
-			case SQ_INT_TOSTRING: {
-				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_new_string(string);
-				break;
-			}
-
 			case SQ_INT_DUMP: {
 				value = NEXT_LOCAL();
 				sq_value_dump(value);
 				putchar('\n');
 				NEXT_LOCAL() = value;
+				break;
+			}
+
+			case SQ_INT_TOSTRING: {
+				string = sq_value_to_string(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_new_string(string);
 				break;
 			}
 
@@ -111,8 +113,14 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				break;
 			}
 			
+			case SQ_INT_TOBOOLEAN: {
+				bool boolean = sq_value_to_boolean(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_new_boolean(boolean);
+				break;
+			}
+
 			case SQ_INT_SUBSTR: {
-				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				string = sq_value_to_string(NEXT_LOCAL());
 				sq_number start = sq_value_to_number(NEXT_LOCAL());
 				sq_number count = sq_value_to_number(NEXT_LOCAL());
 				struct sq_string *result =
@@ -123,8 +131,14 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			}
 
 			case SQ_INT_LENGTH: {
-				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				string = sq_value_to_string(NEXT_LOCAL());
 				NEXT_LOCAL() = sq_value_new_number(string->length);
+				break;
+			}
+
+			case SQ_INT_KINDOF: {
+				string = sq_string_new(strdup(sq_value_typename(NEXT_LOCAL())));
+				NEXT_LOCAL() = sq_value_new_string(string);
 				break;
 			}
 
@@ -152,10 +166,17 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			value = NEXT_LOCAL();
 			unsigned dst = NEXT_INDEX();
 
-			if (!sq_value_is_boolean(value))
-				die("can only jump on booleans");
+			if (!sq_value_to_boolean(value))
+				ip = dst;
 
-			if (!sq_value_as_boolean(value))
+			continue;
+		}
+
+		case SQ_OC_JMP_TRUE: {
+			value = NEXT_LOCAL();
+			unsigned dst = NEXT_INDEX();
+
+			if (sq_value_to_boolean(value))
 				ip = dst;
 
 			continue;
@@ -173,12 +194,12 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			if (sq_value_is_function(instance_value)) {
 				struct sq_function *fn = sq_value_as_function(instance_value);
 				if (argc != fn->argc)
-					die("argc mismatch (given %d, expected %d) for %s", argc, fn->argc, fn->name);
+					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
 				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
 			} else if (sq_value_is_struct(instance_value)) {
 				struct sq_struct *kind = sq_value_as_struct(instance_value);
 				if (argc != kind->nfields)
-					die("fieilds mismatch (given %d, expected %d) for %s", argc, kind->nfields, kind->name);
+					die("fields mismatch (given %d, expected %d) for struct '%s'", argc, kind->nfields, kind->name);
 				NEXT_LOCAL() = sq_value_new_instance(
 					sq_instance_new(kind, memdup(newargs, sizeof(sq_value[argc]))));
 			} else {
@@ -281,15 +302,16 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 	/*** Globals ***/
 
 		case SQ_OC_GLOAD:
-			value = (*function->globals)[NEXT_INDEX()];
+			value = function->program->globals[NEXT_INDEX()];
 			sq_value_clone(value);
 			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_GSTORE: {
-			sq_value *global = &(*function->globals)[NEXT_INDEX()];
 			value = NEXT_LOCAL();
-			*global = value;
+			function->program->globals[NEXT_INDEX()] = value;
+			NEXT_LOCAL() = value;
+			sq_value_clone(value);
 			sq_value_clone(value);
 			continue;
 		}

@@ -136,3 +136,4 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs);
 
 struct sq_string *sq_value_to_string(sq_value value);
 sq_number sq_value_to_number(sq_value value);
+bool sq_value_to_boolean(sq_value value);

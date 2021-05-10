@@ -1,6 +1,7 @@
 #pragma once
 #include "value.h"
 #include "bytecode.h"
+#include "program.h"
 #define MAX_ARGC 255
 
 struct sq_function {
@@ -8,7 +9,8 @@ struct sq_function {
 	int refcount; // negative indicates a global function.
 
 	unsigned argc, nlocals, nconsts;
-	sq_value *consts, **globals;
+	sq_value *consts;
+	struct sq_program *program;
 	union sq_bytecode *bytecode;
 };
 

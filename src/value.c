@@ -92,12 +92,12 @@ void sq_value_free(sq_value value) {
 
 const char *sq_value_typename(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TBOOLEAN: return "<boolean>";
-	case SQ_TNULL: return "<null>";
-	case SQ_TNUMBER: return "<number>";
-	case SQ_TSTRING: return "<string>";
-	case SQ_TINSTANCE: return AS_INSTANCE(value)->kind->name;
-	case SQ_TFUNCTION: return "<function>";
+	case SQ_TBOOLEAN: return "boolean";
+	case SQ_TNULL: return "null";
+	case SQ_TNUMBER: return "number";
+	case SQ_TSTRING: return "string";
+	case SQ_TINSTANCE: return "object";
+	case SQ_TFUNCTION: return "function";
 	default: die("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
@@ -280,6 +280,30 @@ sq_number sq_value_to_number(sq_value value) {
 	case SQ_TINSTANCE:
 	case SQ_TFUNCTION:
 		die("cannot convert %s to a number", TYPENAME(value));
+
+	default:
+		bug("<UNDEFINED: %lld>", value);
+	}
+}
+
+bool sq_value_to_boolean(sq_value value) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TBOOLEAN:
+		return value;
+
+	case SQ_TNULL:
+		return SQ_FALSE;
+
+	case SQ_TNUMBER:
+		return AS_NUMBER(value) ? SQ_TRUE : SQ_FALSE;
+
+	case SQ_TSTRING:
+		return *AS_STR(value) ? SQ_TRUE : SQ_FALSE;
+
+	case SQ_TSTRUCT:
+	case SQ_TINSTANCE:
+	case SQ_TFUNCTION:
+		die("cannot convert %s to a boolean", TYPENAME(value));
 
 	default:
 		bug("<UNDEFINED: %lld>", value);

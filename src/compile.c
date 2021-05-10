@@ -13,9 +13,14 @@ struct var {
 	unsigned index;
 };
 
+struct global {
+	char *name;
+	sq_value value;
+};
+
 struct {
 	unsigned len, cap;
-	struct var *vars;
+	struct global *values;
 } globals;
 
 struct sq_code {
@@ -54,17 +59,37 @@ static unsigned new_constant(struct sq_code *code, sq_value value) {
 	code->consts[code->constlen++] = value;
 	return code->constlen - 1;
 }
+
 static unsigned next_local(struct sq_code *code) {
 	return code->nlocals++;
 }
 
+static unsigned declare_global(char *name, sq_value value) {
+	for (unsigned i = 0; i < globals.len; ++i) {
+		if (strcmp(globals.values[i].name, name))
+			continue;
+		if (value == SQ_NULL) return i; // we already have it defined.
+		if (globals.values[i].value != SQ_NULL) die("attempted to redefine '%s'", name);
+		globals.values[i].value = value;
+		return i;
+	}
+
+	if (globals.len == globals.cap)
+		globals.values = xrealloc(globals.values, sizeof(struct global[globals.cap*=2]));
+		// printf("global: %s\n", name);
+
+	globals.values[globals.len].name = name;
+	globals.values[globals.len].value = value;
+	return globals.len++;
+}
+
 // static unsigned new_global(struct sq_code *code, char *name, sq_value value) {
 // 	for (unsigned i = 0; i < globals.len; ++i) {
-// 		if (!strcmp(globals.vars[i].name, name)) {
-// 			globals.vars[i]
+// 		if (!strcmp(globals.values[i].name, name)) {
+// 			globals.values[i]
 // 		}
 // 	}
-// 	RESIZE(globals.len, globals.cap, globals.vars, struct var);
+// 	RESIZE(globals.len, globals.cap, globals.values, struct var);
 
 	// prin1tf("consts[%d]=", code->constlen); sq_value_dump(value); puts("");
 // 	code->consts[code->constlen++] = value;
@@ -80,17 +105,33 @@ static int new_variable(struct sq_code *code, char *var) {
 	}
 
 	for (unsigned i = 0; i < globals.len; ++i) {
-		if (!(strcmp(var, globals.vars[i].name))) {
+		if (!(strcmp(var, globals.values[i].name))) {
 			free(var);
 			return ~i;
 		}
 	}
 
-	// printf("variables[%d]=%s\n", code->varlen, var);
-
-
 	RESIZE(varcap, varlen, variables, struct var);
 	code->variables[code->varlen].name = var;
+	return code->variables[code->varlen++].index = next_local(code);
+}
+
+static unsigned load_variable(struct sq_code *code, char *name) {
+	for (unsigned i = 0; i < code->varlen; ++i)
+		if (!(strcmp(name, code->variables[i].name)))
+			return i; // do nothing, it's a local variable.
+
+	for (unsigned i = 0; i < globals.len; ++i) {
+		if (!(strcmp(name, globals.values[i].name))) {
+			set_opcode(code, SQ_OC_GLOAD);
+			set_index(code, i);
+			set_index(code, i = next_local(code));
+			return i;
+		}
+	}
+
+	RESIZE(varcap, varlen, variables, struct var);
+	code->variables[code->varlen].name = name;
 	return code->variables[code->varlen++].index = next_local(code);
 }
 
@@ -101,7 +142,7 @@ static void compile_struct(struct sq_code *code, struct struct_declaration *sdec
 	(void) code; (void) sdecl;
 
 	struct sq_struct *struct_ = xmalloc(sizeof(struct sq_struct));
-	struct_->refcount = 1;
+	struct_->refcount = -1; // todo: free
 	struct_->nfields = sdecl->nfields;
 	struct_->fields = sdecl->fields;
 	struct_->name = sdecl->name;
@@ -117,12 +158,9 @@ static struct sq_function *
 compile_function(struct func_declaration *fndecl);
 
 static void compile_func(struct sq_code *code, struct func_declaration *fdecl) {
+	unsigned index = declare_global(fdecl->name, SQ_NULL);
 	struct sq_function *function = compile_function(fdecl);
-	unsigned idx = new_constant(code, sq_value_new_function(function));
-
-	set_opcode(code, SQ_OC_CLOAD);
-	set_index(code, idx);
-	set_index(code, new_variable(code, strdup(function->name)));
+	globals.values[index].value = sq_value_new_function(function);
 }
 
 static void compile_if(struct sq_code *code, struct if_statement *ifstmt) {
@@ -184,6 +222,11 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 	switch (primary->kind) {
 	case SQ_PS_PPAREN:
 		return compile_expr(code, primary->expr);
+
+	case SQ_PS_PLAMBDA:
+		set_opcode(code, SQ_OC_CLOAD);
+		set_index(code, new_constant(code, sq_value_new_function(compile_function(primary->lambda))));
+		return set_index(code, next_local(code));
 
 	case SQ_PS_PNUMBER:
 		set_opcode(code, SQ_OC_CLOAD);
@@ -376,95 +419,85 @@ static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
 	}
 }
 
+static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_) {
+	unsigned lhs, rhs, result, *dst;
+
+	switch (bool_->kind) {
+	case SQ_PS_BAND:
+		lhs = compile_eql(code, bool_->lhs);
+
+		set_opcode(code, SQ_OC_JMP_FALSE);
+		set_index(code, lhs);
+		dst = &code->bytecode[code->codelen].index;
+		set_index(code, 0);
+
+		rhs = compile_bool(code, bool_->rhs);
+		set_opcode(code, SQ_OC_MOV);
+		set_index(code, rhs);
+		set_index(code, lhs);
+		*dst = code->codelen;
+		return result;
+
+	case SQ_PS_BOR:
+		lhs = compile_eql(code, bool_->lhs);
+
+		set_opcode(code, SQ_OC_JMP_TRUE);
+		set_index(code, lhs);
+		dst = &code->bytecode[code->codelen].index;
+		set_index(code, 0);
+
+		rhs = compile_bool(code, bool_->rhs);
+		set_opcode(code, SQ_OC_MOV);
+		set_index(code, rhs);
+		set_index(code, lhs);
+		*dst = code->codelen;
+		return result;
+
+	case SQ_PS_BEQL:
+		return compile_eql(code, bool_->lhs);
+
+	default:
+		bug("unknown bool kind '%d'", bool_->kind);
+	}
+}
+
 static unsigned compile_function_call(struct sq_code *code, struct function_call *fncall) {
-	unsigned index;
+	unsigned args[fncall->arglen];
 
 	if (fncall->func->field)
 		die("doesnt support calling fields yet");
 
-	if (!strcmp(fncall->func->name, "print")) {
-		if (fncall->arglen != 1)
-			die("only one arg for print");
-		index = compile_expr(code, fncall->args[0]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_PRINT);
-		set_index(code, index);
-		return set_index(code, next_local(code));
-	}
-
-	if (!strcmp(fncall->func->name, "number")) {
-		if (fncall->arglen != 1)
-			die("only one arg for number");
-		index = compile_expr(code, fncall->args[0]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_TONUMBER);
-		set_index(code, index);
-		return set_index(code, next_local(code));
-	}
-
-	if (!strcmp(fncall->func->name, "string")) {
-		if (fncall->arglen != 1)
-			die("only one arg for string()");
-		index = compile_expr(code, fncall->args[0]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_TOSTRING);
-		set_index(code, index);
-		return set_index(code, next_local(code));
-	}
-
-	if (!strcmp(fncall->func->name, "dump")) {
-		if (fncall->arglen != 1)
-			die("only one arg for dump()");
-		index = compile_expr(code, fncall->args[0]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_DUMP);
-		set_index(code, index);
-		return set_index(code, next_local(code));
-	}
-
-	if (!strcmp(fncall->func->name, "length")) {
-		if (fncall->arglen != 1)
-			die("only one arg for length()");
-		index = compile_expr(code, fncall->args[0]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_LENGTH);
-		set_index(code, index);
-		return set_index(code, next_local(code));
-	}
-
-	if (!strcmp(fncall->func->name, "substr")) {
-		if (fncall->arglen != 3)
-			die("only three args for substr()");
-		unsigned idx1 = compile_expr(code, fncall->args[0]);
-		unsigned idx2 = compile_expr(code, fncall->args[1]);
-		unsigned idx3 = compile_expr(code, fncall->args[2]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_SUBSTR);
-		set_index(code, idx1);
-		set_index(code, idx2);
-		set_index(code, idx3);
-		return set_index(code, next_local(code));
-	}
-
-	if (!strcmp(fncall->func->name, "exit")) {
-		if (fncall->arglen != 1)
-			die("only one arg for exit()");
-		index = compile_expr(code, fncall->args[0]);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_EXIT);
-		set_index(code, index);
-		return set_index(code, next_local(code));
-	}
-
-	unsigned args[MAX_ARGC];
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expr(code, fncall->args[i]);
 
+#define BUILTIN_FN(name_, int_, argc_) \
+	if (!strcmp(fncall->func->name, name_)) { \
+		if (fncall->arglen != argc_) \
+			die("only %d arg(s) allowed for '%s'", argc_, name_); \
+		set_opcode(code, SQ_OC_INT); \
+		set_index(code, int_); \
+		goto arguments; \
+	}
+
+
+	BUILTIN_FN("print", SQ_INT_PRINT, 1);
+	BUILTIN_FN("number", SQ_INT_TONUMBER, 1);
+	BUILTIN_FN("string", SQ_INT_TOSTRING, 1);
+	BUILTIN_FN("boolean", SQ_INT_TOBOOLEAN, 1);
+	BUILTIN_FN("dump", SQ_INT_DUMP, 1);
+	BUILTIN_FN("length", SQ_INT_LENGTH, 1);
+	BUILTIN_FN("substr", SQ_INT_SUBSTR, 3);
+	BUILTIN_FN("exit", SQ_INT_EXIT, 1);
+	BUILTIN_FN("kindof", SQ_INT_KINDOF, 1);
+
+	unsigned var = load_variable(code, fncall->func->name);
 	set_opcode(code, SQ_OC_CALL);
-	set_index(code, new_variable(code, fncall->func->name));
+	set_index(code, var);
 	set_index(code, fncall->arglen);
-	for (unsigned i = 0; i < fncall->arglen; ++i)
-		set_index(code, args[i]);
+
+arguments:
+
+	for (unsigned i = 0; i < fncall->arglen; ++i) set_index(code, args[i]);
 
 	return set_index(code, next_local(code));
 
@@ -487,15 +520,15 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 			return set_index(code, variable);
 		} else {
 			set_opcode(code, SQ_OC_GSTORE);
-			set_index(code, ~variable);
 			set_index(code, index);
+			set_index(code, ~variable);
 			return set_index(code, next_local(code));
 		}
 	}
 
 	case SQ_PS_EMATH:
 
-		return compile_eql(code, expr->math);
+		return compile_bool(code, expr->math);
 
 	default:
 		bug("unknown expr kind '%d'", expr->kind);
@@ -506,8 +539,8 @@ static void compile_statements(struct sq_code *code, struct statements *stmts) {
 	struct statement *stmt, **stmtptr = stmts->stmts;
 
 	while ((stmt = *stmtptr++)) {
-
 		switch (stmt->kind) {
+		case SQ_PS_SGLOBAL: declare_global(stmt->gdecl, SQ_NULL); break;
 		case SQ_PS_SSTRUCT: compile_struct(code, stmt->sdecl); break;
 		case SQ_PS_SFUNC: compile_func(code, stmt->fdecl); break;
 		case SQ_PS_SIF: compile_if(code, stmt->ifstmt); break;
@@ -538,9 +571,6 @@ compile_function(struct func_declaration *fndecl) {
 	for (unsigned i = 0; i < fndecl->nargs; ++i) {
 		code.variables[i].name = fndecl->args[i];
 		code.variables[i].index = next_local(&code);
-		// set_opcode(&code, SQ_OC_MOV);
-		// set_index(&code, i);
-		// set_index(&code, code.variables[i].index = next_local(&code));
 	}
 
 	compile_statements(&code, fndecl->body);
@@ -549,21 +579,21 @@ compile_function(struct func_declaration *fndecl) {
 
 	struct sq_function *fn = xmalloc(sizeof(struct sq_function));
 
-	fn->refcount = 1;
+	fn->refcount = -1; // todo: refcount
 	fn->name = fndecl->name;
 	fn->argc = fndecl->nargs;
 	fn->bytecode = code.bytecode;
 	fn->consts = code.consts;
 	fn->nconsts = code.constlen;
 	fn->nlocals = code.nlocals;
-	fn->globals = 0; // todo
+	fn->program = program;
 
 	return fn;
 }
 
 struct sq_program *sq_program_compile(const char *stream, unsigned argc, char **argv) {
-	globals.len = globals.cap = 0;
-	globals.vars = xmalloc(sizeof(struct var[globals.cap = 16]));
+	globals.len = 0;
+	globals.values = xmalloc(sizeof(struct var[globals.cap = 16]));
 
 	program = xmalloc(sizeof(struct sq_program));
 	program->nglobals = 0;
@@ -579,6 +609,15 @@ struct sq_program *sq_program_compile(const char *stream, unsigned argc, char **
 	};
 
 	program->main = compile_function(&maindecl);
+
+	program->nglobals = globals.len;
+	program->globals = xmalloc(sizeof(sq_value [globals.len]));
+	for (unsigned i = 0; i < program->nglobals; ++i) {
+		// printf("globals[%s]=", globals.values[i].name);
+		// sq_value_dump(globals.values[i].value);
+		// putchar('\n');
+		program->globals[i] = globals.values[i].value;
+	}
 
 	return program;
 }

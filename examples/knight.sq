@@ -1,4 +1,79 @@
-struct Value { kind, data }
+print( 3 && 4)
 
-func newint() {
- }
+# func die(message) { print(message + "\n"); exit(1) }
+# func assert(cond, message) { if (!cond) { die(message) } }
+# 
+# func boolean(value) {
+# 	if kindof(value) == "string" { return value != "" }
+# 	if kindof(value) == "number" { return value != 0 }
+# 	if kindof(value) == "boolean" { return value }
+# 	if kindof(value) == "null"    { return false }
+# 	die("cannot convert '" + kindof(value) + "' to a boolean")
+# }
+# 
+# global stream;
+# 
+# func peek() {
+# 	return substr(stream, 0, 1)
+# }
+# 
+# func take() {
+# 	result = peek();
+# 	stream = substr(stream, 1, length(stream) - 1);
+# 	return result
+# }
+# 
+# func takeWhile(cond) {
+# 	result = "";
+# 	while cond(peek()) { result = result + take(); }
+# 	return result
+# }
+# 
+# func isDigit(chr) { return string(number(chr)) == chr }
+# #func isDigit(chr) {
+# #	return string(number(chr)) == chr && 3;
+# #}
+# 
+# func isWhitespace(char) {
+# 	if char == ' '  { return true }
+# 	if char == '\n' { return true }
+# 	if char == '\t' { return true }
+# 	if char == '\r' { return true }
+# 	if char == '\v' { return true }
+# 	if char == '\f' { return true }
+# 	if char == '('  { return true }
+# 	if char == ')'  { return true }
+# 	if char == '['  { return true }
+# 	if char == ']'  { return true }
+# 	if char == '{'  { return true }
+# 	if char == '}'  { return true }
+# 	if char == ':'  { return true }
+# 	return false
+# };
+# 
+# func stripWhitespace () {
+# 	while true {
+# 		if takeWhile(isWhitespace) == "" {
+# 			if peek() != '#' {
+# 				return
+# 			}
+# 
+# 			while take() != '\n' { }
+# 		}
+# 	}
+# }
+# 
+# func parseNumber() {
+# 	return number(takeWhile())
+# }
+# 
+# func parse() {
+# 	stripWhitespace();
+# 	head = peek();
+# 	if isDoigit()
+# }
+# 
+# stream = "  #\n12ab";
+# stripWhitespace();
+# dump(parseNumber());
+# dump(stream);

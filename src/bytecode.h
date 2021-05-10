@@ -4,10 +4,12 @@ enum sq_interrupts {
 	SQ_INT_PRINT,
 	SQ_INT_TONUMBER,
 	SQ_INT_TOSTRING,
+	SQ_INT_TOBOOLEAN,
 	SQ_INT_DUMP,
 	SQ_INT_SUBSTR,
 	SQ_INT_LENGTH,
 	SQ_INT_EXIT,
+	SQ_INT_KINDOF,
 };
 
 enum sq_opcode {
@@ -19,8 +21,9 @@ enum sq_opcode {
 
 	SQ_OC_JMP          = 0x10,
 	SQ_OC_JMP_FALSE    = 0x11,
-	SQ_OC_CALL         = 0x12,
-	SQ_OC_RETURN       = 0x13,
+	SQ_OC_JMP_TRUE     = 0x12,
+	SQ_OC_CALL         = 0x13,
+	SQ_OC_RETURN       = 0x14,
 
 	SQ_OC_EQL          = 0x20,
 	SQ_OC_NEQ          = 0x21,

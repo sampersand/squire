@@ -100,6 +100,7 @@ static struct function_call *parse_func_call(struct variable *func) {
 	return fncall;
 }
 
+static struct func_declaration *parse_func_declaration();
 static struct primary *parse_primary() {
 	struct primary primary;
 
@@ -141,6 +142,12 @@ static struct primary *parse_primary() {
 			primary.kind = SQ_PS_PVARIABLE;
 			primary.variable = var;
 		}
+		break;
+	}
+	case SQ_TK_FUNC: {
+		untake();
+		primary.kind = SQ_PS_PLAMBDA;
+		primary.lambda = parse_func_declaration();
 		break;
 	}
 	default:
@@ -279,6 +286,32 @@ static struct eql_expression *parse_eql_expression() {
 	return memdup(&eql, sizeof(struct eql_expression));
 };
 
+static struct bool_expression *parse_bool_expression() {
+	struct bool_expression eql;
+
+	if (!(eql.lhs = parse_eql_expression()))
+		return NULL;
+
+	switch (take().kind) {
+	case SQ_TK_AND:
+		eql.kind = SQ_PS_BAND;
+		break;
+	case SQ_TK_OR:
+		eql.kind = SQ_PS_BOR;
+		break;
+	default:
+		eql.kind = SQ_PS_BEQL;
+		untake();
+	}
+
+	if (eql.kind != SQ_PS_BEQL) {
+		if (!(eql.rhs = parse_bool_expression()))
+			die("missing right-hand side for boolean-like operation");
+	}
+
+	return memdup(&eql, sizeof(struct bool_expression));
+};
+
 static struct assignment *parse_assignment(struct variable *var) {
 	GUARD(SQ_TK_ASSIGN);
 
@@ -293,18 +326,19 @@ static struct expression *parse_expression() {
 	struct expression expr;
 	expr.kind = SQ_PS_EMATH;
 
-	if (!(expr.math = parse_eql_expression()))
+	if (!(expr.math = parse_bool_expression()))
 		return NULL;
 
-	if (expr.math->kind != SQ_PS_ECMP
-		|| expr.math->lhs->kind != SQ_PS_CADD
-		|| expr.math->lhs->lhs->kind != SQ_PS_AMUL
-		|| expr.math->lhs->lhs->lhs->kind != SQ_PS_MUNARY
-		|| expr.math->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
-		|| expr.math->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
+	if (expr.math->kind != SQ_PS_BEQL
+		|| expr.math->lhs->kind != SQ_PS_ECMP
+		|| expr.math->lhs->lhs->kind != SQ_PS_CADD
+		|| expr.math->lhs->lhs->lhs->kind != SQ_PS_AMUL
+		|| expr.math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
+		|| expr.math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
+		|| expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
 	) goto done;
 
-	struct variable *var = expr.math->lhs->lhs->lhs->lhs->rhs->variable;
+	struct variable *var = expr.math->lhs->lhs->lhs->lhs->lhs->rhs->variable;
 	take();
 	untake();
 
@@ -316,6 +350,12 @@ static struct expression *parse_expression() {
 done:
 
 	return memdup(&expr, sizeof(struct expression));
+}
+
+static char *parse_global_declaration() {
+	GUARD(SQ_TK_GLOBAL);
+	EXPECT(SQ_TK_IDENT, "expected an identifier after 'global'");
+	return last.identifier;
 }
 
 static struct struct_declaration *parse_struct_declaration() {
@@ -414,7 +454,8 @@ static struct return_statement *parse_return_statement() {
 
 static struct statement *parse_statement() {
 	struct statement stmt;
-	if ((stmt.sdecl = parse_struct_declaration())) stmt.kind = SQ_PS_SSTRUCT;
+	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
+	else if ((stmt.sdecl = parse_struct_declaration())) stmt.kind = SQ_PS_SSTRUCT;
 	else if ((stmt.fdecl = parse_func_declaration())) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;

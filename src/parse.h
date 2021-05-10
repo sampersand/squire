@@ -15,12 +15,14 @@ struct statement {
 	enum {
 		SQ_PS_SSTRUCT,
 		SQ_PS_SFUNC,
+		SQ_PS_SGLOBAL,
 		SQ_PS_SIF,
 		SQ_PS_SWHILE,
 		SQ_PS_SRETURN,
 		SQ_PS_SEXPR,
 	} kind;
 	union {
+		char *gdecl;
 		struct struct_declaration *sdecl;
 		struct func_declaration *fdecl;
 		struct if_statement *ifstmt;
@@ -64,7 +66,7 @@ struct expression {
 	union {
 		struct function_call *fncall;
 		struct assignment *asgn;
-		struct eql_expression *math;
+		struct bool_expression *math;
 	};
 };
 
@@ -82,6 +84,12 @@ struct assignment {
 struct variable {
 	char *name;
 	struct variable *field;
+};
+
+struct bool_expression {
+	enum { SQ_PS_BEQL, SQ_PS_BAND, SQ_PS_BOR } kind;
+	struct eql_expression *lhs;
+	struct bool_expression *rhs;
 };
 
 struct eql_expression {
@@ -116,6 +124,7 @@ struct unary_expression {
 struct primary {
 	enum {
 		SQ_PS_PPAREN,
+		SQ_PS_PLAMBDA,
 		SQ_PS_PNUMBER,
 		SQ_PS_PSTRING,
 		SQ_PS_PBOOLEAN,
@@ -124,6 +133,7 @@ struct primary {
 	} kind;
 	union {
 		struct expression *expr;
+		struct func_declaration *lambda;
 		sq_number number;
 		struct sq_string *string;
 		bool boolean;
