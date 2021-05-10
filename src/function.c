@@ -5,6 +5,7 @@
 #include "struct.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 void sq_function_clone(struct sq_function *function) {
 	assert(function->refcount);
@@ -110,6 +111,26 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				break;
 			}
 			
+			case SQ_INT_SUBSTR: {
+				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				sq_number start = sq_value_to_number(NEXT_LOCAL());
+				sq_number count = sq_value_to_number(NEXT_LOCAL());
+				struct sq_string *result =
+					sq_string_new(strndup(string->ptr + start, count));
+				// sq_string_free(string);
+				NEXT_LOCAL() = sq_value_new_string(result);
+				break;
+			}
+
+			case SQ_INT_LENGTH: {
+				struct sq_string *string = sq_value_to_string(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_new_number(string->length);
+				break;
+			}
+
+			case SQ_INT_EXIT:
+				exit(sq_value_to_number(NEXT_LOCAL()));
+
 			default:
 				bug("unknown index: %d", idx);
 			}

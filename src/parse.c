@@ -431,7 +431,7 @@ static struct statements *parse_statements() {
 
 	bool endl = true;
 	while ((list[len] = parse_statement())) {
-		if (!endl) die("missing `;` between statements");
+		if (!endl && list[len-1]->kind == SQ_PS_SEXPR) die("missing `;` between statements");
 		if (++len == cap - 1)
 			list = xrealloc(list, sizeof(struct statement *[cap*=2]));
 

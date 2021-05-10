@@ -4,7 +4,10 @@ enum sq_interrupts {
 	SQ_INT_PRINT,
 	SQ_INT_TONUMBER,
 	SQ_INT_TOSTRING,
-	SQ_INT_DUMP
+	SQ_INT_DUMP,
+	SQ_INT_SUBSTR,
+	SQ_INT_LENGTH,
+	SQ_INT_EXIT,
 };
 
 enum sq_opcode {

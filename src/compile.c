@@ -3,6 +3,7 @@
 #include "shared.h"
 #include "parse.h"
 #include "struct.h"
+#include "string.h"
 #include <string.h>
 
 struct sq_program *program;
@@ -65,7 +66,7 @@ static unsigned next_local(struct sq_code *code) {
 // 	}
 // 	RESIZE(globals.len, globals.cap, globals.vars, struct var);
 
-	// printf("consts[%d]=", code->constlen); sq_value_dump(value); puts("");
+	// prin1tf("consts[%d]=", code->constlen); sq_value_dump(value); puts("");
 // 	code->consts[code->constlen++] = value;
 // 	return code->constlen - 1;
 // }
@@ -205,14 +206,28 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		return set_index(code, next_local(code));
 
 	case SQ_PS_PVARIABLE: {
-		if (primary->variable->field) die("doesnt support setting fields yet");
-		int index = new_variable(code, primary->variable->name);
+		struct variable *var = primary->variable;
+		int index;
+		unsigned ret;
+		index = new_variable(code, var->name);
 
-		if (0 <= index) return index; // ie it's alocal
-		// it's a global
-		set_opcode(code, SQ_OC_GLOAD);
-		set_index(code, ~index);
-		return set_index(code, next_local(code));
+		if (0 <= index) {
+			set_opcode(code, SQ_OC_MOV);
+			set_index(code, index);
+			set_index(code, ret = next_local(code));
+		} else {
+			set_opcode(code, SQ_OC_GLOAD);
+			set_index(code, ~index);
+			set_index(code, ret = next_local(code));
+		}
+
+		while ((var = var->field)) {
+			set_opcode(code, SQ_OC_ILOAD);
+			set_index(code, ret);
+			set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(var->name)))));
+			set_index(code, ret = next_local(code));
+		}
+		return ret;
 	}
 
 	default:
@@ -407,6 +422,40 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		return set_index(code, next_local(code));
 	}
 
+	if (!strcmp(fncall->func->name, "length")) {
+		if (fncall->arglen != 1)
+			die("only one arg for length()");
+		index = compile_expr(code, fncall->args[0]);
+		set_opcode(code, SQ_OC_INT);
+		set_index(code, SQ_INT_LENGTH);
+		set_index(code, index);
+		return set_index(code, next_local(code));
+	}
+
+	if (!strcmp(fncall->func->name, "substr")) {
+		if (fncall->arglen != 3)
+			die("only three args for substr()");
+		unsigned idx1 = compile_expr(code, fncall->args[0]);
+		unsigned idx2 = compile_expr(code, fncall->args[1]);
+		unsigned idx3 = compile_expr(code, fncall->args[2]);
+		set_opcode(code, SQ_OC_INT);
+		set_index(code, SQ_INT_SUBSTR);
+		set_index(code, idx1);
+		set_index(code, idx2);
+		set_index(code, idx3);
+		return set_index(code, next_local(code));
+	}
+
+	if (!strcmp(fncall->func->name, "exit")) {
+		if (fncall->arglen != 1)
+			die("only one arg for exit()");
+		index = compile_expr(code, fncall->args[0]);
+		set_opcode(code, SQ_OC_INT);
+		set_index(code, SQ_INT_EXIT);
+		set_index(code, index);
+		return set_index(code, next_local(code));
+	}
+
 	unsigned args[MAX_ARGC];
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expr(code, fncall->args[i]);
@@ -428,11 +477,10 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 	case SQ_PS_EFNCALL:
 		return compile_function_call(code, expr->fncall);
 
-	case SQ_PS_EASSIGN:
-		if (expr->asgn->var->field) die("doesnt support setting fields yet");
-
+	case SQ_PS_EASSIGN: {
 		index = compile_expr(code, expr->asgn->expr);
 		variable = new_variable(code, expr->asgn->var->name);
+
 		if (0 <= variable) {
 			set_opcode(code, SQ_OC_MOV);
 			set_index(code, index);
@@ -443,6 +491,7 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 			set_index(code, index);
 			return set_index(code, next_local(code));
 		}
+	}
 
 	case SQ_PS_EMATH:
 

@@ -1,12 +1,19 @@
-func fib(a, fib) {
-  if (a < 2) {
-    return a;
-  } else {
-    return fib(a - 1, fib) + fib(a - 2, fib);
-  }
-};
+struct person { name, age, fav_color }
 
-print(fib(10, fib));
+f.x = 3;
+func greet(person) {
+	print("Hello, " + person.name + ", aged " + string(person.age) + ".");
+
+	if (person.fav_color == "green") {
+		print(" Hey, you like green!");
+	}
+
+	print("\n");
+}
+
+me = person("samp", 123, "green");
+greet(me);
+
 # print("a" < "b");
 # 
 # n = 1;
