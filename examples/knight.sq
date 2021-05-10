@@ -1,0 +1,4 @@
+struct Value { kind, data }
+
+func newint() {
+ }

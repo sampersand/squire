@@ -281,13 +281,13 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 	/*** Globals ***/
 
 		case SQ_OC_GLOAD:
-			value = function->globals[NEXT_INDEX()];
+			value = (*function->globals)[NEXT_INDEX()];
 			sq_value_clone(value);
 			NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_GSTORE: {
-			sq_value *global = &function->globals[NEXT_INDEX()];
+			sq_value *global = &(*function->globals)[NEXT_INDEX()];
 			value = NEXT_LOCAL();
 			*global = value;
 			sq_value_clone(value);

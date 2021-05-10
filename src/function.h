@@ -8,7 +8,7 @@ struct sq_function {
 	int refcount; // negative indicates a global function.
 
 	unsigned argc, nlocals, nconsts;
-	sq_value *consts, *globals;
+	sq_value *consts, **globals;
 	union sq_bytecode *bytecode;
 };
 
