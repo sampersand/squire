@@ -1,33 +1,33 @@
-companion "utils.sq"
+import "utils.sq"
 
-miscellany Variable { name, value }
-miscellany VariableLinkedList { node, next }
+struct Variable { name, value }
+struct VariableLinkedList { node, next }
 
 journey new_variable(name) {
 	renowned variable_list
 	var = variable_list
 
-	given var == nothing {
+	if var == nothing {
 		variable_list = VariableLinkedList(Variable(name, nuthin), nuthin)
 		reward variable_list.node
 	}
 
 	whilst yay {
-		given name == var.node.name {
+		if name == var.node.name {
 			reward var.node
 		}
 
-		given var.next == nuthin {
+		if var.next == nuthin {
 			var.next = VariableLinkedList(Variable(name, nuthin), nuthin)
 			reward var.next.node
-		} otherwise {
-			var = var.next
 		}
+
+		var = var.next
 	}
 }
 
 journey run_variable(variable) {
-	given variable.value == nuthin {
+	if variable.value == nuthin {
 		die("undefined variable '" + variable.name + "'")
 	}
 

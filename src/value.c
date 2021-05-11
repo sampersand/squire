@@ -185,7 +185,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		*result->ptr = '\0';
 
 		for (unsigned i = 0; i < AS_NUMBER(rhs); ++i)
-			strcpy(result->ptr, AS_STR(lhs));
+			strcat(result->ptr, AS_STR(lhs));
 
 		return sq_value_new_string(result);
 	}

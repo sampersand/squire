@@ -435,7 +435,19 @@ static struct if_statement *parse_if_statement() {
 	if_stmt->iftrue = parse_brace_statements("if");
 
 	if (take().kind == SQ_TK_ELSE) {
-		if_stmt->iffalse = parse_brace_statements("else");
+		take();
+		untake();
+		if (last.kind == SQ_TK_IF) {
+			if_stmt->iffalse = xmalloc(sizeof(struct statements));
+			if_stmt->iffalse->len = 2;
+			if_stmt->iffalse->stmts = xmalloc(sizeof(struct statement *[2]));
+			if_stmt->iffalse->stmts[0] = xmalloc(sizeof(struct statement));
+			if_stmt->iffalse->stmts[0]->kind = SQ_PS_SIF;
+			if_stmt->iffalse->stmts[0]->ifstmt = parse_if_statement();
+			if_stmt->iffalse->stmts[1] = NULL;
+		} else {
+			if_stmt->iffalse = parse_brace_statements("else");
+		}
 	} else {
 		untake();
 		if_stmt->iffalse = NULL;

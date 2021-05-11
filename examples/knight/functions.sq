@@ -31,18 +31,48 @@ fn_output = Function('O', 1, journey(arg) {
 })
 
 fn_add = Function('+', 2, journey(lhs, rhs) {
-	if kindof(lhs = run(lhs)) == "string" {
+	kind = kindof(lhs = run(lhs))
+
+	if kind == "string" {
 		reward lhs + to_string(rhs)
-	} else {
+	} else if kind == "number" {
 		reward lhs + to_number(rhs)
+	} else {
+		die("cannot add to a '" + kind + "'")
 	}
 })
 
-fn_add = Function('+', 2, journey(lhs, rhs) {
-	if kindof(lhs = run(lhs)) == "string" {
-		reward lhs + to_string(rhs)
+fn_sub = Function('-', 2, journey(lhs, rhs) {
+	kind = kindof(lhs = run(lhs))
+
+	if kind == "number" {
+		reward lhs - to_number(rhs)
 	} else {
-		reward lhs + to_number(rhs)
+		die("cannot subtract from a '" + kind + "'")
+	}
+})
+
+fn_mul = Function('*', 2, journey(lhs, rhs) {
+	kind = kindof(lhs = run(lhs))
+
+	if kind == "string" {
+		reward lhs * to_number(rhs)
+	} else if kind == "number" {
+		reward lhs * to_number(rhs)
+	} else {
+		die("cannot multiply a '" + kind + "'")
+	}
+})
+
+fn_mul = Function('/', 2, journey(lhs, rhs) {
+	kind = kindof(lhs = run(lhs))
+
+	if kind != "number" {
+		die("cannot divide a '" + kind + "'")
+	} else if !(rhs = to_number(rhs)) {
+		die("cannot divide by zero")
+	} else {
+		reward lhs / rhs
 	}
 })
 

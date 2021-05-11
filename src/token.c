@@ -131,14 +131,19 @@ struct sq_token sq_next_token(const char **stream) {
 		return token;
 	}
 
+	if (!strncmp(*stream, "__END__", 7)) {
+		token.kind = SQ_TK_UNDEFINED;
+		return token;
+	}
+
 	CHECK_FOR_START_KW("struct", SQ_TK_STRUCT);
-	CHECK_FOR_START_KW("func", SQ_TK_FUNC);
+	CHECK_FOR_START_KW("journey", SQ_TK_FUNC);
 	CHECK_FOR_START_KW("global", SQ_TK_GLOBAL);
 	CHECK_FOR_START_KW("import", SQ_TK_IMPORT);
-	CHECK_FOR_START_KW("if", SQ_TK_IF);
 	CHECK_FOR_START_KW("whilst", SQ_TK_WHILE);
+	CHECK_FOR_START_KW("if", SQ_TK_IF);
 	CHECK_FOR_START_KW("else", SQ_TK_ELSE);
-	CHECK_FOR_START_KW("return", SQ_TK_RETURN);
+	CHECK_FOR_START_KW("reward", SQ_TK_RETURN);
 	CHECK_FOR_START_KW("true", SQ_TK_TRUE);
 	CHECK_FOR_START_KW("false", SQ_TK_FALSE);
 	CHECK_FOR_START_KW("null", SQ_TK_NULL);
