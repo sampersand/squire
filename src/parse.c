@@ -6,7 +6,6 @@
 #include "struct.h"
 #include <string.h>
 
-struct sq_program *program;
 const char *stream;
 struct sq_token last;
 bool rewound;
@@ -244,8 +243,14 @@ static struct cmp_expression *parse_cmp_expression() {
 	case SQ_TK_LTH:
 		cmp.kind = SQ_PS_CLTH;
 		break;
+	case SQ_TK_LEQ:
+		cmp.kind = SQ_PS_CLEQ;
+		break;
 	case SQ_TK_GTH:
 		cmp.kind = SQ_PS_CGTH;
+		break;
+	case SQ_TK_GEQ:
+		cmp.kind = SQ_PS_CGEQ;
 		break;
 	default:
 		cmp.kind = SQ_PS_CADD;
@@ -358,6 +363,12 @@ static char *parse_global_declaration() {
 	return last.identifier;
 }
 
+static char *parse_import_declaration() {
+	GUARD(SQ_TK_IMPORT);
+	EXPECT(SQ_TK_STRING, "expected a string after 'import1'");
+	return last.string->ptr;
+}
+
 static struct struct_declaration *parse_struct_declaration() {
 	GUARD(SQ_TK_STRUCT);
 	struct struct_declaration *sdecl = xmalloc(sizeof(struct struct_declaration));
@@ -455,6 +466,7 @@ static struct return_statement *parse_return_statement() {
 static struct statement *parse_statement() {
 	struct statement stmt;
 	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
+	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
 	else if ((stmt.sdecl = parse_struct_declaration())) stmt.kind = SQ_PS_SSTRUCT;
 	else if ((stmt.fdecl = parse_func_declaration())) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
@@ -492,6 +504,7 @@ static struct statements *parse_statements() {
 
 struct statements *sq_parse_statements(const char *stream_) {
 	last.kind = SQ_TK_UNDEFINED;
+	rewound = false;
 	stream = stream_;
 	return parse_statements();
 }

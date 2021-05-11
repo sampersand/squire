@@ -125,8 +125,7 @@ const char *sq_value_typename(sq_value value);
 
 bool sq_value_not(sq_value arg);
 bool sq_value_eql(sq_value lhs, sq_value rhs);
-bool sq_value_lth(sq_value lhs, sq_value rhs);
-bool sq_value_gth(sq_value lhs, sq_value rhs);
+sq_number sq_value_cmp(sq_value lhs, sq_value rhs);
 sq_value sq_value_neg(sq_value arg);
 sq_value sq_value_add(sq_value lhs, sq_value rhs);
 sq_value sq_value_sub(sq_value lhs, sq_value rhs);

@@ -1,0 +1,43 @@
+import "utils.sq";
+
+#struct Value { kind, data }
+func to_number(value) {
+	kind = kindof(value);
+
+	if kind == Variable {
+		return to_number(run_variable(value))
+	}
+
+	if kind == Ast {
+		return to_number(run_ast(value))
+	}
+
+	return number(value)
+}
+
+# func new_number(data) {
+# 	assert(kindof(data) == "number", "bad number");
+# 	return data;
+# }
+# 
+# func new_string(data)  {
+# 	assert(kindof(data) == "string", "bad string");
+# 	return Value('S', data)
+# }
+# 
+# func new_boolean(data) {
+# 	assert(kindof(data) == "boolean", "bad boolean");
+# 	return Value('B', data)
+# }
+# 
+# func new_null() {
+# 	return Value('N', null)
+# }
+# 
+# func new_var(data) {
+# 	assert(kindof(data) == Variable, "bad var");
+# 	return Value('V', data)
+# }
+# 
+# func to_num(value)  { return number(value.data); }
+# 

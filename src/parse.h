@@ -14,6 +14,7 @@ struct program {
 struct statement {
 	enum {
 		SQ_PS_SSTRUCT,
+		SQ_PS_SIMPORT,
 		SQ_PS_SFUNC,
 		SQ_PS_SGLOBAL,
 		SQ_PS_SIF,
@@ -23,6 +24,7 @@ struct statement {
 	} kind;
 	union {
 		char *gdecl;
+		char *import;
 		struct struct_declaration *sdecl;
 		struct func_declaration *fdecl;
 		struct if_statement *ifstmt;
@@ -99,7 +101,7 @@ struct eql_expression {
 };
 
 struct cmp_expression {
-	enum { SQ_PS_CADD, SQ_PS_CLTH, SQ_PS_CGTH } kind;
+	enum { SQ_PS_CADD, SQ_PS_CLTH, SQ_PS_CLEQ, SQ_PS_CGTH, SQ_PS_CGEQ } kind;
 	struct add_expression *lhs;
 	struct cmp_expression *rhs;
 };

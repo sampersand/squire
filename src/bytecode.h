@@ -29,13 +29,15 @@ enum sq_opcode {
 	SQ_OC_NEQ          = 0x21,
 	SQ_OC_LTH          = 0x22,
 	SQ_OC_GTH          = 0x23,
-	SQ_OC_ADD          = 0x24,
-	SQ_OC_SUB          = 0x25,
-	SQ_OC_MUL          = 0x26,
-	SQ_OC_DIV          = 0x27,
-	SQ_OC_MOD          = 0x28,
-	SQ_OC_NOT          = 0x29,
-	SQ_OC_NEG          = 0x2a,
+	SQ_OC_LEQ          = 0x24,
+	SQ_OC_GEQ          = 0x25,
+	SQ_OC_ADD          = 0x26,
+	SQ_OC_SUB          = 0x27,
+	SQ_OC_MUL          = 0x28,
+	SQ_OC_DIV          = 0x29,
+	SQ_OC_MOD          = 0x2A,
+	SQ_OC_NOT          = 0x2B,
+	SQ_OC_NEG          = 0x2C,
 
 	SQ_OC_CLOAD        = 0x30, // load a constant
 

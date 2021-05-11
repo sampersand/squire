@@ -137,8 +137,11 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			}
 
 			case SQ_INT_KINDOF: {
-				string = sq_string_new(strdup(sq_value_typename(NEXT_LOCAL())));
-				NEXT_LOCAL() = sq_value_new_string(string);
+				value = NEXT_LOCAL();
+				if (sq_value_is_instance(value))
+					NEXT_LOCAL() = sq_value_new_struct(sq_value_as_instance(value)->kind);
+				else
+					NEXT_LOCAL() = sq_value_new_string(sq_string_new(strdup(sq_value_typename(value))));
 				break;
 			}
 
@@ -229,14 +232,26 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			continue;
 
 		case SQ_OC_LTH:
-			value = sq_value_new_boolean(sq_value_lth(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
+			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) < 0);
 			ip += 2;
 			NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_GTH:
-			value = sq_value_new_boolean(sq_value_gth(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
+			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) > 0);
+			ip += 2;
+			sq_value_clone(value);
+			NEXT_LOCAL() = value;
+			continue;
+		case SQ_OC_LEQ:
+			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) <= 0);
+			ip += 2;
+			sq_value_clone(value);
+			NEXT_LOCAL() = value;
+			continue;
+		case SQ_OC_GEQ:
+			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) >= 0);
 			ip += 2;
 			sq_value_clone(value);
 			NEXT_LOCAL() = value;
@@ -351,8 +366,8 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				die("unknown field '%s' for type '%s'", field, instance->kind->name);
 
 			value = NEXT_LOCAL();
-			*valueptr = value;
 			sq_value_clone(value);
+			NEXT_LOCAL() = *valueptr = value;
 			continue;
 		}
 

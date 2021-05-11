@@ -5,6 +5,7 @@
 #include "struct.h"
 #include "string.h"
 #include <string.h>
+#include <errno.h>
 
 struct sq_program *program;
 
@@ -54,6 +55,13 @@ static unsigned set_index(struct sq_code *code, sq_index index) {
 }
 
 static unsigned new_constant(struct sq_code *code, sq_value value) {
+	for (unsigned i = 0; i < code->constlen; ++i) {
+		if (sq_value_eql(code->consts[i], value)) {
+			sq_value_free(value);
+			return i;
+		}
+	}
+	
 	RESIZE(constcap, constlen, consts, sq_value);
 	// printf("consts[%d]=", code->constlen); sq_value_dump(value); puts("");
 	code->consts[code->constlen++] = value;
@@ -374,6 +382,13 @@ static unsigned compile_cmp(struct sq_code *code, struct cmp_expression *cmp) {
 		set_index(code, lhs);
 		set_index(code, rhs);
 		return set_index(code, next_local(code));
+	case SQ_PS_CLEQ:
+		lhs = compile_add(code, cmp->lhs);
+		rhs = compile_cmp(code, cmp->rhs);
+		set_opcode(code, SQ_OC_LEQ);
+		set_index(code, lhs);
+		set_index(code, rhs);
+		return set_index(code, next_local(code));
 
 	case SQ_PS_CGTH:
 		lhs = compile_add(code, cmp->lhs);
@@ -382,6 +397,14 @@ static unsigned compile_cmp(struct sq_code *code, struct cmp_expression *cmp) {
 		set_index(code, lhs);
 		set_index(code, rhs);
 		return set_index(code, next_local(code));
+	case SQ_PS_CGEQ:
+		lhs = compile_add(code, cmp->lhs);
+		rhs = compile_cmp(code, cmp->rhs);
+		set_opcode(code, SQ_OC_GEQ);
+		set_index(code, lhs);
+		set_index(code, rhs);
+		return set_index(code, next_local(code));
+
 
 	case SQ_PS_CADD:
 		return compile_add(code, cmp->lhs);
@@ -436,7 +459,7 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 		set_index(code, rhs);
 		set_index(code, lhs);
 		*dst = code->codelen;
-		return result;
+		return lhs;
 
 	case SQ_PS_BOR:
 		lhs = compile_eql(code, bool_->lhs);
@@ -451,7 +474,7 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 		set_index(code, rhs);
 		set_index(code, lhs);
 		*dst = code->codelen;
-		return result;
+		return lhs;
 
 	case SQ_PS_BEQL:
 		return compile_eql(code, bool_->lhs);
@@ -512,18 +535,58 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 
 	case SQ_PS_EASSIGN: {
 		index = compile_expr(code, expr->asgn->expr);
-		variable = new_variable(code, expr->asgn->var->name);
+		struct variable *var = expr->asgn->var;
+		variable = new_variable(code, var->name);
+		unsigned ret;
+
+		if (!var->field) {
+			if (0 <= variable) {
+				set_opcode(code, SQ_OC_MOV);
+				set_index(code, index);
+				return set_index(code, variable);
+			} else if (!var->field) {
+				set_opcode(code, SQ_OC_GSTORE);
+				set_index(code, index);
+				set_index(code, ~variable);
+				return set_index(code, next_local(code));
+			}
+		} 
 
 		if (0 <= variable) {
-			set_opcode(code, SQ_OC_MOV);
-			set_index(code, index);
-			return set_index(code, variable);
+			// do nothing, it's already loaded.
 		} else {
-			set_opcode(code, SQ_OC_GSTORE);
-			set_index(code, index);
+			set_opcode(code, SQ_OC_GLOAD);
 			set_index(code, ~variable);
-			return set_index(code, next_local(code));
+			set_index(code, variable = next_local(code));
 		}
+
+		if (var->field && var->field->field)
+			die("only one layer deep for assignment supported rn");
+
+		set_opcode(code, SQ_OC_ISTORE);
+		set_opcode(code, variable);
+		set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(var->field->name)))));
+		set_index(code, index);
+		return set_index(code, next_local(code));
+
+		// if (0 <= index) {
+		// 	set_opcode(code, SQ_OC_MOV);
+		// 	set_index(code, index);
+		// 	set_index(code, ret = next_local(code));
+		// } else {
+		// 	set_opcode(code, SQ_OC_GLOAD);
+		// 	set_index(code, ~index);
+		// 	set_index(code, ret = next_local(code));
+		// }
+
+		// while ((var = var->field)) {
+		// 	set_opcode(code, SQ_OC_ILOAD);
+		// 	set_index(code, ret);
+		// 	set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(var->name)))));
+		// 	set_index(code, ret = next_local(code));
+		// }
+		return ret;
+
 	}
 
 	case SQ_PS_EMATH:
@@ -535,12 +598,30 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr) {
 	}
 }
 
+static void compile_statements(struct sq_code *code, struct statements *stmts);
+static void compile_import(struct sq_code *code, char *import) {
+	FILE *stream = fopen(import, "r");
+	if (!stream) die("unable to open file: %s", strerror(errno));
+	if (fseek(stream, 0, SEEK_END)) die("unable to seek to end: %s", strerror(errno));
+	long length = ftell(stream);
+	if (fseek(stream, 0, SEEK_SET)) die("unable to seek to start: %s", strerror(errno));
+	char contents[length + 1];
+	contents[length] = '\0';
+	fread(contents, 1, length, stream);
+	if (ferror(stream)) die("unable to read contents: %s", strerror(errno));
+	if (fclose(stream) == EOF) die("unable to close stream: %s", strerror(errno));
+	struct statements *stmts = sq_parse_statements(contents);
+	if (!stmts) die("invalid syntax.");
+	compile_statements(code, stmts);
+}
+
 static void compile_statements(struct sq_code *code, struct statements *stmts) {
 	struct statement *stmt, **stmtptr = stmts->stmts;
 
 	while ((stmt = *stmtptr++)) {
 		switch (stmt->kind) {
 		case SQ_PS_SGLOBAL: declare_global(stmt->gdecl, SQ_NULL); break;
+		case SQ_PS_SIMPORT: compile_import(code, stmt->import); break;
 		case SQ_PS_SSTRUCT: compile_struct(code, stmt->sdecl); break;
 		case SQ_PS_SFUNC: compile_func(code, stmt->fdecl); break;
 		case SQ_PS_SIF: compile_if(code, stmt->ifstmt); break;
@@ -612,12 +693,8 @@ struct sq_program *sq_program_compile(const char *stream, unsigned argc, char **
 
 	program->nglobals = globals.len;
 	program->globals = xmalloc(sizeof(sq_value [globals.len]));
-	for (unsigned i = 0; i < program->nglobals; ++i) {
-		// printf("globals[%s]=", globals.values[i].name);
-		// sq_value_dump(globals.values[i].value);
-		// putchar('\n');
+	for (unsigned i = 0; i < program->nglobals; ++i)
 		program->globals[i] = globals.values[i].value;
-	}
 
 	return program;
 }

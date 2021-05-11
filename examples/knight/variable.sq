@@ -1,0 +1,16 @@
+struct Variable { name, value }
+
+func run_variable(variable) {
+	assert(kindof(variable) == Variable, "can only run variables");
+
+	if value == null {
+		die("undefined variable '" + variable.name + "'")
+	}
+}
+
+var = Variable("sam", null);
+
+var.value = 23;
+
+#print(var);
+print(var.value);

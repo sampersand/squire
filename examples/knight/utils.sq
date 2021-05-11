@@ -1,0 +1,14 @@
+func die(message) {
+	print(message + "\n");
+	exit(1)
+}
+
+func assert(cond, message) {
+	if !cond {
+		die(message)
+	}
+}
+# 
+# func verify(cond, message) {
+# 	if !cond {
+# 		die(message) } }

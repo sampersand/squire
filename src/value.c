@@ -98,15 +98,13 @@ const char *sq_value_typename(sq_value value) {
 	case SQ_TSTRING: return "string";
 	case SQ_TINSTANCE: return "object";
 	case SQ_TFUNCTION: return "function";
+	case SQ_TSTRUCT: return "struct";
 	default: die("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
 
 bool sq_value_not(sq_value arg) {
-	if (!sq_value_is_boolean(arg))
-		die("cannot logically negate '%s'", TYPENAME(arg));
-
-	return arg == SQ_FALSE;
+	return sq_value_to_boolean(arg) == SQ_FALSE;
 }
 
 bool sq_value_eql(sq_value lhs, sq_value rhs) {
@@ -118,31 +116,16 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 	return !strcmp(AS_STR(lhs), AS_STR(rhs));
 }
 
-bool sq_value_lth(sq_value lhs, sq_value rhs) {
+sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER:
 		if (!sq_value_is_number(rhs))
 			break;
-		return AS_NUMBER(lhs) < AS_NUMBER(rhs);
+		return AS_NUMBER(lhs) - AS_NUMBER(rhs);
 	case SQ_TSTRING:
 		if (!sq_value_is_string(rhs))
 			break;
-		return strcmp(AS_STR(lhs), AS_STR(rhs)) < 0;
-	}
-
-	die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
-}
-
-bool sq_value_gth(sq_value lhs, sq_value rhs) {
-	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER:
-		if (!sq_value_is_number(rhs))
-			break;
-		return AS_NUMBER(lhs) > AS_NUMBER(rhs);
-	case SQ_TSTRING:
-		if (!sq_value_is_string(rhs))
-			break;
-		return strcmp(AS_STR(lhs), AS_STR(rhs)) > 0;
+		return strcmp(AS_STR(lhs), AS_STR(rhs));
 	}
 
 	die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));

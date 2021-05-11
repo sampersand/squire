@@ -1,79 +1,114 @@
-print( 3 && 4)
+## MISC
+func die(message) { print(message + "\n"); exit(1) }
+func sanitycheck(cond, message) { if (!cond) { die(message) } }
+func verify(cond, message) { if (!cond) { die(message) } }
 
-# func die(message) { print(message + "\n"); exit(1) }
-# func assert(cond, message) { if (!cond) { die(message) } }
-# 
-# func boolean(value) {
-# 	if kindof(value) == "string" { return value != "" }
-# 	if kindof(value) == "number" { return value != 0 }
-# 	if kindof(value) == "boolean" { return value }
-# 	if kindof(value) == "null"    { return false }
-# 	die("cannot convert '" + kindof(value) + "' to a boolean")
-# }
-# 
-# global stream;
-# 
-# func peek() {
-# 	return substr(stream, 0, 1)
-# }
-# 
-# func take() {
-# 	result = peek();
-# 	stream = substr(stream, 1, length(stream) - 1);
-# 	return result
-# }
-# 
-# func takeWhile(cond) {
-# 	result = "";
-# 	while cond(peek()) { result = result + take(); }
-# 	return result
-# }
-# 
-# func isDigit(chr) { return string(number(chr)) == chr }
-# #func isDigit(chr) {
-# #	return string(number(chr)) == chr && 3;
-# #}
-# 
-# func isWhitespace(char) {
-# 	if char == ' '  { return true }
-# 	if char == '\n' { return true }
-# 	if char == '\t' { return true }
-# 	if char == '\r' { return true }
-# 	if char == '\v' { return true }
-# 	if char == '\f' { return true }
-# 	if char == '('  { return true }
-# 	if char == ')'  { return true }
-# 	if char == '['  { return true }
-# 	if char == ']'  { return true }
-# 	if char == '{'  { return true }
-# 	if char == '}'  { return true }
-# 	if char == ':'  { return true }
-# 	return false
-# };
-# 
-# func stripWhitespace () {
-# 	while true {
-# 		if takeWhile(isWhitespace) == "" {
-# 			if peek() != '#' {
-# 				return
-# 			}
-# 
-# 			while take() != '\n' { }
-# 		}
-# 	}
-# }
-# 
-# func parseNumber() {
-# 	return number(takeWhile())
-# }
-# 
-# func parse() {
-# 	stripWhitespace();
-# 	head = peek();
-# 	if isDoigit()
-# }
-# 
-# stream = "  #\n12ab";
-# stripWhitespace();
-# dump(parseNumber());
-# dump(stream);
+#############################
+##   Value and Functions   ##
+#############################
+
+struct Value { kind, data }
+
+func new_num(data)  { assert(kindof(data) == "number", "bad num");   return Value('N', data) }
+func new_str(data)  { assert(kindof(data) == "string", "bad str");   return Value('S', data) }
+func new_bool(data) { assert(kindof(data) == "boolean", "bad bool"); return Value('B', data) }
+func new_null()     {                                                return Value('N', null) }
+func new_var(data)  { assert                                               return Value('N', null) }
+func to_num(value)  { return number(value.data); }
+
+#
+######################
+###     PARSING     ##
+######################
+#
+#global stream;
+#
+#func peek() {
+#	return substr(stream, 0, 1)
+#}
+#
+#func take() {
+#	result = peek();
+#	stream = substr(stream, 1, length(stream) - 1);
+#	return result
+#}
+#
+#func takeWhile(cond) {
+#	result = "";
+#	while cond(peek()) { result = result + take(); }
+#	return result
+#}
+#
+#func isDigit(chr) { return '0' <= chr && chr <= '9' }
+#func isQuote(chr) { return chr == "'" || chr == '"' }
+#func isUpper(chr) { return ('A' <= chr && chr <= 'Z') || chr == '_' } # check for islower first
+#func isLower(chr) { return ('a' <= chr && chr <= 'z') || chr == '_' }
+#
+#func isWhitespace(chr) {
+#	return 
+#		chr == '\n' || chr == '\t' || chr == '\r' || chr == '\f' || 
+#		chr ==  ' ' || chr ==  '(' || chr ==  ')' || chr ==  '[' ||
+#		chr ==  ']' || chr ==  '{' || chr ==  '}' || chr == ':';
+#}
+#
+#func stripWhitespace () {
+#	while true {
+#		if takeWhile(isWhitespace) == "" {
+#			if peek() != '#' { return }
+#
+#			while take() != '\n' { }
+#		}
+#	}
+#}
+#
+#func parseNumber() {
+#	assert(isDigit(peek()), "start isn't a digit?");
+#
+#	return number(takeWhile(isDigit))
+#}
+#
+#func parseString(){
+#	global quote;
+#	quote = take();
+#	assert(isQuote(quote), "not a quote?");
+#	str = takeWhile(func (chr) { global quote; return chr != quote; });
+#	take();
+#	return str;
+#}
+#
+#func stripCommand() {
+#	takeWhile(isUpper)
+#}
+#
+#func parse() {
+#	stripWhitespace();
+	#
+#	if isDigit(head = peek()) {
+#		return parseNumber()
+#	}
+#
+#	if isLower(head) {
+#		return parseVariable()
+#	}
+#
+#	if isQuote(head) {
+#		return parseString()
+#	}
+#
+#	if head == 'T' || head == 'F' {
+#		stripCommand()
+#		return head == 'T'
+#	}
+#	if head == 'N' {
+#		return Null()
+#	}
+#	#@if isDigit()
+#}
+#
+#stream="  \"hello\" ";
+#dump(parse());
+#
+##stream = "  #\n12ab";
+##stripWhitespace();
+##dump(parseNumber());
+##dump(stream);

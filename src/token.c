@@ -134,6 +134,7 @@ struct sq_token sq_next_token(const char **stream) {
 	CHECK_FOR_START_KW("struct", SQ_TK_STRUCT);
 	CHECK_FOR_START_KW("func", SQ_TK_FUNC);
 	CHECK_FOR_START_KW("global", SQ_TK_GLOBAL);
+	CHECK_FOR_START_KW("import", SQ_TK_IMPORT);
 	CHECK_FOR_START_KW("if", SQ_TK_IF);
 	CHECK_FOR_START_KW("while", SQ_TK_WHILE);
 	CHECK_FOR_START_KW("else", SQ_TK_ELSE);
@@ -166,6 +167,8 @@ struct sq_token sq_next_token(const char **stream) {
 
 	CHECK_FOR_START("==", SQ_TK_EQL);
 	CHECK_FOR_START("!=", SQ_TK_NEQ);
+	CHECK_FOR_START("<=", SQ_TK_LEQ);
+	CHECK_FOR_START(">=", SQ_TK_GEQ);
 	CHECK_FOR_START("<", SQ_TK_LTH);
 	CHECK_FOR_START(">", SQ_TK_GTH);
 	CHECK_FOR_START("+", SQ_TK_ADD);
