@@ -148,6 +148,68 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			case SQ_INT_EXIT:
 				exit(sq_value_to_number(NEXT_LOCAL()));
 
+			case SQ_INT_SYSTEM: {
+				string = sq_value_to_string(NEXT_LOCAL());
+				char *str = string->ptr;
+				FILE *stream = popen(str, "r");
+
+				if (stream == NULL) die("unable to execute command '%s'.", str);
+
+				// sq_string_free(string);
+
+				size_t tmp;
+				size_t capacity = 2048;
+				size_t length = 0;
+				char *result = xmalloc(capacity);
+
+				// try to read the entire stream's stdout to `result`.
+				while (0 != (tmp = fread(result + length, 1, capacity - length, stream))) {
+					length += tmp;
+
+					if (length == capacity) {
+						capacity *= 2;
+						result = xrealloc(result, capacity);
+					}
+				}
+
+				// Abort if `stream` had an error.
+				if (ferror(stream)) die("unable to read command stream");
+
+				result = xrealloc(result, length + 1);
+				result[length] = '\0';
+
+				// Abort if we cant close stream.
+				if (pclose(stream) == -1)
+					die("unable to close command stream");
+
+				NEXT_LOCAL() = sq_value_new_string(sq_string_new(result));
+				break;
+			}
+
+			case SQ_INT_PROMPT: {
+				char *line = NULL;
+				size_t cap, length;
+
+				if ((length = getline(&line, &cap, stdin)) == -1) {
+					line = strdup("");
+					cap = 0;
+				}
+
+				if (length && line[length-1] == '\n') {
+					--length;
+					if (length && line[length-1] == '\r')
+						--length;
+					line[length] = '\0';
+				}
+
+				NEXT_LOCAL() = sq_value_new_string(sq_string_new(line));
+				break;
+			}
+
+			case SQ_INT_RANDOM:
+				NEXT_LOCAL() = sq_value_new_number(rand());
+				break;
+
 			default:
 				bug("unknown index: %d", idx);
 			}
@@ -206,7 +268,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				NEXT_LOCAL() = sq_value_new_instance(
 					sq_instance_new(kind, memdup(newargs, sizeof(sq_value[argc]))));
 			} else {
-				die("can only call funcs");
+				die("can only call funcs, not '%s'", sq_value_typename(instance_value));
 			}
 			continue;
 		}

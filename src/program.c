@@ -3,9 +3,12 @@
 #include "function.h"
 #include "shared.h"
 #include <string.h>
+#include <stdlib.h>
 
 void sq_program_run(struct sq_program *program) {
+	int x;
 	assert(program->main->argc == 0); // todo: allow for passing cmdline args
+	srand((int) &x);
 
 	sq_value_free(sq_function_run(program->main, 0, NULL));
 }

@@ -10,6 +10,9 @@ enum sq_interrupts {
 	SQ_INT_LENGTH,
 	SQ_INT_EXIT,
 	SQ_INT_KINDOF,
+	SQ_INT_SYSTEM,
+	SQ_INT_PROMPT,
+	SQ_INT_RANDOM
 };
 
 enum sq_opcode {

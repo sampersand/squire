@@ -127,18 +127,19 @@ static int new_variable(struct sq_code *code, char *var) {
 static unsigned load_variable(struct sq_code *code, char *name) {
 	for (unsigned i = 0; i < code->varlen; ++i)
 		if (!(strcmp(name, code->variables[i].name)))
-			return i; // do nothing, it's a local variable.
+			return code->variables[i].index; // do nothing, it's a local variable.
 
 	for (unsigned i = 0; i < globals.len; ++i) {
 		if (!(strcmp(name, globals.values[i].name))) {
+			// printf("gloals[%d]=%s\n", i, name);
 			set_opcode(code, SQ_OC_GLOAD);
 			set_index(code, i);
-			set_index(code, i = next_local(code));
-			return i;
+			return set_index(code, next_local(code));
 		}
 	}
 
 	RESIZE(varcap, varlen, variables, struct var);
+	// printf("variables[%d]=%s\n", code->varlen, name);
 	code->variables[code->varlen].name = name;
 	return code->variables[code->varlen++].index = next_local(code);
 }
@@ -147,7 +148,7 @@ static unsigned compile_expr(struct sq_code *code, struct expression *expr);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
 
 static void compile_struct(struct sq_code *code, struct struct_declaration *sdecl) {
-	(void) code; (void) sdecl;
+	(void) code;
 
 	struct sq_struct *struct_ = xmalloc(sizeof(struct sq_struct));
 	struct_->refcount = -1; // todo: free
@@ -155,10 +156,7 @@ static void compile_struct(struct sq_code *code, struct struct_declaration *sdec
 	struct_->fields = sdecl->fields;
 	struct_->name = sdecl->name;
 
-	unsigned idx = new_constant(code, sq_value_new_struct(struct_));
-	set_opcode(code, SQ_OC_CLOAD);
-	set_index(code, idx);
-	set_index(code, new_variable(code, strdup(struct_->name)));
+	globals.values[declare_global(sdecl->name, SQ_NULL)].value = sq_value_new_struct(struct_);
 
 }
 
@@ -490,6 +488,8 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	if (fncall->func->field)
 		die("doesnt support calling fields yet");
 
+	set_opcode(code, SQ_OC_NOOP);
+	set_opcode(code, SQ_OC_NOOP);
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expr(code, fncall->args[i]);
 
@@ -512,7 +512,11 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("substr", SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("exit", SQ_INT_EXIT, 1);
 	BUILTIN_FN("kindof", SQ_INT_KINDOF, 1);
+	BUILTIN_FN("system", SQ_INT_SYSTEM, 1);
+	BUILTIN_FN("prompt", SQ_INT_PROMPT, 0);
+	BUILTIN_FN("random", SQ_INT_RANDOM, 0);
 
+	set_opcode(code, SQ_OC_NOOP);
 	unsigned var = load_variable(code, fncall->func->name);
 	set_opcode(code, SQ_OC_CALL);
 	set_index(code, var);

@@ -1,16 +1,41 @@
-struct Variable { name, value }
+companion "utils.sq"
 
-func run_variable(variable) {
-	assert(kindof(variable) == Variable, "can only run variables");
+miscellany Variable { name, value }
+miscellany VariableLinkedList { node, next }
 
-	if value == null {
-		die("undefined variable '" + variable.name + "'")
+journey new_variable(name) {
+	renowned variable_list
+	var = variable_list
+
+	given var == nothing {
+		variable_list = VariableLinkedList(Variable(name, nuthin), nuthin)
+		reward variable_list.node
+	}
+
+	whilst yay {
+		given name == var.node.name {
+			reward var.node
+		}
+
+		given var.next == nuthin {
+			var.next = VariableLinkedList(Variable(name, nuthin), nuthin)
+			reward var.next.node
+		} otherwise {
+			var = var.next
+		}
 	}
 }
 
-var = Variable("sam", null);
+journey run_variable(variable) {
+	given variable.value == nuthin {
+		die("undefined variable '" + variable.name + "'")
+	}
 
-var.value = 23;
+	reward variable.value
+}
 
-#print(var);
-print(var.value);
+journey assign_variable(variable, value) {
+	variable.value = value
+}
+
+
