@@ -1,98 +1,115 @@
-import "variable.sq"
+#import "variable.sq"
+
 journey parse() {
 
 }
-
-struct Function { name, arity, fn }
-struct FunctionArgs { arg0, arg1, arg2, arg3 }
-journey run(arg) { reward arg; }
-
-journey to_string(arg) { reward string(run(arg)) }
-journey to_number(arg) { reward number(run(arg)) }
-journey to_boolean(arg) { reward boolean(run(arg)) }
-fn_prompt = Function('P', 0, journey() { reward prompt() })
-fn_random = Function('R', 0, journey() { reward random() })
-
-fn_eval   = Function('E', 1, journey(arg) { run(parse(to_string(arg))) })
-fn_block  = Function('B', 1, journey(arg) { reward arg })
-fn_run    = Function('C', 1, journey(arg) { reward run(run(arg)) })
-fn_system = Function('`', 1, journey(arg) { reward system(to_string(arg)) })
-fn_quit   = Function('Q', 1, journey(arg) { exit(to_number(arg)) })
-fn_not    = Function('!', 1, journey(arg) { reward !to_boolean(arg) })
-fn_length = Function('L', 1, journey(arg) { reward length(to_string(arg)) })
-fn_dump   = Function('D', 1, journey(arg) { reward dump(run(arg)) })
-fn_output = Function('O', 1, journey(arg) {
-	text = to_string(arg)
-	if text && substr(text, length(text) - 1, 1) == '\\' {
-		print(substr(text, 0, length(text) - 1));
-	} else {
-		print(text + "\n")
-	}
-})
-
-fn_add = Function('+', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
-
-	if kind == "string" {
-		reward lhs + to_string(rhs)
-	} else if kind == "number" {
-		reward lhs + to_number(rhs)
-	} else {
-		die("cannot add to a '" + kind + "'")
-	}
-})
-
-fn_sub = Function('-', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
-
-	if kind == "number" {
-		reward lhs - to_number(rhs)
-	} else {
-		die("cannot subtract from a '" + kind + "'")
-	}
-})
-
-fn_mul = Function('*', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
-
-	if kind == "string" {
-		reward lhs * to_number(rhs)
-	} else if kind == "number" {
-		reward lhs * to_number(rhs)
-	} else {
-		die("cannot multiply a '" + kind + "'")
-	}
-})
-
-fn_mul = Function('/', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
-
-	if kind != "number" {
-		die("cannot divide a '" + kind + "'")
-	} else if !(rhs = to_number(rhs)) {
-		die("cannot divide by zero")
-	} else {
-		reward lhs / rhs
-	}
-})
-
- #
- #	4.3.1 [`+`](#431-unchanged-coerce)  
- #	4.3.2 [`-`](#432--unchanged-number)  
- #	4.3.3 [`*`](#433-unchanged-coerce)  
- #	4.3.4 [`/`](#434-unchanged-number)  
- #	4.3.5 [`%`](#435-unchanged-number)  
- #	4.3.6 [`^`](#436-unchanged-number)  
- #	4.3.7 [`<`](#437-unchanged-coerce)  
- #	4.3.8 [`>`](#438-unchanged-coerce)  
- #	4.3.9 [`?`](#439-unchanged-unchanged)  
- #	4.3.10 [`&`](#4311-unchanged-unevaluated)  
- #	4.3.11 [`|`](#4310-unchanged-unevaluated)  
- #	4.3.12 [`;`](#4312-unchanged-unchanged)  
- #	4.3.13 [`=`](#4313-unevaluated-unchanged)  
- #	4.3.14 [`WHILE`](#4314-whileunevaluated-unevaluated)  
- #
- #	4.4.1 [`IF`](#441-ifboolean-unevaluated-unevaluated)  
- #	4.4.2 [`GET`](#442-getstring-number-number)  
- #
- #	4.5.1 [`SUBSTITUTE`](#451-substitutestring-number-number-string)  
+#
+#struct Function { name, arity, fn }
+#struct FunctionArgs { arg0, arg1, arg2, arg3 }
+#journey run(arg) { reward arg; }
+#
+#journey to_string(arg) { reward string(run(arg)) }
+#journey to_number(arg) { reward number(run(arg)) }
+#journey to_boolean(arg) { reward boolean(run(arg)) }
+#
+#fn_prompt = Function('P', 0, journey() { reward prompt() })
+#fn_random = Function('R', 0, journey() { reward random() })
+#
+#journey eval(arg) {
+#	reward run(parse(to_string(arg)))
+#}
+#
+#journey block(block) {
+#
+#}
+#
+#dump(block.name);
+#print(block.name)
+#
+#fn_eval   = Function('E', 1, journey(arg) { run(parse(to_string(arg))) })
+#fn_block  = Function('B', 1, journey(arg) { reward arg })
+#fn_run    = Function('C', 1, journey(arg) { reward run(run(arg)) })
+#fn_system = Function('`', 1, journey(arg) { reward system(to_string(arg)) })
+#fn_quit   = Function('Q', 1, journey(arg) { exit(to_number(arg)) })
+#fn_not    = Function('!', 1, journey(arg) { reward !to_boolean(arg) })
+#fn_length = Function('L', 1, journey(arg) { reward length(to_string(arg)) })
+#fn_dump   = Function('D', 1, journey(arg) { reward dump(run(arg)) })
+#fn_output = Function('O', 1, journey(arg) {
+#	text = to_string(arg)
+#	if text && substr(text, length(text) - 1, 1) == '\\' {
+#		print(substr(text, 0, length(text) - 1));
+#	} else {
+#		print(text + "\n")
+#	}
+#})
+#
+#fn_add = Function('+', 2, journey(lhs, rhs) {
+#	kind = kindof(lhs = run(lhs))
+#
+#	if kind == "string" {
+#		reward lhs + to_string(rhs)
+#	} else if kind == "number" {
+#		reward lhs + to_number(rhs)
+#	} else {
+#		die("cannot add to a '" + kind + "'")
+#	}
+#})
+#
+#fn_sub = Function('-', 2, journey(lhs, rhs) {
+#	kind = kindof(lhs = run(lhs))
+#
+#	if kind == "number" {
+#		reward lhs - to_number(rhs)
+#	} else {
+#		die("cannot subtract from a '" + kind + "'")
+#	}
+#})
+#
+#fn_mul = Function('*', 2, journey(lhs, rhs) {
+#	kind = kindof(lhs = run(lhs))
+#
+#	if kind == "string" {
+#		reward lhs * to_number(rhs)
+#	} else if kind == "number" {
+#		reward lhs * to_number(rhs)
+#	} else {
+#		die("cannot multiply a '" + kind + "'")
+#	}
+#})
+#
+#fn_div = Function('/', 2, journey(lhs, rhs) {
+#	kind = kindof(lhs = run(lhs))
+#
+#	if kind != "number" {
+#		die("cannot divide a '" + kind + "'")
+#	} else if !(rhs = to_number(rhs)) {
+#		die("cannot divide by zero")
+#	} else {
+#		reward lhs / rhs
+#	}
+#})
+#
+#journey foo() {
+#	dump(fn_div)
+#}
+#foo()
+# #
+# #	4.3.1 [`+`](#431-unchanged-coerce)  
+# #	4.3.2 [`-`](#432--unchanged-number)  
+# #	4.3.3 [`*`](#433-unchanged-coerce)  
+# #	4.3.4 [`/`](#434-unchanged-number)  
+# #	4.3.5 [`%`](#435-unchanged-number)  
+# #	4.3.6 [`^`](#436-unchanged-number)  
+# #	4.3.7 [`<`](#437-unchanged-coerce)  
+# #	4.3.8 [`>`](#438-unchanged-coerce)  
+# #	4.3.9 [`?`](#439-unchanged-unchanged)  
+# #	4.3.10 [`&`](#4311-unchanged-unevaluated)  
+# #	4.3.11 [`|`](#4310-unchanged-unevaluated)  
+# #	4.3.12 [`;`](#4312-unchanged-unchanged)  
+# #	4.3.13 [`=`](#4313-unevaluated-unchanged)  
+# #	4.3.14 [`WHILE`](#4314-whileunevaluated-unevaluated)  
+# #
+# #	4.4.1 [`IF`](#441-ifboolean-unevaluated-unevaluated)  
+# #	4.4.2 [`GET`](#442-getstring-number-number)  
+# #
+# #	4.5.1 [`SUBSTITUTE`](#451-substitutestring-number-number-string)  
