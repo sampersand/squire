@@ -357,10 +357,20 @@ done:
 	return memdup(&expr, sizeof(struct expression));
 }
 
-static char *parse_global_declaration() {
+static struct global_declaration *parse_global_declaration() {
 	GUARD(SQ_TK_GLOBAL);
+	struct global_declaration *global = xmalloc(sizeof(struct global_declaration));
+
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'global'");
-	return last.identifier;
+	global->name = last.identifier;
+	if (take().kind == SQ_TK_ASSIGN) {
+		global->value = parse_expression();
+	} else {
+		untake();
+		global->value = NULL;
+	}
+
+	return global;
 }
 
 static char *parse_import_declaration() {

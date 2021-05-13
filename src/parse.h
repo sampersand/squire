@@ -23,7 +23,7 @@ struct statement {
 		SQ_PS_SEXPR,
 	} kind;
 	union {
-		char *gdecl;
+		struct global_declaration *gdecl;
 		char *import;
 		struct struct_declaration *sdecl;
 		struct func_declaration *fdecl;
@@ -32,6 +32,11 @@ struct statement {
 		struct return_statement *rstmt;
 		struct expression *expr;
 	};
+};
+
+struct global_declaration {
+	char *name;
+	struct expression *value; // can be null
 };
 
 struct struct_declaration {

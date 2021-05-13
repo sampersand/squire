@@ -123,9 +123,13 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				string = sq_value_to_string(NEXT_LOCAL());
 				sq_number start = sq_value_to_number(NEXT_LOCAL());
 				sq_number count = sq_value_to_number(NEXT_LOCAL());
-				struct sq_string *result =
-					sq_string_new(strndup(string->ptr + start, count));
-				// sq_string_free(string);
+				struct sq_string *result;
+
+				if (!*string->ptr) 
+					result = sq_string_new(strdup(""));
+				else
+					result = sq_string_new(strndup(string->ptr + start, count));
+
 				NEXT_LOCAL() = sq_value_new_string(result);
 				break;
 			}

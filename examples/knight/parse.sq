@@ -1,0 +1,89 @@
+import "utils.sq" 
+
+global parse_stream
+
+journey peek() {
+	reward substr(parse_stream, 0, 1)
+}
+
+journey advance() {
+	parse_stream = substr(parse_stream, 1, length(parse_stream) - 1)
+}
+
+journey take_while(cond) {
+	idx = 0
+
+	whilst cond(substr(parse_stream, idx, 1)) {
+		idx = idx + 1
+	}
+
+	if idx == 0 {
+		reward null
+	}
+
+	result = substr(parse_stream, 0, idx)
+	parse_stream = substr(parse_stream, idx, length(parse_stream) - 1)
+
+	reward result
+}
+
+journey isdigit(chr) { reward '0' <= chr && chr <= '9' }
+journey isident(chr) { reward isdigit(chr) || ('a' <= chr && chr <= 'z') || chr == '_'  }
+journey isupper(chr) { reward ('A' <= chr && chr <= 'Z') || chr == '_' }
+journey isspace(chr) {
+	reward chr == '{' || chr == '}' || chr == '(' || chr == ')' || chr == '['
+	    || chr == ']' || chr == ':' || chr == ' ' || ('\t' <= chr && chr <= '\r')
+}
+journey isquote(chr) { reward chr == '\'' || chr == '\"' }
+
+journey stripwhitespace() {
+	take_while(isspace)
+
+	if peek() == '#' {
+		take_while(journey(chr) { reward chr != '\n' })
+		reward stripwhitespace()
+	}
+}
+
+journey parse_expr() {
+	global parse_function
+	global fetch_variable
+	global quote
+
+	stripwhitespace()
+	head = peek()
+
+	if !parse_stream {
+		reward
+	}
+
+	if isdigit(head) {
+		reward number(take_while(isdigit))
+	}
+
+	if isident(head) {
+		reward fetch_variable(take_while(isident))
+	}
+
+	if isquote(head) {
+		quote = head
+
+		advance() # delete starting quote
+		str = take_while(journey (chr) { reward chr != quote });
+		advance() # delete trailing quote
+
+		reward str
+	}
+
+	if !take_while(isupper) {
+		advance()
+	}
+
+	reward parse_function(head)
+}
+
+journey parse(stream) {
+	parse_stream = stream
+	reward parse_expr()
+}
+
