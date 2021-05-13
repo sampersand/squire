@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SQ_TOKEN_H
+#define SQ_TOKEN_H
 
 #include "value.h"
 #include "string.h"
@@ -62,3 +63,5 @@ struct sq_token {
 
 struct sq_token sq_next_token(const char **stream);
 void sq_token_dump(const struct sq_token *);
+
+#endif /* !SQ_TOKEN_H */

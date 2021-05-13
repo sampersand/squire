@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SQ_STRING_H
+#define SQ_STRING_H
 
 struct sq_string {
 	char *ptr;
@@ -20,3 +21,5 @@ static inline struct sq_string *sq_string_new(char *ptr) {
 void sq_string_clone(struct sq_string *string);
 void sq_string_free(struct sq_string *string);
 void sq_string_combine(const struct sq_string *lhs, const struct sq_string *rhs);
+
+#endif /* !SQ_STRING_H */

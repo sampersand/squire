@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SQ_PARSE_H
+#define SQ_PARSE_H
 
 struct statements *sq_parse_statements(const char *stream);
 
@@ -147,3 +148,5 @@ struct primary {
 		struct variable *variable;
 	};
 };
+
+#endif /* !SQ_PARSE_H */

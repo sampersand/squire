@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SQ_VALUE_H
+#define SQ_VALUE_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -136,3 +137,5 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs);
 struct sq_string *sq_value_to_string(sq_value value);
 sq_number sq_value_to_number(sq_value value);
 bool sq_value_to_boolean(sq_value value);
+
+#endif /* !SQ_VALUE_H */

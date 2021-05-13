@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SQ_FUNCTION_H
+#define SQ_FUNCTION_H
+
 #include "value.h"
 #include "bytecode.h"
 #include "program.h"
@@ -18,3 +20,5 @@ void sq_function_clone(struct sq_function *function);
 void sq_function_free(struct sq_function *function);
 sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args);
 void sq_function_dump(const struct sq_function *function);
+
+#endif /* !SQ_FUNCTION_H */

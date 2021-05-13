@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SQ_BYTECODE_H
+#define SQ_BYTECODE_H
 
 enum sq_interrupts {
 	SQ_INT_PRINT,
@@ -58,3 +59,5 @@ union sq_bytecode {
 	enum sq_opcode opcode;
 	sq_index index;
 };
+
+#endif /* !SQ_BYTECODE_H */

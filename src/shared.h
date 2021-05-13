@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SQ_SHARED_H
+#define SQ_SHARED_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,3 +10,5 @@
 void *xmalloc(size_t length);
 void *xrealloc(void *ptr, size_t length);
 void *memdup(void *ptr, size_t length);
+
+#endif /* !SQ_SHARED_H */

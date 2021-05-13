@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SQ_STRUCT_H
+#define SQ_STRUCT_H
+
 #include "value.h"
 #define MAX_FIELDS 256
 
@@ -25,3 +27,5 @@ sq_value *sq_instance_field(struct sq_instance *instance, const char *name);
 void sq_instance_clone(struct sq_instance *instance);
 void sq_instance_free(struct sq_instance *instance);
 void sq_instance_dump(const struct sq_instance *instance);
+
+#endif /* !SQ_STRUCT_H */
