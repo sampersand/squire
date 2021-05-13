@@ -6,9 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-void
-sq_program_run(struct sq_program *program, unsigned argc, const char **argv)
-{
+void sq_program_run(struct sq_program *program, unsigned argc, const char **argv) {
 	assert(program->main->argc == 0); // todo: allow for passing cmdline args
 	srand(time(NULL));
 
@@ -23,9 +21,7 @@ sq_program_run(struct sq_program *program, unsigned argc, const char **argv)
 		sq_value_free(args[i]);
 }
 
-void
-sq_program_free(struct sq_program *program)
-{
+void sq_program_free(struct sq_program *program) {
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		sq_value_free(program->globals[i]);
 

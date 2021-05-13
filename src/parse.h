@@ -8,10 +8,6 @@ struct statements {
 	struct statement **stmts;
 };
 
-struct program {
-	struct statements stmts;
-};
-
 struct statement {
 	enum {
 		SQ_PS_SSTRUCT,

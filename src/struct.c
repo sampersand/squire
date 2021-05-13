@@ -3,9 +3,7 @@
 #include "struct.h"
 #include "shared.h"
 
-struct sq_struct *
-sq_struct_new(char *name, unsigned nfields, char **fields)
-{
+struct sq_struct *sq_struct_new(char *name, unsigned nfields, char **fields) {
 	assert(name != NULL);
 	assert(nfields == 0 || fields != NULL);
 
@@ -19,9 +17,7 @@ sq_struct_new(char *name, unsigned nfields, char **fields)
 	return struct_;
 }
 
-struct sq_struct *
-sq_struct_clone(struct sq_struct *struct_)
-{
+struct sq_struct *sq_struct_clone(struct sq_struct *struct_) {
 	assert(struct_->refcount);
 
 	if (0 < struct_->refcount)
@@ -30,9 +26,7 @@ sq_struct_clone(struct sq_struct *struct_)
 	return struct_;
 }
 
-void
-sq_struct_free(struct sq_struct *struct_)
-{
+void sq_struct_free(struct sq_struct *struct_) {
 	assert(struct_->refcount);
 
 	if (struct_->refcount < 0 || --struct_->refcount)
@@ -45,8 +39,7 @@ sq_struct_free(struct sq_struct *struct_)
 	free(struct_);
 }
 
-void
-sq_struct_dump(const struct sq_struct *struct_) {
+void sq_struct_dump(const struct sq_struct *struct_) {
 	printf("Struct(%s:", struct_->name);
 
 	for (unsigned i = 0; i < struct_->nfields; ++i) {
@@ -62,9 +55,7 @@ sq_struct_dump(const struct sq_struct *struct_) {
 	putchar(')');
 }
 
-struct sq_instance *
-sq_instance_new(struct sq_struct *kind, sq_value *fields)
-{
+struct sq_instance *sq_instance_new(struct sq_struct *kind, sq_value *fields) {
 	assert(kind != NULL);
 	assert(kind->nfields == 0 || fields != NULL);
 
@@ -79,9 +70,7 @@ sq_instance_new(struct sq_struct *kind, sq_value *fields)
 	return instance;
 }
 
-sq_value *
-sq_instance_field(struct sq_instance *instance, const char *name)
-{
+sq_value *sq_instance_field(struct sq_instance *instance, const char *name) {
 	for (unsigned i = 0; i < instance->kind->nfields; ++i)
 		if (!strcmp(name, instance->kind->fields[i]))
 			return &instance->fields[i];
@@ -89,9 +78,7 @@ sq_instance_field(struct sq_instance *instance, const char *name)
 	return NULL;
 }
 
-struct sq_instance *
-sq_instance_clone(struct sq_instance *instance)
-{
+struct sq_instance *sq_instance_clone(struct sq_instance *instance) {
 	assert(instance->refcount);
 
 	if (0 < instance->refcount)
@@ -100,9 +87,7 @@ sq_instance_clone(struct sq_instance *instance)
 	return instance;
 }
 
-void
-sq_instance_free(struct sq_instance *instance)
-{
+void sq_instance_free(struct sq_instance *instance) {
 	assert(instance->refcount);
 
 	if (0 < instance->refcount || --instance->refcount)
@@ -114,9 +99,7 @@ sq_instance_free(struct sq_instance *instance)
 	sq_struct_free(instance->kind);
 }
 
-void
-sq_instance_dump(const struct sq_instance *instance)
-{
+void sq_instance_dump(const struct sq_instance *instance) {
 	printf("Instance(%s:", instance->kind->name);
 
 	for (unsigned i = 0; i < instance->kind->nfields; ++i) {

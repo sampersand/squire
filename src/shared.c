@@ -1,9 +1,7 @@
 #include "shared.h"
 #include <string.h>
 
-void *
-xmalloc(size_t length)
-{
+void *xmalloc(size_t length) {
 	void *ptr = malloc(length);
 
 	if (ptr == NULL) {
@@ -14,9 +12,7 @@ xmalloc(size_t length)
 	return ptr;
 }
 
-void *
-xrealloc(void *ptr, size_t length)
-{
+void *xrealloc(void *ptr, size_t length) {
 	ptr = realloc(ptr, length);
 
 	if (ptr == NULL && length != 0) {
@@ -27,8 +23,6 @@ xrealloc(void *ptr, size_t length)
 	return ptr;
 }
 
-void *
-memdup(void *ptr, size_t length)
-{
+void *memdup(void *ptr, size_t length) {
 	return memcpy(xmalloc(length), ptr, length);
 }

@@ -6,9 +6,7 @@
 
 struct sq_string sq_string_empty = SQ_STRING_STATIC("");
 
-static struct sq_string *
-allocate_string(unsigned length)
-{
+static struct sq_string *allocate_string(unsigned length) {
 	assert(length != 0);
 	struct sq_string *string = xmalloc(sizeof(struct sq_string));
 
@@ -19,9 +17,7 @@ allocate_string(unsigned length)
 	return string;
 }
 
-struct sq_string *
-sq_string_new2(char *ptr, unsigned length)
-{
+struct sq_string *sq_string_new2(char *ptr, unsigned length) {
 	assert(ptr != NULL);
 	assert(strlen(ptr) == length);
 
@@ -36,9 +32,7 @@ sq_string_new2(char *ptr, unsigned length)
 	return string;
 }
 
-struct sq_string *
-sq_string_alloc(unsigned length)
-{
+struct sq_string *sq_string_alloc(unsigned length) {
 	if (length == 0)
 		return &sq_string_empty;
 
@@ -49,15 +43,11 @@ sq_string_alloc(unsigned length)
 	return string;
 }
 
-struct sq_string *
-sq_string_new(char *ptr)
-{
+struct sq_string *sq_string_new(char *ptr) {
 	return sq_string_new2(ptr, strlen(ptr));
 }
 
-struct sq_string *
-sq_string_borrowed(char *ptr)
-{
+struct sq_string *sq_string_borrowed(char *ptr) {
 	if (ptr[0] == '\0')
 		return &sq_string_empty;
 
@@ -69,9 +59,7 @@ sq_string_borrowed(char *ptr)
 
 
 
-struct sq_string *
-sq_string_clone(struct sq_string *string)
-{
+struct sq_string *sq_string_clone(struct sq_string *string) {
 	assert(string->refcount);
 
 	if (0 < string->refcount)

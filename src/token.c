@@ -3,21 +3,18 @@
 #include <string.h>
 #include "shared.h"
 
-#define PEEK(stream) (**(stream))
-#define ADVANCE(stream) (++*(stream))
-#define PEEK_ADVANCE(stream) (*(*(stream))++)
-#define NEXT(stream) (*(*(stream))++)
+const char *sq_stream;
 
-static void strip_whitespace(const char **stream) {
+static void strip_whitespace() {
 	char c;
 
 	// strip whitespace
-	while ((c = **stream)) {
+	while ((c = *sq_stream)) {
 		if (c == '#') {
 			do {
-				c = *++*stream;
+				c = *++sq_stream;
 			} while (c && c != '\n');
-			if (c == '\n') ++*stream;
+			if (c == '\n') ++sq_stream;
 			continue;
 		}
 
@@ -25,74 +22,74 @@ static void strip_whitespace(const char **stream) {
 			break;
 
 		while (isspace(c) && c != '\n') {
-			c = *++*stream;
+			c = *++sq_stream;
 		}
 	}
 }
 
 #define CHECK_FOR_START(str, tkn) \
-	if (!strncmp(str, *stream, strlen(str))) {\
-		*stream += strlen(str); token.kind = tkn; return token; \
+	if (!strncmp(str, sq_stream, strlen(str))) {\
+		sq_stream += strlen(str); token.kind = tkn; return token; \
 	}
 
 #define CHECK_FOR_START_KW(str, tkn) \
-	if (!strncmp(str, *stream, strlen(str)) \
-		&& !isalnum(*(*stream + strlen(str))) && *(*stream + strlen(str)) != '_') {\
-		*stream += strlen(str); token.kind = tkn; return token; }
+	if (!strncmp(str, sq_stream, strlen(str)) \
+		&& !isalnum(*(sq_stream + strlen(str))) && *(sq_stream + strlen(str)) != '_') {\
+		sq_stream += strlen(str); token.kind = tkn; return token; }
 
 
-static char tohex(char c) {
+static unsigned tohex(char c) {
 	if (isdigit(c)) return c - '0';
 	if ('a' <= c && c <= 'f') return c - 'a';
 	if ('A' <= c && c <= 'F') return c - 'A';
 	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 
-struct sq_token sq_next_token(const char **stream) {
-	strip_whitespace(stream);
+struct sq_token sq_next_token(const char *sq_stream) {
+	strip_whitespace(sq_stream);
 	struct sq_token token;
 
-	if (!**stream) {
+	if (!*sq_stream) {
 		token.kind = SQ_TK_UNDEFINED;
 		return token;
 	}
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
-	if (isdigit(**stream)) {
+	if (isdigit(*sq_stream)) {
 		token.kind = SQ_TK_NUMBER;
 		token.number = 0;
 
 		do {
-			token.number = token.number * 10 + (**stream - '0');
-		} while (isdigit(*++*stream));
+			token.number = token.number * 10 + (*sq_stream - '0');
+		} while (isdigit(*++sq_stream));
 
-		if (isalpha(**stream) || **stream == '_')
+		if (isalpha(*sq_stream) || *sq_stream == '_')
 			die("invalid trailing characters on number literal: %llu%c\n",
-				(long long) token.number, **stream);
+				(long long) token.number, *sq_stream);
 		return token;
 	}
 
-	if (**stream == '\\') {
-		++*stream;
+	if (*sq_stream == '\\') {
+		++sq_stream;
 
-		if (*++*stream != '\n') 
+		if (*++sq_stream != '\n') 
 			die("unexpected '\\' on its own.");
 	}
 
-	if (**stream == '\'' || **stream == '\"') {
+	if (*sq_stream == '\'' || *sq_stream == '\"') {
 		token.kind = SQ_TK_STRING;
 		token.string = malloc(sizeof(struct sq_string));
-		char quote = **stream;
-		const char *start = ++*stream;
+		char quote = *sq_stream;
+		const char *start = ++sq_stream;
 
-		while (**stream != quote) {
-			if (**stream == '\\') ++*stream;
-			if (!**stream) die("unterminated quote found");
-			++*stream;
+		while (*sq_stream != quote) {
+			if (*sq_stream == '\\') ++sq_stream;
+			if (!*sq_stream) die("unterminated quote found");
+			++sq_stream;
 		}
-		++*stream;
+		++sq_stream;
 
-		token.string->length = *stream - start - 1;
+		token.string->length = sq_stream - start - 1;
 		char *dst = xmalloc(token.string->length + 1);
 		unsigned ins = 0;
 		char c;
@@ -131,7 +128,7 @@ struct sq_token sq_next_token(const char **stream) {
 		return token;
 	}
 
-	if (!strncmp(*stream, "__END__", 7)) {
+	if (!strncmp(sq_stream, "__END__", 7)) {
 		token.kind = SQ_TK_UNDEFINED;
 		return token;
 	}
@@ -148,14 +145,14 @@ struct sq_token sq_next_token(const char **stream) {
 	CHECK_FOR_START_KW("false", SQ_TK_FALSE);
 	CHECK_FOR_START_KW("null", SQ_TK_NULL);
 
-	if (isalpha(**stream) || **stream == '_') {
+	if (isalpha(*sq_stream) || *sq_stream == '_') {
 		token.kind = SQ_TK_IDENT;
-		const char *start = *stream;
+		const char *start = sq_stream;
 
-		while (isalnum(**stream) || **stream == '_')
-			++*stream;
+		while (isalnum(*sq_stream) || *sq_stream == '_')
+			++sq_stream;
 
-		token.identifier = strndup(start, *stream - start);
+		token.identifier = strndup(start, sq_stream - start);
 		return token;
 	}
 
@@ -186,7 +183,7 @@ struct sq_token sq_next_token(const char **stream) {
 	CHECK_FOR_START("||", SQ_TK_OR);
 	CHECK_FOR_START("=", SQ_TK_ASSIGN);
 
-	die("unknown token start '%c'", **stream);
+	die("unknown token start '%c'", *sq_stream);
 }
 
 

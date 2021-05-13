@@ -50,8 +50,6 @@ enum sq_token_kind {
 	SQ_TK_ASSIGN,
 };
 
-// struct sq_tk_
-
 struct sq_token {
 	enum sq_token_kind kind;
 	union {
@@ -61,7 +59,8 @@ struct sq_token {
 	};
 };
 
-struct sq_token sq_next_token(const char **stream);
-void sq_token_dump(const struct sq_token *);
+extern const char *sq_stream;
+struct sq_token sq_next_token(void);
+void sq_token_dump(const struct sq_token *token);
 
 #endif /* !SQ_TOKEN_H */
