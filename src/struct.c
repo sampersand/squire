@@ -19,13 +19,15 @@ sq_struct_new(char *name, unsigned nfields, char **fields)
 	return struct_;
 }
 
-void
+struct sq_struct *
 sq_struct_clone(struct sq_struct *struct_)
 {
 	assert(struct_->refcount);
 
 	if (0 < struct_->refcount)
 		++struct_->refcount;
+
+	return struct_;
 }
 
 void
@@ -87,13 +89,15 @@ sq_instance_field(struct sq_instance *instance, const char *name)
 	return NULL;
 }
 
-void
+struct sq_instance *
 sq_instance_clone(struct sq_instance *instance)
 {
 	assert(instance->refcount);
 
 	if (0 < instance->refcount)
 		++instance->refcount;
+
+	return instance;
 }
 
 void

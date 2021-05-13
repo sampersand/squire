@@ -7,11 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-void sq_function_clone(struct sq_function *function) {
+struct sq_function *sq_function_clone(struct sq_function *function) {
 	assert(function->refcount);
 
 	if (0 < function->refcount)
 		++function->refcount;
+
+	return function;
 }
 
 void sq_function_free(struct sq_function *function) {

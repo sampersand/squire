@@ -687,20 +687,18 @@ compile_function(struct func_declaration *fndecl) {
 	return fn;
 }
 
-struct sq_program *sq_program_compile(const char *stream, unsigned argc, char **argv) {
+struct sq_program *sq_program_compile(const char *stream) {
 	globals.len = 0;
 	globals.values = xmalloc(sizeof(struct var[globals.cap = 16]));
 
 	program = xmalloc(sizeof(struct sq_program));
 	program->nglobals = 0;
 	program->globals = NULL;
-	program->nfuncs = 0;
-	program->funcs = NULL;
 
 	struct func_declaration maindecl = {
 		.name = strdup("main"),
-		.nargs = argc, // todo: pass commandline arguments
-		.args = argv,
+		.nargs = 0, // todo: pass commandline arguments
+		.args = NULL,
 		.body = sq_parse_statements(stream)
 	};
 

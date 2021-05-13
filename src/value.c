@@ -49,17 +49,19 @@ void sq_value_dump(sq_value value) {
 	}
 }
 
-void sq_value_clone(sq_value value) {
+sq_value sq_value_clone(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TSTRING:
-		sq_string_clone(AS_STRING(value));
-		return;
+		return sq_value_new_string(sq_string_clone(AS_STRING(value)));
+
 	case SQ_TINSTANCE:
-		sq_instance_clone(AS_INSTANCE(value));
-		return;
+		return sq_value_new_instance(sq_instance_clone(AS_INSTANCE(value)));
+
 	case SQ_TFUNCTION:
-		sq_function_clone(AS_FUNCTION(value));
-		return;
+		return sq_value_new_function(sq_function_clone(AS_FUNCTION(value)));
+
+	default:
+		return value;
 	}
 }
 
@@ -68,9 +70,11 @@ void sq_value_free(sq_value value) {
 	case SQ_TSTRING:
 		sq_string_free(AS_STRING(value));
 		return;
+
 	case SQ_TINSTANCE:
 		sq_instance_free(AS_INSTANCE(value));
 		return;
+
 	case SQ_TFUNCTION:
 		sq_function_free(AS_FUNCTION(value));
 		return;
@@ -201,9 +205,9 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 }
 
 struct sq_string *sq_value_to_string(sq_value value) {
-	static struct sq_string truestring = { "true", -1, 4 };
-	static struct sq_string falsestring = { "false", -1, 5 };
-	static struct sq_string nullstring = { "null", -1, 4 };
+	static struct sq_string truestring = SQ_STRING_STATIC("true");
+	static struct sq_string falsestring = SQ_STRING_STATIC("false");
+	static struct sq_string nullstring = SQ_STRING_STATIC("null");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TBOOLEAN:

@@ -10,7 +10,6 @@ const char *stream;
 struct sq_token last;
 bool rewound;
 
-
 static void untake() {
 	assert(!rewound);
 	rewound = true;

@@ -23,6 +23,7 @@ struct statement {
 		SQ_PS_SRETURN,
 		SQ_PS_SEXPR,
 	} kind;
+
 	union {
 		struct global_declaration *gdecl;
 		char *import;

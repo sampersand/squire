@@ -9,10 +9,10 @@
 
 #include "program.h"
 
-int main(int a, char **v) {
+int main(int a, const char **v) {
 	(void) a;
-	struct sq_program *program = sq_program_compile(v[1], 0, 0);
-	sq_program_run(program);
+	struct sq_program *program = sq_program_compile(v[1]);
+	sq_program_run(program, a - 1, v + 1);
 	sq_program_free(program);
 
 	return 0;
