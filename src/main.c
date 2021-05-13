@@ -10,6 +10,7 @@
 #include "program.h"
 
 int main(int a, char **v) {
+	(void) a;
 	struct sq_program *program = sq_program_compile(v[1], 0, 0);
 	sq_program_run(program);
 	sq_program_free(program);

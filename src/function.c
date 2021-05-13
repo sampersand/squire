@@ -194,7 +194,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				char *line = NULL;
 				size_t cap, length;
 
-				if ((length = getline(&line, &cap, stdin)) == -1) {
+				if ((length = getline(&line, &cap, stdin)) == (size_t) -1) {
 					line = strdup("");
 					cap = 0;
 				}

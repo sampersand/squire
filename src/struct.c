@@ -4,7 +4,9 @@
 #include "value.h"
 #include "shared.h"
 
-struct sq_struct *sq_struct_new(char *name, unsigned nfields, char **fields) {
+struct sq_struct *
+sq_struct_new(char *name, unsigned nfields, char **fields)
+{
 	struct sq_struct *struct_ = xmalloc(sizeof(struct sq_struct));
 
 	struct_->nfields = nfields;

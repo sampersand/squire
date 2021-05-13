@@ -26,7 +26,7 @@ all: $(exe)
 shared: $(dyn)
 
 clean:
-	@-rm *.o squire -r squire.dSYM
+	@-rm -r bin obj squire.dSYM
 
 optimized:
 	$(CC) $(CFLAGS) -o $(exe) $(wildcard $(SRCDIR)/*.c)

@@ -164,6 +164,7 @@ static struct sq_function *
 compile_function(struct func_declaration *fndecl);
 
 static void compile_func(struct sq_code *code, struct func_declaration *fdecl) {
+	(void) code;
 	unsigned index = declare_global(fdecl->name, SQ_NULL);
 	struct sq_function *function = compile_function(fdecl);
 	globals.values[index].value = sq_value_new_function(function);
@@ -441,7 +442,7 @@ static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
 }
 
 static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_) {
-	unsigned lhs, rhs, result, *dst;
+	unsigned lhs, rhs, *dst;
 
 	switch (bool_->kind) {
 	case SQ_PS_BAND:

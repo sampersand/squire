@@ -176,7 +176,7 @@ static struct unary_expression *parse_unary_expression() {
 		return NULL;
 
 	return memdup(&unary, sizeof(struct unary_expression));
-};
+}
 
 static struct mul_expression *parse_mul_expression() {
 	struct mul_expression mul;
@@ -205,7 +205,7 @@ static struct mul_expression *parse_mul_expression() {
 	}
 
 	return memdup(&mul, sizeof(struct mul_expression));
-};
+}
 
 static struct add_expression *parse_add_expression() {
 	struct add_expression add;
@@ -231,7 +231,7 @@ static struct add_expression *parse_add_expression() {
 	}
 
 	return memdup(&add, sizeof(struct add_expression));
-};
+}
 
 static struct cmp_expression *parse_cmp_expression() {
 	struct cmp_expression cmp;
@@ -263,7 +263,7 @@ static struct cmp_expression *parse_cmp_expression() {
 	}
 
 	return memdup(&cmp, sizeof(struct cmp_expression));
-};
+}
 
 static struct eql_expression *parse_eql_expression() {
 	struct eql_expression eql;
@@ -289,7 +289,7 @@ static struct eql_expression *parse_eql_expression() {
 	}
 
 	return memdup(&eql, sizeof(struct eql_expression));
-};
+}
 
 static struct bool_expression *parse_bool_expression() {
 	struct bool_expression eql;
@@ -315,7 +315,7 @@ static struct bool_expression *parse_bool_expression() {
 	}
 
 	return memdup(&eql, sizeof(struct bool_expression));
-};
+}
 
 static struct assignment *parse_assignment(struct variable *var) {
 	GUARD(SQ_TK_ASSIGN);
