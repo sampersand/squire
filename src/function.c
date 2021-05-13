@@ -30,6 +30,17 @@ void sq_function_free(struct sq_function *function) {
 	free(function);
 }
 
+void
+sq_function_dump(const struct sq_function *function)
+{
+	printf("Function(%s, %d arg", function->name, function->argc);
+
+	if (function->argc != 1)
+		putchar('s');
+
+	putchar(')');
+}
+
 #define ABS_INDEX(idx) (function->bytecode[idx].index)
 #define REL_INDEX(idx) ABS_INDEX((idx)+ip)
 #define NEXT_INDEX() ABS_INDEX((ip)++)

@@ -19,44 +19,31 @@ void sq_value_dump(sq_value value) {
 	case SQ_TBOOLEAN:
 		printf("Boolean(%s)", value == SQ_TRUE ? "true" : "false");
 		break;
+
 	case SQ_TNULL:
 		printf("Null()");
 		break;
+
 	case SQ_TNUMBER:
 		printf("Number(%lld)", AS_NUMBER(value));
 		break;
+
 	case SQ_TSTRING:
 		printf("String(%s)", AS_STR(value));
 		break;
-	case SQ_TSTRUCT: {
-		struct sq_struct *struct_ = AS_STRUCT(value);
-		printf("Struct(%s:", struct_->name);
-		for (unsigned i = 0; i < struct_->nfields; ++i) {
-			if (i) printf(", ");
-			printf("'%s'", struct_->fields[i]);
-		}
-		if (!struct_->nfields) printf("<no fields>");
-		printf(")");
-		break;
-	}
-	case SQ_TINSTANCE: {
-		struct sq_instance *instance = AS_INSTANCE(value);
 
-		printf("Instance(%s: ", instance->kind->name);
-		for (unsigned i = 0; i < instance->kind->nfields; ++i) {
-			if (i) printf(", ");
-			printf("'%s'=", instance->kind->fields[i]);
-			sq_value_dump(instance->fields[i]);
-		}
-		if (!instance->kind->nfields) printf("<no fields>");
-		printf(")");
+	case SQ_TSTRUCT:
+		sq_struct_dump(AS_STRUCT(value));
 		break;
-	}
-	case SQ_TFUNCTION: {
-		struct sq_function *function = AS_FUNCTION(value);
-		printf("Function(%s, %d args)", function->name, function->argc);
+
+	case SQ_TINSTANCE:
+		sq_instance_dump(AS_INSTANCE(value));
 		break;
-	}
+
+	case SQ_TFUNCTION:
+		sq_function_dump(AS_FUNCTION(value));
+		break;
+
 	default:
 		printf("<UNDEFINED: %lld>", value);
 	}
