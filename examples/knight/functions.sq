@@ -1,98 +1,199 @@
 import "variable.sq"
-journey parse() {
 
+struct Args { a1, a2, a3, a4 }
+struct Ast { fn, args }
+
+journey run(arg) {
+	if kindof(arg) == Ast { fn = arg.fn; reward fn(arg.args) }
+	if kindof(arg) == Variable { reward run_variable(arg) }
+
+	reward arg
 }
-
-struct Function { name, arity, fn }
-struct FunctionArgs { arg0, arg1, arg2, arg3 }
-journey run(arg) { reward arg; }
 
 journey to_string(arg) { reward string(run(arg)) }
 journey to_number(arg) { reward number(run(arg)) }
 journey to_boolean(arg) { reward boolean(run(arg)) }
-fn_prompt = Function('P', 0, journey() { reward prompt() })
-fn_random = Function('R', 0, journey() { reward random() })
 
-fn_eval   = Function('E', 1, journey(arg) { run(parse(to_string(arg))) })
-fn_block  = Function('B', 1, journey(arg) { reward arg })
-fn_run    = Function('C', 1, journey(arg) { reward run(run(arg)) })
-fn_system = Function('`', 1, journey(arg) { reward system(to_string(arg)) })
-fn_quit   = Function('Q', 1, journey(arg) { exit(to_number(arg)) })
-fn_not    = Function('!', 1, journey(arg) { reward !to_boolean(arg) })
-fn_length = Function('L', 1, journey(arg) { reward length(to_string(arg)) })
-fn_dump   = Function('D', 1, journey(arg) { reward dump(run(arg)) })
-fn_output = Function('O', 1, journey(arg) {
-	text = to_string(arg)
+# Arity zero
+
+journey sq_prompt(_args) {
+	reward prompt()
+}
+
+journey sq_random(_args) {
+	reward random()
+}
+
+journey sq_true(_args) {
+	reward true
+}
+
+journey sq_false(_args) {
+	reward false
+}
+
+journey sq_null(_args) {
+	reward null
+}
+
+# Arity one
+
+journey sq_eval(args) {
+	reward run(parse(to_string(args.a1)))
+}
+
+journey sq_block(args) {
+	reward args.a1
+}
+
+journey sq_call(args){
+	reward run(run(args.a1))
+}
+
+journey sq_system(args) {
+	reward system(to_string(args.a1))
+}
+
+journey sq_quit(args) {
+	exit(to_number(args.a1))
+}
+
+journey sq_not(args) {
+	reward !to_boolean(args.a1)
+}
+
+journey sq_length(args) {
+	reward length(to_string(args.a1))
+}
+
+journey sq_dump(args) {
+	arg = run(args.a1)
+
+	if kindof(arg) == 'string' { print('String(' + arg + ')') }
+	else if kindof(arg) == 'number' { print('Number(' + string(arg) + ')') }
+	else if kindof(arg) == 'boolean' { print('Boolean(' + string(arg) + ')') }
+	else if kindof(arg) == 'null' { print('Null()') }
+	else { dump(arg) }
+
+	print("\n")
+
+	reward arg
+}
+
+journey sq_output(args) {
+	text = to_string(args.a1)
+
 	if text && substr(text, length(text) - 1, 1) == '\\' {
-		print(substr(text, 0, length(text) - 1));
+		print(substr(text, 0, length(text) - 2))
 	} else {
 		print(text + "\n")
 	}
-})
 
-fn_add = Function('+', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
+	reward null
+}
 
-	if kind == "string" {
-		reward lhs + to_string(rhs)
-	} else if kind == "number" {
-		reward lhs + to_number(rhs)
-	} else {
-		die("cannot add to a '" + kind + "'")
-	}
-})
+# Arity two
 
-fn_sub = Function('-', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
+journey sq_add(args) {
+	kind = kindof(lhs = run(args.a1))
 
-	if kind == "number" {
-		reward lhs - to_number(rhs)
-	} else {
-		die("cannot subtract from a '" + kind + "'")
-	}
-})
+	if kind == "string" { reward lhs + to_string(args.a2) }
+	if kind == "number" { reward lhs + to_number(args.a2) }
 
-fn_mul = Function('*', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
+	die("cannot add to a '" + kind + "'")
+}
 
-	if kind == "string" {
-		reward lhs * to_number(rhs)
-	} else if kind == "number" {
-		reward lhs * to_number(rhs)
-	} else {
-		die("cannot multiply a '" + kind + "'")
-	}
-})
+journey sq_sub(args) {
+	kind = kindof(lhs = run(args.a1))
 
-fn_mul = Function('/', 2, journey(lhs, rhs) {
-	kind = kindof(lhs = run(lhs))
+	if kind == "number" { reward lhs - to_number(args.a2) }
 
-	if kind != "number" {
-		die("cannot divide a '" + kind + "'")
-	} else if !(rhs = to_number(rhs)) {
-		die("cannot divide by zero")
-	} else {
-		reward lhs / rhs
-	}
-})
+	die("cannot subtract to a '" + kind + "'")
+}
 
- #
- #	4.3.1 [`+`](#431-unchanged-coerce)  
- #	4.3.2 [`-`](#432--unchanged-number)  
- #	4.3.3 [`*`](#433-unchanged-coerce)  
- #	4.3.4 [`/`](#434-unchanged-number)  
- #	4.3.5 [`%`](#435-unchanged-number)  
- #	4.3.6 [`^`](#436-unchanged-number)  
- #	4.3.7 [`<`](#437-unchanged-coerce)  
- #	4.3.8 [`>`](#438-unchanged-coerce)  
- #	4.3.9 [`?`](#439-unchanged-unchanged)  
- #	4.3.10 [`&`](#4311-unchanged-unevaluated)  
- #	4.3.11 [`|`](#4310-unchanged-unevaluated)  
- #	4.3.12 [`;`](#4312-unchanged-unchanged)  
- #	4.3.13 [`=`](#4313-unevaluated-unchanged)  
- #	4.3.14 [`WHILE`](#4314-whileunevaluated-unevaluated)  
- #
- #	4.4.1 [`IF`](#441-ifboolean-unevaluated-unevaluated)  
- #	4.4.2 [`GET`](#442-getstring-number-number)  
- #
- #	4.5.1 [`SUBSTITUTE`](#451-substitutestring-number-number-string)  
+journey sq_mul(args) {
+	kind = kindof(lhs = run(args.a1))
+
+	if kind == "string" { reward lhs * to_number(args.a2) }
+	if kind == "number" { reward lhs * to_number(args.a2) }
+
+	die("cannot multiply a '" + kind + "'")
+}
+
+journey sq_div(args) {
+	kind = kindof(lhs = run(args.a1))
+
+	if kind != "number" { die("cannot divide a '" + kind + "'") }
+	if !(rhs = to_number(args.a2)) { die("cannot divide by zero") }
+
+	reward lhs / rhs
+}
+
+journey sq_mod(args) {
+	kind = kindof(lhs = run(args.a1))
+
+	if kind != "number" { die("cannot modulo a '" + kind + "'") }
+	if !(rhs = to_number(args.a2)) { die("cannot modulo by zero") }
+
+	reward lhs % rhs
+}
+
+journey sq_pow(args) {
+	die("todo: pow")
+}
+
+journey parse_function(fn) {
+	global parse_expr
+
+	args = Args(null, null, null, null)
+
+	if fn == 'P' { reward Ast(sq_prompt, args) }
+	if fn == 'R' { reward Ast(sq_random, args) }
+	if fn == 'T' { reward Ast(sq_true, args) }
+	if fn == 'F' { reward Ast(sq_false, args) }
+	if fn == 'N' { reward Ast(sq_null, args) }
+
+	if null == (args.a1 = parse_expr()) { die("unable to parse argument 1 for '" + fn + "'") }
+
+	if fn == 'E' { reward Ast(sq_eval, args) }
+	if fn == 'B' { reward Ast(sq_block, args) }
+	if fn == 'C' { reward Ast(sq_call, args) }
+	if fn == '`' { reward Ast(sq_system, args) }
+	if fn == 'Q' { reward Ast(sq_quit, args) }
+	if fn == 'L' { reward Ast(sq_length, args) }
+	if fn == '!' { reward Ast(sq_not, args) }
+	if fn == 'D' { reward Ast(sq_dump, args) }
+	if fn == 'O' { reward Ast(sq_output, args) }
+
+	if null == (args.a2 = parse_expr()) { die("unable to parse argument 2 for '" + fn + "'") }
+
+	if fn == '+' { reward Ast(sq_add, args) }
+	if fn == '-' { reward Ast(sq_sub, args) }
+	if fn == '*' { reward Ast(sq_mul, args) }
+	if fn == '/' { reward Ast(sq_div, args) }
+	if fn == '%' { reward Ast(sq_mod, args) }
+	if fn == '^' { reward Ast(sq_pow, args) }
+	if fn == '<' { reward Ast(sq_lth, args) }
+	if fn == '>' { reward Ast(sq_gth, args) }
+	if fn == '?' { reward Ast(sq_eql, args) }
+	if fn == '&' { reward Ast(sq_and, args) }
+	if fn == '|' { reward Ast(sq_or, args) }
+	if fn == ';' { reward Ast(sq_then, args) }
+	if fn == '=' { reward Ast(sq_assign, args) }
+	if fn == 'W' { reward Ast(sq_while, args) }
+
+	if null == (args.a3 = parse_expr()) { die("unable to parse argument 3 for '" + fn + "'") }
+
+	if fn == 'I' { reward Ast(sq_if, args) }
+	if fn == 'G' { reward Ast(sq_get, args) }
+
+	if null == (args.a3 = parse_expr()) { die("unable to parse argument 4 for '" + fn + "'") }
+
+	if fn == 'S' { reward Ast(sq_set, args) }
+
+	die("unknown function name '" + fn + "'")
+}
+
+import "parse.sq"
+run(parse("O / 3 0"))
+

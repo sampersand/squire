@@ -624,7 +624,17 @@ static void compile_statements(struct sq_code *code, struct statements *stmts) {
 
 	while ((stmt = *stmtptr++)) {
 		switch (stmt->kind) {
-		case SQ_PS_SGLOBAL: declare_global(stmt->gdecl, SQ_NULL); break;
+		case SQ_PS_SGLOBAL: {
+			unsigned glbl = declare_global(stmt->gdecl->name, SQ_NULL);
+			if (stmt->gdecl->value) {
+				unsigned index = compile_expr(code, stmt->gdecl->value);
+				set_opcode(code, SQ_OC_GSTORE);
+				set_index(code, index);
+				set_index(code, glbl);
+				set_index(code, next_local(code));
+			}
+			break;
+		}
 		case SQ_PS_SIMPORT: compile_import(code, stmt->import); break;
 		case SQ_PS_SSTRUCT: compile_struct(code, stmt->sdecl); break;
 		case SQ_PS_SFUNC: compile_func(code, stmt->fdecl); break;

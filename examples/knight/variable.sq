@@ -3,7 +3,7 @@ import "utils.sq"
 struct Variable { name, value }
 struct VariableLinkedList { node, next }
 
-journey new_variable(name) {
+journey fetch_variable(name) {
 	renowned variable_list
 	var = variable_list
 
