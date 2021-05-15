@@ -1,24 +1,27 @@
 import "utils.sq"
 
 struct Variable { name, value }
+
+# lol no native arrays
 struct VariableLinkedList { node, next }
 
 journey fetch_variable(name) {
-	renowned variable_list
+	global variable_list
 	var = variable_list
 
-	if var == nothing {
-		variable_list = VariableLinkedList(Variable(name, nuthin), nuthin)
+	# parens aren't required
+	if var == null {
+		variable_list = VariableLinkedList(Variable(name, null), null)
 		reward variable_list.node
 	}
 
-	whilst yay {
+	whilst true {
 		if name == var.node.name {
 			reward var.node
 		}
 
-		if var.next == nuthin {
-			var.next = VariableLinkedList(Variable(name, nuthin), nuthin)
+		if var.next == null {
+			var.next = VariableLinkedList(Variable(name, null), null)
 			reward var.next.node
 		}
 
@@ -27,7 +30,7 @@ journey fetch_variable(name) {
 }
 
 journey run_variable(variable) {
-	if variable.value == nuthin {
+	if variable.value == null {
 		die("undefined variable '" + variable.name + "'")
 	}
 
@@ -37,5 +40,3 @@ journey run_variable(variable) {
 journey assign_variable(variable, value) {
 	variable.value = value
 }
-
-

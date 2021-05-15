@@ -41,7 +41,7 @@ journey stripwhitespace() {
 
 	if peek() == '#' {
 		take_while(journey(chr) { reward chr != '\n' })
-		reward stripwhitespace()
+		stripwhitespace()
 	}
 }
 
@@ -86,4 +86,3 @@ journey parse(stream) {
 	parse_stream = stream
 	reward parse_expr()
 }
-

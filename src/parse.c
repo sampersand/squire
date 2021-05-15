@@ -6,7 +6,6 @@
 #include "struct.h"
 #include <string.h>
 
-const char *stream;
 struct sq_token last;
 bool rewound;
 
@@ -19,7 +18,7 @@ static struct sq_token take_endline() {
 	if (rewound) {
 		rewound = false;
 	} else {
-		last = sq_next_token(&stream);
+		last = sq_next_token();
 	}
 
 	return last;
@@ -523,10 +522,10 @@ static struct statements *parse_statements() {
 	return stmts;
 }
 
-struct statements *sq_parse_statements(const char *stream_) {
+struct statements *sq_parse_statements(const char *stream) {
 	last.kind = SQ_TK_UNDEFINED;
 	rewound = false;
-	stream = stream_;
+	sq_stream = stream;
 	return parse_statements();
 }
 

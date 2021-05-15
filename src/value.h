@@ -123,6 +123,7 @@ sq_value sq_value_clone(sq_value value);
 void sq_value_dump(sq_value value);
 void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value);
+sq_value sq_value_kindof(sq_value value);
 
 bool sq_value_not(sq_value arg);
 bool sq_value_eql(sq_value lhs, sq_value rhs);

@@ -45,8 +45,8 @@ static unsigned tohex(char c) {
 	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 
-struct sq_token sq_next_token(const char *sq_stream) {
-	strip_whitespace(sq_stream);
+struct sq_token sq_next_token() {
+	strip_whitespace();
 	struct sq_token token;
 
 	if (!*sq_stream) {

@@ -94,6 +94,40 @@ const char *sq_value_typename(sq_value value) {
 	}
 }
 
+sq_value sq_value_kindof(sq_value value) {
+	static struct sq_string KIND_BOOLEAN = SQ_STRING_STATIC("boolean");
+	static struct sq_string KIND_NULL = SQ_STRING_STATIC("null");
+	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("number");
+	static struct sq_string KIND_STRING = SQ_STRING_STATIC("string");
+	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("function");
+	static struct sq_string KIND_STRUCT = SQ_STRING_STATIC("struct");
+
+	switch (SQ_VTAG(value)) {
+	case SQ_TBOOLEAN:
+		return sq_value_new_string(&KIND_BOOLEAN);
+
+	case SQ_TNULL:
+		return sq_value_new_string(&KIND_NULL);
+
+	case SQ_TNUMBER:
+		return sq_value_new_string(&KIND_NUMBER);
+
+	case SQ_TSTRING:
+		return sq_value_new_string(&KIND_STRING);
+
+	case SQ_TINSTANCE:
+		return sq_valuee_new_struct(sq_struct_clone(sq_value_as_instance(value)->kind));
+
+	case SQ_TFUNCTION:
+		return sq_value_new_string(&KIND_FUNCTION);
+
+	case SQ_TSTRUCT:
+		return sq_value_new_string(&KIND_STRUCT);
+
+	default: die("unknown tag '%d'", (int) SQ_VTAG(value));
+	}
+}
+
 bool sq_value_not(sq_value arg) {
 	return sq_value_to_boolean(arg) == SQ_FALSE;
 }

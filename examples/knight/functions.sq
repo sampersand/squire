@@ -1,12 +1,13 @@
-import "variable.sq"
-
+global die
 struct Args { a1, a2, a3, a4 }
 struct Ast { fn, args }
 
 journey run(arg) {
+	global run_variable
+	global Variable
+
 	if kindof(arg) == Ast { fn = arg.fn; reward fn(arg.args) }
 	if kindof(arg) == Variable { reward run_variable(arg) }
-
 	reward arg
 }
 
@@ -88,8 +89,6 @@ journey sq_output(args) {
 	} else {
 		print(text + "\n")
 	}
-
-	reward null
 }
 
 # Arity two
@@ -139,7 +138,107 @@ journey sq_mod(args) {
 }
 
 journey sq_pow(args) {
-	die("todo: pow")
+	if kindof(base = run(args.a1)) != 'number' { die("cannot exponentiate a '" + kindof(base) + "'") }
+	if kindof(exp = run(args.a2)) != 'number' { die("cannot exponentiate by a '" + kindof(exp) + "'") }
+
+	if exp < 0 {
+		if base == -1 { if exp % 2 { reward -1 } else { reward 1 } }
+		if base == 0 { die("cannot exponentiate zero by a negative power") }
+		if base == 1 { reward 1 }
+		reward 0
+	}
+
+	result = 1
+	whilst exp {
+		result = result * base
+		exp = exp - 1
+	}
+
+	reward result
+}
+
+journey sq_lth(args) {
+	kind = kindof(lhs = run(args.a1))
+
+	if kind == 'number' { reward lhs < to_number(args.a2) }
+	if kind == 'string' { reward lhs < to_string(args.a2) }
+	if kind == 'boolean' { reward to_boolean(args.a2) && !lhs }
+
+	die("cannot compare a '" + kind + "'")
+}
+
+journey sq_gth(args) {
+	kind = kindof(lhs = run(args.a1))
+
+	if kind == 'number' { reward lhs > to_number(args.a2) }
+	if kind == 'string' { reward lhs > to_string(args.a2) }
+	if kind == 'boolean' { reward !to_boolean(args.a2) && lhs }
+
+	die("cannot compare a '" + kind + "'")
+}
+
+journey sq_eql(args) {
+	reward run(args.a1) == run(args.a2)
+}
+
+journey sq_and(args) {
+	if to_boolean(lhs = run(args.a1)) {
+		reward run(args.a2)
+	} else {
+		reward lhs
+	}
+}
+
+journey sq_or(args) {
+	if to_boolean(lhs = run(args.a1)) {
+		reward lhs
+	} else {
+		reward run(args.a2)
+	}
+}
+
+journey sq_then(args) {
+	run(args.a1)
+	reward run(args.a2)
+}
+
+journey sq_assign(args) {
+	global assign_variable
+	assign_variable(args.a1, value=run(args.a2))
+	reward value
+}
+
+journey sq_while(args) {
+	whilst to_boolean(args.a1) {
+		run(args.a2)
+	}
+}
+
+# Arity three
+
+journey sq_if(args) {
+	if to_boolean(args.a1) {
+		reward run(args.a2)
+	} else {
+		reward run(args.a3)
+	}
+}
+
+journey sq_get(args) {
+	str = to_string(args.a1)
+	start = to_number(args.a2)
+	len = to_number(args.a3)
+
+	reward substr(str, start, len)
+}
+
+journey sq_subs(args) {
+	str = to_string(args.a1)
+	start = to_number(args.a2)
+	len = to_number(args.a3)
+	repl = to_string(args.a4)
+
+	reward substr(str, 0, start) + repl + substr(str, start + len, length(str) - 1)
 }
 
 journey parse_function(fn) {
@@ -194,5 +293,14 @@ journey parse_function(fn) {
 	die("unknown function name '" + fn + "'")
 }
 
+
 import "parse.sq"
-run(parse("O / 3 0"))
+import "variable.sq"
+dump(run(parse("
+; = n 0 
+; = sum 0
+; WHILE < n 11
+	; = sum + sum n
+	: = n + n 1
+
+: OUTPUT + \"sum(1..10)=\" sum ")))
