@@ -9,18 +9,19 @@ struct sq_string;
 struct sq_struct;
 struct sq_instance;
 struct sq_function;
+struct sq_array;
 
 typedef int64_t sq_number;
 typedef uint64_t sq_value;
 
 typedef enum {
-	SQ_TBOOLEAN,
-	SQ_TNULL,
+	SQ_TCONST,
 	SQ_TNUMBER,
 	SQ_TSTRING,
 	SQ_TSTRUCT,
 	SQ_TINSTANCE,
 	SQ_TFUNCTION,
+	SQ_TARRAY,
 } sq_vtag;
 
 #define SQ_VSHIFT 3
@@ -28,9 +29,9 @@ typedef enum {
 #define SQ_VMASK(value, kind) ((value) | (kind))
 #define SQ_VTAG(value) ((value) & SQ_VMASK_BITS)
 #define SQ_VUNMASK(value) ((value) & ~SQ_VMASK_BITS)
-#define SQ_TRUE SQ_VMASK((true << SQ_VSHIFT), SQ_TBOOLEAN)
-#define SQ_FALSE SQ_VMASK(false, SQ_TBOOLEAN)
-#define SQ_NULL SQ_VMASK(0, SQ_TNULL)
+#define SQ_TRUE SQ_VMASK((1 << SQ_VSHIFT), SQ_TCONST)
+#define SQ_FALSE SQ_VMASK(0, SQ_TCONST)
+#define SQ_NULL SQ_VMASK((2 << SQ_VSHIFT), SQ_TCONST)
 
 static inline sq_value sq_value_new_number(sq_number number) {
 	assert(number == (((sq_number) (((sq_value) number << SQ_VSHIFT)) >> SQ_VSHIFT)));
@@ -61,6 +62,11 @@ static inline sq_value sq_value_new_function(struct sq_function *function) {
 	return SQ_VMASK((sq_value) function, SQ_TFUNCTION);
 }
 
+static inline sq_value sq_value_new_array(struct sq_array *array) {
+	assert(!SQ_VTAG((sq_value) array));
+	return SQ_VMASK((sq_value) array, SQ_TARRAY);
+}
+
 static inline bool sq_value_is_null(sq_value value) {
 	return value == SQ_NULL;
 }
@@ -87,6 +93,10 @@ static inline bool sq_value_is_instance(sq_value value) {
 
 static inline bool sq_value_is_function(sq_value value) {
 	return SQ_VTAG(value) == SQ_TFUNCTION;
+}
+
+static inline bool sq_value_is_array(sq_value value) {
+	return SQ_VTAG(value) == SQ_TARRAY;
 }
 
 static inline sq_number sq_value_as_number(sq_value value) {
@@ -117,6 +127,11 @@ static inline struct sq_instance *sq_value_as_instance(sq_value value) {
 static inline struct sq_function *sq_value_as_function(sq_value value) {
 	assert(sq_value_is_function(value));
 	return (struct sq_function *) SQ_VUNMASK(value);
+}
+
+static inline struct sq_array *sq_value_as_array(sq_value value) {
+	assert(sq_value_is_array(value));
+	return (struct sq_array *) SQ_VUNMASK(value);
 }
 
 sq_value sq_value_clone(sq_value value);

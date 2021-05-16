@@ -8,20 +8,21 @@ exe=$(BINDIR)/squire
 dyn=$(BINDIR)/libsquire.so
 objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 
-override CFLAGS+=-F$(SRCDIR)
+CFLAGS=-F$(SRCDIR)
 
 ifdef DEBUG
-override CFLAGS+=-g -fsanitize=address,undefined
+CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
 else
-override CFLAGS+=-O3 -flto -march=native -DNDEBUG
+CFLAGS+=-O2 -flto -march=native -DNDEBUG
 endif
 
 ifdef COMPUTED_GOTOS
-override CFLAGS+=-DKN_COMPUTED_GOTOS -Wno-gnu-label-as-value -Wno-gnu-designator
+CFLAGS+=-DKN_COMPUTED_GOTOS -Wno-gnu-label-as-value -Wno-gnu-designator
 endif
 
 .PHONY: all optimized clean shared
 
+CFLAGS+= $(EFLAGS)
 all: $(exe)
 shared: $(dyn)
 

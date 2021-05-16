@@ -156,7 +156,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				if (sq_value_is_instance(value))
 					NEXT_LOCAL() = sq_value_new_struct(sq_value_as_instance(value)->kind);
 				else
-					NEXT_LOCAL() = sq_value_new_string(sq_value_kindof(value));
+					NEXT_LOCAL() = sq_value_kindof(value);
 				break;
 			}
 
@@ -291,6 +291,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_RETURN:
 			value = NEXT_LOCAL();
 			sq_value_clone(value);
+			sq_value_clone(value);
 			goto done;
 
 	/*** Math ***/
@@ -385,6 +386,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 	/*** Constants ***/
 
 		case SQ_OC_CLOAD:
+	
 			value = function->consts[NEXT_INDEX()];
 			sq_value_clone(value);
 			NEXT_LOCAL() = value;

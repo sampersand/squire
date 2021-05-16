@@ -100,18 +100,18 @@ void sq_instance_free(struct sq_instance *instance) {
 }
 
 void sq_instance_dump(const struct sq_instance *instance) {
-	printf("Instance(%s:", instance->kind->name);
+	printf("%s(", instance->kind->name);
 
 	for (unsigned i = 0; i < instance->kind->nfields; ++i) {
 		if (i != 0)
-			putchar(',');
+			printf(", ");
 
-		printf(" %s=", instance->kind->fields[i]);
+		printf("%s=", instance->kind->fields[i]);
 		sq_value_dump(instance->fields[i]);
 	}
 
 	if (!instance->kind->nfields)
-		printf(" <no fields>");
+		printf("<no fields>");
 
 	printf(")");
 }

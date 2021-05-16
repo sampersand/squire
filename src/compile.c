@@ -91,8 +91,8 @@ static int lookup_constant(struct sq_code *code, sq_value value) {
 	// check to see if we've declared the constant before. if so, reuse that.
 	for (unsigned i = 0; i < code->consts.len; ++i) {
 		if (sq_value_eql(code->consts.ary[i], value)) {
-			sq_value_free(value); // free it as we're no longer using it.
-			return i;
+			// sq_value_free(value); // free it as we're no longer using it.
+			return -1; // TODO: THIS does not work because of a bug...
 		}
 	}
 
@@ -111,7 +111,7 @@ static unsigned load_constant(struct sq_code *code, sq_value value) {
 	// if we haven't encountered the value before, load it.
 	if (index == -1) {
 		set_opcode(code, SQ_OC_CLOAD);
-		set_index(code, value);
+		set_index(code, declare_constant(code, value));
 		set_index(code, index = next_local(code));
 	}
 
@@ -187,7 +187,7 @@ static unsigned load_identifier(struct sq_code *code, char *name) {
 	if ((index = lookup_local_variable(code, name)) != -1)
 		return index;
 
-	if ((index = lookup_global_variable(name)) == -1) {
+	if ((index = lookup_global_variable(name)) != -1) {
 		set_opcode(code, SQ_OC_GLOAD);
 		set_index(code, index);
 		set_index(code, index = next_local(code));
@@ -296,7 +296,7 @@ static void compile_while_statement(struct sq_code *code, struct while_statement
 	free(wstmt);
 }
 
-static void compile_return_statement(struct sq_code *code, struct return_statement *rstmt) {
+static void compile_return_statement(struct sq_code *code, struct return_statement *rstmt, bool tofree) {
 	unsigned index;
 
 	if (rstmt->value == NULL) {
@@ -308,7 +308,8 @@ static void compile_return_statement(struct sq_code *code, struct return_stateme
 	set_opcode(code, SQ_OC_RETURN);
 	set_index(code, index);
 
-	free(rstmt);
+	if (tofree)
+		free(rstmt);
 }
 
 static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
@@ -381,11 +382,8 @@ static unsigned compile_mul(struct sq_code *code, struct mul_expression *mul) {
 
 	lhs = compile_unary(code, mul->lhs);
 
-	if (mul->rhs == NULL) {
-		assert(mul->kind == SQ_PS_MUNARY);
-	} else {
+	if (mul->kind != SQ_PS_MUNARY)
 		rhs = compile_mul(code, mul->rhs);
-	}
 
 	switch (mul->kind) {
 	case SQ_PS_MMUL: set_opcode(code, SQ_OC_MUL); break;
@@ -409,11 +407,8 @@ static unsigned compile_add(struct sq_code *code, struct add_expression *add) {
 	unsigned lhs, rhs, result;
 
 	lhs = compile_mul(code, add->lhs);
-	if (add->rhs == NULL) {
-		assert(add->kind == SQ_PS_AMUL);
-	} else {
+	if (add->kind != SQ_PS_AMUL)
 		rhs = compile_add(code, add->rhs);
-	}
 
 	switch (add->kind) {
 	case SQ_PS_AADD: set_opcode(code, SQ_OC_ADD); break;
@@ -436,11 +431,8 @@ static unsigned compile_cmp(struct sq_code *code, struct cmp_expression *cmp) {
 	unsigned lhs, rhs, result;
 
 	lhs = compile_add(code, cmp->lhs);
-	if (cmp->rhs == NULL) {
-		assert(cmp->kind == SQ_PS_CADD);
-	} else {
+	if (cmp->kind != SQ_PS_CADD)
 		rhs = compile_cmp(code, cmp->rhs);
-	}
 
 	switch (cmp->kind) {
 	case SQ_PS_CLTH: set_opcode(code, SQ_OC_LTH); break;
@@ -466,11 +458,8 @@ static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
 	unsigned lhs, rhs, result;
 
 	lhs = compile_cmp(code, eql->lhs);
-	if (eql->rhs == NULL) {
-		assert(eql->kind == SQ_PS_ECMP);
-	} else {
+	if (eql->kind != SQ_PS_CADD)
 		rhs = compile_eql(code, eql->rhs);
-	}
 
 	switch (eql->kind) {
 	case SQ_PS_EEQL: set_opcode(code, SQ_OC_EQL); break;
@@ -493,11 +482,8 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 	unsigned lhs, rhs;
 
 	lhs = compile_eql(code, bool_->lhs);
-	if (bool_->rhs == NULL) {
-		assert(bool_->kind == SQ_PS_BEQL);
-	} else {
+	if (bool_->kind != SQ_PS_BEQL)
 		rhs = compile_bool(code, bool_->rhs);
-	}
 
 	switch (bool_->kind) {
 	case SQ_PS_BAND: set_opcode(code, SQ_OC_JMP_FALSE); break;
@@ -530,6 +516,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expression(code, fncall->args[i]);
+
 
 #define BUILTIN_FN(name_, int_, argc_) \
 	if (!strcmp(fncall->func->name, name_)) { \
@@ -574,6 +561,7 @@ arguments:
 static unsigned compile_expression(struct sq_code *code, struct expression *expr) {
 	unsigned index;
 	int variable;
+
 	switch (expr->kind) {
 	case SQ_PS_EFNCALL:
 		return compile_function_call(code, expr->fncall);
@@ -674,15 +662,16 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;
-	case SQ_PS_SRETURN: compile_return_statement(code, stmt->rstmt); break;
+	case SQ_PS_SRETURN: compile_return_statement(code, stmt->rstmt, true); break;
 	case SQ_PS_SEXPR: compile_expression(code, stmt->expr); break;
 	default: bug("unknown statement kind '%d'", stmt->kind);
 	}
 }
 
 static void compile_statements(struct sq_code *code, struct statements *stmts) {
-	for (unsigned i = 0; i < stmts->len; ++i)
+	for (unsigned i = 0; i < stmts->len; ++i) {
 		compile_statement(code, stmts->stmts[i]);
+	}
 }
 
 static struct sq_function *compile_function(struct func_declaration *fndecl) {
@@ -705,9 +694,12 @@ static struct sq_function *compile_function(struct func_declaration *fndecl) {
 		code.vars.ary[i].index = next_local(&code);
 	}
 
-	compile_statements(&code, fndecl->body);
+
+	if (fndecl->body != NULL)
+		compile_statements(&code, fndecl->body);
+
 	struct return_statement return_null = { .value = NULL };
-	compile_return_statement(&code, &return_null);
+	compile_return_statement(&code, &return_null, false);
 
 	struct sq_function *fn = xmalloc(sizeof(struct sq_function));
 

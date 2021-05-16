@@ -129,6 +129,7 @@ static struct primary *parse_primary() {
 	case SQ_TK_IDENT: {
 		untake();
 		struct variable *var = parse_variable();
+
 		if (take().kind == SQ_TK_LPAREN) {
 			primary.kind = SQ_PS_PPAREN;
 			primary.expr = xmalloc(sizeof(struct expression));
@@ -513,8 +514,6 @@ static struct statements *parse_statements() {
 			endl = true;
 		untake(); // as the while statement broke it.
 	}
-
-	list[len++] = NULL;
 
 	struct statements *stmts = xmalloc(sizeof(struct statements));
 	stmts->len = len;

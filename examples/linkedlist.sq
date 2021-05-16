@@ -1,0 +1,32 @@
+struct LinkedList {
+	value, next
+}
+
+journey empty() {
+	reward null
+}
+
+journey pure(value) {
+	reward LinkedList(value, null)
+}
+
+journey car(list) {
+	reward list.value
+}
+
+journey cdr(list) {
+	reward list.next
+}
+
+journey cons(head, rest) {
+	reward LinkedList(head, rest)
+}
+
+journey fetch(list, index) {
+	whilst index {
+		list = list.next
+		index = index - 1
+	}
+
+	reward list.value
+}
