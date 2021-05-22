@@ -596,15 +596,13 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("random", SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert", SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete", SQ_INT_ARRAY_DELETE, 2);
-	BUILTIN_FN("_index", SQ_INT_ARRAY_INDEX, 2);
-	BUILTIN_FN("_index_assign", SQ_INT_ARRAY_INDEX_ASSIGN, 3);
 
-	if (!strcmp(fncall->func->name, "_array")) {
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_ARRAY_NEW);
-		set_index(code, fncall->arglen);
-		goto arguments;
-	}
+	// if (!strcmp(fncall->func->name, "array")) {
+	// 	set_opcode(code, SQ_OC_INT);
+	// 	set_index(code, SQ_INT_ARRAY_NEW);
+	// 	set_index(code, fncall->arglen);
+	// 	goto arguments;
+	// }
 
 	set_opcode(code, SQ_OC_NOOP);
 	unsigned var = load_identifier(code, fncall->func->name);
