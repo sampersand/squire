@@ -16,7 +16,6 @@ journey to_number(arg) { reward number(run(arg)) }
 journey to_boolean(arg) { reward boolean(run(arg)) }
 
 # Arity zero
-
 journey sq_prompt(_args) {
 	reward prompt()
 }
@@ -242,6 +241,7 @@ journey sq_subs(args) {
 }
 
 journey parse_function(fn) {
+	dump(1)
 	global parse_expr
 
 	args = Args(null, null, null, null)
@@ -293,14 +293,4 @@ journey parse_function(fn) {
 	die("unknown function name '" + fn + "'")
 }
 
-
-import "parse.sq"
-import "variable.sq"
-dump(run(parse("
-; = n 0 
-; = sum 0
-; WHILE < n 11
-	; = sum + sum n
-	: = n + n 1
-
-: OUTPUT + \"sum(1..10)=\" sum ")))
+dump(parse_function)

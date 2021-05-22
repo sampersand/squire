@@ -1,12 +1,10 @@
-import "linkedlist.sq"
-
 journey timestr(time) {
 	if time % 2 { minutes = "30" }
 	else { minutes = "00"};
 
 	rawhours = time / 2;
 
-	if (rawhours % 12) { hours = string(rawhours % 12) }
+	if rawhours % 12 { hours = string(rawhours % 12) }
 	else { hours = "12"};
 
 	if rawhours >= 12 { ampm = "pm" }
@@ -15,12 +13,8 @@ journey timestr(time) {
 	reward hours + ":" + minutes + " " + ampm
 }
 
-
-journey shared_times(usera, userb) {
-	shared = empty()
-
-	i = 0
+i = 0
+whilst i <= 49 {
+	print(string(i) + ", " + timestr(i) + "\n")
+	i = i + 1
 }
-
-usera = cons(1, cons(3, cons(9, empty())))
-#dump(share(foo, 1))

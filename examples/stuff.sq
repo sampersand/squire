@@ -1,0 +1,6 @@
+
+journey isspace(chr) {
+	reward chr == '{' || chr == '}' || chr == '(' || chr == ')' || chr == '['
+	    || chr == ']' || chr == ':' || chr == ' '
+}
+__END__

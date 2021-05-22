@@ -8,7 +8,7 @@ exe=$(BINDIR)/squire
 dyn=$(BINDIR)/libsquire.so
 objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 
-CFLAGS=-F$(SRCDIR)
+CFLAGS+=-F$(SRCDIR)
 
 ifdef DEBUG
 CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
@@ -20,6 +20,7 @@ ifdef COMPUTED_GOTOS
 CFLAGS+=-DKN_COMPUTED_GOTOS -Wno-gnu-label-as-value -Wno-gnu-designator
 endif
 
+CFLAGS+=$(CEXTRA)
 .PHONY: all optimized clean shared
 
 CFLAGS+= $(EFLAGS)

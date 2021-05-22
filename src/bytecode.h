@@ -2,18 +2,26 @@
 #define SQ_BYTECODE_H
 
 enum sq_interrupts {
-	SQ_INT_PRINT,
-	SQ_INT_TONUMBER,
-	SQ_INT_TOSTRING,
-	SQ_INT_TOBOOLEAN,
-	SQ_INT_DUMP,
-	SQ_INT_SUBSTR,
-	SQ_INT_LENGTH,
-	SQ_INT_EXIT,
-	SQ_INT_KINDOF,
-	SQ_INT_SYSTEM,
-	SQ_INT_PROMPT,
-	SQ_INT_RANDOM
+	SQ_INT_TONUMBER           =  1,
+	SQ_INT_TOSTRING           =  2,
+	SQ_INT_TOBOOLEAN          =  3,
+	SQ_INT_KINDOF             =  4,
+
+	SQ_INT_PRINT              = 10,
+	SQ_INT_DUMP               = 11,
+	SQ_INT_PROMPT             = 12,
+	SQ_INT_SYSTEM             = 13,
+	SQ_INT_EXIT               = 14,
+	SQ_INT_RANDOM             = 15,
+
+	SQ_INT_SUBSTR             = 20,
+	SQ_INT_LENGTH             = 21,
+
+	SQ_INT_ARRAY_NEW          = 30,
+	SQ_INT_ARRAY_INSERT       = 31,
+	SQ_INT_ARRAY_DELETE       = 32,
+	SQ_INT_ARRAY_INDEX        = 33,
+	SQ_INT_ARRAY_INDEX_ASSIGN = 34,
 };
 
 enum sq_opcode {

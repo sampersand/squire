@@ -1,0 +1,21 @@
+#!../../squire -f
+
+journey die(message) {
+	print(message + "\n");
+	exit(1)
+}
+
+import "./variable.sq"
+import "./parse.sq"
+import "./functions.sq"
+
+
+if _index(ARGV, 1) == '-e' {
+	expr = _index(ARGV, 2)
+} else if _index(ARGV, 1) == '-f' {
+	expr = system("cat " + _index(ARGV, 2))
+} else {
+	die("usage: " + _index(ARGV, 0) + " (-e 'expr' | -f filename)")
+}
+
+dump(parse(expr))

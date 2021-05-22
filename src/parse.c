@@ -97,6 +97,41 @@ static struct function_call *parse_func_call(struct variable *func) {
 	return fncall;
 }
 
+static struct array_index *parse_array_index(struct variable *array) {
+	struct array_index *array_index = xmalloc(sizeof(struct array_index));
+	array_index->array = array;
+	if (!(array_index->index = parse_expression())) die("Cant compile array index");
+	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
+	return array_index;
+}
+
+static struct array *parse_array() {
+	unsigned len = 0, cap = 8;
+	struct expression **args = xmalloc(sizeof(struct expression[cap]));
+
+	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
+		if (last.kind == SQ_TK_UNDEFINED)
+			die("missing rparen for array call");
+
+		if (len == cap)
+			args = xrealloc(args, sizeof(struct expression[cap *= 2]));
+
+		args[len++] = parse_expression();
+
+		if (take().kind != SQ_TK_COMMA) {
+			untake();
+			break;
+		}
+	}
+
+	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of array");
+
+	struct array *array = xmalloc(sizeof(struct array));
+	array->nargs = len;
+	array->args = args;
+	return array;
+}
+
 static struct func_declaration *parse_func_declaration();
 static struct primary *parse_primary() {
 	struct primary primary;
@@ -106,6 +141,10 @@ static struct primary *parse_primary() {
 		primary.kind = SQ_PS_PPAREN;
 		primary.expr = parse_expression();
 		EXPECT(SQ_TK_RPAREN, "expected a ')' at end of paren expr");
+		break;
+	case SQ_TK_LBRACKET:
+		primary.kind = SQ_PS_PARRAY;
+		primary.array = parse_array();
 		break;
 	case SQ_TK_NUMBER:
 		primary.kind = SQ_PS_PNUMBER;
@@ -135,6 +174,9 @@ static struct primary *parse_primary() {
 			primary.expr = xmalloc(sizeof(struct expression));
 			primary.expr->kind = SQ_PS_EFNCALL;
 			primary.expr->fncall = parse_func_call(var);
+		} else if (last.kind == SQ_TK_LBRACKET) {
+			primary.kind = SQ_PS_PARRAY_INDEX;
+			primary.array_index = parse_array_index(var);
 		} else {
 			untake();
 			primary.kind = SQ_PS_PVARIABLE;
@@ -326,6 +368,21 @@ static struct assignment *parse_assignment(struct variable *var) {
 	return asgn;
 }
 
+static struct array_assignment *parse_array_assignment(struct array_index *aidx) {
+	GUARD(SQ_TK_ASSIGN);
+
+	struct array_assignment *ary_asgn = xmalloc(sizeof(struct array_assignment));
+
+	ary_asgn->var = aidx->array;
+	ary_asgn->index = aidx->index;
+	free(aidx);
+
+	if (!(ary_asgn->value = parse_expression()))
+		die("cannot parse value for ary assignment");
+
+	return ary_asgn;
+}
+
 static struct expression *parse_expression() {
 	struct expression expr;
 	expr.kind = SQ_PS_EMATH;
@@ -339,16 +396,23 @@ static struct expression *parse_expression() {
 		|| expr.math->lhs->lhs->lhs->kind != SQ_PS_AMUL
 		|| expr.math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
 		|| expr.math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
-		|| expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
+		|| (expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
+		&& expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PARRAY_INDEX)
 	) goto done;
 
-	struct variable *var = expr.math->lhs->lhs->lhs->lhs->lhs->rhs->variable;
+	struct primary *prim = expr.math->lhs->lhs->lhs->lhs->lhs->rhs;
+
 	take();
 	untake();
 
 	if (last.kind == SQ_TK_ASSIGN) {
-		expr.kind = SQ_PS_EASSIGN;
-		expr.asgn = parse_assignment(var);
+		if (prim->kind == SQ_PS_PVARIABLE) {
+			expr.kind = SQ_PS_EASSIGN;
+			expr.asgn = parse_assignment(prim->variable);
+		} else {
+			expr.kind = SQ_PS_EARRAY_ASSIGN;
+			expr.ary_asgn = parse_array_assignment(prim->array_index);
+		}
 	}
 
 done:
@@ -448,7 +512,7 @@ static struct if_statement *parse_if_statement() {
 		untake();
 		if (last.kind == SQ_TK_IF) {
 			if_stmt->iffalse = xmalloc(sizeof(struct statements));
-			if_stmt->iffalse->len = 2;
+			if_stmt->iffalse->len = 1;
 			if_stmt->iffalse->stmts = xmalloc(sizeof(struct statement *[2]));
 			if_stmt->iffalse->stmts[0] = xmalloc(sizeof(struct statement));
 			if_stmt->iffalse->stmts[0]->kind = SQ_PS_SIF;

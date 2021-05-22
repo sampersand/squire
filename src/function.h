@@ -10,7 +10,7 @@ struct sq_function {
 	char *name;
 	int refcount; // negative indicates a global function.
 
-	unsigned argc, nlocals, nconsts;
+	unsigned argc, nlocals, nconsts, codelen;
 	sq_value *consts;
 	struct sq_program *program;
 	union sq_bytecode *bytecode;

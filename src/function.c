@@ -3,6 +3,7 @@
 #include "program.h"
 #include "shared.h"
 #include "struct.h"
+#include "array.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,9 +58,10 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 	sq_value value;
 	enum sq_opcode opcode;
 
-	for (unsigned i = 0; i < argc; ++i) {
+	// printf("argc=%d, nlocals=%d\n", argc, function->nlocals);
+
+	for (unsigned i = 0; i < argc; ++i)
 		locals[i] = args[i];
-	}
 
 	// printf("starting function '%s'\n", function->name);
 	for (unsigned i = argc; i < function->nlocals; ++i)
@@ -68,8 +70,13 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 	unsigned ip = 0;
 
 	while (true) {
+		if (ip == function->codelen) {
+			value = SQ_NULL;
+			goto done;
+		}
+
 		opcode = function->bytecode[ip++].opcode;
-		// LOG("loaded opcode '%02x'", opcode);
+		// printf("loaded opcode '%02x'\n", opcode);
 
 		switch (opcode) {
 
@@ -99,11 +106,11 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			switch ((idx = NEXT_INDEX())) {
 			case SQ_INT_PRINT: {
 				string = sq_value_to_string(NEXT_LOCAL());
-				printf("%s", string->ptr);
 				sq_string_free(string);
 				NEXT_LOCAL() = SQ_NULL;
 				break;
 			}
+
 			case SQ_INT_DUMP: {
 				value = NEXT_LOCAL();
 				sq_value_dump(value);
@@ -145,11 +152,18 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				break;
 			}
 
-			case SQ_INT_LENGTH: {
-				string = sq_value_to_string(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_new_number(string->length);
+			case SQ_INT_LENGTH:
+				value = NEXT_LOCAL();
+
+				if (sq_value_is_array(value)) {
+					value = sq_value_new_number(sq_value_as_array(value)->len);
+				} else {
+					string = sq_value_to_string(value);
+					value = sq_value_new_number(string->length);
+				}
+
+				NEXT_LOCAL() = value;
 				break;
-			}
 
 			case SQ_INT_KINDOF: {
 				value = NEXT_LOCAL();
@@ -225,8 +239,63 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				NEXT_LOCAL() = sq_value_new_number(rand());
 				break;
 
+			case SQ_INT_ARRAY_NEW: {
+				unsigned amnt = NEXT_INDEX();
+				sq_value *eles = xmalloc(sizeof(sq_value [amnt]));
+
+				for (unsigned i = 0; i < amnt; ++i) {
+					eles[i] = NEXT_LOCAL();
+				}
+
+				NEXT_LOCAL() = sq_value_new_array(sq_array_new(amnt, eles));
+				break;
+			}
+
+
+			case SQ_INT_ARRAY_INSERT: {
+				value = NEXT_LOCAL();
+				if (!sq_value_is_array(value)) die("can only insert into arrays");
+				struct sq_array *array = sq_value_as_array(value);
+
+				unsigned index = sq_value_to_number(NEXT_LOCAL());
+				sq_array_insert(array, index, NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_clone(value);
+				break;
+			}
+
+			case SQ_INT_ARRAY_DELETE: {
+				value = NEXT_LOCAL();
+				if (!sq_value_is_array(value)) die("can only delete from arrays");
+				struct sq_array *array = sq_value_as_array(value);
+				unsigned index = sq_value_to_number(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_array_delete(array, index);
+				break;
+			}
+
+			case SQ_INT_ARRAY_INDEX: {
+				value = NEXT_LOCAL();
+				if (!sq_value_is_array(value)) die("can only index into arrays");
+				struct sq_array *array = sq_value_as_array(value);
+
+				unsigned index = sq_value_to_number(NEXT_LOCAL());
+				NEXT_LOCAL() = sq_array_index(array, index);
+				break;
+			}
+
+			case SQ_INT_ARRAY_INDEX_ASSIGN: {
+				value = NEXT_LOCAL();
+				if (!sq_value_is_array(value)) die("can only index assign into arrays");
+				struct sq_array *array = sq_value_as_array(value);
+
+				unsigned index = sq_value_to_number(NEXT_LOCAL());
+				sq_array_index_assign(array, index, value = NEXT_LOCAL());
+				NEXT_LOCAL() = sq_value_clone(value);
+				break;
+			}
+
+
 			default:
-				bug("unknown index: %d", idx);
+				bug("unknown interrupt: %d", idx);
 			}
 
 			continue;
@@ -275,6 +344,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				struct sq_function *fn = sq_value_as_function(instance_value);
 				if (argc != fn->argc)
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
+			printf("function=%s\n", fn->name);
 				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
 			} else if (sq_value_is_struct(instance_value)) {
 				struct sq_struct *kind = sq_value_as_struct(instance_value);
@@ -402,8 +472,9 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			continue;
 
 		case SQ_OC_GSTORE: {
-			value = NEXT_LOCAL();
-			function->program->globals[NEXT_INDEX()] = value;
+			unsigned index = NEXT_INDEX();
+			// todo: free old value.
+			function->program->globals[index] = NEXT_LOCAL();
 			NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			sq_value_clone(value);

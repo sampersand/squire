@@ -1,0 +1,19 @@
+journey push(array, value) {
+	_index_assign(array, length(array), value)
+}
+
+journey clone_array(array) {
+	result = _array()
+	i = 0
+
+	whilst i < length(array) {
+		push(result, _index(array, i))
+		i = i + 1
+	}
+
+	reward result
+}
+
+journey sort(array) {
+	
+}

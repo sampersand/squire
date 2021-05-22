@@ -66,11 +66,17 @@ struct return_statement {
 };
 
 struct expression {
-	enum { SQ_PS_EFNCALL, SQ_PS_EASSIGN, SQ_PS_EMATH } kind;
+	enum {
+		SQ_PS_EFNCALL,
+		SQ_PS_EASSIGN,
+		SQ_PS_EARRAY_ASSIGN,
+		SQ_PS_EMATH
+	} kind;
 
 	union {
 		struct function_call *fncall;
 		struct assignment *asgn;
+		struct array_assignment *ary_asgn;
 		struct bool_expression *math;
 	};
 };
@@ -84,6 +90,12 @@ struct function_call {
 struct assignment {
 	struct variable *var;
 	struct expression *expr;
+};
+
+struct array_assignment {
+	struct variable *var;
+	struct expression *index;
+	struct expression *value;
 };
 
 struct variable {
@@ -126,6 +138,16 @@ struct unary_expression {
 	struct primary *rhs;
 };
 
+struct array {
+	unsigned nargs;
+	struct expression **args;
+};
+
+struct array_index {
+	struct variable *array;
+	struct expression *index;
+};
+
 struct primary {
 	enum {
 		SQ_PS_PPAREN,
@@ -135,6 +157,8 @@ struct primary {
 		SQ_PS_PBOOLEAN,
 		SQ_PS_PNULL,
 		SQ_PS_PVARIABLE,
+		SQ_PS_PARRAY,
+		SQ_PS_PARRAY_INDEX,
 	} kind;
 	union {
 		struct expression *expr;
@@ -143,6 +167,8 @@ struct primary {
 		struct sq_string *string;
 		bool boolean;
 		struct variable *variable;
+		struct array *array;
+		struct array_index *array_index;
 	};
 };
 

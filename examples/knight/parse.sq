@@ -1,5 +1,4 @@
-import "utils.sq" 
-
+global die
 global parse_stream
 
 journey peek() {
@@ -44,11 +43,11 @@ journey stripwhitespace() {
 		stripwhitespace()
 	}
 }
-
+global parse_function
 journey parse_expr() {
-	global parse_function
 	global fetch_variable
 	global quote
+	global parse_stream
 
 	stripwhitespace()
 	head = peek()
@@ -79,10 +78,13 @@ journey parse_expr() {
 		advance()
 	}
 
+	dump(parse_function)
+
 	reward parse_function(head)
 }
 
 journey parse(stream) {
-	parse_stream = stream
+	dump(parse_function)
+	global parse_stream = stream
 	reward parse_expr()
 }

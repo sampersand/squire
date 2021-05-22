@@ -1,12 +1,14 @@
-import "utils.sq"
+#!../../squire -f
+global die
+global variable_list
 
 struct Variable { name, value }
 
-# lol no native arrays
-struct VariableLinkedList { node, next }
+if !variable_list {
+	variable_list = []
+}
 
 journey fetch_variable(name) {
-	global variable_list
 	var = variable_list
 
 	# parens aren't required
