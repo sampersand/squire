@@ -1,5 +1,5 @@
-global die
-global parse_stream
+renowned die
+renowned parse_stream
 
 journey peek() {
 	reward substr(parse_stream, 0, 1)
@@ -43,11 +43,11 @@ journey stripwhitespace() {
 		stripwhitespace()
 	}
 }
-global parse_function
+renowned parse_function
 journey parse_expr() {
-	global fetch_variable
-	global quote
-	global parse_stream
+	renowned fetch_variable
+	renowned quote
+	renowned parse_stream
 
 	stripwhitespace()
 	head = peek()
@@ -78,13 +78,10 @@ journey parse_expr() {
 		advance()
 	}
 
-	dump(parse_function)
-
 	reward parse_function(head)
 }
 
 journey parse(stream) {
-	dump(parse_function)
-	global parse_stream = stream
+	renowned parse_stream = stream
 	reward parse_expr()
 }

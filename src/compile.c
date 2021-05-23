@@ -549,7 +549,7 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 
 	set_index(code, lhs);
 	unsigned dst = code->codelen;
-	set_index(code, 0);
+	set_index(code, 0xffff);
 
 	rhs = compile_bool(code, bool_->rhs);
 	set_opcode(code, SQ_OC_MOV);
@@ -582,17 +582,17 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		goto arguments; \
 	}
 
-	BUILTIN_FN("print", SQ_INT_PRINT, 1);
+	BUILTIN_FN("print", SQ_INT_PRINT, 1); // `proclaim`?
 	BUILTIN_FN("number", SQ_INT_TONUMBER, 1);
 	BUILTIN_FN("string", SQ_INT_TOSTRING, 1);
 	BUILTIN_FN("boolean", SQ_INT_TOBOOLEAN, 1);
 	BUILTIN_FN("dump", SQ_INT_DUMP, 1);
 	BUILTIN_FN("length", SQ_INT_LENGTH, 1);
 	BUILTIN_FN("substr", SQ_INT_SUBSTR, 3);
-	BUILTIN_FN("exit", SQ_INT_EXIT, 1);
+	BUILTIN_FN("exit", SQ_INT_EXIT, 1); // `dismount` ?
 	BUILTIN_FN("kindof", SQ_INT_KINDOF, 1);
 	BUILTIN_FN("system", SQ_INT_SYSTEM, 1);
-	BUILTIN_FN("prompt", SQ_INT_PROMPT, 0);
+	BUILTIN_FN("inquire", SQ_INT_PROMPT, 0); // `inquire`?
 	BUILTIN_FN("random", SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert", SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete", SQ_INT_ARRAY_DELETE, 2);
@@ -656,8 +656,8 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 				set_index(code, index = variable);
 			} else if (!var->field) {
 				set_opcode(code, SQ_OC_GSTORE);
-				set_index(code, index);
 				set_index(code, ~variable);
+				set_index(code, index);
 				set_index(code, index = next_local(code));
 			}
 
@@ -715,7 +715,7 @@ static void compile_import(struct sq_code *code, char *import) {
 	compile_statements(code, stmts);
 }
 
-static unsigned compile_global(struct sq_code *code, struct global_declaration *gdecl) {
+static unsigned compile_global(struct sq_code *code, struct scope_declaration *gdecl) {
 	unsigned index = new_global(gdecl->name);
 	if (gdecl->value == NULL) 
 		goto done;
@@ -724,7 +724,7 @@ static unsigned compile_global(struct sq_code *code, struct global_declaration *
 	set_opcode(code, SQ_OC_GSTORE);
 	set_index(code, index);
 	set_index(code, result);
-	set_index(code, next_local(code));
+	set_index(code, index = next_local(code));
 
 done:
 
@@ -732,9 +732,24 @@ done:
 	return index;
 }
 
+static unsigned compile_local(struct sq_code *code, struct scope_declaration *ldecl) {
+	unsigned index = new_local_variable(code, ldecl->name);
+
+	if (ldecl->value != NULL) {
+		unsigned result = compile_expression(code, ldecl->value);
+		set_opcode(code, SQ_OC_MOV);
+		set_index(code, result);
+		set_index(code, index);
+	}
+
+	free(ldecl);
+	return index;
+}
+
 static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	switch (stmt->kind) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
+	case SQ_PS_SLOCAL: compile_local(code, stmt->ldecl); break;
 	case SQ_PS_SIMPORT: compile_import(code, stmt->import); break;
 	case SQ_PS_SSTRUCT: compile_struct_declaration(stmt->sdecl); break;
 	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;

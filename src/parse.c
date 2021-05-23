@@ -420,9 +420,9 @@ done:
 	return memdup(&expr, sizeof(struct expression));
 }
 
-static struct global_declaration *parse_global_declaration() {
+static struct scope_declaration *parse_global_declaration() {
 	GUARD(SQ_TK_GLOBAL);
-	struct global_declaration *global = xmalloc(sizeof(struct global_declaration));
+	struct scope_declaration *global = xmalloc(sizeof(struct scope_declaration));
 
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'global'");
 	global->name = last.identifier;
@@ -434,6 +434,21 @@ static struct global_declaration *parse_global_declaration() {
 	}
 
 	return global;
+}
+static struct scope_declaration *parse_local_declaration() {
+	GUARD(SQ_TK_LOCAL);
+	struct scope_declaration *local = xmalloc(sizeof(struct scope_declaration));
+
+	EXPECT(SQ_TK_IDENT, "expected an identifier after 'local'");
+	local->name = last.identifier;
+	if (take().kind == SQ_TK_ASSIGN) {
+		local->value = parse_expression();
+	} else {
+		untake();
+		local->value = NULL;
+	}
+
+	return local;
 }
 
 static char *parse_import_declaration() {
@@ -551,6 +566,7 @@ static struct return_statement *parse_return_statement() {
 static struct statement *parse_statement() {
 	struct statement stmt;
 	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
+	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
 	else if ((stmt.sdecl = parse_struct_declaration())) stmt.kind = SQ_PS_SSTRUCT;
 	else if ((stmt.fdecl = parse_func_declaration())) stmt.kind = SQ_PS_SFUNC;

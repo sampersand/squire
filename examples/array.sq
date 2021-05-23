@@ -1,13 +1,13 @@
-journey push(array, value) {
-	_index_assign(array, length(array), value)
+journey push(ary, value) {
+	insert(ary, length(ary), value)
 }
 
-journey clone_array(array) {
-	result = _array()
+journey clone_array(ary) {
+	result = []
 	i = 0
 
-	whilst i < length(array) {
-		push(result, _index(array, i))
+	whilst i < length(ary) {
+		push(result, ary[i])
 		i = i + 1
 	}
 

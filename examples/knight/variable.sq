@@ -1,44 +1,44 @@
-#!../../squire -f
-global die
-global variable_list
+renowned variable_list
 
 struct Variable { name, value }
+struct Undefined { }
 
 if !variable_list {
 	variable_list = []
 }
 
 journey fetch_variable(name) {
-	var = variable_list
+	renowned variable_list
+	i = 0
+	len = length(variable_list)
+	var
 
-	# parens aren't required
-	if var == null {
-		variable_list = VariableLinkedList(Variable(name, null), null)
-		reward variable_list.node
+	whilst i < len {
+		var = variable_list[i]
+		if name == var.name {
+			reward var
+		}
 	}
 
-	whilst true {
-		if name == var.node.name {
-			reward var.node
-		}
-
-		if var.next == null {
-			var.next = VariableLinkedList(Variable(name, null), null)
-			reward var.next.node
-		}
-
-		var = var.next
-	}
+	var = Variable(name, Undefined)
+	insert(variable_list, len, var)
+	reward var
 }
 
-journey run_variable(variable) {
-	if variable.value == null {
-		die("undefined variable '" + variable.name + "'")
+journey run_variable(var) {
+	renowned die
+
+	if var.value == Undefined {
+		die("undefined variable '" + var.name + "'")
 	}
 
-	reward variable.value
+	reward var.value
 }
 
-journey assign_variable(variable, value) {
-	variable.value = value
+journey assign_variable(var, value) {
+	if kindof(var) != Variable {
+		die("Can only assign to variables, not '" + string(kindof(var)) + "'")
+	}
+
+	var.value = value
 }

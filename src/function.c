@@ -106,6 +106,8 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			switch ((idx = NEXT_INDEX())) {
 			case SQ_INT_PRINT: {
 				string = sq_value_to_string(NEXT_LOCAL());
+				printf("%s", string->ptr);
+				fflush(stdout);
 				sq_string_free(string);
 				NEXT_LOCAL() = SQ_NULL;
 				break;
@@ -344,7 +346,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				struct sq_function *fn = sq_value_as_function(instance_value);
 				if (argc != fn->argc)
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
-			printf("function=%s\n", fn->name);
+
 				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
 			} else if (sq_value_is_struct(instance_value)) {
 				struct sq_struct *kind = sq_value_as_struct(instance_value);
@@ -474,7 +476,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_GSTORE: {
 			unsigned index = NEXT_INDEX();
 			// todo: free old value.
-			function->program->globals[index] = NEXT_LOCAL();
+			value = function->program->globals[index] = NEXT_LOCAL();
 			NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			sq_value_clone(value);

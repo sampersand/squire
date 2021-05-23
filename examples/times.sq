@@ -1,20 +1,20 @@
 journey timestr(time) {
 	if time % 2 { minutes = "30" }
-	else { minutes = "00"};
+	alas { minutes = "00"};
 
 	rawhours = time / 2;
 
 	if rawhours % 12 { hours = string(rawhours % 12) }
-	else { hours = "12"};
+	alas { hours = "12"};
 
 	if rawhours >= 12 { ampm = "pm" }
-	else { ampm = "am" }
+	alas { ampm = "am" }
 
 	reward hours + ":" + minutes + " " + ampm
 }
 
 i = 0
 whilst i <= 49 {
-	print(string(i) + ", " + timestr(i) + "\n")
+	proclaim(string(i) + ", " + timestr(i) + "\n")
 	i = i + 1
 }

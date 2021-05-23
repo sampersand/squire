@@ -1,10 +1,10 @@
-global die
+renowned die
 struct Args { a1, a2, a3, a4 }
 struct Ast { fn, args }
 
 journey run(arg) {
-	global run_variable
-	global Variable
+	renowned run_variable
+	renowned Variable
 
 	if kindof(arg) == Ast { fn = arg.fn; reward fn(arg.args) }
 	if kindof(arg) == Variable { reward run_variable(arg) }
@@ -17,7 +17,7 @@ journey to_boolean(arg) { reward boolean(run(arg)) }
 
 # Arity zero
 journey sq_prompt(_args) {
-	reward prompt()
+	reward inquire()
 }
 
 journey sq_random(_args) {
@@ -25,11 +25,11 @@ journey sq_random(_args) {
 }
 
 journey sq_true(_args) {
-	reward true
+	reward yay
 }
 
 journey sq_false(_args) {
-	reward false
+	reward nay
 }
 
 journey sq_null(_args) {
@@ -70,22 +70,23 @@ journey sq_dump(args) {
 	arg = run(args.a1)
 
 	if kindof(arg) == 'string' { print('String(' + arg + ')') }
-	else if kindof(arg) == 'number' { print('Number(' + string(arg) + ')') }
-	else if kindof(arg) == 'boolean' { print('Boolean(' + string(arg) + ')') }
-	else if kindof(arg) == 'null' { print('Null()') }
-	else { dump(arg) }
+	alas if kindof(arg) == 'number' { print('Number(' + string(arg) + ')') }
+	alas if kindof(arg) == 'boolean' { print('Boolean(' + string(arg) + ')') }
+	alas if kindof(arg) == 'null' { print('Null()') }
+	alas { dump(arg) }
 
 	print("\n")
 
 	reward arg
 }
 
+
 journey sq_output(args) {
-	text = to_string(args.a1)
+	text = to_string(args.a1);
 
 	if text && substr(text, length(text) - 1, 1) == '\\' {
 		print(substr(text, 0, length(text) - 2))
-	} else {
+	} alas {
 		print(text + "\n")
 	}
 }
@@ -141,7 +142,7 @@ journey sq_pow(args) {
 	if kindof(exp = run(args.a2)) != 'number' { die("cannot exponentiate by a '" + kindof(exp) + "'") }
 
 	if exp < 0 {
-		if base == -1 { if exp % 2 { reward -1 } else { reward 1 } }
+		if base == -1 { if exp % 2 { reward -1 } alas { reward 1 } }
 		if base == 0 { die("cannot exponentiate zero by a negative power") }
 		if base == 1 { reward 1 }
 		reward 0
@@ -183,7 +184,7 @@ journey sq_eql(args) {
 journey sq_and(args) {
 	if to_boolean(lhs = run(args.a1)) {
 		reward run(args.a2)
-	} else {
+	} alas {
 		reward lhs
 	}
 }
@@ -191,7 +192,7 @@ journey sq_and(args) {
 journey sq_or(args) {
 	if to_boolean(lhs = run(args.a1)) {
 		reward lhs
-	} else {
+	} alas {
 		reward run(args.a2)
 	}
 }
@@ -202,7 +203,7 @@ journey sq_then(args) {
 }
 
 journey sq_assign(args) {
-	global assign_variable
+	renowned assign_variable
 	assign_variable(args.a1, value=run(args.a2))
 	reward value
 }
@@ -218,7 +219,7 @@ journey sq_while(args) {
 journey sq_if(args) {
 	if to_boolean(args.a1) {
 		reward run(args.a2)
-	} else {
+	} alas {
 		reward run(args.a3)
 	}
 }
@@ -241,8 +242,7 @@ journey sq_subs(args) {
 }
 
 journey parse_function(fn) {
-	dump(1)
-	global parse_expr
+	renowned parse_expr
 
 	args = Args(null, null, null, null)
 
@@ -292,5 +292,3 @@ journey parse_function(fn) {
 
 	die("unknown function name '" + fn + "'")
 }
-
-dump(parse_function)

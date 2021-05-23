@@ -9,6 +9,7 @@ enum sq_token_kind {
 	SQ_TK_STRUCT,
 	SQ_TK_FUNC,
 	SQ_TK_GLOBAL,
+	SQ_TK_LOCAL,
 	SQ_TK_IMPORT,
 	SQ_TK_IF,
 	SQ_TK_WHILE,

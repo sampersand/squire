@@ -14,6 +14,7 @@ struct statement {
 		SQ_PS_SIMPORT,
 		SQ_PS_SFUNC,
 		SQ_PS_SGLOBAL,
+		SQ_PS_SLOCAL,
 		SQ_PS_SIF,
 		SQ_PS_SWHILE,
 		SQ_PS_SRETURN,
@@ -21,7 +22,7 @@ struct statement {
 	} kind;
 
 	union {
-		struct global_declaration *gdecl;
+		struct scope_declaration *gdecl, *ldecl;
 		char *import;
 		struct struct_declaration *sdecl;
 		struct func_declaration *fdecl;
@@ -32,7 +33,7 @@ struct statement {
 	};
 };
 
-struct global_declaration {
+struct scope_declaration {
 	char *name;
 	struct expression *value; // can be null
 };
