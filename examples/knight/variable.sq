@@ -1,4 +1,5 @@
 renowned variable_list
+renowned die
 
 struct Variable { name, value }
 struct Undefined { }
@@ -9,15 +10,16 @@ if !variable_list {
 
 journey fetch_variable(name) {
 	renowned variable_list
+	local var
 	i = 0
 	len = length(variable_list)
-	var
 
 	whilst i < len {
 		var = variable_list[i]
 		if name == var.name {
 			reward var
 		}
+		i = i + 1
 	}
 
 	var = Variable(name, Undefined)
@@ -26,13 +28,12 @@ journey fetch_variable(name) {
 }
 
 journey run_variable(var) {
-	renowned die
-
 	if var.value == Undefined {
 		die("undefined variable '" + var.name + "'")
+	} alas {
+		reward var.value
 	}
 
-	reward var.value
 }
 
 journey assign_variable(var, value) {

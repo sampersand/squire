@@ -60,11 +60,17 @@ static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
 	code->bytecode[code->codelen++].opcode = opcode;
 }
 
-static void set_index(struct sq_code *code, sq_index index) {
+static void set_index(struct sq_code *code, unsigned index) {
 	LOG("bytecode[%d].index=%d\n", code->codelen, index);
 
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
 	code->bytecode[code->codelen++].index = index;
+}
+
+static void set_target(struct sq_code *code, unsigned target) {
+	LOG("bytecode[%d].index=%d [update]\n", target, code->codelen);
+
+	code->bytecode[target].index = code->codelen;
 }
 
 static unsigned next_local(struct sq_code *code) {
@@ -282,13 +288,11 @@ static void compile_if_statement(struct sq_code *code, struct if_statement *ifst
 		finished_label = code->codelen;
 		set_index(code, 0);
 
-		code->bytecode[iffalse_label].index = code->codelen;
-
+		set_target(code, iffalse_label);
 		compile_statements(code, ifstmt->iffalse);
-
-		code->bytecode[finished_label].index = code->codelen;
+		set_target(code, finished_label);
 	} else {
-		code->bytecode[iffalse_label].index = code->codelen;
+		set_target(code, iffalse_label);
 	}
 
 	free(ifstmt);
@@ -309,7 +313,7 @@ static void compile_while_statement(struct sq_code *code, struct while_statement
 
 	set_opcode(code, SQ_OC_JMP);
 	set_index(code, condition_label);
-	code->bytecode[finished_label].index = code->codelen;
+	set_target(code, finished_label);
 
 	free(wstmt);
 }
@@ -336,6 +340,7 @@ static unsigned compile_array(struct sq_code *code, struct array *array) {
 	set_opcode(code, SQ_OC_INT);
 	set_index(code, SQ_INT_ARRAY_NEW);
 	set_index(code, array->nargs);
+
 	for (unsigned i = 0; i < array->nargs; ++i)
 		set_index(code, indices[i]);
 
@@ -534,11 +539,15 @@ done:
 }
 
 static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_) {
-	unsigned lhs, rhs;
+	unsigned tmp = compile_eql(code, bool_->lhs);
+	unsigned target;
+	
+	set_opcode(code, SQ_OC_MOV);
+	set_opcode(code, tmp);
+	set_opcode(code, target = next_local(code));
 
-	lhs = compile_eql(code, bool_->lhs);
 	if (bool_->kind != SQ_PS_BEQL)
-		rhs = compile_bool(code, bool_->rhs);
+		tmp = compile_bool(code, bool_->rhs);
 
 	switch (bool_->kind) {
 	case SQ_PS_BAND: set_opcode(code, SQ_OC_JMP_FALSE); break;
@@ -547,20 +556,19 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 	default: bug("unknown bool kind '%d'", bool_->kind);
 	}
 
-	set_index(code, lhs);
+	set_index(code, target);
 	unsigned dst = code->codelen;
 	set_index(code, 0xffff);
 
-	rhs = compile_bool(code, bool_->rhs);
 	set_opcode(code, SQ_OC_MOV);
-	set_index(code, rhs);
-	set_index(code, lhs);
-	code->bytecode[dst].index = code->codelen;
+	set_index(code, tmp);
+	set_index(code, target);
+	set_target(code, dst);
 
 done:
 
 	free(bool_);
-	return lhs;
+	return target;
 }
 
 static unsigned compile_function_call(struct sq_code *code, struct function_call *fncall) {

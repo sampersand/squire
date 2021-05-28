@@ -1,4 +1,5 @@
-n=1
+#!../squire -f
+n = 1
 
 whilst n <= 100 {
 	if !(a=n % 3) { print('Fizz') }

@@ -101,7 +101,7 @@ struct sq_token sq_next_token() {
 			if (c != '\\') continue;
 
 			token.string->length--;
-			if (i == token.string->length) die("unterminated escape sequence");
+			if (i == token.string->length -) die("unterminated escape sequence");
 			switch (c = src[++i]) {
 			case '\\': break;
 			case '\'': break;

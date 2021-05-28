@@ -22,6 +22,7 @@ expr
  := <func-call>
   | <assignment>
   | <eql-expr>
+  ;
 
 call-expr := (<variable> | <paren-expr>) '(' <arguments> ')' (* structs are made by calling *)
 arguments := {<expr> ','} [<expr> [',']]

@@ -5,7 +5,7 @@
 struct sq_array *sq_array_new(unsigned len, sq_value *eles) {
 	struct sq_array *array = xmalloc(sizeof(struct sq_array));
 
-	array->len = array->cap = len;
+	array->cap = array->len = len;
 	array->eles = eles;
 	array->refcount = 1;
 
@@ -32,6 +32,7 @@ struct sq_array *sq_array_clone(struct sq_array *array) {
 }
 
 void sq_array_free(struct sq_array *array) {
+	return; // todo: free things properly rip...
 	assert(array->refcount);
 
 	if (--array->refcount) return;
@@ -54,10 +55,13 @@ static unsigned fix_index(const struct sq_array *array, int index) {
 }
 
 void sq_array_resize(struct sq_array *array) {
-	if (array->cap == 0)
-		array->eles = xmalloc(sizeof(sq_value[array->cap=4]));
-	else
+	if (array->cap == 0) {
+		array->eles = xmalloc(sizeof(sq_value[array->cap=8]));
+	} else {
+		if (array->cap < 8) array->cap = 8; // minimum bound.
+
 		array->eles = xrealloc(array->eles, sizeof(sq_value[array->cap*=2]));
+	}
 }
 
 
@@ -69,18 +73,28 @@ void sq_array_insert(struct sq_array *array, int sindex, sq_value value) {
 		return;
 	}
 
-	if (array->len + 1 >= array->cap)
+	if (array->cap <= array->len)
 		sq_array_resize(array);
 
-	for (unsigned i = ++array->len; i != index; --i)
+	for (unsigned i = array->len++; i != index; --i)
 		array->eles[i] = array->eles[i - 1];
 
 	sq_value_free(array->eles[index]);
 	array->eles[index] = value;
 }
 
-sq_value sq_array_delete(struct sq_array *array, int index) {
-	return sq_value_clone(array->eles[fix_index(array, index)]);
+sq_value sq_array_delete(struct sq_array *array, int sindex) {
+	unsigned index = fix_index(array, sindex);
+
+	if (index > array->len) return SQ_NULL;
+
+	sq_value result = array->eles[index];
+
+	for (unsigned i = index; i < array->len - 1; ++i)
+		array->eles[i] = array->eles[i + 1];
+
+	--array->len;
+	return result;
 }
 
 sq_value sq_array_index(struct sq_array *array, int sindex) {

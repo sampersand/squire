@@ -10,9 +10,10 @@ journey advance() {
 }
 
 journey take_while(cond) {
+	len = length(parse_stream)
 	idx = 0
 
-	whilst cond(substr(parse_stream, idx, 1)) {
+	whilst idx <= len && cond(substr(parse_stream, idx, 1)) {
 		idx = idx + 1
 	}
 
@@ -21,7 +22,7 @@ journey take_while(cond) {
 	}
 
 	result = substr(parse_stream, 0, idx)
-	parse_stream = substr(parse_stream, idx, length(parse_stream) - 1)
+	parse_stream = substr(parse_stream, idx, len - 1)
 
 	reward result
 }
@@ -35,21 +36,23 @@ journey isspace(chr) {
 }
 journey isquote(chr) { reward chr == '\'' || chr == '\"' }
 
-journey stripwhitespace() {
+journey strip_whitespace() {
+	renowned strip_whitespace
 	take_while(isspace)
 
 	if peek() == '#' {
 		take_while(journey(chr) { reward chr != '\n' })
-		stripwhitespace()
+		strip_whitespace()
 	}
 }
+
 renowned parse_function
 journey parse_expr() {
 	renowned fetch_variable
 	renowned quote
 	renowned parse_stream
 
-	stripwhitespace()
+	strip_whitespace()
 	head = peek()
 
 	if !parse_stream {
@@ -71,7 +74,7 @@ journey parse_expr() {
 		str = take_while(journey (chr) { reward chr != quote });
 		advance() # delete trailing quote
 
-		reward str
+		reward str || ''
 	}
 
 	if !take_while(isupper) {

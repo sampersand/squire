@@ -84,8 +84,12 @@ journey sq_dump(args) {
 journey sq_output(args) {
 	text = to_string(args.a1);
 
+	if text == '\\' {
+		reward # ignore just empty strings.
+	}
+
 	if text && substr(text, length(text) - 1, 1) == '\\' {
-		print(substr(text, 0, length(text) - 2))
+		print(substr(text, 0, length(text) - 1))
 	} alas {
 		print(text + "\n")
 	}
@@ -139,7 +143,7 @@ journey sq_mod(args) {
 
 journey sq_pow(args) {
 	if kindof(base = run(args.a1)) != 'number' { die("cannot exponentiate a '" + kindof(base) + "'") }
-	if kindof(exp = run(args.a2)) != 'number' { die("cannot exponentiate by a '" + kindof(exp) + "'") }
+	exp = to_number(args.a2)
 
 	if exp < 0 {
 		if base == -1 { if exp % 2 { reward -1 } alas { reward 1 } }
@@ -232,13 +236,13 @@ journey sq_get(args) {
 	reward substr(str, start, len)
 }
 
-journey sq_subs(args) {
+journey sq_set(args) {
 	str = to_string(args.a1)
 	start = to_number(args.a2)
 	len = to_number(args.a3)
 	repl = to_string(args.a4)
 
-	reward substr(str, 0, start) + repl + substr(str, start + len, length(str) - 1)
+	reward substr(str, 0, start) + repl + substr(str, start + len, length(str))
 }
 
 journey parse_function(fn) {
@@ -286,7 +290,7 @@ journey parse_function(fn) {
 	if fn == 'I' { reward Ast(sq_if, args) }
 	if fn == 'G' { reward Ast(sq_get, args) }
 
-	if null == (args.a3 = parse_expr()) { die("unable to parse argument 4 for '" + fn + "'") }
+	if null == (args.a4 = parse_expr()) { die("unable to parse argument 4 for '" + fn + "'") }
 
 	if fn == 'S' { reward Ast(sq_set, args) }
 

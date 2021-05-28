@@ -1,7 +1,7 @@
 #!../../squire -f
 
 journey die(message) {
-	print(message + "\n");
+	print(message + "\n")
 	exit(1)
 }
 

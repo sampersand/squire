@@ -283,6 +283,8 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		return AS_STRING(value);
 
 	case SQ_TSTRUCT:
+		return sq_string_new(strdup(AS_STRUCT(value)->name));
+
 	case SQ_TINSTANCE:
 	case SQ_TFUNCTION:
 	case SQ_TARRAY:
@@ -326,10 +328,12 @@ bool sq_value_to_boolean(sq_value value) {
 	case SQ_TSTRING:
 		return *AS_STR(value) ? SQ_TRUE : SQ_FALSE;
 
+	case SQ_TARRAY:
+		return AS_ARRAY(value)->len;
+
 	case SQ_TSTRUCT:
 	case SQ_TINSTANCE:
 	case SQ_TFUNCTION:
-	case SQ_TARRAY:
 		die("cannot convert %s to a boolean", TYPENAME(value));
 
 	default:

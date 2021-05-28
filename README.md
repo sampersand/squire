@@ -1,0 +1,1 @@
+I originally wanted to have "Knight" and "Squire" languages---the Knight would be simpler, and Squire would be more complex. However, I decided against it, as I like the purity of just Knight. But, I left this here for posterity.

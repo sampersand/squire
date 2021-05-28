@@ -1,3 +1,4 @@
+#!../squire -f
 journey timestr(time) {
 	if time % 2 { minutes = "30" }
 	alas { minutes = "00"};
@@ -15,6 +16,6 @@ journey timestr(time) {
 
 i = 0
 whilst i <= 49 {
-	proclaim(string(i) + ", " + timestr(i) + "\n")
+	print(string(i) + ", " + timestr(i) + "\n")
 	i = i + 1
 }
