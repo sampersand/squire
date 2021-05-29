@@ -10,7 +10,7 @@ struct statements {
 
 struct statement {
 	enum {
-		SQ_PS_SSTRUCT,
+		SQ_PS_SCLASS,
 		SQ_PS_SIMPORT,
 		SQ_PS_SFUNC,
 		SQ_PS_SGLOBAL,
@@ -24,7 +24,7 @@ struct statement {
 	union {
 		struct scope_declaration *gdecl, *ldecl;
 		char *import;
-		struct struct_declaration *sdecl;
+		struct class_declaration *cdecl;
 		struct func_declaration *fdecl;
 		struct if_statement *ifstmt;
 		struct while_statement *wstmt;
@@ -38,10 +38,11 @@ struct scope_declaration {
 	struct expression *value; // can be null
 };
 
-struct struct_declaration {
+struct class_declaration {
 	char *name;
-	unsigned nfields;
+	unsigned nfields, nfuncs, nmeths;
 	char **fields;
+	struct sq_function **funcs, **meths;
 };
 
 struct func_declaration {

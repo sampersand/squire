@@ -1,6 +1,6 @@
 #include "value.h"
 #include "array.h"
-#include "struct.h"
+#include "class.h"
 #include "function.h"
 #include "shared.h"
 #include "string.h"
@@ -9,7 +9,7 @@
 #define IS_STRING sq_value_is_string
 #define AS_STRING sq_value_as_string
 #define AS_NUMBER sq_value_as_number
-#define AS_STRUCT sq_value_as_struct
+#define AS_CLASS sq_value_as_class
 #define AS_INSTANCE sq_value_as_instance
 #define AS_FUNCTION sq_value_as_function
 #define AS_ARRAY sq_value_as_array
@@ -35,8 +35,8 @@ void sq_value_dump(sq_value value) {
 		printf("String(%s)", AS_STR(value));
 		break;
 
-	case SQ_TSTRUCT:
-		sq_struct_dump(AS_STRUCT(value));
+	case SQ_TCLASS:
+		sq_class_dump(AS_CLASS(value));
 		break;
 
 	case SQ_TINSTANCE:
@@ -61,8 +61,8 @@ sq_value sq_value_clone(sq_value value) {
 	case SQ_TSTRING:
 		return sq_value_new_string(sq_string_clone(AS_STRING(value)));
 
-	case SQ_TSTRUCT:
-		return sq_value_new_struct(sq_struct_clone(AS_STRUCT(value)));
+	case SQ_TCLASS:
+		return sq_value_new_class(sq_class_clone(AS_CLASS(value)));
 
 	case SQ_TINSTANCE:
 		return sq_value_new_instance(sq_instance_clone(AS_INSTANCE(value)));
@@ -84,8 +84,8 @@ void sq_value_free(sq_value value) {
 		sq_string_free(AS_STRING(value));
 		return;
 
-	case SQ_TSTRUCT:
-		sq_struct_free(AS_STRUCT(value));
+	case SQ_TCLASS:
+		sq_class_free(AS_CLASS(value));
 		return;
 
 	case SQ_TINSTANCE:
@@ -109,7 +109,7 @@ const char *sq_value_typename(sq_value value) {
 	case SQ_TSTRING: return "string";
 	case SQ_TINSTANCE: return "object";
 	case SQ_TFUNCTION: return "function";
-	case SQ_TSTRUCT: return "struct";
+	case SQ_TCLASS: return "class";
 	case SQ_TARRAY: return "array";
 	default: bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
@@ -121,7 +121,7 @@ sq_value sq_value_kindof(sq_value value) {
 	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("number");
 	static struct sq_string KIND_STRING = SQ_STRING_STATIC("string");
 	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("function");
-	static struct sq_string KIND_STRUCT = SQ_STRING_STATIC("struct");
+	static struct sq_string KIND_CLASS = SQ_STRING_STATIC("class");
 	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("array");
 
 	switch (SQ_VTAG(value)) {
@@ -135,13 +135,13 @@ sq_value sq_value_kindof(sq_value value) {
 		return sq_value_new_string(&KIND_STRING);
 
 	case SQ_TINSTANCE:
-		return sq_value_new_struct(sq_struct_clone(sq_value_as_instance(value)->kind));
+		return sq_value_new_class(sq_class_clone(sq_value_as_instance(value)->class));
 
 	case SQ_TFUNCTION:
 		return sq_value_new_string(&KIND_FUNCTION);
 
-	case SQ_TSTRUCT:
-		return sq_value_new_string(&KIND_STRUCT);
+	case SQ_TCLASS:
+		return sq_value_new_string(&KIND_CLASS);
 
 	case SQ_TARRAY:
 		return sq_value_new_string(&KIND_ARRAY);
@@ -282,8 +282,8 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		sq_string_clone(AS_STRING(value));
 		return AS_STRING(value);
 
-	case SQ_TSTRUCT:
-		return sq_string_new(strdup(AS_STRUCT(value)->name));
+	case SQ_TCLASS:
+		return sq_string_new(strdup(AS_CLASS(value)->name));
 
 	case SQ_TINSTANCE:
 	case SQ_TFUNCTION:
@@ -306,7 +306,7 @@ sq_number sq_value_to_number(sq_value value) {
 	case SQ_TSTRING:
 		return strtoll(AS_STR(value), NULL, 10);
 
-	case SQ_TSTRUCT:
+	case SQ_TCLASS:
 	case SQ_TINSTANCE:
 	case SQ_TFUNCTION:
 	case SQ_TARRAY:
@@ -331,8 +331,22 @@ bool sq_value_to_boolean(sq_value value) {
 	case SQ_TARRAY:
 		return AS_ARRAY(value)->len;
 
-	case SQ_TSTRUCT:
-	case SQ_TINSTANCE:
+	case SQ_TINSTANCE: {
+		sq_value *to_boolean = sq_instance_field(AS_INSTANCE(value), "to_boolean");
+		if (to_boolean != NULL) {
+			if (!sq_value_is_function(*to_boolean))
+				die("'to_boolean' must be a function.");
+			else {
+				value = sq_function_run(AS_FUNCTION(*to_boolean), 1, &value);
+				bool result = sq_value_to_boolean(value);
+				sq_value_free(value);
+				return result;
+			}
+		}
+		// else fallthrough
+	}
+
+	case SQ_TCLASS:
 	case SQ_TFUNCTION:
 		die("cannot convert %s to a boolean", TYPENAME(value));
 

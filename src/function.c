@@ -2,7 +2,7 @@
 #include "string.h"
 #include "program.h"
 #include "shared.h"
-#include "struct.h"
+#include "class.h"
 #include "array.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -170,7 +170,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			case SQ_INT_KINDOF: {
 				value = NEXT_LOCAL();
 				if (sq_value_is_instance(value))
-					NEXT_LOCAL() = sq_value_new_struct(sq_value_as_instance(value)->kind);
+					NEXT_LOCAL() = sq_value_new_class(sq_value_as_instance(value)->class);
 				else
 					NEXT_LOCAL() = sq_value_kindof(value);
 				break;
@@ -348,12 +348,12 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
 
 				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
-			} else if (sq_value_is_struct(instance_value)) {
-				struct sq_struct *kind = sq_value_as_struct(instance_value);
-				if (argc != kind->nfields)
-					die("fields mismatch (given %d, expected %d) for struct '%s'", argc, kind->nfields, kind->name);
+			} else if (sq_value_is_class(instance_value)) {
+				struct sq_class *class = sq_value_as_class(instance_value);
+				if (argc != class->nfields)
+					die("fields mismatch (given %d, expected %d) for struct '%s'", argc, class->nfields, class->name);
 				NEXT_LOCAL() = sq_value_new_instance(
-					sq_instance_new(kind, memdup(newargs, sizeof(sq_value[argc]))));
+					sq_instance_new(class, memdup(newargs, sizeof(sq_value[argc]))));
 			} else {
 				die("can only call funcs, not '%s'", sq_value_typename(instance_value));
 			}
@@ -496,7 +496,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			sq_value *valueptr = sq_instance_field(instance, field);
 
 			if (!valueptr)
-				die("unknown field '%s' for type '%s'", field, instance->kind->name);
+				die("unknown field '%s' for type '%s'", field, instance->class->name);
 
 			value = *valueptr;
 			sq_value_clone(value);
@@ -515,7 +515,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
 			sq_value *valueptr = sq_instance_field(instance, field);
 			if (!valueptr)
-				die("unknown field '%s' for type '%s'", field, instance->kind->name);
+				die("unknown field '%s' for type '%s'", field, instance->class->name);
 
 			value = NEXT_LOCAL();
 			sq_value_clone(value);

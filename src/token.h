@@ -6,7 +6,7 @@
 
 enum sq_token_kind {
 	SQ_TK_UNDEFINED = 0,
-	SQ_TK_STRUCT,
+	SQ_TK_CLASS,
 	SQ_TK_FUNC,
 	SQ_TK_GLOBAL,
 	SQ_TK_LOCAL,

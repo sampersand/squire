@@ -1,8 +1,8 @@
-struct Card {
+class Card {
 	rank, suit
 }
 
-renowned SUITS = ['♦', '♥', '♣', '♠'];
+renowned SUITS = ['♦', '♥', '♣', '♠']
 renowned RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
 
 journey cardstr(card) {

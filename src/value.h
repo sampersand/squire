@@ -6,7 +6,7 @@
 #include <assert.h>
 
 struct sq_string;
-struct sq_struct;
+struct sq_class;
 struct sq_instance;
 struct sq_function;
 struct sq_array;
@@ -18,7 +18,7 @@ typedef enum {
 	SQ_TCONST,
 	SQ_TNUMBER,
 	SQ_TSTRING,
-	SQ_TSTRUCT,
+	SQ_TCLASS,
 	SQ_TINSTANCE,
 	SQ_TFUNCTION,
 	SQ_TARRAY,
@@ -47,9 +47,9 @@ static inline sq_value sq_value_new_string(struct sq_string *string) {
 	return SQ_VMASK((sq_value) string, SQ_TSTRING);
 }
 
-static inline sq_value sq_value_new_struct(struct sq_struct *struct_) {
-	assert(!SQ_VTAG((sq_value) struct_));
-	return SQ_VMASK((sq_value) struct_, SQ_TSTRUCT);
+static inline sq_value sq_value_new_class(struct sq_class *class) {
+	assert(!SQ_VTAG((sq_value) class));
+	return SQ_VMASK((sq_value) class, SQ_TCLASS);
 }
 
 static inline sq_value sq_value_new_instance(struct sq_instance *instance) {
@@ -83,8 +83,8 @@ static inline bool sq_value_is_string(sq_value value) {
 	return SQ_VTAG(value) == SQ_TSTRING;
 }
 
-static inline bool sq_value_is_struct(sq_value value) {
-	return SQ_VTAG(value) == SQ_TSTRUCT;
+static inline bool sq_value_is_class(sq_value value) {
+	return SQ_VTAG(value) == SQ_TCLASS;
 }
 
 static inline bool sq_value_is_instance(sq_value value) {
@@ -114,9 +114,9 @@ static inline struct sq_string *sq_value_as_string(sq_value value) {
 	return (struct sq_string *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_struct *sq_value_as_struct(sq_value value) {
-	assert(sq_value_is_struct(value));
-	return (struct sq_struct *) SQ_VUNMASK(value);
+static inline struct sq_class *sq_value_as_class(sq_value value) {
+	assert(sq_value_is_class(value));
+	return (struct sq_class *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_instance *sq_value_as_instance(sq_value value) {

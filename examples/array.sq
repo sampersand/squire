@@ -1,3 +1,7 @@
+struct Array {
+	eles;
+	journey __create(){}
+}
 journey push(ary, value) {
 	insert(ary, length(ary), value)
 }

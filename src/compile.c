@@ -2,7 +2,7 @@
 #include "function.h"
 #include "shared.h"
 #include "parse.h"
-#include "struct.h"
+#include "class.h"
 #include "string.h"
 #include <string.h>
 #include <errno.h>
@@ -222,7 +222,7 @@ static unsigned load_identifier(struct sq_code *code, char *name) {
 	return index;
 }
 
-static unsigned load_variable_struct(struct sq_code *code, struct variable *var) {
+static unsigned load_variable_class(struct sq_code *code, struct variable *var) {
 	unsigned index = load_identifier(code, var->name);
 
 	if (var->field == NULL) {
@@ -249,16 +249,20 @@ static unsigned load_variable_struct(struct sq_code *code, struct variable *var)
 static unsigned compile_expression(struct sq_code *code, struct expression *expr);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
 
-static void compile_struct_declaration(struct struct_declaration *sdecl) {
-	struct sq_struct *struct_ = sq_struct_new(
-		sdecl->name,
-		sdecl->nfields,
-		sdecl->fields
-	);
+static void compile_class_declaration(struct class_declaration *sdecl) {
+	struct sq_class *class = sq_class_new(sdecl->name);
 
-	free(sdecl); // but none of the fields, as they're now owned by `struct_`.
+	class->nfields = sdecl->nfields;
+	class->nfuncs = sdecl->nfuncs;
+	class->nmeths = sdecl->nfuncs;
 
-	declare_global_variable(strdup(struct_->name), sq_value_new_struct(struct_));
+	class->fields = sdecl->fields;
+	class->funcs = sdecl->funcs;
+	class->meths = sdecl->meths;
+
+	free(sdecl); // but none of the fields, as they're now owned by `class`.
+
+	declare_global_variable(strdup(class->name), sq_value_new_class(class));
 }
 
 static struct sq_function *compile_function(struct func_declaration *fndecl);
@@ -351,8 +355,8 @@ static unsigned compile_array(struct sq_code *code, struct array *array) {
 }
 
 static unsigned compile_array_index(struct sq_code *code, struct array_index *array_index) {
-	unsigned array = load_variable_struct(code, array_index->array);
-	free(array_index->array); // OR SHOULD THIS BE FREED IN `load_variable_struct`?
+	unsigned array = load_variable_class(code, array_index->array);
+	free(array_index->array); // OR SHOULD THIS BE FREED IN `load_variable_class`?
 	unsigned index = compile_expression(code, array_index->index);
 
 	set_opcode(code, SQ_OC_INT);
@@ -405,11 +409,11 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	case SQ_PS_PVARIABLE:
-		result = load_variable_struct(code, primary->variable);
+		result = load_variable_class(code, primary->variable);
 		break;
 
 	default:
-		bug("unknown primary kind '%d'", primary->kind);
+		bug("unknown primary class '%d'", primary->kind);
 	}
 
 	free(primary);
@@ -759,7 +763,7 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
 	case SQ_PS_SLOCAL: compile_local(code, stmt->ldecl); break;
 	case SQ_PS_SIMPORT: compile_import(code, stmt->import); break;
-	case SQ_PS_SSTRUCT: compile_struct_declaration(stmt->sdecl); break;
+	case SQ_PS_SCLASS: compile_class_declaration(stmt->cdecl); break;
 	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;

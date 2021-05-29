@@ -457,9 +457,9 @@ static char *parse_import_declaration() {
 	return last.string->ptr;
 }
 
-static struct struct_declaration *parse_struct_declaration() {
-	GUARD(SQ_TK_STRUCT);
-	struct struct_declaration *sdecl = xmalloc(sizeof(struct struct_declaration));
+static struct class_declaration *parse_class_declaration() {
+	GUARD(SQ_TK_CLASS);
+	struct class_declaration *sdecl = xmalloc(sizeof(struct class_declaration));
 
 	// optional name
 	if (take().kind == SQ_TK_IDENT) {
@@ -472,6 +472,24 @@ static struct struct_declaration *parse_struct_declaration() {
 	// require a lparen.
 	EXPECT(SQ_TK_LBRACE, "expected '{' before struct fields");
 	parse_field_names();
+/*
+static unsigned field_name_count;
+static char *field_names[256];
+
+static void parse_field_names() {
+	field_name_count = 0;
+
+	while (take().kind == SQ_TK_IDENT) {
+		if (field_name_count > 255) die("too many fields!");
+		field_names[field_name_count++] = last.identifier;
+
+		if (take().kind != SQ_TK_COMMA)
+			break;
+	}
+
+	untake();
+}
+*/
 	EXPECT(SQ_TK_RBRACE, "expected '}' after struct fields");
 
 	sdecl->nfields = field_name_count;
@@ -568,7 +586,7 @@ static struct statement *parse_statement() {
 	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
-	else if ((stmt.sdecl = parse_struct_declaration())) stmt.kind = SQ_PS_SSTRUCT;
+	else if ((stmt.cdecl = parse_class_declaration())) stmt.kind = SQ_PS_SCLASS;
 	else if ((stmt.fdecl = parse_func_declaration())) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;

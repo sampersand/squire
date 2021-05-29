@@ -17,6 +17,7 @@ journey new_hand(deck, size) {
 	reward hand
 }
 
+
 journey try_play(card) {
 	renowned discard
 	renowned Card
