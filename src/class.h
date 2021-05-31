@@ -11,7 +11,7 @@ struct sq_class {
 	char *name, **fields;
 
 	unsigned nfuncs, nmeths;
-	struct sq_function **funcs, **meths;
+	struct sq_function **funcs, **meths, *constructor;
 };
 
 struct sq_instance {
@@ -24,11 +24,11 @@ struct sq_class *sq_class_new(char *name);
 struct sq_class *sq_class_clone(struct sq_class *class);
 void sq_class_free(struct sq_class *class);
 void sq_class_dump(const struct sq_class *class);
-const struct sq_function *sq_class_func(const struct sq_class *, const char *);
+sq_value sq_class_field(struct sq_class *, const char *);
 
 struct sq_instance *sq_instance_new(struct sq_class *class, sq_value *fields);
 sq_value *sq_instance_field(struct sq_instance *instance, const char *name);
-const struct sq_function *sq_instance_meth(const struct sq_instance *, const char *);
+struct sq_function *sq_instance_method(struct sq_instance *, const char *);
 
 struct sq_instance *sq_instance_clone(struct sq_instance *instance);
 void sq_instance_free(struct sq_instance *instance);

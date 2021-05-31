@@ -42,7 +42,7 @@ struct class_declaration {
 	char *name;
 	unsigned nfields, nfuncs, nmeths;
 	char **fields;
-	struct sq_function **funcs, **meths;
+	struct func_declaration **funcs, **meths, *constructor;
 };
 
 struct func_declaration {

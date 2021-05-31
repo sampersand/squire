@@ -33,8 +33,11 @@ static struct sq_token take() {
 static unsigned field_name_count;
 static char *field_names[256];
 
-static void parse_field_names() {
+static void parse_field_names(bool is_method) {
 	field_name_count = 0;
+
+	if (is_method)
+		field_names[field_name_count++] = strdup("my");
 
 	while (take().kind == SQ_TK_IDENT) {
 		if (field_name_count > 255) die("too many fields!");
@@ -132,7 +135,7 @@ static struct array *parse_array() {
 	return array;
 }
 
-static struct func_declaration *parse_func_declaration();
+static struct func_declaration *parse_func_declaration(bool, bool);
 static struct primary *parse_primary() {
 	struct primary primary;
 
@@ -187,7 +190,7 @@ static struct primary *parse_primary() {
 	case SQ_TK_FUNC: {
 		untake();
 		primary.kind = SQ_PS_PLAMBDA;
-		primary.lambda = parse_func_declaration();
+		primary.lambda = parse_func_declaration(true, false);
 		break;
 	}
 	default:
@@ -459,42 +462,86 @@ static char *parse_import_declaration() {
 
 static struct class_declaration *parse_class_declaration() {
 	GUARD(SQ_TK_CLASS);
-	struct class_declaration *sdecl = xmalloc(sizeof(struct class_declaration));
+	struct class_declaration *cdecl = xmalloc(sizeof(struct class_declaration));
 
 	// optional name
 	if (take().kind == SQ_TK_IDENT) {
-		sdecl->name = last.identifier;
+		cdecl->name = last.identifier;
 	} else {
 		untake();
-		sdecl->name = strdup("<anonymous>");
+		cdecl->name = strdup("<anonymous>");
 	}
 
 	// require a lparen.
-	EXPECT(SQ_TK_LBRACE, "expected '{' before struct fields");
-	parse_field_names();
-/*
-static unsigned field_name_count;
-static char *field_names[256];
+	EXPECT(SQ_TK_LBRACE, "expected '{' before class contents");
 
-static void parse_field_names() {
-	field_name_count = 0;
+#define MAX_LEN 256 // having more than this is a god object anyways.
+	cdecl->fields = xmalloc(sizeof(char *[MAX_LEN]));
+	cdecl->meths = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
+	cdecl->funcs = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
+	cdecl->constructor = NULL;
+	cdecl->nfields = 0;
+	cdecl->nfuncs = 0;
+	cdecl->nmeths = 0;
 
-	while (take().kind == SQ_TK_IDENT) {
-		if (field_name_count > 255) die("too many fields!");
-		field_names[field_name_count++] = last.identifier;
+	while (take().kind != SQ_TK_RBRACE) {
+		struct sq_token tkn = last;
 
-		if (take().kind != SQ_TK_COMMA)
+		switch (tkn.kind) {
+		case SQ_TK_FUNC:
+		case SQ_TK_CLASSFN:
+		case SQ_TK_CONSTRUCTOR: {
+			struct func_declaration *fn = parse_func_declaration(false, true);
+			if (tkn.kind == SQ_TK_CONSTRUCTOR) {
+				if (cdecl->constructor != NULL)
+					die("cannot have two constructors.");
+				cdecl->constructor = fn;
+			} else if (tkn.kind == SQ_TK_FUNC) {
+				if (cdecl->nmeths >= MAX_LEN)
+					die("too many methods!");
+				cdecl->meths[cdecl->nmeths++] = fn;
+			} else if (tkn.kind == SQ_TK_CLASSFN) {
+				if (cdecl->nfuncs >= MAX_LEN)
+					die("too many class methods!");
+				cdecl->funcs[cdecl->nfuncs++] = fn;
+			} else {
+				die("[bug] its not a constructor, func, or classfn?");
+			}
+
 			break;
+		}
+
+		case SQ_TK_FIELD:
+			while (take().kind == SQ_TK_IDENT) {
+				if (cdecl->nfields > MAX_LEN) die("too many fields!");
+				cdecl->fields[cdecl->nfields++] = last.identifier;
+				if (take().kind != SQ_TK_COMMA) {
+					untake();
+					break;
+				}
+			}
+
+			break;
+
+		case SQ_TK_ENDL:
+		case SQ_TK_SOFT_ENDL:
+			continue;
+
+		default:
+			die("unknown token encountered when parsing class.");
+		}
 	}
 
 	untake();
-}
-*/
-	EXPECT(SQ_TK_RBRACE, "expected '}' after struct fields");
 
-	sdecl->nfields = field_name_count;
-	sdecl->fields = memdup(field_names, sizeof(char *[field_name_count]));
-	return sdecl;
+#undef MAX_LEN
+
+	cdecl->fields = xrealloc(cdecl->fields, sizeof(char *[cdecl->nfields]));
+	cdecl->meths = xrealloc(cdecl->meths, sizeof(struct sq_function *[cdecl->nmeths]));
+	cdecl->funcs = xrealloc(cdecl->funcs, sizeof(struct sq_function *[cdecl->nfuncs]));
+
+	EXPECT(SQ_TK_RBRACE, "expected '}' after class fields");
+	return cdecl;
 }
 
 static struct statements *parse_statements(void);
@@ -508,8 +555,9 @@ static struct statements *parse_brace_statements(char *what) {
 	return stmts;
 }
 
-static struct func_declaration *parse_func_declaration() {
-	GUARD(SQ_TK_FUNC);
+static struct func_declaration *parse_func_declaration(bool guard, bool is_method) {
+	if (guard)
+		GUARD(SQ_TK_FUNC);
 	struct func_declaration *fdecl = xmalloc(sizeof(struct func_declaration));
 
 	// optional name
@@ -522,7 +570,7 @@ static struct func_declaration *parse_func_declaration() {
 
 	// require a lparen.
 	EXPECT(SQ_TK_LPAREN, "expected '(' before func fields");
-	parse_field_names();
+	parse_field_names(is_method);
 	EXPECT(SQ_TK_RPAREN, "expected ')' after func fields");
 
 	fdecl->nargs = field_name_count;
@@ -587,7 +635,7 @@ static struct statement *parse_statement() {
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
 	else if ((stmt.cdecl = parse_class_declaration())) stmt.kind = SQ_PS_SCLASS;
-	else if ((stmt.fdecl = parse_func_declaration())) stmt.kind = SQ_PS_SFUNC;
+	else if ((stmt.fdecl = parse_func_declaration(true, false))) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;
 	else if ((stmt.rstmt = parse_return_statement())) stmt.kind = SQ_PS_SRETURN;

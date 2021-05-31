@@ -1,0 +1,41 @@
+myth Rich {
+	equip money, name
+	journey take() {
+		money = my.money
+		my.money = 0
+		reward money
+	}
+}
+
+# 'class' declaration
+myth RobinHood {
+	# field declarations declarations
+	equip weapon
+	# constructor
+	realize(weapon) {
+		my.weapon = weapon
+	}
+
+	# member function
+	journey steal_from(whom) {
+		print("Hello, " + whom.name + "\n")
+		print("Give me your money or i'll shoot you with my " + my.weapon + "\n")
+		reward whom.take()
+	}
+
+	# class function
+	recite please_help() {
+		print("Oh, robinhood, please help us!\n");
+	}
+}
+
+journey distribute(money, whom) {
+	print("Here you go, " + whom + ", here's " + string(money) + " gold coins.\n")
+}
+
+RobinHood.please_help()
+robin = RobinHood("bow")
+money = robin.steal_from(Rich(1234, "richard"))
+distribute(money, 'paupers')
+
+

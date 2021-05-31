@@ -133,18 +133,22 @@ struct sq_token sq_next_token() {
 		return token;
 	}
 
-	CHECK_FOR_START_KW("class", SQ_TK_CLASS);
-	CHECK_FOR_START_KW("journey", SQ_TK_FUNC);
+	CHECK_FOR_START_KW("myth",     SQ_TK_CLASS);
+	// CHECK_FOR_START_KW("my",       SQ_TK_THIS);
+	CHECK_FOR_START_KW("journey",  SQ_TK_FUNC);
+	CHECK_FOR_START_KW("equip",    SQ_TK_FIELD);
+	CHECK_FOR_START_KW("recite",   SQ_TK_CLASSFN);
+	CHECK_FOR_START_KW("realize",  SQ_TK_CONSTRUCTOR);
 	CHECK_FOR_START_KW("renowned", SQ_TK_GLOBAL);
-	CHECK_FOR_START_KW("local", SQ_TK_LOCAL);
-	CHECK_FOR_START_KW("import", SQ_TK_IMPORT);
-	CHECK_FOR_START_KW("whilst", SQ_TK_WHILE);
-	CHECK_FOR_START_KW("if", SQ_TK_IF);
-	CHECK_FOR_START_KW("alas", SQ_TK_ELSE);
-	CHECK_FOR_START_KW("reward", SQ_TK_RETURN);
-	CHECK_FOR_START_KW("yay", SQ_TK_TRUE);
-	CHECK_FOR_START_KW("nay", SQ_TK_FALSE);
-	CHECK_FOR_START_KW("null", SQ_TK_NULL);
+	CHECK_FOR_START_KW("local",    SQ_TK_LOCAL);
+	CHECK_FOR_START_KW("import",   SQ_TK_IMPORT);
+	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
+	CHECK_FOR_START_KW("if",       SQ_TK_IF);
+	CHECK_FOR_START_KW("alas",     SQ_TK_ELSE);
+	CHECK_FOR_START_KW("reward",   SQ_TK_RETURN);
+	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
+	CHECK_FOR_START_KW("nay",      SQ_TK_FALSE);
+	CHECK_FOR_START_KW("null",     SQ_TK_NULL);
 
 	if (isalpha(*sq_stream) || *sq_stream == '_') {
 		token.kind = SQ_TK_IDENT;

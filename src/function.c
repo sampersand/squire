@@ -53,17 +53,36 @@ void sq_function_dump(const struct sq_function *function) {
 // #define LOG(fmt, ...) printf(fmt "\n", __VA_ARGS__);
 #endif
 
+static sq_value create_class_instance(struct sq_class *class, sq_value *args, unsigned argc) {
+	// todo: this will fail with functions with an arity not the same as their field count.
+	if (class->constructor == NULL) {
+		if (argc != class->nfields)
+			die("fields mismatch (given %d, expected %d) for struct '%s'", argc, class->nfields, class->name);
+		return sq_value_new_instance(sq_instance_new(class, memdup(args, sizeof(sq_value[argc]))));
+	}
+
+	sq_value instance = sq_value_new_instance(sq_instance_new(class, xmalloc(sizeof(sq_value[class->nfields]))));
+	for (unsigned i = 0; i < class->nfields; ++i)
+		sq_value_as_instance(instance)->fields[i] = SQ_NULL;
+
+	sq_value fn_args[argc+1];
+	for (unsigned i = 0; i < argc; ++i)
+		fn_args[i+1] = sq_value_clone(args[i]);
+
+	fn_args[0] = sq_value_clone(instance);
+	sq_value_free(sq_function_run(class->constructor, argc+1, fn_args));
+
+	return instance;
+}
+
 sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
 	sq_value value;
 	enum sq_opcode opcode;
 
-	// printf("argc=%d, nlocals=%d\n", argc, function->nlocals);
-
 	for (unsigned i = 0; i < argc; ++i)
 		locals[i] = args[i];
 
-	// printf("starting function '%s'\n", function->name);
 	for (unsigned i = argc; i < function->nlocals; ++i)
 		locals[i] = SQ_NULL;
 
@@ -76,10 +95,8 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		}
 
 		opcode = function->bytecode[ip++].opcode;
-		// printf("loaded opcode '%02x'\n", opcode);
 
 		switch (opcode) {
-
 
 	/*** Misc ***/
 
@@ -344,16 +361,14 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 			if (sq_value_is_function(instance_value)) {
 				struct sq_function *fn = sq_value_as_function(instance_value);
+
 				if (argc != fn->argc)
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
 
 				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
 			} else if (sq_value_is_class(instance_value)) {
 				struct sq_class *class = sq_value_as_class(instance_value);
-				if (argc != class->nfields)
-					die("fields mismatch (given %d, expected %d) for struct '%s'", argc, class->nfields, class->name);
-				NEXT_LOCAL() = sq_value_new_instance(
-					sq_instance_new(class, memdup(newargs, sizeof(sq_value[argc]))));
+				NEXT_LOCAL() = create_class_instance(class, newargs, argc);
 			} else {
 				die("can only call funcs, not '%s'", sq_value_typename(instance_value));
 			}
@@ -488,17 +503,31 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_ILOAD: {
 			value = NEXT_LOCAL();
 
-			if (!sq_value_is_instance(value))
+			if (sq_value_is_class(value)) {
+				struct sq_class *class = sq_value_as_class(value);
+				const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
+				value = sq_class_field(class, field);
+
+				if (value == SQ_UNDEFINED)
+					die("unknown static field '%s' for type '%s'", field, class->name);
+			} else if (sq_value_is_instance(value)) {
+				struct sq_instance *instance = sq_value_as_instance(value);
+				const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
+				sq_value *valueptr = sq_instance_field(instance, field);
+				struct sq_function *method;
+
+				// i've given up on this function lol.
+
+				if (valueptr)
+					value = *valueptr;
+				else if ((method = sq_instance_method(instance, field)))
+					value =  sq_value_new_function(sq_function_clone(method));
+				else
+					die("unknown field '%s' for type '%s'", field, instance->class->name);
+			} else  {
 				die("can only access fields on instances.");
+			}
 
-			struct sq_instance *instance = sq_value_as_instance(value);
-			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
-			sq_value *valueptr = sq_instance_field(instance, field);
-
-			if (!valueptr)
-				die("unknown field '%s' for type '%s'", field, instance->class->name);
-
-			value = *valueptr;
 			sq_value_clone(value);
 			NEXT_LOCAL() = value;
 			continue;

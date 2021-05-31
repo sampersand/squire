@@ -43,7 +43,7 @@ void sq_class_free(struct sq_class *class) {
 }
 
 void sq_class_dump(const struct sq_class *class) {
-	printf("Class(%s:", class->name);
+	printf("Myth(%s:", class->name);
 
 	for (unsigned i = 0; i < class->nfields; ++i) {
 		if (i != 0)
@@ -58,12 +58,12 @@ void sq_class_dump(const struct sq_class *class) {
 	putchar(')');
 }
 
-const struct sq_function *sq_class_func(const struct sq_class *class, const char *name) {
+sq_value sq_class_field(struct sq_class *class, const char *name) {
 	for (unsigned i = 0; i < class->nfuncs; ++i)
 		if (!strcmp(class->funcs[i]->name, name))
-			return class->funcs[i];
+			return sq_value_new_function(sq_function_clone(class->funcs[i]));
 
-	return NULL;
+	return SQ_UNDEFINED;
 }
 
 struct sq_instance *sq_instance_new(struct sq_class *class, sq_value *fields) {
@@ -90,7 +90,7 @@ sq_value *sq_instance_field(struct sq_instance *instance, const char *name) {
 }
 
 
-const struct sq_function *sq_instance_meth(const struct sq_instance *instance, const char *name) {
+struct sq_function *sq_instance_method(struct sq_instance *instance, const char *name) {
 	for (unsigned i = 0; i < instance->class->nmeths; ++i)
 		if (!strcmp(instance->class->meths[i]->name, name))
 			return instance->class->meths[i];

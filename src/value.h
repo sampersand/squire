@@ -32,6 +32,7 @@ typedef enum {
 #define SQ_TRUE SQ_VMASK((1 << SQ_VSHIFT), SQ_TCONST)
 #define SQ_FALSE SQ_VMASK(0, SQ_TCONST)
 #define SQ_NULL SQ_VMASK((2 << SQ_VSHIFT), SQ_TCONST)
+#define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_TCONST)
 
 static inline sq_value sq_value_new_number(sq_number number) {
 	assert(number == (((sq_number) (((sq_value) number << SQ_VSHIFT)) >> SQ_VSHIFT)));

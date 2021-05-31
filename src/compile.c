@@ -222,21 +222,25 @@ static unsigned load_identifier(struct sq_code *code, char *name) {
 	return index;
 }
 
-static unsigned load_variable_class(struct sq_code *code, struct variable *var) {
+static unsigned load_variable_class(struct sq_code *code, struct variable *var, int *parent) {
+	int p;
+	if (parent == NULL) parent = &p;
+
 	unsigned index = load_identifier(code, var->name);
 
 	if (var->field == NULL) {
 		free(var);
+		*parent = -1;
 		return index;
 	}
 
 	set_opcode(code, SQ_OC_MOV);
-	set_index(code, index);
+	set_index(code, *parent = index);
 	set_index(code, index = next_local(code));
 
 	while ((var = var->field)) {
 		set_opcode(code, SQ_OC_ILOAD);
-		set_index(code, index);
+		set_index(code, *parent = index);
 		set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(var->name)))));
 		set_index(code, index = next_local(code));
 	}
@@ -248,29 +252,40 @@ static unsigned load_variable_class(struct sq_code *code, struct variable *var) 
 
 static unsigned compile_expression(struct sq_code *code, struct expression *expr);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
+static struct sq_function *compile_function(struct func_declaration *fndecl, bool is_method);
 
 static void compile_class_declaration(struct class_declaration *sdecl) {
 	struct sq_class *class = sq_class_new(sdecl->name);
 
 	class->nfields = sdecl->nfields;
-	class->nfuncs = sdecl->nfuncs;
-	class->nmeths = sdecl->nfuncs;
-
 	class->fields = sdecl->fields;
-	class->funcs = sdecl->funcs;
-	class->meths = sdecl->meths;
+
+	if (sdecl->constructor != NULL) {
+		class->constructor = compile_function(sdecl->constructor, true);
+	} else {
+		class->constructor = NULL;
+	}
+
+	class->nfuncs = sdecl->nfuncs;
+	class->funcs = xmalloc(sizeof(struct sq_function *[class->nfuncs]));
+	for (unsigned i = 0; i < class->nfuncs; ++i)
+		class->funcs[i] = compile_function(sdecl->funcs[i], false);
+
+	class->nmeths = sdecl->nmeths;
+	class->meths = xmalloc(sizeof(struct sq_function *[class->nmeths]));
+
+	for (unsigned i = 0; i < class->nmeths; ++i)
+		class->meths[i] = compile_function(sdecl->meths[i], true);
 
 	free(sdecl); // but none of the fields, as they're now owned by `class`.
 
 	declare_global_variable(strdup(class->name), sq_value_new_class(class));
 }
 
-static struct sq_function *compile_function(struct func_declaration *fndecl);
-
 static void compile_func_declaration(struct func_declaration *fdecl) {
 	assert(fdecl->name != NULL);
 
-	struct sq_function *func = compile_function(fdecl);
+	struct sq_function *func = compile_function(fdecl, false);
 	free(fdecl); // but none of the fields, as they're now owned by `func`.
 
 	declare_global_variable(strdup(func->name), sq_value_new_function(func));
@@ -355,7 +370,7 @@ static unsigned compile_array(struct sq_code *code, struct array *array) {
 }
 
 static unsigned compile_array_index(struct sq_code *code, struct array_index *array_index) {
-	unsigned array = load_variable_class(code, array_index->array);
+	unsigned array = load_variable_class(code, array_index->array, NULL);
 	free(array_index->array); // OR SHOULD THIS BE FREED IN `load_variable_class`?
 	unsigned index = compile_expression(code, array_index->index);
 
@@ -385,7 +400,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	case SQ_PS_PLAMBDA: {
-		struct sq_function *func = compile_function(primary->lambda);
+		struct sq_function *func = compile_function(primary->lambda, false);
 		free(primary->lambda);
 
 		result = load_constant(code, sq_value_new_function(func));
@@ -409,7 +424,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	case SQ_PS_PVARIABLE:
-		result = load_variable_class(code, primary->variable);
+		result = load_variable_class(code, primary->variable, NULL);
 		break;
 
 	default:
@@ -578,12 +593,19 @@ done:
 static unsigned compile_function_call(struct sq_code *code, struct function_call *fncall) {
 	unsigned args[fncall->arglen];
 
-	if (fncall->func->field)
-		die("doesnt support calling fields yet");
-
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expression(code, fncall->args[i]);
 
+	if (fncall->func->field != NULL) {
+		set_opcode(code, SQ_OC_NOOP);
+		int dst;
+		unsigned var = load_variable_class(code, fncall->func, &dst);
+		set_opcode(code, SQ_OC_CALL);
+		set_index(code, var);
+		set_index(code, fncall->arglen + 1);
+		set_index(code, dst);
+		goto arguments;
+	}
 
 #define BUILTIN_FN(name_, int_, argc_) \
 	if (!strcmp(fncall->func->name, name_)) { \
@@ -599,25 +621,18 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("string", SQ_INT_TOSTRING, 1);
 	BUILTIN_FN("boolean", SQ_INT_TOBOOLEAN, 1);
 	BUILTIN_FN("dump", SQ_INT_DUMP, 1);
-	BUILTIN_FN("length", SQ_INT_LENGTH, 1);
+	BUILTIN_FN("length", SQ_INT_LENGTH, 1); // `fathoms` ?
 	BUILTIN_FN("substr", SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("exit", SQ_INT_EXIT, 1); // `dismount` ?
 	BUILTIN_FN("kindof", SQ_INT_KINDOF, 1);
 	BUILTIN_FN("system", SQ_INT_SYSTEM, 1);
-	BUILTIN_FN("inquire", SQ_INT_PROMPT, 0); // `inquire`?
+	BUILTIN_FN("inquire", SQ_INT_PROMPT, 0);
 	BUILTIN_FN("random", SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert", SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete", SQ_INT_ARRAY_DELETE, 2);
 
-	// if (!strcmp(fncall->func->name, "array")) {
-	// 	set_opcode(code, SQ_OC_INT);
-	// 	set_index(code, SQ_INT_ARRAY_NEW);
-	// 	set_index(code, fncall->arglen);
-	// 	goto arguments;
-	// }
-
 	set_opcode(code, SQ_OC_NOOP);
-	unsigned var = load_identifier(code, fncall->func->name);
+	unsigned var = load_variable_class(code, fncall->func, NULL);
 	set_opcode(code, SQ_OC_CALL);
 	set_index(code, var);
 	set_index(code, fncall->arglen);
@@ -774,12 +789,11 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 }
 
 static void compile_statements(struct sq_code *code, struct statements *stmts) {
-	for (unsigned i = 0; i < stmts->len; ++i) {
+	for (unsigned i = 0; i < stmts->len; ++i)
 		compile_statement(code, stmts->stmts[i]);
-	}
 }
 
-static struct sq_function *compile_function(struct func_declaration *fndecl) {
+static struct sq_function *compile_function(struct func_declaration *fndecl, bool is_method) {
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
@@ -794,9 +808,11 @@ static struct sq_function *compile_function(struct func_declaration *fndecl) {
 	code.vars.cap = 16 + code.vars.len;
 	code.vars.ary = xmalloc(sizeof(struct local[code.vars.cap]));
 
+	unsigned offset = 0;
+
 	for (unsigned i = 0; i < fndecl->nargs; ++i) {
-		code.vars.ary[i].name = fndecl->args[i];
-		code.vars.ary[i].index = next_local(&code);
+		code.vars.ary[i+offset].name = fndecl->args[i];
+		code.vars.ary[i+offset].index = next_local(&code);
 	}
 
 
@@ -814,6 +830,7 @@ static struct sq_function *compile_function(struct func_declaration *fndecl) {
 	fn->nlocals = code.nlocals;
 	fn->program = program;
 	fn->codelen = code.codelen;
+	fn->is_method = is_method;
 
 	return fn;
 }
@@ -835,7 +852,7 @@ struct sq_program *sq_program_compile(const char *stream) {
 		.body = sq_parse_statements(stream)
 	};
 
-	program->main = compile_function(&maindecl);
+	program->main = compile_function(&maindecl, false);
 
 	program->nglobals = globals.len;
 	program->globals = xmalloc(sizeof(sq_value [globals.len]));

@@ -14,6 +14,7 @@ struct sq_function {
 	sq_value *consts;
 	struct sq_program *program;
 	union sq_bytecode *bytecode;
+	bool is_method;
 };
 
 struct sq_function *sq_function_clone(struct sq_function *function);
