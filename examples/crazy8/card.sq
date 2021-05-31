@@ -1,10 +1,23 @@
-class Card {
-	rank, suit
-}
-
 renowned SUITS = ['♦', '♥', '♣', '♠']
 renowned RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
 
-journey cardstr(card) {
-	reward (card.rank) + (card.suit)
+myth Card {
+	equip rank, suit
+
+	realize(rank, suit) {
+		if kindof(rank) != 'string' {
+			rank = RANKS[rank]
+		}
+
+		if kindof(suit) != 'string' {
+			suit = SUITS[suit]
+		}
+
+		my.rank = rank
+		my.suit = suit
+	}
+
+	journey to_string() {
+		reward my.rank + my.suit
+	}
 }

@@ -260,6 +260,8 @@ static void compile_class_declaration(struct class_declaration *sdecl) {
 	class->nfields = sdecl->nfields;
 	class->fields = sdecl->fields;
 
+	declare_global_variable(strdup(class->name), SQ_NULL);
+
 	if (sdecl->constructor != NULL) {
 		class->constructor = compile_function(sdecl->constructor, true);
 	} else {

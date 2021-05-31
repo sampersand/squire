@@ -1,53 +1,62 @@
 import "card.sq"
 
-journey new_deck() {
-	local deck = []
-	local i = 0
+myth Pile {
+	equip cards
 
-	whilst i < 52 {
-		deck[i] = Card(RANKS[i % 13], SUITS[i / 13])
-		i = i + 1
+	recite create() {
+		local deck = []
+		local i = 0
+
+		whilst i < 52 {
+			deck[i] = Card(i % 13, i / 13)
+			i = i + 1
+		}
+
+		reward my(deck)
 	}
 
-	reward deck
-}
+	journey shuffle() {
+		local len = my.length()
+		local n = 100 + (random() % 300)
+		local cards = my.cards
 
-journey shuffle_pile(pile) {
-	local len = length(pile)
-	local n = 100 + (random() % 300)
+		whilst n {
+			i = random() % len
+			j = random() % len
 
-	whilst n {
-		i = random() % len
-		j = random() % len
+			tmp = cards[i]
+			cards[i] = cards[j]
+			cards[j] = tmp
 
-		tmp = pile[i]
-		pile[i] = pile[j]
-		pile[j] = tmp
-
-		n = n - 1
+			n = n - 1
+		}
 	}
 
-	reward pile
-}
-
-journey pilestr(pile) {
-	renowned cardstr
-	local i = 0
-	local len = length(pile)
-	local str = ""
-
-	whilst i < len {
-		str = str + cardstr(pile[i]) + " "
-		i = i + 1
+	journey length() {
+		reward length(my.cards)
 	}
 
-	reward substr(str, 0, length(str) - 1)
-}
+	journey to_string() {
+		renowned cardstr
+		local i = 0
+		local len = my.length()
+		local str = ""
 
-journey draw_from_pile(pile) {
-	reward delete(pile, 0)
-}
+		whilst i < len {
+			local card = my.cards[i];
 
-journey add_to_pile(pile, card) {
-	insert(pile, length(pile), card)
+			str = str + card.to_string() + " "
+			i = i + 1
+		}
+
+		reward substr(str, 0, length(str) - 1)
+	}
+
+	journey draw() {
+		reward delete(my.cards, 0)
+	}
+
+	journey add(card) {
+		insert(my.cards, my.length(), card)
+	}
 }

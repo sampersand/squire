@@ -1,0 +1,31 @@
+myth Value {
+	equip data
+
+	journey run() {
+		renowned Variable
+		renowned Ast
+
+		local kind = kindof(my.data)
+
+		if (kind == Variable) || (kind == Ast) {
+			reward my.data.run()
+		} alas {
+			reward my.data
+		}
+	}
+
+	journey to_string() {
+		reward string(my.run())
+	}
+
+	journey to_number() {
+		reward number(my.run())
+	}
+
+	journey to_boolean() {
+		reward boolean(my.run())
+	}
+
+	
+}
+

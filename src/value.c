@@ -285,7 +285,17 @@ struct sq_string *sq_value_to_string(sq_value value) {
 	case SQ_TCLASS:
 		return sq_string_new(strdup(AS_CLASS(value)->name));
 
-	case SQ_TINSTANCE:
+	case SQ_TINSTANCE: {
+		struct sq_function *to_string = sq_instance_method(AS_INSTANCE(value), "to_string");
+
+		if (to_string != NULL) {
+			sq_value string = sq_function_run(to_string, 1, &value);
+			if (!sq_value_is_string(string))
+				die("to_string for an instance of '%s' didn't return a string", AS_INSTANCE(value)->class->name);
+			return AS_STRING(string);
+		}
+		// else fallthrough
+	}
 	case SQ_TFUNCTION:
 	case SQ_TARRAY:
 		die("cannot convert %s to a string", TYPENAME(value));
@@ -306,8 +316,18 @@ sq_number sq_value_to_number(sq_value value) {
 	case SQ_TSTRING:
 		return strtoll(AS_STR(value), NULL, 10);
 
+	case SQ_TINSTANCE: {
+		struct sq_function *to_number = sq_instance_method(AS_INSTANCE(value), "to_number");
+
+		if (to_number != NULL) {
+			sq_value number = sq_function_run(to_number, 1, &value);
+			if (!sq_value_is_number(number))
+				die("to_number for an instance of '%s' didn't return a number", AS_INSTANCE(value)->class->name);
+			return AS_NUMBER(number);
+		}
+		// else fallthrough
+	}
 	case SQ_TCLASS:
-	case SQ_TINSTANCE:
 	case SQ_TFUNCTION:
 	case SQ_TARRAY:
 		die("cannot convert %s to a number", TYPENAME(value));
@@ -332,17 +352,15 @@ bool sq_value_to_boolean(sq_value value) {
 		return AS_ARRAY(value)->len;
 
 	case SQ_TINSTANCE: {
-		sq_value *to_boolean = sq_instance_field(AS_INSTANCE(value), "to_boolean");
+		struct sq_function *to_boolean = sq_instance_method(AS_INSTANCE(value), "to_boolean");
+
 		if (to_boolean != NULL) {
-			if (!sq_value_is_function(*to_boolean))
-				die("'to_boolean' must be a function.");
-			else {
-				value = sq_function_run(AS_FUNCTION(*to_boolean), 1, &value);
-				bool result = sq_value_to_boolean(value);
-				sq_value_free(value);
-				return result;
-			}
+			sq_value boolean = sq_function_run(to_boolean, 1, &value);
+			if (!sq_value_is_boolean(boolean))
+				die("to_boolean for an instance of '%s' didn't return a boolean", AS_INSTANCE(value)->class->name);
+			return sq_value_as_boolean(boolean);
 		}
+
 		// else fallthrough
 	}
 

@@ -6,12 +6,19 @@ myth Args {
 
 myth Ast {
 	equip fn, args
-
-	journey run() {
-		fn = my.fn
-		reward fn(my.args)
-	}
 }
+
+journey run(arg) {
+	renowned Variable
+
+	if kindof(arg) == Ast { fn = arg.fn; reward fn(arg.args) }
+	if kindof(arg) == Variable { reward arg.run() }
+	reward arg
+}
+
+journey to_string(arg) { reward string(run(arg)) }
+journey to_number(arg) { reward number(run(arg)) }
+journey to_boolean(arg) { reward boolean(run(arg)) }
 
 # Arity zero
 journey sq_prompt(_args) {

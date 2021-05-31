@@ -1,15 +1,7 @@
-myth Rich {
-	equip money, name
-	journey take() {
-		money = my.money
-		my.money = 0
-		reward money
-	}
-}
-
 # 'class' declaration
 myth RobinHood {
 	# field declarations declarations
+
 	equip weapon
 	# constructor
 	realize(weapon) {
@@ -26,6 +18,15 @@ myth RobinHood {
 	# class function
 	recite please_help() {
 		print("Oh, robinhood, please help us!\n");
+	}
+}
+
+myth Rich {
+	equip money, name
+	journey take() {
+		money = my.money
+		my.money = 0
+		reward money
 	}
 }
 
