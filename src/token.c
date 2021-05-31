@@ -1,7 +1,9 @@
 #include "token.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
 #include "shared.h"
+#include "roman.h"
 
 const char *sq_stream;
 
@@ -45,6 +47,19 @@ static unsigned tohex(char c) {
 	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 
+static void parse_arabic_numeral(struct sq_token *token) {
+	token->kind = SQ_TK_NUMBER;
+	token->number = 0;
+
+	do {
+		token->number = token->number * 10 + (*sq_stream - '0');
+	} while (isdigit(*++sq_stream));
+
+	if (isalpha(*sq_stream) || *sq_stream == '_')
+		die("invalid trailing characters on arabic numeral literal: %llu%c\n",
+			(long long) token->number, *sq_stream);
+}
+
 struct sq_token sq_next_token() {
 	strip_whitespace();
 	struct sq_token token;
@@ -55,24 +70,19 @@ struct sq_token sq_next_token() {
 	}
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
-	if (isdigit(*sq_stream)) {
-		token.kind = SQ_TK_NUMBER;
-		token.number = 0;
+	if (isdigit(*sq_stream))
+		return parse_arabic_numeral(&token), token;
 
-		do {
-			token.number = token.number * 10 + (*sq_stream - '0');
-		} while (isdigit(*++sq_stream));
-
-		if (isalpha(*sq_stream) || *sq_stream == '_')
-			die("invalid trailing characters on number literal: %llu%c\n",
-				(long long) token.number, *sq_stream);
-		return token;
+	if (sq_roman_is_numeral(*sq_stream)) {
+		token.number = sq_roman_to_number(sq_stream, &sq_stream);
+		if (token.number > 0)
+			return token;
 	}
 
 	if (*sq_stream == '\\') {
 		++sq_stream;
 
-		if (*++sq_stream != '\n') 
+		if (sq_stream[1] && *++sq_stream != '\n') 
 			die("unexpected '\\' on its own.");
 	}
 
@@ -134,21 +144,20 @@ struct sq_token sq_next_token() {
 	}
 
 	CHECK_FOR_START_KW("myth",     SQ_TK_CLASS);
-	// CHECK_FOR_START_KW("my",       SQ_TK_THIS);
 	CHECK_FOR_START_KW("journey",  SQ_TK_FUNC);
-	CHECK_FOR_START_KW("equip",    SQ_TK_FIELD);
+	CHECK_FOR_START_KW("equip",    SQ_TK_FIELD); // todo: better name
 	CHECK_FOR_START_KW("recite",   SQ_TK_CLASSFN);
 	CHECK_FOR_START_KW("realize",  SQ_TK_CONSTRUCTOR);
 	CHECK_FOR_START_KW("renowned", SQ_TK_GLOBAL);
-	CHECK_FOR_START_KW("local",    SQ_TK_LOCAL);
-	CHECK_FOR_START_KW("import",   SQ_TK_IMPORT);
+	CHECK_FOR_START_KW("local",    SQ_TK_LOCAL); // better name?
+	CHECK_FOR_START_KW("import",   SQ_TK_IMPORT); // `befriend`? `beseech`?
 	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
-	CHECK_FOR_START_KW("if",       SQ_TK_IF);
+	CHECK_FOR_START_KW("if",       SQ_TK_IF); // _should_ we have a better one?
 	CHECK_FOR_START_KW("alas",     SQ_TK_ELSE);
 	CHECK_FOR_START_KW("reward",   SQ_TK_RETURN);
 	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",      SQ_TK_FALSE);
-	CHECK_FOR_START_KW("null",     SQ_TK_NULL);
+	CHECK_FOR_START_KW("null",     SQ_TK_NULL); // is there a better word for this?
 
 	if (isalpha(*sq_stream) || *sq_stream == '_') {
 		token.kind = SQ_TK_IDENT;

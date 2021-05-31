@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
+#include "number.h"
 
 struct sq_string;
 struct sq_class;
@@ -11,7 +12,6 @@ struct sq_instance;
 struct sq_function;
 struct sq_array;
 
-typedef int64_t sq_number;
 typedef uint64_t sq_value;
 
 typedef enum {

@@ -2,11 +2,11 @@
 n = 1
 
 whilst n <= 100 {
-	if !(a=n % 3) { print('Fizz') }
-	if !(b=n % 5) { print('Buzz') }
-	if a*b  { print(n) }
+	if !(a=n % 3) { proclaim('Fizz') }
+	if !(b=n % 5) { proclaim('Buzz') }
+	if a*b  { proclaim(n) }
 
-	print("\n")
+	proclaim("\n")
 
 	n = n + 1
 }

@@ -618,7 +618,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		goto arguments; \
 	}
 
-	BUILTIN_FN("print", SQ_INT_PRINT, 1); // `proclaim`?
+	BUILTIN_FN("proclaim", SQ_INT_PRINT, 1);
 	BUILTIN_FN("number", SQ_INT_TONUMBER, 1);
 	BUILTIN_FN("string", SQ_INT_TOSTRING, 1);
 	BUILTIN_FN("boolean", SQ_INT_TOBOOLEAN, 1);

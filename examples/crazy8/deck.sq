@@ -12,7 +12,7 @@ myth Pile {
 			i = i + 1
 		}
 
-		reward my(deck)
+		reward Pile(deck)
 	}
 
 	journey shuffle() {

@@ -1,8 +1,8 @@
 # 'class' declaration
 myth RobinHood {
 	# field declarations declarations
-
 	equip weapon
+
 	# constructor
 	realize(weapon) {
 		my.weapon = weapon
@@ -10,19 +10,24 @@ myth RobinHood {
 
 	# member function
 	journey steal_from(whom) {
-		print("Hello, " + whom.name + "\n")
-		print("Give me your money or i'll shoot you with my " + my.weapon + "\n")
+		proclaim("Hello, " + whom.name + "\n")
+		proclaim("Give me your money or i'll shoot you with my " + my.weapon + "\n")
 		reward whom.take()
 	}
 
 	# class function
 	recite please_help() {
-		print("Oh, robinhood, please help us!\n");
+		proclaim("Oh, robinhood, please help us!\n");
 	}
 }
 
 myth Rich {
+	# field declarations declarations
 	equip money, name
+
+	# implicit constructor
+
+	# member function
 	journey take() {
 		money = my.money
 		my.money = 0
@@ -31,7 +36,7 @@ myth Rich {
 }
 
 journey distribute(money, whom) {
-	print("Here you go, " + whom + ", here's " + string(money) + " gold coins.\n")
+	proclaim("Here you go, " + whom + ", here's " + string(money) + " gold coins.\n")
 }
 
 RobinHood.please_help()

@@ -16,6 +16,6 @@ journey timestr(time) {
 
 i = 0
 whilst i <= 49 {
-	print(string(i) + ", " + timestr(i) + "\n")
+	proclaim(string(i) + ", " + timestr(i) + "\n")
 	i = i + 1
 }

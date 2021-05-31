@@ -74,13 +74,13 @@ journey sq_length(args) {
 journey sq_dump(args) {
 	arg = run(args.a1)
 
-	if kindof(arg) == 'string' { print('String(' + arg + ')') }
-	alas if kindof(arg) == 'number' { print('Number(' + string(arg) + ')') }
-	alas if kindof(arg) == 'boolean' { print('Boolean(' + string(arg) + ')') }
-	alas if kindof(arg) == 'null' { print('Null()') }
+	if kindof(arg) == 'string' { proclaim('String(' + arg + ')') }
+	alas if kindof(arg) == 'number' { proclaim('Number(' + string(arg) + ')') }
+	alas if kindof(arg) == 'boolean' { proclaim('Boolean(' + string(arg) + ')') }
+	alas if kindof(arg) == 'null' { proclaim('Null()') }
 	alas { dump(arg) }
 
-	print("\n")
+	proclaim("\n")
 
 	reward arg
 }
@@ -94,9 +94,9 @@ journey sq_output(args) {
 	}
 
 	if text && substr(text, length(text) - 1, 1) == '\\' {
-		print(substr(text, 0, length(text) - 1))
+		proclaim(substr(text, 0, length(text) - 1))
 	} alas {
-		print(text + "\n")
+		proclaim(text + "\n")
 	}
 }
 
