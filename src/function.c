@@ -18,7 +18,7 @@ struct sq_function *sq_function_clone(struct sq_function *function) {
 }
 
 void sq_function_free(struct sq_function *function) {
-	return;
+	return; // todo: fixme?
 	assert(function->refcount);
 
 	if (function->refcount < 0 || !--function->refcount)

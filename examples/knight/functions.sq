@@ -53,7 +53,7 @@ journey sq_system(args) {
 }
 
 journey sq_quit(args) {
-	exit(to_number(args.a1))
+	dismount(to_number(args.a1))
 }
 
 journey sq_not(args) {

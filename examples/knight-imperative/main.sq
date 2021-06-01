@@ -2,7 +2,7 @@
 
 journey die(message) {
 	proclaim(message + "\n")
-	exit(1)
+	dismount(1)
 }
 
 import "./variable.sq"

@@ -625,7 +625,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("dump", SQ_INT_DUMP, 1);
 	BUILTIN_FN("length", SQ_INT_LENGTH, 1); // `fathoms` ?
 	BUILTIN_FN("substr", SQ_INT_SUBSTR, 3);
-	BUILTIN_FN("exit", SQ_INT_EXIT, 1); // `dismount` ?
+	BUILTIN_FN("dismount", SQ_INT_EXIT, 1);
 	BUILTIN_FN("kindof", SQ_INT_KINDOF, 1);
 	BUILTIN_FN("system", SQ_INT_SYSTEM, 1);
 	BUILTIN_FN("inquire", SQ_INT_PROMPT, 0);

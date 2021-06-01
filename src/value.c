@@ -4,6 +4,7 @@
 #include "function.h"
 #include "shared.h"
 #include "string.h"
+#include "roman.h"
 #include <string.h>
 
 #define IS_STRING sq_value_is_string
@@ -273,9 +274,13 @@ struct sq_string *sq_value_to_string(sq_value value) {
 			return value == SQ_TRUE ? &truestring : &falsestring;
 
 	case SQ_TNUMBER: {
-		char *buf = xmalloc(40);
-		// snprintf(buf, 40, "%lld", AS_NUMBER(value));
-		strcpy(buf, "XVII");
+		char *buf;
+#ifdef SQ_NUMBER_TO_ROMAN
+		buf = sq_number_to_roman(AS_NUMBER(value));
+#else
+		buf = xmalloc(40);
+		snprintf(buf, 40, "%lld", AS_NUMBER(value));
+#endif
 		return sq_string_new(buf);
 	}
 

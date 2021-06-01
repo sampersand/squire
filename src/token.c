@@ -76,7 +76,7 @@ struct sq_token sq_next_token() {
 	if (sq_roman_is_numeral(*sq_stream)) {
 		token.number = sq_roman_to_number(sq_stream, &sq_stream);
 		if (token.number > 0)
-			return token;
+			return (token.kind = SQ_TK_NUMBER), token;
 	}
 
 	if (*sq_stream == '\\') {
