@@ -5,7 +5,7 @@ myth Value {
 		renowned Variable
 		renowned Ast
 
-		local kind = kindof(my.data)
+		nigh kind = kindof(my.data)
 
 		if (kind == Variable) || (kind == Ast) {
 			reward my.data.run()
@@ -25,7 +25,30 @@ myth Value {
 	journey to_boolean() {
 		reward boolean(my.run())
 	}
-
-	
 }
 
+myth Fraction {
+	equip numer, denom
+
+	realize(numer, denom) {
+		my.numer = numer
+
+		if !(my.denom = denom) {
+			proclaim("cannot create a fraction with a denom of zero.")
+			dismount(1)
+		}
+	}
+
+	journey to_string() {
+		reward string(my.numer) + "/" + string(my.denom)
+	}
+
+	journey to_boolean() {
+		reward boolean(my.numer)
+	}
+}
+
+f = Fraction(4, 3)
+
+dump(string(f))
+dump(!f)

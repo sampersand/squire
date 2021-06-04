@@ -278,8 +278,7 @@ struct sq_string *sq_value_to_string(sq_value value) {
 #ifdef SQ_NUMBER_TO_ROMAN
 		buf = sq_number_to_roman(AS_NUMBER(value));
 #else
-		buf = xmalloc(40);
-		snprintf(buf, 40, "%lld", AS_NUMBER(value));
+		buf = sq_number_to_arabic(AS_NUMBER(value));
 #endif
 		return sq_string_new(buf);
 	}

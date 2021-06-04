@@ -22,6 +22,9 @@ enum sq_interrupts {
 	SQ_INT_ARRAY_DELETE       = 32,
 	SQ_INT_ARRAY_INDEX        = 33,
 	SQ_INT_ARRAY_INDEX_ASSIGN = 34,
+
+	SQ_INT_ARABIC             = 40,
+	SQ_INT_ROMAN              = 41,
 };
 
 enum sq_opcode {

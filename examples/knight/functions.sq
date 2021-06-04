@@ -14,29 +14,30 @@ myth Ast {
 }
 
 # Arity zero
-journey sq_prompt(_args) {
+journey sq_prompt(_) {
 	reward inquire()
 }
 
-journey sq_random(_args) {
+journey sq_random(_) {
 	reward random()
 }
 
-journey sq_true(_args) {
+journey sq_true(_) {
 	reward yay
 }
 
-journey sq_false(_args) {
+journey sq_false(_) {
 	reward nay
 }
 
-journey sq_null(_args) {
+journey sq_null(_) {
 	reward null
 }
 
 # Arity one
 
 journey sq_eval(args) {
+	string(args.a1).parse
 	reward run(parse(to_string(args.a1)))
 }
 

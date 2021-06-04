@@ -4,21 +4,21 @@ myth Pile {
 	equip cards
 
 	recite create() {
-		local deck = []
-		local i = 0
+		nigh deck = []
+		nigh i = N
 
-		whilst i < 52 {
-			deck[i] = Card(i % 13, i / 13)
-			i = i + 1
+		whilst i < LII {
+			deck[i] = Card(i % XIII, i / XIII)
+			i = i + I
 		}
 
 		reward Pile(deck)
 	}
 
 	journey shuffle() {
-		local len = my.length()
-		local n = 100 + (random() % 300)
-		local cards = my.cards
+		nigh len = my.length()
+		nigh n = C + (random() % CCC)
+		nigh cards = my.cards
 
 		whilst n {
 			i = random() % len
@@ -28,7 +28,7 @@ myth Pile {
 			cards[i] = cards[j]
 			cards[j] = tmp
 
-			n = n - 1
+			n = n - I
 		}
 	}
 
@@ -38,22 +38,22 @@ myth Pile {
 
 	journey to_string() {
 		renowned cardstr
-		local i = 0
-		local len = my.length()
-		local str = ""
+		nigh i = N
+		nigh len = my.length()
+		nigh str = ""
 
 		whilst i < len {
-			local card = my.cards[i];
+			nigh card = my.cards[i];
 
 			str = str + card.to_string() + " "
-			i = i + 1
+			i = i + I
 		}
 
-		reward substr(str, 0, length(str) - 1)
+		reward substr(str, N, length(str) - I)
 	}
 
 	journey draw() {
-		reward delete(my.cards, 0)
+		reward delete(my.cards, N)
 	}
 
 	journey add(card) {

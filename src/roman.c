@@ -1,6 +1,7 @@
 #include "roman.h"
 #include "shared.h"
 #include <ctype.h>
+#include <string.h>
 
 enum roman_numeral {
 	SQ_TK_ROMAN_I = 1,
@@ -13,7 +14,7 @@ enum roman_numeral {
 };
 
 static void convert(unsigned number, char one, char five, char ten, char **out) {
-	if (5 <= number && number <= 8) *(*out)++ = five;
+	if (5 < number && number <= 8) *(*out)++ = five;
 
 	switch (number) {
 	case 3: *(*out)++ = one;
@@ -35,6 +36,9 @@ static void convert(unsigned number, char one, char five, char ten, char **out) 
 
 // lol this is so bad.
 char *sq_number_to_roman(sq_number number) {
+	if (number == 0)
+		return strdup("N");
+
 	char *buf = xmalloc(40); // todo: find an actual max size lol
 	char *ret = buf;
 
@@ -64,9 +68,21 @@ char *sq_number_to_roman(sq_number number) {
 	return buf;
 }
 
+// note that this returns an owned string.
+char *sq_number_to_arabic(sq_number number) {
+	char *buf = xmalloc(40);
+	snprintf(buf, 40, "%lld", number);
+	return buf;
+}
+
 sq_number sq_roman_to_number(const char *input, const char **output) {
 	sq_number number = 0;
 	enum roman_numeral stage = 0, parsed;
+
+	if (*input == 'N' && !isalnum(input[1])) {
+		input++;
+		goto done;
+	}
 
 	while (true) {
 		switch(*input) {
@@ -78,8 +94,7 @@ sq_number sq_roman_to_number(const char *input, const char **output) {
 		case 'D': parsed = SQ_TK_ROMAN_D; break;
 		case 'M': parsed = SQ_TK_ROMAN_M; break;
 		default:
-			if (isalnum(*input))
-				return -1;
+			if (isalnum(*input)) return -1;
 			goto done;
 		}
 

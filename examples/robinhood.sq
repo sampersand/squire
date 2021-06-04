@@ -25,8 +25,6 @@ myth Rich {
 	# field declarations declarations
 	equip money, name
 
-	# implicit constructor
-
 	# member function
 	journey take() {
 		money = my.money
@@ -41,7 +39,12 @@ journey distribute(money, whom) {
 
 RobinHood.please_help()
 robin = RobinHood("bow")
-money = robin.steal_from(Rich(1234, "richard"))
-distribute(money, 'paupers')
+money = robin.steal_from(Rich(L, "richard"))
+
+if money {
+	distribute(money, 'paupers')
+} alas {
+	proclaim("Oh, we robbed a poor person...\n")	
+}
 
 

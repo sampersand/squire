@@ -4,6 +4,7 @@
 #include "shared.h"
 #include "class.h"
 #include "array.h"
+#include "roman.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -312,6 +313,16 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				break;
 			}
 
+			/** ARABIC **/
+			case SQ_INT_ARABIC:
+				value = NEXT_LOCAL();
+				NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_arabic(sq_value_to_number(value))));
+				break;
+
+			case SQ_INT_ROMAN:
+				value = NEXT_LOCAL();
+				NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_roman(sq_value_to_number(value))));
+				break;
 
 			default:
 				bug("unknown interrupt: %d", idx);

@@ -11,9 +11,9 @@ myth Variable {
 
 	recite fetch(name) {
 		renowned variable_list
-		local var
-		local i = 0
-		local len = length(variable_list)
+		nigh var
+		nigh i = 0
+		nigh len = length(variable_list)
 
 		whilst i < len {
 			var = variable_list[i]
