@@ -1,0 +1,13 @@
+i = N
+
+whilst i < XL {
+	if i > XV {
+		greater_than_fifteen:
+	}
+	i = i + I
+	proclaim(string(i) + "\n")
+}
+
+whence greater_than_fifteen
+proclaim("done")
+

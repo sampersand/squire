@@ -16,9 +16,9 @@ myth Pile {
 	}
 
 	journey shuffle() {
-		nigh len = my.length()
+		nigh len = thine.length()
 		nigh n = C + (random() % CCC)
-		nigh cards = my.cards
+		nigh cards = thine.cards
 
 		whilst n {
 			i = random() % len
@@ -33,17 +33,17 @@ myth Pile {
 	}
 
 	journey length() {
-		reward length(my.cards)
+		reward length(thine.cards)
 	}
 
 	journey to_string() {
 		renowned cardstr
 		nigh i = N
-		nigh len = my.length()
+		nigh len = thine.length()
 		nigh str = ""
 
 		whilst i < len {
-			nigh card = my.cards[i];
+			nigh card = thine.cards[i];
 
 			str = str + card.to_string() + " "
 			i = i + I
@@ -53,10 +53,10 @@ myth Pile {
 	}
 
 	journey draw() {
-		reward delete(my.cards, N)
+		reward delete(thine.cards, N)
 	}
 
 	journey add(card) {
-		insert(my.cards, my.length(), card)
+		insert(thine.cards, thine.length(), card)
 	}
 }

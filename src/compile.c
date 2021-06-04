@@ -12,14 +12,12 @@ struct sq_program *program;
 // total temporary hack...
 #define free(x) ((void)0)
 
-struct global {
-	char *name;
-	sq_value value;
-};
-
 struct {
 	unsigned len, cap;
-	struct global *ary;
+	struct global {
+		char *name;
+		sq_value value;
+	} *ary;
 } globals;
 
 struct sq_code {
@@ -27,6 +25,14 @@ struct sq_code {
 	union sq_bytecode *bytecode;
 
 	unsigned nlocals;
+
+	struct {
+		unsigned cap, len;
+		struct label {
+			char *name;
+			unsigned index;
+		} *ary;
+	} labels;
 
 	struct {
 		unsigned cap, len;
@@ -777,6 +783,53 @@ static unsigned compile_local(struct sq_code *code, struct scope_declaration *ld
 	return index;
 }
 
+static void compile_label_statement(struct sq_code *code, char *label) {
+	unsigned i;
+
+	for (i = 0; i < code->labels.len; ++i) {
+		// we've found a destination, assign to that.
+		if (!strcmp(code->labels.ary[i].name, label)) {
+			free(label);
+			goto done;
+		}
+	}
+
+	// havent found the label, add it. (note we increase len here)
+	if (code->labels.len++ == code->labels.cap)
+		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
+
+	set_opcode(code, SQ_OC_JMP);
+	set_index(code, code->labels.ary[i].index);
+	code->labels.ary[i].name = label;
+	code->labels.ary[i].index = code->codelen - 1;
+
+done:
+
+	set_opcode(code, SQ_OC_JMP);
+	set_index(code, code->labels.ary[i].index);
+}
+
+static void compile_comefrom_statement(struct sq_code *code, char *label) {
+	unsigned i;
+
+	for (i = 0; i < code->labels.len; ++i) {
+		if (!strcmp(code->labels.ary[i].name, label)) {
+			// if the label already exists, make it go here.
+			set_target(code, code->labels.ary[i].index);
+			free(label);
+			return;
+		}
+	}
+
+	// otherwise,the code doesn't exist. (note we increment len here)
+	if (code->labels.len++ == code->labels.cap)
+		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
+
+	code->labels.ary[i].name = label;
+	code->labels.ary[i].index = code->codelen;
+}
+
+
 static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	switch (stmt->kind) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
@@ -786,6 +839,8 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;
+	case SQ_PS_SLABEL: compile_label_statement(code, stmt->label); break;
+	case SQ_PS_SCOMEFROM: compile_comefrom_statement(code, stmt->comefrom); break;
 	case SQ_PS_SRETURN: compile_return_statement(code, stmt->rstmt); break;
 	case SQ_PS_SEXPR: compile_expression(code, stmt->expr); break;
 	default: bug("unknown statement kind '%d'", stmt->kind);
@@ -812,13 +867,16 @@ static struct sq_function *compile_function(struct func_declaration *fndecl, boo
 	code.vars.cap = 16 + code.vars.len;
 	code.vars.ary = xmalloc(sizeof(struct local[code.vars.cap]));
 
+	code.labels.len = 0;
+	code.labels.cap = 4;
+	code.labels.ary = xmalloc(sizeof(struct label[code.labels.cap]));
+
 	unsigned offset = 0;
 
 	for (unsigned i = 0; i < fndecl->nargs; ++i) {
 		code.vars.ary[i+offset].name = fndecl->args[i];
 		code.vars.ary[i+offset].index = next_local(&code);
 	}
-
 
 	if (fndecl->body != NULL)
 		compile_statements(&code, fndecl->body);

@@ -5,25 +5,25 @@ myth Value {
 		renowned Variable
 		renowned Ast
 
-		nigh kind = kindof(my.data)
+		nigh kind = kindof(thine.data)
 
 		if (kind == Variable) || (kind == Ast) {
-			reward my.data.run()
+			reward thine.data.run()
 		} alas {
-			reward my.data
+			reward thine.data
 		}
 	}
 
 	journey to_string() {
-		reward string(my.run())
+		reward string(thine.run())
 	}
 
 	journey to_number() {
-		reward number(my.run())
+		reward number(thine.run())
 	}
 
 	journey to_boolean() {
-		reward boolean(my.run())
+		reward boolean(thine.run())
 	}
 }
 
@@ -31,20 +31,20 @@ myth Fraction {
 	equip numer, denom
 
 	realize(numer, denom) {
-		my.numer = numer
+		thine.numer = numer
 
-		if !(my.denom = denom) {
+		if !(thine.denom = denom) {
 			proclaim("cannot create a fraction with a denom of zero.")
 			dismount(1)
 		}
 	}
 
 	journey to_string() {
-		reward string(my.numer) + "/" + string(my.denom)
+		reward string(thine.numer) + "/" + string(thine.denom)
 	}
 
 	journey to_boolean() {
-		reward boolean(my.numer)
+		reward boolean(thine.numer)
 	}
 }
 

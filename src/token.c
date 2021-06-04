@@ -153,6 +153,7 @@ struct sq_token sq_next_token() {
 	CHECK_FOR_START_KW("import",   SQ_TK_IMPORT); // `befriend`? `beseech`?
 	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
 	CHECK_FOR_START_KW("if",       SQ_TK_IF); // _should_ we have a better one?
+	CHECK_FOR_START_KW("whence",   SQ_TK_COMEFROM);
 	CHECK_FOR_START_KW("alas",     SQ_TK_ELSE);
 	CHECK_FOR_START_KW("reward",   SQ_TK_RETURN);
 	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
@@ -167,6 +168,17 @@ struct sq_token sq_next_token() {
 			++sq_stream;
 
 		token.identifier = strndup(start, sq_stream - start);
+
+		// check to see if we're a label
+		while (isspace(*sq_stream) || *sq_stream == '#')
+			if (*sq_stream == '#')
+				while (*sq_stream && *sq_stream++ != '\n');
+			else
+				++sq_stream;
+
+		if (*sq_stream == ':')
+			++sq_stream, token.kind = SQ_TK_LABEL;
+
 		return token;
 	}
 

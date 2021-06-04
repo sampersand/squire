@@ -17,6 +17,8 @@ struct statement {
 		SQ_PS_SLOCAL,
 		SQ_PS_SIF,
 		SQ_PS_SWHILE,
+		SQ_PS_SLABEL,
+		SQ_PS_SCOMEFROM,
 		SQ_PS_SRETURN,
 		SQ_PS_SEXPR,
 	} kind;
@@ -29,6 +31,7 @@ struct statement {
 		struct if_statement *ifstmt;
 		struct while_statement *wstmt;
 		struct return_statement *rstmt;
+		char *label, *comefrom;
 		struct expression *expr;
 	};
 };

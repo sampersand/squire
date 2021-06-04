@@ -13,11 +13,11 @@ myth Card {
 			suit = SUITS[suit]
 		}
 
-		my.rank = rank
-		my.suit = suit
+		thine.rank = rank
+		thine.suit = suit
 	}
 
 	journey to_string() {
-		reward my.rank + my.suit
+		reward thine.rank + thine.suit
 	}
 }

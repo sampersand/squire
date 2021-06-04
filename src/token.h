@@ -22,6 +22,8 @@ enum sq_token_kind {
 	SQ_TK_WHILE,
 	SQ_TK_ELSE,
 	SQ_TK_RETURN,
+	SQ_TK_COMEFROM,
+	// TODO: `assert` as `challenge`?
 
 	SQ_TK_TRUE,
 	SQ_TK_FALSE,
@@ -30,6 +32,7 @@ enum sq_token_kind {
 	SQ_TK_IDENT,
 	SQ_TK_NUMBER,
 	SQ_TK_STRING,
+	SQ_TK_LABEL,
 
 	SQ_TK_LBRACE,
 	SQ_TK_RBRACE,

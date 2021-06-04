@@ -5,13 +5,13 @@ myth RobinHood {
 
 	# constructor
 	realize(weapon) {
-		my.weapon = weapon
+		thine.weapon = weapon
 	}
 
 	# member function
 	journey steal_from(whom) {
 		proclaim("Hello, " + whom.name + "\n")
-		proclaim("Give me your money or i'll shoot you with my " + my.weapon + "\n")
+		proclaim("Give me your money or i'll shoot you with thine " + thine.weapon + "\n")
 		reward whom.take()
 	}
 
@@ -27,8 +27,8 @@ myth Rich {
 
 	# member function
 	journey take() {
-		money = my.money
-		my.money = 0
+		money = thine.money
+		thine.money = 0
 		reward money
 	}
 }

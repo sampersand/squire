@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct sq_function *sq_function_clone(struct sq_function *function) {
 	assert(function->refcount);
@@ -340,6 +341,19 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_JMP:
 			ip = REL_INDEX(0);
 			continue;
+
+		case SQ_OC_JMP_FORK: {
+			unsigned amnt = NEXT_INDEX();
+			unsigned i;
+
+			for (i = 0; i < amnt - 1; ++i) {
+				if (!fork()) goto done2;
+			}
+
+		done2:
+			ip = REL_INDEX(i);
+			continue;
+		}
 
 		case SQ_OC_JMP_FALSE: {
 			value = NEXT_LOCAL();

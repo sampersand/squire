@@ -3,7 +3,7 @@
 #include "function.h"
 #include "parse.h"
 #include "shared.h"
-#include "struct.h"
+#include "class.h"
 #include <string.h>
 
 struct sq_token last;
@@ -37,7 +37,7 @@ static void parse_field_names(bool is_method) {
 	field_name_count = 0;
 
 	if (is_method)
-		field_names[field_name_count++] = strdup("my");
+		field_names[field_name_count++] = strdup("thine");
 
 	while (take().kind == SQ_TK_IDENT) {
 		if (field_name_count > 255) die("too many fields!");
@@ -456,7 +456,7 @@ static struct scope_declaration *parse_local_declaration() {
 
 static char *parse_import_declaration() {
 	GUARD(SQ_TK_IMPORT);
-	EXPECT(SQ_TK_STRING, "expected a string after 'import1'");
+	EXPECT(SQ_TK_STRING, "expected a string after 'import'");
 	return last.string->ptr;
 }
 
@@ -629,11 +629,30 @@ static struct return_statement *parse_return_statement() {
 	return ret_stmt;
 }
 
+static char *parse_label_declaration()  {
+	if (take().kind == SQ_TK_LABEL)
+		return last.identifier;
+
+	untake();
+	return NULL;
+}
+
+static char *parse_comefrom_declaration() {
+	GUARD(SQ_TK_COMEFROM);
+
+	if (take().kind != SQ_TK_IDENT)
+		die("expecting an identifier");
+
+	return last.identifier;
+}
+
 static struct statement *parse_statement() {
 	struct statement stmt;
 	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
+	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
+	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;
 	else if ((stmt.cdecl = parse_class_declaration())) stmt.kind = SQ_PS_SCLASS;
 	else if ((stmt.fdecl = parse_func_declaration(true, false))) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;

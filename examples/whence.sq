@@ -1,0 +1,12 @@
+i = I
+whilst i < XL {
+	proclaim(string(i) + "\n")
+	if i > X {
+		 more_than_ten:
+	} alas {
+		i = i + 1
+	}
+}
+
+whence more_than_ten
+proclaim("done\n")

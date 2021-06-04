@@ -5,8 +5,8 @@ myth Variable {
 	equip name, value
 
 	realize(name) {
-		my.name = name
-		my.assigned = nay
+		thine.name = name
+		thine.assigned = nay
 	}
 
 	recite fetch(name) {
@@ -24,21 +24,21 @@ myth Variable {
 			i = i + 1
 		}
 
-		var = my(name, Undefined)
+		var = thine(name, Undefined)
 		insert(variable_list, len, var)
 		reward var
 	}
 
 	journey run() {
-		if my.assigned == nay {
-			die("undefined variable '" + my.name + "'")
+		if thine.assigned == nay {
+			die("undefined variable '" + thine.name + "'")
 		}
 
-		reward my.value
+		reward thine.value
 	}
 
 	journey assign(value) {
-		my.assigned = yay
-		my.value = value
+		thine.assigned = yay
+		thine.value = value
 	}
 }
