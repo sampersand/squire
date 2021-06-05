@@ -785,7 +785,7 @@ static unsigned compile_local(struct sq_code *code, struct scope_declaration *ld
 	return index;
 }
 
-static void create_label_statement(struct sq_code *code, char *label, bool in_mem, bool assign_indices) {
+static void create_label_statement(struct sq_code *code, char *label, bool in_mem) {
 	unsigned len = code->labels.len++;
 	// havent found the label, add it. (note we increase len here)
 	if (len == code->labels.cap)
@@ -802,38 +802,26 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 	}
 
 	for (unsigned i = 1; i < MAX_COMEFROMS; ++i) {
-		if (assign_indices) code->labels.ary[len].indices[i] = -1;
+		code->labels.ary[len].indices[i] = -1;
+
 		if (in_mem) set_index(code, -1);
 	}
 }
 
 static void compile_label_statement(struct sq_code *code, char *label) {
-	unsigned i;
-	for (i = 0; i < code->labels.len; ++i) {
+	for (unsigned i = 0; i < code->labels.len; ++i) {
 		// we've found a destination, assign to that.
 		if (!strcmp(code->labels.ary[i].name, label)) {
 			if (code->labels.ary[i].length != NULL)
 				die("cannot redefine '%s'", label);
 			free(label);
-			create_label_statement(code, label, true, false);
-			die("!");
-			goto assign;
+			die("todo: label after we had its COMEFROM.");
+			// goto found;
 		}
 	}
 
 	// haven't found it, need to set it.
-	create_label_statement(code, label, true, true);
-
-assign:;
-
-	struct label *lbl = &code->labels.ary[i];
-
-	for (unsigned j = 0; j < MAX_COMEFROMS; ++j) {
-		int dst = code->labels.ary[i].indices[j];
-		if (dst == -1) break;
-		lbl->length[j + 1] = dst;
-		++*lbl->length;
-	}
+	create_label_statement(code, label, true);
 }
 
 static void compile_comefrom_statement(struct sq_code *code, char *label) {
@@ -857,7 +845,7 @@ static void compile_comefrom_statement(struct sq_code *code, char *label) {
 	}
 
 	// it doesn't, create it.
-	create_label_statement(code, label, false, true);
+	create_label_statement(code, label, false);
 
 set_existing:
 
