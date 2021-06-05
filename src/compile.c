@@ -20,6 +20,8 @@ struct {
 	} *ary;
 } globals;
 
+#define MAX_COMEFROMS 16
+
 struct sq_code {
 	unsigned codecap, codelen;
 	union sq_bytecode *bytecode;
@@ -30,7 +32,7 @@ struct sq_code {
 		unsigned cap, len;
 		struct label {
 			char *name;
-			unsigned index;
+			int *length, indices[MAX_COMEFROMS];
 		} *ary;
 	} labels;
 
@@ -783,52 +785,92 @@ static unsigned compile_local(struct sq_code *code, struct scope_declaration *ld
 	return index;
 }
 
+static void create_label_statement(struct sq_code *code, char *label, bool in_mem, bool assign_indices) {
+	unsigned len = code->labels.len++;
+	// havent found the label, add it. (note we increase len here)
+	if (len == code->labels.cap)
+		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
+
+	code->labels.ary[len].name = label;
+	if (in_mem) {
+		set_opcode(code, SQ_OC_COMEFROM);
+		code->labels.ary[len].length = (int *) &code->bytecode[code->codelen];
+		set_index(code, 1); // no arguments.
+		set_index(code, code->codelen + MAX_COMEFROMS);
+	} else {
+		code->labels.ary[len].length = NULL;
+	}
+
+	for (unsigned i = 1; i < MAX_COMEFROMS; ++i) {
+		if (assign_indices) code->labels.ary[len].indices[i] = -1;
+		if (in_mem) set_index(code, -1);
+	}
+}
+
 static void compile_label_statement(struct sq_code *code, char *label) {
 	unsigned i;
-
 	for (i = 0; i < code->labels.len; ++i) {
 		// we've found a destination, assign to that.
 		if (!strcmp(code->labels.ary[i].name, label)) {
+			if (code->labels.ary[i].length != NULL)
+				die("cannot redefine '%s'", label);
 			free(label);
-			goto done;
+			create_label_statement(code, label, true, false);
+			die("!");
+			goto assign;
 		}
 	}
 
-	// havent found the label, add it. (note we increase len here)
-	if (code->labels.len++ == code->labels.cap)
-		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
+	// haven't found it, need to set it.
+	create_label_statement(code, label, true, true);
 
-	set_opcode(code, SQ_OC_JMP);
-	set_index(code, code->labels.ary[i].index);
-	code->labels.ary[i].name = label;
-	code->labels.ary[i].index = code->codelen - 1;
+assign:;
 
-done:
+	struct label *lbl = &code->labels.ary[i];
 
-	set_opcode(code, SQ_OC_JMP);
-	set_index(code, code->labels.ary[i].index);
+	for (unsigned j = 0; j < MAX_COMEFROMS; ++j) {
+		int dst = code->labels.ary[i].indices[j];
+		if (dst == -1) break;
+		lbl->length[j + 1] = dst;
+		++*lbl->length;
+	}
 }
 
 static void compile_comefrom_statement(struct sq_code *code, char *label) {
 	unsigned i;
+	struct label *lbl;
 
+	// check to see if the label statement exists.
 	for (i = 0; i < code->labels.len; ++i) {
 		if (!strcmp(code->labels.ary[i].name, label)) {
+			lbl = &code->labels.ary[i];
+
 			// if the label already exists, make it go here.
-			set_target(code, code->labels.ary[i].index);
 			free(label);
-			return;
+			if (lbl->length != NULL) goto already_exists;
+
+			for (unsigned j = 0; j < MAX_COMEFROMS; ++j)
+				if (code->labels.ary[i].indices[j] == -1) goto set_existing;
+
+			die("max amount of 'whence's encountered.");
 		}
 	}
 
-	// otherwise,the code doesn't exist. (note we increment len here)
-	if (code->labels.len++ == code->labels.cap)
-		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
+	// it doesn't, create it.
+	create_label_statement(code, label, false, true);
 
-	code->labels.ary[i].name = label;
-	code->labels.ary[i].index = code->codelen;
+set_existing:
+
+	code->labels.ary[i].indices[0] = code->codelen;
+	return;
+
+already_exists:
+
+	if (*lbl->length == MAX_COMEFROMS) die("max amount of 'whence's encountered.");
+
+	unsigned length = ++*lbl->length;
+	lbl->length[length] = code->codelen;
 }
-
 
 static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	switch (stmt->kind) {

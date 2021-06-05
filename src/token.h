@@ -24,6 +24,7 @@ enum sq_token_kind {
 	SQ_TK_RETURN,
 	SQ_TK_COMEFROM,
 	// TODO: `assert` as `challenge`?
+	// TODOO: `alias` is `henceforth`
 
 	SQ_TK_TRUE,
 	SQ_TK_FALSE,

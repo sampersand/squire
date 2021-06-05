@@ -39,7 +39,7 @@ enum sq_opcode {
 	SQ_OC_JMP_TRUE     = 0x12,
 	SQ_OC_CALL         = 0x13,
 	SQ_OC_RETURN       = 0x14,
-	SQ_OC_JMP_FORK     = 0x15, // jump to the given locations, forking for all but the first.
+	SQ_OC_COMEFROM     = 0x15,
 
 	SQ_OC_EQL          = 0x20,
 	SQ_OC_NEQ          = 0x21,

@@ -342,15 +342,12 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			ip = REL_INDEX(0);
 			continue;
 
-		case SQ_OC_JMP_FORK: {
-			unsigned amnt = NEXT_INDEX();
-			unsigned i;
+		case SQ_OC_COMEFROM: {
+			int i, amnt = (int) NEXT_INDEX();
 
-			for (i = 0; i < amnt - 1; ++i) {
-				if (!fork()) goto done2;
-			}
+			for (i = 0; i < amnt - 1; ++i)
+				if (!fork()) break;
 
-		done2:
 			ip = REL_INDEX(i);
 			continue;
 		}
