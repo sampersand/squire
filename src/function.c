@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <setjmp.h>
 
 struct sq_function *sq_function_clone(struct sq_function *function) {
 	assert(function->refcount);
@@ -76,6 +77,15 @@ static sq_value create_class_instance(struct sq_class *class, sq_value *args, un
 
 	return instance;
 }
+
+
+#ifndef SQ_NUM_EXCEPTION_HANDLERS
+#define SQ_NUM_EXCEPTION_HANDLERS 2048
+#endif
+
+jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
+sq_value exception;
+unsigned current_exception_handler;
 
 sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
@@ -394,6 +404,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			} else {
 				die("can only call funcs, not '%s'", sq_value_typename(instance_value));
 			}
+
 			continue;
 		}
 
@@ -402,6 +413,48 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			sq_value_clone(value);
 			sq_value_clone(value);
 			goto done;
+
+		case SQ_OC_THROW: {
+			int index = (int) NEXT_INDEX();
+			if (index != -1)
+				exception = locals[index];
+
+			if (!current_exception_handler) {
+				printf("uncaught exception encountered: ");
+				sq_value_dump(exception);
+				putchar('\n');
+				fflush(stdout);
+				die("exiting due to exception.");
+			}
+
+			longjmp(exception_handlers[--current_exception_handler], 1);
+		}
+
+		case SQ_OC_POPTRYCATCH:
+			--current_exception_handler;
+			continue;
+
+		case SQ_OC_TRYCATCH: {
+			unsigned catch_index = NEXT_INDEX();
+			unsigned exception_index = NEXT_INDEX();
+
+			if (!setjmp(exception_handlers[current_exception_handler++]))
+				continue;
+
+			locals[exception_index] = exception;
+			exception = SQ_NULL;
+			ip = catch_index;
+			continue;
+/*
+struct {
+	jmp_buf buf;
+	unsigned catch, noerror;
+} exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
+unsigned current_exception_handler;
+
+*/
+			// todo: how do we want to handle popping
+		}
 
 	/*** Math ***/
 		case SQ_OC_EQL:
@@ -573,9 +626,6 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			NEXT_LOCAL() = *valueptr = value;
 			continue;
 		}
-
-		case SQ_OC_INEW: // create a struct instance
-			die("todo: SQ_OC_INEW");
 
 		default:
 			die("unknown opcode '%d'", opcode);

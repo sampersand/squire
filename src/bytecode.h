@@ -40,6 +40,9 @@ enum sq_opcode {
 	SQ_OC_CALL         = 0x13,
 	SQ_OC_RETURN       = 0x14,
 	SQ_OC_COMEFROM     = 0x15,
+	SQ_OC_TRYCATCH     = 0x16,
+	SQ_OC_THROW        = 0x17,
+	SQ_OC_POPTRYCATCH  = 0x18,
 
 	SQ_OC_EQL          = 0x20,
 	SQ_OC_NEQ          = 0x21,
@@ -62,7 +65,6 @@ enum sq_opcode {
 
 	SQ_OC_ILOAD        = 0x50, // load an instance field
 	SQ_OC_ISTORE       = 0x51, // store an instance field
-	SQ_OC_INEW         = 0x52, // create a struct instance
 };
 
 typedef unsigned sq_index;

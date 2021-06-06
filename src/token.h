@@ -19,10 +19,13 @@ enum sq_token_kind {
 	SQ_TK_IMPORT,
 
 	SQ_TK_IF,
-	SQ_TK_WHILE,
 	SQ_TK_ELSE,
-	SQ_TK_RETURN,
 	SQ_TK_COMEFROM,
+	SQ_TK_WHILE,
+	SQ_TK_RETURN,
+	SQ_TK_TRY,
+	SQ_TK_CATCH,
+	SQ_TK_THROW,
 	// TODO: `assert` as `challenge`?
 	// TODOO: `alias` is `henceforth`
 

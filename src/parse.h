@@ -20,6 +20,8 @@ struct statement {
 		SQ_PS_SLABEL,
 		SQ_PS_SCOMEFROM,
 		SQ_PS_SRETURN,
+		SQ_PS_STRYCATCH,
+		SQ_PS_STHROW,
 		SQ_PS_SEXPR,
 	} kind;
 
@@ -31,6 +33,8 @@ struct statement {
 		struct if_statement *ifstmt;
 		struct while_statement *wstmt;
 		struct return_statement *rstmt;
+		struct trycatch_statement *tcstmt;
+		struct expression *throwstmt;
 		char *label, *comefrom;
 		struct expression *expr;
 	};
@@ -68,6 +72,11 @@ struct while_statement {
 
 struct return_statement {
 	struct expression *value;
+};
+
+struct trycatch_statement {
+	struct statements *try, *catch;
+	char *exception;
 };
 
 struct expression {

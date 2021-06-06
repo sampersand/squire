@@ -427,7 +427,7 @@ static struct scope_declaration *parse_global_declaration() {
 	GUARD(SQ_TK_GLOBAL);
 	struct scope_declaration *global = xmalloc(sizeof(struct scope_declaration));
 
-	EXPECT(SQ_TK_IDENT, "expected an identifier after 'global'");
+	EXPECT(SQ_TK_IDENT, "expected an identifier after 'renowned'");
 	global->name = last.identifier;
 	if (take().kind == SQ_TK_ASSIGN) {
 		global->value = parse_expression();
@@ -442,7 +442,7 @@ static struct scope_declaration *parse_local_declaration() {
 	GUARD(SQ_TK_LOCAL);
 	struct scope_declaration *local = xmalloc(sizeof(struct scope_declaration));
 
-	EXPECT(SQ_TK_IDENT, "expected an identifier after 'local'");
+	EXPECT(SQ_TK_IDENT, "expected an identifier after 'nigh'");
 	local->name = last.identifier;
 	if (take().kind == SQ_TK_ASSIGN) {
 		local->value = parse_expression();
@@ -473,7 +473,7 @@ static struct class_declaration *parse_class_declaration() {
 	}
 
 	// require a lparen.
-	EXPECT(SQ_TK_LBRACE, "expected '{' before class contents");
+	EXPECT(SQ_TK_LBRACE, "expected '{' before myth contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
 	cdecl->fields = xmalloc(sizeof(char *[MAX_LEN]));
@@ -528,7 +528,7 @@ static struct class_declaration *parse_class_declaration() {
 			continue;
 
 		default:
-			die("unknown token encountered when parsing class.");
+			die("unknown token encountered when parsing myth.");
 		}
 	}
 
@@ -540,7 +540,7 @@ static struct class_declaration *parse_class_declaration() {
 	cdecl->meths = xrealloc(cdecl->meths, sizeof(struct sq_function *[cdecl->nmeths]));
 	cdecl->funcs = xrealloc(cdecl->funcs, sizeof(struct sq_function *[cdecl->nfuncs]));
 
-	EXPECT(SQ_TK_RBRACE, "expected '}' after class fields");
+	EXPECT(SQ_TK_RBRACE, "expected '}' after myth fields");
 	return cdecl;
 }
 
@@ -575,7 +575,7 @@ static struct func_declaration *parse_func_declaration(bool guard, bool is_metho
 
 	fdecl->nargs = field_name_count;
 	fdecl->args = memdup(field_names, sizeof(char *[field_name_count]));
-	if (!(fdecl->body = parse_brace_statements("func")))
+	if (!(fdecl->body = parse_brace_statements("journey")))
 		die("no body given for function");
 	return fdecl;
 }
@@ -600,7 +600,7 @@ static struct if_statement *parse_if_statement() {
 			if_stmt->iffalse->stmts[0]->ifstmt = parse_if_statement();
 			if_stmt->iffalse->stmts[1] = NULL;
 		} else {
-			if_stmt->iffalse = parse_brace_statements("else");
+			if_stmt->iffalse = parse_brace_statements("alas");
 		}
 	} else {
 		untake();
@@ -614,9 +614,9 @@ static struct while_statement *parse_while_statement() {
 	GUARD(SQ_TK_WHILE);
 	struct while_statement *while_stmt = xmalloc(sizeof(struct while_statement));
 	if (!(while_stmt->cond = parse_expression()))
-		die("missing condition for 'while'");
+		die("missing condition for 'whilst'");
 
-	while_stmt->body = parse_brace_statements("while");
+	while_stmt->body = parse_brace_statements("whilst");
 	return while_stmt;
 }
 
@@ -627,6 +627,26 @@ static struct return_statement *parse_return_statement() {
 	ret_stmt->value = parse_expression();
 
 	return ret_stmt;
+}
+
+static struct expression *parse_throw_statement() {
+	GUARD(SQ_TK_THROW);
+	struct expression *expression = parse_expression();
+	if (!expression) die("expected expression after 'throw'");
+	return expression;
+}
+
+static struct trycatch_statement *parse_trycatch_statement() {
+	GUARD(SQ_TK_TRY);
+
+	struct trycatch_statement *tc = xmalloc(sizeof(struct trycatch_statement));
+	tc->try = parse_brace_statements("try");
+	EXPECT(SQ_TK_CATCH, "expected 'catch' after 'try'");
+	EXPECT(SQ_TK_IDENT, "expected an identifier after 'catch'");
+	tc->exception = last.identifier;
+	tc->catch = parse_brace_statements("catch");
+
+	return tc;
 }
 
 static char *parse_label_declaration()  {
@@ -658,6 +678,8 @@ static struct statement *parse_statement() {
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;
 	else if ((stmt.rstmt = parse_return_statement())) stmt.kind = SQ_PS_SRETURN;
+	else if ((stmt.tcstmt = parse_trycatch_statement())) stmt.kind = SQ_PS_STRYCATCH;
+	else if ((stmt.throwstmt = parse_throw_statement())) stmt.kind = SQ_PS_STHROW;
 	else if ((stmt.expr = parse_expression())) stmt.kind = SQ_PS_SEXPR;
 	else return NULL;
 

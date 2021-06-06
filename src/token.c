@@ -148,14 +148,20 @@ struct sq_token sq_next_token() {
 	CHECK_FOR_START_KW("equip",    SQ_TK_FIELD); // todo: better name
 	CHECK_FOR_START_KW("recite",   SQ_TK_CLASSFN);
 	CHECK_FOR_START_KW("realize",  SQ_TK_CONSTRUCTOR);
+
 	CHECK_FOR_START_KW("renowned", SQ_TK_GLOBAL);
 	CHECK_FOR_START_KW("nigh",     SQ_TK_LOCAL);
 	CHECK_FOR_START_KW("import",   SQ_TK_IMPORT); // `befriend`? `beseech`?
-	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
+
 	CHECK_FOR_START_KW("if",       SQ_TK_IF); // _should_ we have a better one?
-	CHECK_FOR_START_KW("whence",   SQ_TK_COMEFROM);
 	CHECK_FOR_START_KW("alas",     SQ_TK_ELSE);
+	CHECK_FOR_START_KW("whence",   SQ_TK_COMEFROM);
+	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
 	CHECK_FOR_START_KW("reward",   SQ_TK_RETURN);
+	CHECK_FOR_START_KW("try",      SQ_TK_TRY); // todo: better name
+	CHECK_FOR_START_KW("catch",    SQ_TK_CATCH); // todo: better name
+	CHECK_FOR_START_KW("throw",    SQ_TK_THROW); // todo: better name
+
 	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",      SQ_TK_FALSE);
 	CHECK_FOR_START_KW("null",     SQ_TK_NULL); // `naught`?

@@ -889,6 +889,34 @@ already_exists:
 	lbl->length[length] = code->codelen;
 }
 
+static void compile_trycatch_statement(struct sq_code *code, struct trycatch_statement *tc) {
+	unsigned *catchblock, *noerror, exception;
+
+	set_opcode(code, SQ_OC_TRYCATCH);
+	catchblock = &code->bytecode[code->codelen].index;
+	set_index(code, -1);
+	set_index(code, exception = new_local_variable(code, tc->exception));
+
+	compile_statements(code, tc->try);
+	set_opcode(code, SQ_OC_POPTRYCATCH);
+	set_opcode(code, SQ_OC_JMP);
+	noerror = &code->bytecode[code->codelen].index;
+	set_index(code, -1);
+
+	*catchblock = code->codelen;
+	compile_statements(code, tc->catch);
+	*noerror = code->codelen;
+
+	// free(tc->exception);
+	free(tc);
+}
+
+static void compile_throw_statement(struct sq_code *code, struct expression *throw) {
+	unsigned dst = throw ? compile_expression(code, throw) : -1;
+	set_opcode(code, SQ_OC_THROW);
+	set_index(code, dst);
+}
+
 static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	switch (stmt->kind) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
@@ -901,6 +929,8 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SLABEL: compile_label_statement(code, stmt->label); break;
 	case SQ_PS_SCOMEFROM: compile_comefrom_statement(code, stmt->comefrom); break;
 	case SQ_PS_SRETURN: compile_return_statement(code, stmt->rstmt); break;
+	case SQ_PS_STRYCATCH: compile_trycatch_statement(code, stmt->tcstmt); break;
+	case SQ_PS_STHROW: compile_throw_statement(code, stmt->throwstmt); break;
 	case SQ_PS_SEXPR: compile_expression(code, stmt->expr); break;
 	default: bug("unknown statement kind '%d'", stmt->kind);
 	}

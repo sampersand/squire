@@ -1,13 +1,37 @@
-i = N
-
-whilst i < XL {
-	if i > XV {
-		greater_than_fifteen:
+journey divide(n, d) {
+	if !d {
+		throw "cannot divide by zero";
 	}
-	i = i + I
-	proclaim(string(i) + "\n")
+
+	reward n / d;
 }
 
-whence greater_than_fifteen
-proclaim("done")
+journey halve(num) {
+	reward divide(num, 0);
+}
 
+try {
+	dump(halve(2))
+	} catch err {
+		dump(err)
+	}
+
+__END__
+proclaim("1\n");
+try {
+	proclaim("2\n");
+	try {
+		proclaim("3\n");
+		#throw 123;
+		proclaim("4\n");
+	} catch e {
+		proclaim("5\n");
+		throw e;
+		proclaim("6\n");
+	}
+	proclaim("7\n");
+} catch e {
+	proclaim("8\n");
+}
+
+proclaim("9\n");
