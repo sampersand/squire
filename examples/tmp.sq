@@ -7,20 +7,33 @@ journey divide(n, d) {
 }
 
 journey halve(num) {
-	reward divide(num, 2);
+	if num % II {
+		hark "non-even number"
+	}
+
+	reward divide(num, II);
 }
 
-attempt {
-	dump(divide(2,3))
-} retreat err {
-
-	#dump(err)
+journey doit() {
+	attempt {
+		reward halve(IV);
+	} retreat err {
+		if err == 'non-even number' {
+			reward 3; # haha! actually go back and continue execution.
+		} alas {
+			proclaim(err);
+			dismount(I);
+		}
+	}
 }
+
+proclaim("III halved is: " + string(doit()) + "\n");
+# III halved is: I
 
 __END__
 proclaim("1\n");
 attempt {
-	proclaim("2\n");
+	proclaim("II\n");
 	attempt {
 		proclaim("3\n");
 		#hark 123;

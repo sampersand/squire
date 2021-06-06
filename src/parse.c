@@ -636,6 +636,11 @@ static struct expression *parse_throw_statement() {
 	return expression;
 }
 
+static bool parse_undo_statement() {
+	GUARD(SQ_TK_THROW);
+	return true;
+}
+
 static struct trycatch_statement *parse_trycatch_statement() {
 	GUARD(SQ_TK_TRY);
 
@@ -680,6 +685,7 @@ static struct statement *parse_statement() {
 	else if ((stmt.rstmt = parse_return_statement())) stmt.kind = SQ_PS_SRETURN;
 	else if ((stmt.tcstmt = parse_trycatch_statement())) stmt.kind = SQ_PS_STRYCATCH;
 	else if ((stmt.throwstmt = parse_throw_statement())) stmt.kind = SQ_PS_STHROW;
+	else if (parse_undo_statement()) stmt.kind = SQ_PS_SUNDO;
 	else if ((stmt.expr = parse_expression())) stmt.kind = SQ_PS_SEXPR;
 	else return NULL;
 

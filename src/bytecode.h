@@ -42,7 +42,8 @@ enum sq_opcode {
 	SQ_OC_COMEFROM     = 0x15,
 	SQ_OC_TRYCATCH     = 0x16,
 	SQ_OC_THROW        = 0x17,
-	SQ_OC_POPTRYCATCH  = 0x18,
+	SQ_OC_UNDO         = 0x18,
+	SQ_OC_POPTRYCATCH  = 0x19,
 
 	SQ_OC_EQL          = 0x20,
 	SQ_OC_NEQ          = 0x21,

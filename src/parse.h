@@ -22,6 +22,7 @@ struct statement {
 		SQ_PS_SRETURN,
 		SQ_PS_STRYCATCH,
 		SQ_PS_STHROW,
+		SQ_PS_SUNDO,
 		SQ_PS_SEXPR,
 	} kind;
 

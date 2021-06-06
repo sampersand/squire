@@ -83,9 +83,15 @@ static sq_value create_class_instance(struct sq_class *class, sq_value *args, un
 #define SQ_NUM_EXCEPTION_HANDLERS 2048
 #endif
 
+// jmp_buf redo_location;
 jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
 sq_value exception;
 unsigned current_exception_handler;
+
+// struct function_vm_state {
+// 	unsigned ip;
+// 	struct 
+// };
 
 sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
@@ -414,6 +420,12 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			sq_value_clone(value);
 			goto done;
 
+		case SQ_OC_UNDO:
+		// todo: ensure we have a redo location
+			// longjmp(redo_location, 1);
+			die("todo: undo");
+			// if (current_exception_handler)
+
 		case SQ_OC_THROW: {
 			int index = (int) NEXT_INDEX();
 			if (index != -1)
@@ -427,7 +439,9 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				die("exiting due to exception.");
 			}
 
-			longjmp(exception_handlers[--current_exception_handler], 1);
+			// if (!setjmp(redo_location))
+				longjmp(exception_handlers[--current_exception_handler], 1);
+			// else continue;
 		}
 
 		case SQ_OC_POPTRYCATCH:
@@ -445,15 +459,6 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			exception = SQ_NULL;
 			ip = catch_index;
 			continue;
-/*
-struct {
-	jmp_buf buf;
-	unsigned catch, noerror;
-} exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
-unsigned current_exception_handler;
-
-*/
-			// todo: how do we want to handle popping
 		}
 
 	/*** Math ***/

@@ -161,6 +161,7 @@ struct sq_token sq_next_token() {
 	CHECK_FOR_START_KW("attempt",  SQ_TK_TRY);
 	CHECK_FOR_START_KW("retreat",  SQ_TK_CATCH);
 	CHECK_FOR_START_KW("hark",     SQ_TK_THROW);
+	CHECK_FOR_START_KW("feint",    SQ_TK_UNDO);
 
 	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",      SQ_TK_FALSE);

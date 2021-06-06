@@ -26,6 +26,7 @@ enum sq_token_kind {
 	SQ_TK_TRY,
 	SQ_TK_CATCH,
 	SQ_TK_THROW,
+	SQ_TK_UNDO,
 	// TODO: `assert` as `challenge`?
 	// TODOO: `alias` is `henceforth`
 
