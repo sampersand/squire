@@ -439,6 +439,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				die("exiting due to exception.");
 			}
 
+			// todo: free locals.
 			// if (!setjmp(redo_location))
 				longjmp(exception_handlers[--current_exception_handler], 1);
 			// else continue;
