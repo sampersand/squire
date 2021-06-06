@@ -640,8 +640,8 @@ static struct trycatch_statement *parse_trycatch_statement() {
 	GUARD(SQ_TK_TRY);
 
 	struct trycatch_statement *tc = xmalloc(sizeof(struct trycatch_statement));
-	tc->try = parse_brace_statements("try");
-	EXPECT(SQ_TK_CATCH, "expected 'catch' after 'try'");
+	tc->try = parse_brace_statements("attempt");
+	EXPECT(SQ_TK_CATCH, "expected 'catch' after 'attempt'");
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'catch'");
 	tc->exception = last.identifier;
 	tc->catch = parse_brace_statements("catch");

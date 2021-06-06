@@ -158,9 +158,9 @@ struct sq_token sq_next_token() {
 	CHECK_FOR_START_KW("whence",   SQ_TK_COMEFROM);
 	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
 	CHECK_FOR_START_KW("reward",   SQ_TK_RETURN);
-	CHECK_FOR_START_KW("try",      SQ_TK_TRY); // todo: better name
-	CHECK_FOR_START_KW("catch",    SQ_TK_CATCH); // todo: better name
-	CHECK_FOR_START_KW("throw",    SQ_TK_THROW); // todo: better name
+	CHECK_FOR_START_KW("attempt",  SQ_TK_TRY);
+	CHECK_FOR_START_KW("retreat",  SQ_TK_CATCH);
+	CHECK_FOR_START_KW("hark",     SQ_TK_THROW);
 
 	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",      SQ_TK_FALSE);
