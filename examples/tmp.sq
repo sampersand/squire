@@ -1,37 +1,37 @@
 journey divide(n, d) {
 	if !d {
-		throw "cannot divide by zero";
+		hark "cannot divide by zero";
 	}
 
 	reward n / d;
 }
 
 journey halve(num) {
-	reward divide(num, 0);
+	reward divide(num, 2);
 }
 
-try {
-	dump(halve(2))
-} catch err {
-	throw;
+attempt {
+	dump(divide(2,3))
+} retreat err {
+
 	#dump(err)
 }
 
 __END__
 proclaim("1\n");
-try {
+attempt {
 	proclaim("2\n");
-	try {
+	attempt {
 		proclaim("3\n");
-		#throw 123;
+		#hark 123;
 		proclaim("4\n");
-	} catch e {
+	} retreat e {
 		proclaim("5\n");
-		throw e;
+		hark e;
 		proclaim("6\n");
 	}
 	proclaim("7\n");
-} catch e {
+} retreat e {
 	proclaim("8\n");
 }
 

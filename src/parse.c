@@ -632,7 +632,7 @@ static struct return_statement *parse_return_statement() {
 static struct expression *parse_throw_statement() {
 	GUARD(SQ_TK_THROW);
 	struct expression *expression = parse_expression();
-	if (!expression) die("expected expression after 'throw'");
+	if (!expression) die("expected expression after 'hark'");
 	return expression;
 }
 
@@ -641,10 +641,10 @@ static struct trycatch_statement *parse_trycatch_statement() {
 
 	struct trycatch_statement *tc = xmalloc(sizeof(struct trycatch_statement));
 	tc->try = parse_brace_statements("attempt");
-	EXPECT(SQ_TK_CATCH, "expected 'catch' after 'attempt'");
-	EXPECT(SQ_TK_IDENT, "expected an identifier after 'catch'");
+	EXPECT(SQ_TK_CATCH, "expected 'retreat' after 'attempt'");
+	EXPECT(SQ_TK_IDENT, "expected an identifier after 'retreat'");
 	tc->exception = last.identifier;
-	tc->catch = parse_brace_statements("catch");
+	tc->catch = parse_brace_statements("retreat");
 
 	return tc;
 }
