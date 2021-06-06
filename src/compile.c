@@ -834,10 +834,12 @@ static void compile_label_statement(struct sq_code *code, char *label) {
 #else
 			set_index(code, j = 0);
 #endif
-			for (unsigned j = 0; j < MAX_COMEFROMS; ++j) {
-				if (lbl->indices[j] != -1) ++lbl->length;
+
+			for (; j < MAX_COMEFROMS; ++j) {
+				if (lbl->indices[j] != -1) ++*lbl->length;
 				set_index(code, lbl->indices[j]);
 			}
+
 			return;
 		}
 	}
@@ -847,7 +849,7 @@ static void compile_label_statement(struct sq_code *code, char *label) {
 }
 
 static void compile_comefrom_statement(struct sq_code *code, char *label) {
-	unsigned i;
+	unsigned i, j;
 	struct label *lbl;
 
 	// check to see if the label statement exists.
@@ -859,19 +861,24 @@ static void compile_comefrom_statement(struct sq_code *code, char *label) {
 			free(label);
 			if (lbl->length != NULL) goto already_exists;
 
-			for (unsigned j = 0; j < MAX_COMEFROMS; ++j)
-				if (code->labels.ary[i].indices[j] == -1) goto set_existing;
+			for (j = 0; j < MAX_COMEFROMS; ++j)
+				if (lbl->indices[j] == -1) {
+					printf("j=%d\n", j);
+					goto set_existing;
+				}
 
 			die("max amount of 'whence's encountered.");
 		}
 	}
+
+	j = 0;
 
 	// it doesn't, create it.
 	create_label_statement(code, label, false);
 
 set_existing:
 
-	code->labels.ary[i].indices[0] = code->codelen;
+	code->labels.ary[i].indices[j] = code->codelen;
 	return;
 
 already_exists:
