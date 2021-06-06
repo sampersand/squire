@@ -787,6 +787,8 @@ static unsigned compile_local(struct sq_code *code, struct scope_declaration *ld
 
 static void create_label_statement(struct sq_code *code, char *label, bool in_mem) {
 	unsigned len = code->labels.len++;
+	unsigned i;
+
 	// havent found the label, add it. (note we increase len here)
 	if (len == code->labels.cap)
 		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
@@ -795,13 +797,18 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 	if (in_mem) {
 		set_opcode(code, SQ_OC_COMEFROM);
 		code->labels.ary[len].length = (int *) &code->bytecode[code->codelen];
-		set_index(code, 1); // no arguments.
-		set_index(code, code->codelen + MAX_COMEFROMS);
+#ifdef SQ_WHENCE_CONTINUES_ON // ie continues onwards in addition to jumping
+		set_index(code, i = 1);
+		set_index(code, code->codelen + MAX_COMEFROMS); 
+#else
+		set_index(code, i = 0);
+#endif
 	} else {
 		code->labels.ary[len].length = NULL;
+		i = 0;
 	}
 
-	for (unsigned i = 1; i < MAX_COMEFROMS; ++i) {
+	for (; i < MAX_COMEFROMS; ++i) {
 		code->labels.ary[len].indices[i] = -1;
 
 		if (in_mem) set_index(code, -1);
@@ -809,14 +816,29 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 }
 
 static void compile_label_statement(struct sq_code *code, char *label) {
+	struct label *lbl;
+	unsigned j;
 	for (unsigned i = 0; i < code->labels.len; ++i) {
 		// we've found a destination, assign to that.
-		if (!strcmp(code->labels.ary[i].name, label)) {
-			if (code->labels.ary[i].length != NULL)
+		if (!strcmp((lbl=&code->labels.ary[i])->name, label)) {
+			if (lbl->length != NULL)
 				die("cannot redefine '%s'", label);
 			free(label);
-			die("todo: label after we had its COMEFROM.");
-			// goto found;
+
+			set_opcode(code, SQ_OC_COMEFROM);
+			lbl->length = (int *) &code->bytecode[code->codelen];
+
+#ifdef SQ_WHENCE_CONTINUES_ON // ie continues onwards in addition to jumping
+			set_index(code, j = 1);
+			set_index(code, code->codelen + MAX_COMEFROMS); 
+#else
+			set_index(code, j = 0);
+#endif
+			for (unsigned j = 0; j < MAX_COMEFROMS; ++j) {
+				if (lbl->indices[j] != -1) ++lbl->length;
+				set_index(code, lbl->indices[j]);
+			}
+			return;
 		}
 	}
 

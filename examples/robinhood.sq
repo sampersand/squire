@@ -11,7 +11,7 @@ myth RobinHood {
 	# member function
 	journey steal_from(whom) {
 		proclaim("Hello, " + whom.name + "\n")
-		proclaim("Give me your money or i'll shoot you with thine " + thine.weapon + "\n")
+		proclaim("Give me your money or i'll shoot you with my " + thine.weapon + "\n")
 		reward whom.take()
 	}
 
