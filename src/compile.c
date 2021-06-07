@@ -639,7 +639,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("inquire",  SQ_INT_PROMPT, 0);
 	BUILTIN_FN("random",   SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert",   SQ_INT_ARRAY_INSERT, 3);
-	BUILTIN_FN("slay",     SQ_INT_ARRAY_DELETE, 2);
+	BUILTIN_FN("delete",   SQ_INT_ARRAY_DELETE, 2); // `slay`?
 	BUILTIN_FN("roman",    SQ_INT_ROMAN, 1);
 	BUILTIN_FN("arabic",   SQ_INT_ARABIC, 1);
 

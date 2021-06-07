@@ -36,13 +36,13 @@ void sq_function_free(struct sq_function *function) {
 	free(function);
 }
 
-void sq_function_dump(const struct sq_function *function) {
-	printf("Function(%s, %d arg", function->name, function->argc);
+void sq_function_dump(FILE *out, const struct sq_function *function) {
+	fprintf(out, "Function(%s, %d arg", function->name, function->argc);
 
 	if (function->argc != 1)
-		putchar('s');
+		putc('s', out);
 
-	putchar(')');
+	putc(')', out);
 }
 
 #define ABS_INDEX(idx) (function->bytecode[idx].index)
@@ -426,27 +426,11 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			die("todo: undo");
 			// if (current_exception_handler)
 
-		case SQ_OC_THROW: {
-			int index = (int) NEXT_INDEX();
-			if (index != -1)
-				exception = locals[index];
-
-			if (!current_exception_handler) {
-				printf("uncaught exception encountered: ");
-				sq_value_dump(exception);
-				putchar('\n');
-				fflush(stdout);
-				die("exiting due to exception.");
-			}
-
-			// todo: free locals.
-			// if (!setjmp(redo_location))
-				longjmp(exception_handlers[--current_exception_handler], 1);
-			// else continue;
-		}
+		case SQ_OC_THROW:
+			sq_throw_value(NEXT_LOCAL());
 
 		case SQ_OC_POPTRYCATCH:
-			--current_exception_handler;
+			sq_exception_pop();
 			continue;
 
 		case SQ_OC_TRYCATCH: {

@@ -1,7 +1,7 @@
 i = I
 whilst i < XL {
 	proclaim(string(i) + "\n")
-	if i > X {
+	if i >= X {
 		 more_than_ten:
 	} alas {
 		i = i + 1

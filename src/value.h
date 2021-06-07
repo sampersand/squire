@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
+#include <stdio.h>
 #include "number.h"
 
 struct sq_string;
@@ -137,6 +138,7 @@ static inline struct sq_array *sq_value_as_array(sq_value value) {
 
 sq_value sq_value_clone(sq_value value);
 void sq_value_dump(sq_value value);
+void sq_value_dump_to(FILE *out, sq_value value);
 void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value);
 sq_value sq_value_kindof(sq_value value);

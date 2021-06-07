@@ -42,20 +42,20 @@ void sq_class_free(struct sq_class *class) {
 	free(class);
 }
 
-void sq_class_dump(const struct sq_class *class) {
-	printf("Myth(%s:", class->name);
+void sq_class_dump(FILE *out, const struct sq_class *class) {
+	fprintf(out, "Myth(%s:", class->name);
 
 	for (unsigned i = 0; i < class->nfields; ++i) {
 		if (i != 0)
-			putchar(',');
+			putc(',', out);
 
-		printf(" %s", class->fields[i]);
+		fprintf(out, " %s", class->fields[i]);
 	}
 
 	if (!class->nfields)
-		printf(" <no fields>");
+		fprintf(out, " <no fields>");
 
-	putchar(')');
+	putc(')', out);
 }
 
 sq_value sq_class_field(struct sq_class *class, const char *name) {
@@ -121,19 +121,19 @@ void sq_instance_free(struct sq_instance *instance) {
 	sq_class_free(instance->class);
 }
 
-void sq_instance_dump(const struct sq_instance *instance) {
-	printf("%s(", instance->class->name);
+void sq_instance_dump(FILE *out, const struct sq_instance *instance) {
+	fprintf(out, "%s(", instance->class->name);
 
 	for (unsigned i = 0; i < instance->class->nfields; ++i) {
 		if (i != 0)
-			printf(", ");
+			fprintf(out, ", ");
 
-		printf("%s=", instance->class->fields[i]);
+		fprintf(out, "%s=", instance->class->fields[i]);
 		sq_value_dump(instance->fields[i]);
 	}
 
 	if (!instance->class->nfields)
-		printf("<no fields>");
+		fprintf(out, "<no fields>");
 
-	printf(")");
+	putc(')', out);
 }

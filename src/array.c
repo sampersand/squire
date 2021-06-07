@@ -1,5 +1,6 @@
 #include "array.h"
 #include "shared.h"
+#include "exception.h"
 #include <stdio.h>
 
 struct sq_array *sq_array_new(unsigned len, sq_value *eles) {
@@ -12,15 +13,15 @@ struct sq_array *sq_array_new(unsigned len, sq_value *eles) {
 	return array;
 }
 
-void sq_array_dump(const struct sq_array *array) {
-	putchar('[');
+void sq_array_dump(FILE *out, const struct sq_array *array) {
+	putc('[', out);
 
 	for (unsigned i = 0; i < array->len; ++i) {
-		if (i != 0) printf(", ");
+		if (i != 0) fprintf(out, ", ");
 		sq_value_dump(array->eles[i]);
 	}
 
-	putchar(']');
+	putc(']', out);
 }
 
 struct sq_array *sq_array_clone(struct sq_array *array) {
@@ -49,7 +50,7 @@ static unsigned fix_index(const struct sq_array *array, int index) {
 		index += array->len;
 
 	if (index < 0)
-		die("index '%d' out of bounds!", index - array->len);
+		sq_throw("index '%d' out of bounds!", index - array->len);
 
 	return index;
 }

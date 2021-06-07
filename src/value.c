@@ -18,38 +18,42 @@
 #define AS_STR(c) (AS_STRING(c)->ptr)
 
 void sq_value_dump(sq_value value) {
+	sq_value_dump_to(stdout, value);
+}
+
+void sq_value_dump_to(FILE *out, sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
 		if (sq_value_is_null(value)) {
-			printf("Null()");
+			fprintf(out, "Null()");
 		} else {
-			printf("Boolean(%s)", sq_value_as_boolean(value) ? "true" : "false");
+			fprintf(out, "Boolean(%s)", sq_value_as_boolean(value) ? "true" : "false");
 		}
 
 		break;
 
 	case SQ_TNUMBER:
-		printf("Number(%lld)", AS_NUMBER(value));
+		fprintf(out, "Number(%lld)", AS_NUMBER(value));
 		break;
 
 	case SQ_TSTRING:
-		printf("String(%s)", AS_STR(value));
+		fprintf(out, "String(%s)", AS_STR(value));
 		break;
 
 	case SQ_TCLASS:
-		sq_class_dump(AS_CLASS(value));
+		sq_class_dump(out, AS_CLASS(value));
 		break;
 
 	case SQ_TINSTANCE:
-		sq_instance_dump(AS_INSTANCE(value));
+		sq_instance_dump(out, AS_INSTANCE(value));
 		break;
 
 	case SQ_TFUNCTION:
-		sq_function_dump(AS_FUNCTION(value));
+		sq_function_dump(out, AS_FUNCTION(value));
 		break;
 
 	case SQ_TARRAY:
-		sq_array_dump(AS_ARRAY(value));
+		sq_array_dump(out, AS_ARRAY(value));
 		break;
 
 	default:

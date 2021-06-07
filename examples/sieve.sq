@@ -1,0 +1,16 @@
+journey sieve(max) {
+	if max <= N {
+		hark "can only do numbers >= 1"
+	}
+
+	nigh numbers = [];
+	nigh i = 1
+	numbers[max - N] = null; # set the length of the array
+
+	whilst i < length(numbers) {
+		if 
+	}
+	reward numbers
+}
+
+dump(sieve(10))

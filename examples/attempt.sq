@@ -1,0 +1,51 @@
+journey divide(n, d) {
+	if !d {
+		hark "cannot divide by zero";
+	}
+
+	reward n / d;
+}
+
+journey halve(num) {
+	if num % II {
+		hark "non-even number"
+	}
+
+	reward divide(num, II);
+}
+
+journey doit() {
+	attempt {
+		reward halve(IV);
+	} retreat err {
+		if err == 'non-even number' {
+			reward 3; # haha! actually go back and continue execution.
+		} alas {
+			proclaim(err);
+			dismount(I);
+		}
+	}
+}
+
+proclaim("III halved is: " + string(doit()) + "\n");
+# III halved is: I
+
+__END__
+proclaim("1\n");
+attempt {
+	proclaim("II\n");
+	attempt {
+		proclaim("3\n");
+		#hark 123;
+		proclaim("4\n");
+	} retreat e {
+		proclaim("5\n");
+		hark e;
+		proclaim("6\n");
+	}
+	proclaim("7\n");
+} retreat e {
+	proclaim("8\n");
+}
+
+proclaim("9\n");
