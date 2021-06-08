@@ -1,10 +1,10 @@
 # 'class' declaration
-myth RobinHood {
+form RobinHood {
 	# field declarations declarations
-	equip weapon
+	matter weapon
 
 	# constructor
-	realize(weapon) {
+	substantiate(weapon) {
 		thine.weapon = weapon
 	}
 
@@ -16,14 +16,14 @@ myth RobinHood {
 	}
 
 	# class function
-	recite please_help() {
+	describe please_help() {
 		proclaim("Oh, robinhood, please help us!\n");
 	}
 }
 
-myth Rich {
+form Rich {
 	# field declarations declarations
-	equip money, name
+	matter money, name
 
 	# member function
 	journey take() {

@@ -143,29 +143,87 @@ struct sq_token sq_next_token() {
 		return token;
 	}
 
-	CHECK_FOR_START_KW("myth",     SQ_TK_CLASS);
-	CHECK_FOR_START_KW("journey",  SQ_TK_FUNC);
-	CHECK_FOR_START_KW("equip",    SQ_TK_FIELD); // todo: better name
-	CHECK_FOR_START_KW("recite",   SQ_TK_CLASSFN);
-	CHECK_FOR_START_KW("realize",  SQ_TK_CONSTRUCTOR);
+/*
+archetype
 
-	CHECK_FOR_START_KW("renowned", SQ_TK_GLOBAL);
-	CHECK_FOR_START_KW("nigh",     SQ_TK_LOCAL);
-	CHECK_FOR_START_KW("import",   SQ_TK_IMPORT); // `befriend`? `beseech`?
+class Child {
+	field name, age;
+	constructor(quux) { ... }
+	function(...) { ... }
+	static function(...) { ... }
+}
 
-	CHECK_FOR_START_KW("if",       SQ_TK_IF); // _should_ we have a better one?
-	CHECK_FOR_START_KW("alas",     SQ_TK_ELSE);
-	CHECK_FOR_START_KW("whence",   SQ_TK_COMEFROM);
-	CHECK_FOR_START_KW("whilst",   SQ_TK_WHILE);
-	CHECK_FOR_START_KW("reward",   SQ_TK_RETURN);
-	CHECK_FOR_START_KW("attempt",  SQ_TK_TRY);
-	CHECK_FOR_START_KW("retreat",  SQ_TK_CATCH);
-	CHECK_FOR_START_KW("hark",     SQ_TK_THROW);
-	CHECK_FOR_START_KW("feint",    SQ_TK_UNDO);
+form RobinHood isa Myth {
+	matter bow, name
 
-	CHECK_FOR_START_KW("yay",      SQ_TK_TRUE);
-	CHECK_FOR_START_KW("nay",      SQ_TK_FALSE);
-	CHECK_FOR_START_KW("null",     SQ_TK_NULL); // `naught`?
+	substantiate(name) {
+		thine.bow = "bow"
+		thine.name = name
+	}
+
+	describe please_help() {
+		proclaim("Oh robin hood, please save us!\n")
+	}
+
+	action steal_from(whom) {
+		reward whom.take( )
+	}
+
+	# member function
+	journey steal_from(whom) {
+		proclaim("Hello, " + whom.name + "\n")
+		proclaim("Give me your money or i'll shoot you with my " + thine.weapon + "\n")
+		reward whom.take()
+	}
+
+
+}
+# class definition
+form Child isa Parent {
+	# fields
+	matter name, age;
+	
+	# constructor
+	substantiate(...) { ...}
+	# class function
+	describe(...) { ... }
+
+	# instance function
+	???(...) { ... }
+}
+
+myth Foo {
+	field bar, baz;
+
+	realize(quux) { ... }
+	recite(...) { ... }
+	journey(blargh) { ... }
+}
+*/
+	CHECK_FOR_START_KW("form",         SQ_TK_CLASS);
+	CHECK_FOR_START_KW("matter",       SQ_TK_FIELD);
+	CHECK_FOR_START_KW("action",       SQ_TK_METHOD);
+	CHECK_FOR_START_KW("describe",     SQ_TK_CLASSFN);
+	CHECK_FOR_START_KW("substantiate", SQ_TK_CONSTRUCTOR);
+
+	CHECK_FOR_START_KW("journey",      SQ_TK_FUNC);
+	CHECK_FOR_START_KW("renowned",     SQ_TK_GLOBAL);
+	CHECK_FOR_START_KW("nigh",         SQ_TK_LOCAL);
+	CHECK_FOR_START_KW("import",       SQ_TK_IMPORT); // `befriend`? `beseech`?
+
+	CHECK_FOR_START_KW("if",           SQ_TK_IF); // _should_ we have a better one?
+	CHECK_FOR_START_KW("alas",         SQ_TK_ELSE);
+	CHECK_FOR_START_KW("whence",       SQ_TK_COMEFROM);
+	CHECK_FOR_START_KW("whilst",       SQ_TK_WHILE);
+	CHECK_FOR_START_KW("reward",       SQ_TK_RETURN);
+	CHECK_FOR_START_KW("attempt",      SQ_TK_TRY);
+	CHECK_FOR_START_KW("retreat",      SQ_TK_CATCH);
+	CHECK_FOR_START_KW("hark",         SQ_TK_THROW);
+	CHECK_FOR_START_KW("feint",        SQ_TK_UNDO);
+
+	CHECK_FOR_START_KW("yay",          SQ_TK_TRUE);
+	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);
+	CHECK_FOR_START_KW("null",         SQ_TK_NULL); // `naught`?
 
 	if (isalpha(*sq_stream) || *sq_stream == '_') {
 		token.kind = SQ_TK_IDENT;

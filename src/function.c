@@ -90,7 +90,7 @@ unsigned current_exception_handler;
 
 // struct function_vm_state {
 // 	unsigned ip;
-// 	struct 
+
 // };
 
 sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {

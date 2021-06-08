@@ -1,6 +1,6 @@
 import "card.sq"
 
-myth Pile {
+form Pile {
 	equip cards
 
 	recite create() {

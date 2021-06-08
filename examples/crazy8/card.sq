@@ -1,21 +1,10 @@
-if nay {
-  whence yup;
-  proclaim(" world");
-} alas {
-  proclaim("Hello, ");
-  yup:
-}
-
-proclaim("!\n");
-
-
 renowned SUITS = ['♦', '♥', '♣', '♠']
 renowned RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
 
-myth Card {
-	equip rank, suit
+form Card {
+	matter rank, suit
 
-	realize(rank, suit) {
+	substantiate(rank, suit) {
 		if kindof(rank) != 'string' {
 			rank = RANKS[rank]
 		}
@@ -28,7 +17,7 @@ myth Card {
 		thine.suit = suit
 	}
 
-	journey to_string() {
+	action to_string() {
 		reward thine.rank + thine.suit
 	}
 }

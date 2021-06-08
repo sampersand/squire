@@ -43,7 +43,7 @@ void sq_class_free(struct sq_class *class) {
 }
 
 void sq_class_dump(FILE *out, const struct sq_class *class) {
-	fprintf(out, "Myth(%s:", class->name);
+	fprintf(out, "Form(%s:", class->name);
 
 	for (unsigned i = 0; i < class->nfields; ++i) {
 		if (i != 0)
@@ -53,7 +53,7 @@ void sq_class_dump(FILE *out, const struct sq_class *class) {
 	}
 
 	if (!class->nfields)
-		fprintf(out, " <no fields>");
+		fprintf(out, " <none>");
 
 	putc(')', out);
 }
@@ -133,7 +133,7 @@ void sq_instance_dump(FILE *out, const struct sq_instance *instance) {
 	}
 
 	if (!instance->class->nfields)
-		fprintf(out, "<no fields>");
+		fprintf(out, "<none>");
 
 	putc(')', out);
 }

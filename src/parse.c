@@ -473,7 +473,7 @@ static struct class_declaration *parse_class_declaration() {
 	}
 
 	// require a lparen.
-	EXPECT(SQ_TK_LBRACE, "expected '{' before myth contents");
+	EXPECT(SQ_TK_LBRACE, "expected '{' before 'form' contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
 	cdecl->fields = xmalloc(sizeof(char *[MAX_LEN]));
@@ -488,7 +488,7 @@ static struct class_declaration *parse_class_declaration() {
 		struct sq_token tkn = last;
 
 		switch (tkn.kind) {
-		case SQ_TK_FUNC:
+		case SQ_TK_METHOD:
 		case SQ_TK_CLASSFN:
 		case SQ_TK_CONSTRUCTOR: {
 			struct func_declaration *fn = parse_func_declaration(false, true);
@@ -496,7 +496,7 @@ static struct class_declaration *parse_class_declaration() {
 				if (cdecl->constructor != NULL)
 					die("cannot have two constructors.");
 				cdecl->constructor = fn;
-			} else if (tkn.kind == SQ_TK_FUNC) {
+			} else if (tkn.kind == SQ_TK_METHOD) {
 				if (cdecl->nmeths >= MAX_LEN)
 					die("too many methods!");
 				cdecl->meths[cdecl->nmeths++] = fn;
@@ -528,7 +528,7 @@ static struct class_declaration *parse_class_declaration() {
 			continue;
 
 		default:
-			die("unknown token encountered when parsing myth.");
+			die("unknown token encountered when parsing 'form'.");
 		}
 	}
 
@@ -540,7 +540,7 @@ static struct class_declaration *parse_class_declaration() {
 	cdecl->meths = xrealloc(cdecl->meths, sizeof(struct sq_function *[cdecl->nmeths]));
 	cdecl->funcs = xrealloc(cdecl->funcs, sizeof(struct sq_function *[cdecl->nfuncs]));
 
-	EXPECT(SQ_TK_RBRACE, "expected '}' after myth fields");
+	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' fields");
 	return cdecl;
 }
 
