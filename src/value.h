@@ -153,6 +153,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs);
 sq_value sq_value_div(sq_value lhs, sq_value rhs);
 sq_value sq_value_mod(sq_value lhs, sq_value rhs);
 
+size_t sq_value_length(sq_value value);
 struct sq_string *sq_value_to_string(sq_value value);
 sq_number sq_value_to_number(sq_value value);
 bool sq_value_to_boolean(sq_value value);

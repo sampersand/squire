@@ -64,11 +64,11 @@ static struct sq_token parse_arabic_numeral(void) {
 	return token;
 }
 
+static struct sq_token sq_next_token_nointerpolate(void);
+
 #define MAX_INTERPOLATIONS 256
 static struct { int stage; unsigned depth; char quote; } interpolations[MAX_INTERPOLATIONS];
 static unsigned interpolation_length;
-
-static struct sq_token sq_next_token_nointerpolate(void);
 
 static struct sq_token next_string_interpolate(void) {
 	struct sq_token token;
@@ -102,6 +102,8 @@ static struct sq_token next_string_interpolate(void) {
 
 	return token;
 }
+// whelp, `"foo \(bar)!" * 3` will not expand properly, so we need to have
+// every string return a leading `(` first...; but that's too hard rn.
 
 static struct sq_token parse_string(void) {
 	unsigned length = 0;

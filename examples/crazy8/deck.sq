@@ -16,7 +16,7 @@ form Pile {
 	}
 
 	action shuffle() {
-		nigh len = thine.length()
+		nigh len = lengththine()
 		nigh n = C + (random() % CCC)
 		nigh cards = thine.cards
 
@@ -45,7 +45,7 @@ form Pile {
 		whilst i < len {
 			nigh card = thine.cards[i];
 
-			str = str + card.to_string() + " "
+			str = "\(str)\(card) "
 			i = i + I
 		}
 

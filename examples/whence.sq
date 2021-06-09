@@ -1,6 +1,6 @@
 i = I
 whilst i < XL {
-	proclaim(string(i) + "\n")
+	proclaim("\(i)\n")
 	if i >= X {
 		 more_than_ten:
 	} alas {

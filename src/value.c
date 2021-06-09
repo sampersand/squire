@@ -383,3 +383,34 @@ bool sq_value_to_boolean(sq_value value) {
 		bug("<UNDEFINED: %lld>", value);
 	}
 }
+
+size_t sq_value_length(sq_value value) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TARRAY:
+		return sq_value_as_array(value)->len;
+
+	case SQ_TSTRING:
+		return AS_STRING(value)->length;
+
+	case SQ_TINSTANCE: {
+		struct sq_function *length = sq_instance_method(AS_INSTANCE(value), "length");
+
+		if (length != NULL) {
+			sq_value boolean = sq_function_run(length, 1, &value);
+			if (!sq_value_is_number(boolean))
+				die("length for an instance of '%s' didn't return a boolean", AS_INSTANCE(value)->class->name);
+			return AS_NUMBER(boolean);
+		}
+		// else fallthrough
+	}
+
+	case SQ_TCONST:
+	case SQ_TNUMBER:
+	case SQ_TCLASS:
+	case SQ_TFUNCTION:
+		die("cannot get length of %s", TYPENAME(value));
+
+	default:
+		bug("<UNDEFINED: %lld>", value);
+	}
+}

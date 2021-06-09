@@ -192,14 +192,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			case SQ_INT_LENGTH:
 				value = NEXT_LOCAL();
 
-				if (sq_value_is_array(value)) {
-					value = sq_value_new_number(sq_value_as_array(value)->len);
-				} else {
-					string = sq_value_to_string(value);
-					value = sq_value_new_number(string->length);
-				}
-
-				NEXT_LOCAL() = value;
+				NEXT_LOCAL() = sq_value_new_number((sq_number) sq_value_length(value));
 				break;
 
 			case SQ_INT_KINDOF: {
