@@ -243,7 +243,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		return sq_value_new_string(result);
 	}
 
-	die("cannot multiply '%s' to '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	die("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 
 }
 

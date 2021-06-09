@@ -7,10 +7,9 @@
 
 struct sq_class {
 	int refcount;
-	unsigned nfields;
+	unsigned nfields, nfuncs, nmeths, nparents;
 	char *name, **fields;
-
-	unsigned nfuncs, nmeths;
+	struct sq_class **parents;
 	struct sq_function **funcs, **meths, *constructor;
 };
 

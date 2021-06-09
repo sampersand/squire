@@ -23,6 +23,7 @@ void sq_throw_value(sq_value value)  {
 	if (!current_exception_handler) {
 		fprintf(stderr, "uncaught exception encountered: ");
 		sq_value_dump_to(stderr, value);
+		putc('\n', stderr);
 		exit(1);
 	}
 

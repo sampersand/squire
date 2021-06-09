@@ -1,9 +1,9 @@
 import "card.sq"
 
 form Pile {
-	equip cards
+	matter cards
 
-	recite create() {
+	describe create() {
 		nigh deck = []
 		nigh i = N
 
@@ -15,7 +15,7 @@ form Pile {
 		reward Pile(deck)
 	}
 
-	journey shuffle() {
+	action shuffle() {
 		nigh len = thine.length()
 		nigh n = C + (random() % CCC)
 		nigh cards = thine.cards
@@ -32,11 +32,11 @@ form Pile {
 		}
 	}
 
-	journey length() {
+	action length() {
 		reward length(thine.cards)
 	}
 
-	journey to_string() {
+	action to_string() {
 		renowned cardstr
 		nigh i = N
 		nigh len = thine.length()
@@ -52,11 +52,11 @@ form Pile {
 		reward substr(str, N, length(str) - I)
 	}
 
-	journey draw() {
+	action draw() {
 		reward delete(thine.cards, N)
 	}
 
-	journey add(card) {
+	action add(card) {
 		insert(thine.cards, thine.length(), card)
 	}
 }

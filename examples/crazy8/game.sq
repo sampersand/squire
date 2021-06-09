@@ -1,5 +1,16 @@
 import "deck.sq"
 
-myth Game {
+
+attempt {
+	proclaim(1/0);
+} retreat foo {
+	proclaim(foo + "\n");
+	attempt { hark foo
+	} retreat bar { hark(foo * bar) ; }
+}
+
+__END__
+journey Game {
 	equip
 }
+

@@ -48,8 +48,8 @@ struct scope_declaration {
 
 struct class_declaration {
 	char *name;
-	unsigned nfields, nfuncs, nmeths;
-	char **fields;
+	unsigned nfields, nfuncs, nmeths, nparents;
+	char **fields, **parents;
 	struct func_declaration **funcs, **meths, *constructor;
 };
 
