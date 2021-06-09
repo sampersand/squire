@@ -6,8 +6,9 @@
 #include "roman.h"
 
 const char *sq_stream;
+static char put_back_quote;
 
-static void strip_whitespace() {
+static void strip_whitespace(bool strip_newline) {
 	char c;
 
 	// strip whitespace
@@ -20,7 +21,7 @@ static void strip_whitespace() {
 			continue;
 		}
 
-		if (!isspace(c) || c == '\n')
+		if (!isspace(c) || (!strip_newline && c == '\n'))
 			break;
 
 		while (isspace(c) && c != '\n') {
@@ -47,31 +48,172 @@ static unsigned tohex(char c) {
 	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 
-static void parse_arabic_numeral(struct sq_token *token) {
-	token->kind = SQ_TK_NUMBER;
-	token->number = 0;
+static struct sq_token parse_arabic_numeral(void) {
+	struct sq_token token;
+	token.kind = SQ_TK_NUMBER;
+	token.number = 0;
 
 	do {
-		token->number = token->number * 10 + (*sq_stream - '0');
+		token.number = token.number * 10 + (*sq_stream - '0');
 	} while (isdigit(*++sq_stream));
 
 	if (isalpha(*sq_stream) || *sq_stream == '_')
 		die("invalid trailing characters on arabic numeral literal: %llu%c\n",
-			(long long) token->number, *sq_stream);
+			(long long) token.number, *sq_stream);
+
+	return token;
+}
+
+#define MAX_INTERPOLATIONS 256
+static struct { int stage; unsigned depth; char quote; } interpolations[MAX_INTERPOLATIONS];
+static unsigned interpolation_length;
+
+static struct sq_token sq_next_token_nointerpolate(void);
+
+static struct sq_token next_string_interpolate(void) {
+	struct sq_token token;
+
+	switch (interpolations[interpolation_length].stage++){
+	case -1: // `-1` is what's set to after we do the final `)`.
+		put_back_quote = interpolations[interpolation_length--].quote;
+
+	case 0:
+		token.kind = SQ_TK_ADD;
+		return token;
+
+	case 1:
+		token.kind = SQ_TK_IDENT;
+		token.identifier = strdup("string");
+		return token;
+
+	case 2:
+		token.kind = SQ_TK_LPAREN;
+		return token;
+	}
+
+	token = sq_next_token_nointerpolate();
+
+	if (token.kind == SQ_TK_LPAREN) {
+		++interpolations[interpolation_length].depth;
+	} else if (token.kind == SQ_TK_RPAREN) {
+		if (!--interpolations[interpolation_length].depth)
+			interpolations[interpolation_length].stage = -1;
+	}
+
+	return token;
+}
+
+static struct sq_token parse_string(void) {
+	unsigned length = 0;
+	char *dst = xmalloc(strlen(sq_stream));
+	char quote, c;
+
+	if (put_back_quote)
+		quote = put_back_quote, put_back_quote = '\0';
+	else
+		quote = *sq_stream++;
+
+	while ((c = *sq_stream++) != quote) {
+	top:
+		if (!c)
+			die("unterminated quote encountered");
+
+		if (c != '\\') {
+			dst[length++] = c;
+			continue;
+		}
+
+		switch (c = *sq_stream++) {
+		case '\\':
+		case '\'': 
+		case '\"':
+			break;
+
+		case '\n':
+			goto top;
+
+		case '(':
+			if (MAX_INTERPOLATIONS < interpolation_length)
+				die("too many interpolations");
+
+			interpolations[interpolation_length + 1].depth = 1;
+			interpolations[interpolation_length + 1].quote = quote;
+			interpolations[++interpolation_length].stage = 0;
+
+			goto done;
+
+		case 'n': c = '\n'; break;
+		case 't': c = '\t'; break;
+		case 'f': c = '\f'; break;
+		case 'v': c = '\v'; break;
+		case 'r': c = '\r'; break;
+
+		case 'x':
+			if (sq_stream[0] == quote || sq_stream[0] == '\0' || sq_stream[1] == quote)
+				die("unterminated escape sequence");
+
+			c = tohex(sq_stream[0]) * 16 + tohex(sq_stream[1]);
+			sq_stream += 2;
+			break;
+		}
+
+		dst[length++] = c;
+	}
+
+done:
+
+	dst[length] = '\0';
+
+	struct sq_token token;
+	token.kind = SQ_TK_STRING;
+	token.string = sq_string_new2(dst, length);
+
+	return token;
+}
+
+static struct sq_token parse_identifier(void) {
+	struct sq_token token;
+	token.kind = SQ_TK_IDENT;
+	const char *start = sq_stream;
+
+	while (isalnum(*sq_stream) || *sq_stream == '_')
+		++sq_stream;
+
+	token.identifier = strndup(start, sq_stream - start);
+
+	// check to see if we're a label
+	while (isspace(*sq_stream) || *sq_stream == '#')
+		if (*sq_stream == '#')
+			while (*sq_stream && *sq_stream++ != '\n');
+		else
+			++sq_stream;
+
+	if (*sq_stream == ':')
+		++sq_stream, token.kind = SQ_TK_LABEL;
+
+	return token;
 }
 
 struct sq_token sq_next_token() {
-	strip_whitespace();
+	if (interpolation_length)
+		return next_string_interpolate();
+	else
+		return sq_next_token_nointerpolate();
+}
+
+static struct sq_token sq_next_token_nointerpolate(void) {
 	struct sq_token token;
 
-	if (!*sq_stream) {
-		token.kind = SQ_TK_UNDEFINED;
-		return token;
-	}
+	if (put_back_quote) return parse_string();
+
+	strip_whitespace(false);
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
+	if (!*sq_stream || !strncmp(sq_stream, "__END__", 7))
+		return token.kind = SQ_TK_UNDEFINED, token;
+
 	if (isdigit(*sq_stream))
-		return parse_arabic_numeral(&token), token;
+		return parse_arabic_numeral();
 
 	if (sq_roman_is_numeral(*sq_stream)) {
 		token.number = sq_roman_to_number(sq_stream, &sq_stream);
@@ -86,120 +228,9 @@ struct sq_token sq_next_token() {
 			die("unexpected '\\' on its own.");
 	}
 
-	if (*sq_stream == '\'' || *sq_stream == '\"') {
-		token.kind = SQ_TK_STRING;
-		token.string = malloc(sizeof(struct sq_string));
-		char quote = *sq_stream;
-		const char *start = ++sq_stream;
+	if (*sq_stream == '\'' || *sq_stream == '\"')
+		return parse_string();
 
-		while (*sq_stream != quote) {
-			if (*sq_stream == '\\') ++sq_stream;
-			if (!*sq_stream) die("unterminated quote found");
-			++sq_stream;
-		}
-		++sq_stream;
-
-		token.string->length = sq_stream - start - 1;
-		char *dst = xmalloc(token.string->length + 1);
-		unsigned ins = 0;
-		char c;
-		const char *src = start;
-		for (unsigned i = 0; ins <= token.string->length; dst[ins++] = c, ++i) {
-		top:
-			c = src[i];
-
-			if (c != '\\') continue;
-
-			token.string->length--;
-			if (i == token.string->length) die("unterminated escape sequence");
-			switch (c = src[++i]) {
-			case '\\': break;
-			case '\'': break;
-			case '\"': break;
-			case '\n': ++i; goto top;
-			case 'n': c = '\n'; break;
-			case 't': c = '\t'; break;
-			case 'f': c = '\f'; break;
-			case 'v': c = '\v'; break;
-			case 'r': c = '\r'; break;
-			case 'x':
-				if (src[i+1] == quote || src[i+1] == '\0' ||src[i+2] == quote)
-					die("unterminated escape sequence");
-				c = tohex(src[i+1]) * 16 + tohex(src[i+2]);
-				i+=2;
-				token.string->length-=2;
-				break;
-			default:
-				die("unknown escape character '%1$c' (\\x%1$02x)", c);
-			}
-		}
-		token.string->ptr = xrealloc(dst, token.string->length+1);
-		token.string->ptr[token.string->length] = '\0';
-		return token;
-	}
-
-	if (!strncmp(sq_stream, "__END__", 7)) {
-		token.kind = SQ_TK_UNDEFINED;
-		return token;
-	}
-
-/*
-archetype
-
-class Child {
-	field name, age;
-	constructor(quux) { ... }
-	function(...) { ... }
-	static function(...) { ... }
-}
-
-form RobinHood isa Myth {
-	matter bow, name
-
-	substantiate(name) {
-		thine.bow = "bow"
-		thine.name = name
-	}
-
-	describe please_help() {
-		proclaim("Oh robin hood, please save us!\n")
-	}
-
-	action steal_from(whom) {
-		reward whom.take( )
-	}
-
-	# member function
-	journey steal_from(whom) {
-		proclaim("Hello, " + whom.name + "\n")
-		proclaim("Give me your money or i'll shoot you with my " + thine.weapon + "\n")
-		reward whom.take()
-	}
-
-
-}
-# class definition
-form Child isa Parent {
-	# fields
-	matter name, age;
-	
-	# constructor
-	substantiate(...) { ...}
-	# class function
-	describe(...) { ... }
-
-	# instance function
-	???(...) { ... }
-}
-
-myth Foo {
-	field bar, baz;
-
-	realize(quux) { ... }
-	recite(...) { ... }
-	journey(blargh) { ... }
-}
-*/
 	CHECK_FOR_START_KW("form",         SQ_TK_CLASS);
 	CHECK_FOR_START_KW("matter",       SQ_TK_FIELD);
 	CHECK_FOR_START_KW("action",       SQ_TK_METHOD);
@@ -225,27 +256,8 @@ myth Foo {
 	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);
 	CHECK_FOR_START_KW("null",         SQ_TK_NULL); // `naught`?
 
-	if (isalpha(*sq_stream) || *sq_stream == '_') {
-		token.kind = SQ_TK_IDENT;
-		const char *start = sq_stream;
-
-		while (isalnum(*sq_stream) || *sq_stream == '_')
-			++sq_stream;
-
-		token.identifier = strndup(start, sq_stream - start);
-
-		// check to see if we're a label
-		while (isspace(*sq_stream) || *sq_stream == '#')
-			if (*sq_stream == '#')
-				while (*sq_stream && *sq_stream++ != '\n');
-			else
-				++sq_stream;
-
-		if (*sq_stream == ':')
-			++sq_stream, token.kind = SQ_TK_LABEL;
-
-		return token;
-	}
+	if (isalpha(*sq_stream) || *sq_stream == '_')
+		return parse_identifier();
 
 	CHECK_FOR_START("{", SQ_TK_LBRACE);
 	CHECK_FOR_START("}", SQ_TK_RBRACE);
@@ -279,6 +291,7 @@ myth Foo {
 
 
 void sq_token_dump(const struct sq_token *token) {
+	// this isn't exactly correct anymore...
 	switch (token->kind) {
 	case SQ_TK_UNDEFINED: printf("Keyword(undefined)"); break;
 	case SQ_TK_CLASS: printf("Keyword(class)"); break;

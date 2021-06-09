@@ -336,9 +336,12 @@ sq_number sq_value_to_number(sq_value value) {
 		}
 		// else fallthrough
 	}
+
+	case SQ_TARRAY:
+		return sq_value_new_string(sq_array_to_string(AS_ARRAY(value)));
+
 	case SQ_TCLASS:
 	case SQ_TFUNCTION:
-	case SQ_TARRAY:
 		die("cannot convert %s to a number", TYPENAME(value));
 
 	default:

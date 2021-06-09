@@ -1,3 +1,7 @@
+a=["a=", 0, ";"];a[1]=string(a)
+proclaim(a)
+
+__END__
 # journey sieve(n){
 # 	insert(sieve=[],n,null);
 # 	reward sieve

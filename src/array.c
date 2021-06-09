@@ -122,3 +122,8 @@ void sq_array_index_assign(struct sq_array *array, int sindex, sq_value value) {
 
 	array->eles[index] = value;
 }
+
+struct sq_string *sq_array_to_string(const struct sq_array *array) {
+	(void)array;
+	die("todo!");
+}

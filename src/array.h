@@ -12,6 +12,7 @@ void sq_array_dump(FILE *, const struct sq_array *array);
 struct sq_array *sq_array_clone(struct sq_array *array);
 void sq_array_free(struct sq_array *array);
 
+struct sq_string *sq_array_to_string(const struct sq_array *array);
 void sq_array_insert(struct sq_array *array, int index, sq_value value);
 sq_value sq_array_delete(struct sq_array *array, int index);
 sq_value sq_array_index(struct sq_array *array, int index);
