@@ -96,7 +96,6 @@ static void parse_henceforth_literal(struct macro_variable *var) {
 	while (true) {
 		switch ((tokens[len++] = sq_next_token()).kind) {
 		case SQ_TK_ENDL:
-		case SQ_TK_SOFT_ENDL:
 			--len;
 		case SQ_TK_UNDEFINED:
 			goto done;

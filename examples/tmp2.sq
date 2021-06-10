@@ -1,7 +1,12 @@
-@henceforth $mul($x, $y) = $x * ($y);
-@henceforth $add($x, $y) = $x + $mul($y, 3);
+@henceforth $opfn($name, $op, $precheck) =
+	journey $name(lhs, rhs) {
+		$precheck;
+		reward lhs $op rhs
+	};
 
-dump($add(4, 5))
+$opfn(add, +, 3);
+dump(add(3, 4));
+
 
 __END__
 @henceforth $form = form $name { matter x, y };

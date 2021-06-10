@@ -25,6 +25,14 @@ static void strip_whitespace(bool strip_newline) {
 			continue;
 		}
 
+		if (*sq_stream == '\\') {
+			++sq_stream;
+
+			if (*sq_stream && *sq_stream++ != '\n') 
+				die("unexpected '\\' on its own.");
+			continue;
+		}
+
 		if (!isspace(c) || (!strip_newline && c == '\n'))
 			break;
 
@@ -227,13 +235,6 @@ static struct sq_token next_normal_token(void) {
 		token.number = sq_roman_to_number(sq_stream, &sq_stream);
 		if (token.number >= 0)
 			return (token.kind = SQ_TK_NUMBER), token;
-	}
-
-	if (*sq_stream == '\\') {
-		++sq_stream;
-
-		if (sq_stream[1] && *++sq_stream != '\n') 
-			die("unexpected '\\' on its own.");
 	}
 
 	if (*sq_stream == '\'' || *sq_stream == '\"')
