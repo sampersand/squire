@@ -9,6 +9,10 @@
 const char *sq_stream;
 static char put_back_quote;
 
+static struct sq_token next_macro_token(void);
+static void parse_macro_statement(char *);
+static bool parse_macro_identifier(char *);
+
 static void strip_whitespace(bool strip_newline) {
 	char c;
 
@@ -242,7 +246,8 @@ static struct sq_token sq_next_token_nointerpolate(void) {
 		return sq_next_token();
 	} else if (*sq_stream == '$') {
 		++sq_stream;
-		parse_macro_identifier(parse_identifier().identifier);
+		if (parse_macro_identifier(token.identifier = parse_identifier().identifier))
+			return token.kind = SQ_TK_MACRO_VAR, token;
 		return sq_next_token();
 	}
 

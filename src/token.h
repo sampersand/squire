@@ -30,6 +30,8 @@ enum sq_token_kind {
 	// TODO: `assert` as `challenge`?
 	// TODOO: `alias` is `henceforth`
 
+	SQ_TK_MACRO_VAR,
+
 	SQ_TK_TRUE,
 	SQ_TK_FALSE,
 	SQ_TK_NULL,

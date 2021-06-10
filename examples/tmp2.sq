@@ -1,3 +1,10 @@
+@henceforth $foo = $a + $b;
+@henceforth $a = 4;
+@henceforth $b = $a;
+
+dump($foo * 2)
+
+__END__
 i=N;
 bar:
 proclaim(3);
