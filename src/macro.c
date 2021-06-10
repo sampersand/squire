@@ -93,12 +93,32 @@ static void parse_henceforth_literal(struct macro_variable *var) {
 	tokens = xmalloc(sizeof(struct sq_token[cap = 8]));
 
 	is_in_macro_declaration = true;
+	bool is_verbatim = false;
+
 	while (true) {
 		switch ((tokens[len++] = sq_next_token()).kind) {
-		case SQ_TK_ENDL:
+		case SQ_TK_LTH:
+			if (*sq_stream != '<') break;
+			++sq_stream;
 			--len;
-		case SQ_TK_UNDEFINED:
+			is_verbatim = true;
+			continue;
+
+		case SQ_TK_GTH:
+			if (*sq_stream != '>') break;
+			++sq_stream;
+			--len;
+			is_verbatim = false;
+			continue;
+
+		case SQ_TK_ENDL:
+			if (is_verbatim) break;
+			--len;
 			goto done;
+
+		case SQ_TK_UNDEFINED:
+			die("unterminated macro");
+
 		default:
 			break;
 		}
@@ -205,14 +225,28 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		cap = 8;
 		paren_depth = 0;
 		arg = xmalloc(sizeof(struct sq_token [cap]));
+		bool is_verbatim = false;
 
 		while (true) {
 			switch ((token = sq_next_token()).kind) {
+			case SQ_TK_LTH:
+				if (*sq_stream != '<') break;
+				++sq_stream;
+				is_verbatim = true;
+				continue;
+
+			case SQ_TK_GTH:
+				if (*sq_stream != '>') break;
+				++sq_stream;
+				is_verbatim = false;
+				continue;
+
 			case SQ_TK_LPAREN:
-				paren_depth++;
+				if (!is_verbatim) paren_depth++;
 				break;
+
 			case SQ_TK_RPAREN:
-				if (!paren_depth--) {
+				if (!is_verbatim && !paren_depth--) {
 					if (i != var->arglen - 1)
 						die("unexpected `)`; too few arguments");
 					goto next_arg;
@@ -220,8 +254,9 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 				break;
 
 			case SQ_TK_COMMA:
-
+				if (is_verbatim) break;
 				if (!paren_depth) goto next_arg;
+
 			default:
 				;
 			}

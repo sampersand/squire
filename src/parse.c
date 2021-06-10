@@ -673,6 +673,10 @@ static char *parse_comefrom_declaration() {
 
 static struct statement *parse_statement() {
 	struct statement stmt;
+
+	while (take().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL) {}
+	untake();
+
 	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
@@ -707,6 +711,11 @@ static struct statements *parse_statements() {
 			endl = true;
 		untake(); // as the while statement broke it.
 	}
+
+	while (take().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL) {
+		// do nothing
+	}
+	untake();
 
 	struct statements *stmts = xmalloc(sizeof(struct statements));
 	stmts->len = len;
