@@ -190,7 +190,7 @@ static void parse_macro_statement(char *name) {
 }
 
 static void	parse_macro_identifier_invocation(struct expansion *exp, struct macro_variable *var) {
-	if (next_normal_token().kind != SQ_TK_LPAREN)
+	if (sq_next_token().kind != SQ_TK_LPAREN)
 		die("expected '(' after macro function '%s'", var->name);
 
 	struct {
@@ -226,7 +226,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 			default:
 				;
 			}
-			
+
 			arg[len++] = token;
 			if (len == cap)
 				arg = xrealloc(arg, sizeof(struct sq_token [cap *= 2]));
@@ -258,6 +258,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		for (unsigned j = 0; j < var->arglen; ++j) {
 			if (strcmp(var->args[j], var->tokens[i].identifier))
 				continue;
+
 			for (unsigned k = 0; k < args[j].len; ++k) {
 				if (cap == len) tokens = xrealloc(tokens, sizeof(struct sq_token [cap *= 2]));
 				tokens[len++] = args[j].args[k];
@@ -266,20 +267,30 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 			goto next_argument;
 		}
 
-		assert(!is_in_macro_declaration);
-		parse_macro_identifier(var->tokens[i].identifier);
-		for (unsigned j = 0; j < expansions[expansion_pos].len; ++j) {
-			if (cap == len) tokens = xrealloc(tokens, sizeof(struct sq_token [cap *= 2]));
-			tokens[len++] = expansions[expansion_pos].tokens[j];
-		}
-		--expansion_pos;
-
+		tokens[len++] = var->tokens[i];
 	next_argument:
 		;
+		// assert(!is_in_macro_declaration);
+
+		// expansions[++expansion_pos].len = var->tokenlen;
+		// expansions[expansion_pos].pos = i;
+		// expansions[expansion_pos].tokens = var->tokens;
+
+		// unsigned pos = expansion_pos;
+		// do {
+		// 	if (cap == len) tokens = xrealloc(tokens, sizeof(struct sq_token [cap *= 2]));
+		// 	tokens[len++] = sq_next_token();
+		// } while (pos < expansion_pos);
+
+		// // ie we're done with the entire macro parsing
+		// if (expansion_pos < pos) break;
+
+		// assert(pos == expansion_pos);
+		// i += expansions[expansion_pos--].pos;
+		// i--; // will wraparound but that's ok, as we add one.
 	}
 
 	exp->tokens = xrealloc(tokens, sizeof(struct sq_token [len]));
-	printf("len=%d\n", len);
 	exp->len = len;
 }
 
