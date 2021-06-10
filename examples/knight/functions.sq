@@ -8,8 +8,8 @@ myth Ast {
 	equip fn, args
 
 	journey run() {
-		fn = thine.fn
-		reward fn(thine.args)
+		fn = my.fn
+		reward fn(my.args)
 	}
 }
 

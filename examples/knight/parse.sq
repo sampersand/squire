@@ -13,18 +13,18 @@ myth Parser {
 	equip stream
 
 	journey peek() {
-		reward substr(thine.stream, 0, 1)
+		reward substr(my.stream, 0, 1)
 	}
 
 	journey advance() {
-		thine.stream =substr(thine.stream, 1, length(thine.stream) - 1)
+		my.stream =substr(my.stream, 1, length(my.stream) - 1)
 	}
 
 	journey take_while(cond) {
-		len = length(thine.stream)
+		len = length(my.stream)
 		idx = 0
 
-		whilst idx <= len && cond(substr(thine.stream, idx, 1)) {
+		whilst idx <= len && cond(substr(my.stream, idx, 1)) {
 			idx = idx + 1
 		}
 
@@ -32,29 +32,29 @@ myth Parser {
 			reward null
 		}
 
-		result = substr(thine.stream, 0, idx)
-		thine.stream = substr(thine.stream, idx, len - 1)
+		result = substr(my.stream, 0, idx)
+		my.stream = substr(my.stream, idx, len - 1)
 
 		reward result
 	}
 
 	journey strip_whitespace() {
-		thine.take_while(isspace)
+		my.take_while(isspace)
 
-		if thine.peek() == '#' {
-			thine.take_while(journey(chr) { reward chr != '\n' })
-			thine.strip_whitespace()
+		if my.peek() == '#' {
+			my.take_while(journey(chr) { reward chr != '\n' })
+			my.strip_whitespace()
 		}
 	}
 
 	journey parse() {
-		thine.strip_whitespace()
+		my.strip_whitespace()
 
-		if !thine.stream {
+		if !my.stream {
 			reward
 		}
 
-		if isdigit(thine.peek()) {
+		if isdigit(my.peek()) {
 			reward number()
 		}
 	}

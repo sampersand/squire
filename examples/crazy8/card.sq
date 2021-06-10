@@ -13,11 +13,11 @@ form Card {
 			suit = SUITS[suit]
 		}
 
-		thine.rank = rank
-		thine.suit = suit
+		my.rank = rank
+		my.suit = suit
 	}
 
 	action to_string() {
-		reward thine.rank + thine.suit
+		reward my.rank + my.suit
 	}
 }

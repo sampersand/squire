@@ -16,9 +16,9 @@ form Pile {
 	}
 
 	action shuffle() {
-		nigh len = lengththine()
+		nigh len = lengthmy()
 		nigh n = C + (random() % CCC)
-		nigh cards = thine.cards
+		nigh cards = my.cards
 
 		whilst n {
 			i = random() % len
@@ -33,17 +33,17 @@ form Pile {
 	}
 
 	action length() {
-		reward length(thine.cards)
+		reward length(my.cards)
 	}
 
 	action to_string() {
 		renowned cardstr
 		nigh i = N
-		nigh len = thine.length()
+		nigh len = my.length()
 		nigh str = ""
 
 		whilst i < len {
-			nigh card = thine.cards[i];
+			nigh card = my.cards[i];
 
 			str = "\(str)\(card) "
 			i = i + I
@@ -53,10 +53,10 @@ form Pile {
 	}
 
 	action draw() {
-		reward delete(thine.cards, N)
+		reward delete(my.cards, N)
 	}
 
 	action add(card) {
-		insert(thine.cards, thine.length(), card)
+		insert(my.cards, my.length(), card)
 	}
 }

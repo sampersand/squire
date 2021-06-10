@@ -11,11 +11,11 @@ journey timestr(time) {
 	if rawhours >= 12 { ampm = "pm" }
 	alas { ampm = "am" }
 
-	reward hours + ":" + minutes + " " + ampm
+	reward "\(hours):\(minutes) \(ampm)"
 }
 
 i = 0
 whilst i <= 49 {
-	proclaim(string(i) + ", " + timestr(i) + "\n")
+	proclaim("\(arabic(i)), \(timestr(i))\n")
 	i = i + 1
 }

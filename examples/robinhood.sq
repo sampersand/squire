@@ -5,13 +5,13 @@ form RobinHood {
 
 	# constructor
 	substantiate(weapon) {
-		thine.weapon = weapon
+		my.weapon = weapon
 	}
 
 	# member function
 	action steal_from(whom) {
 		proclaim("Hello, \(whom.name)\n")
-		proclaim("Give me your money or i'll shoot you with my \(thine.weapon)\n")
+		proclaim("Give me your money or i'll shoot you with my \(my.weapon)\n")
 		reward whom.take()
 	}
 
@@ -27,8 +27,8 @@ form Rich {
 
 	# member function
 	journey take() {
-		money = thine.money
-		thine.money = 0
+		money = my.money
+		my.money = 0
 		reward money
 	}
 }

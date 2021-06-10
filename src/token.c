@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "shared.h"
 #include "roman.h"
+#include "macros.h"
 
 const char *sq_stream;
 static char put_back_quote;
@@ -197,10 +198,12 @@ static struct sq_token parse_identifier(void) {
 }
 
 struct sq_token sq_next_token() {
-	if (interpolation_length)
-		return next_string_interpolate();
-	else
-		return sq_next_token_nointerpolate();
+	struct sq_token token = next_macro_token();
+
+	if (token.kind != SQ_TK_UNDEFINED)
+		return token;
+
+	return interpolation_length ? next_string_interpolate() : sq_next_token_nointerpolate();
 }
 
 static struct sq_token sq_next_token_nointerpolate(void) {
@@ -232,6 +235,16 @@ static struct sq_token sq_next_token_nointerpolate(void) {
 
 	if (*sq_stream == '\'' || *sq_stream == '\"')
 		return parse_string();
+
+	if (*sq_stream == '@') {
+		++sq_stream;
+		parse_macro_statement(parse_identifier().identifier);
+		return sq_next_token();
+	} else if (*sq_stream == '$') {
+		++sq_stream;
+		parse_macro_identifier(parse_identifier().identifier);
+		return sq_next_token();
+	}
 
 	CHECK_FOR_START_KW("form",         SQ_TK_CLASS);
 	CHECK_FOR_START_KW("matter",       SQ_TK_FIELD);
@@ -335,3 +348,7 @@ void sq_token_dump(const struct sq_token *token) {
 	default: printf("Unknown(%d)", token->kind); break;
 	}
 }
+
+
+#define SQ_MACRO_INCLUDE
+#include "macro.c"

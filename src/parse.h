@@ -11,17 +11,20 @@ struct statements {
 struct statement {
 	enum {
 		SQ_PS_SCLASS,
-		SQ_PS_SIMPORT,
 		SQ_PS_SFUNC,
+		SQ_PS_STRYCATCH,
+		SQ_PS_STHROW,
+		SQ_PS_SRETURN,
+
+		SQ_PS_SIMPORT,
 		SQ_PS_SGLOBAL,
 		SQ_PS_SLOCAL,
+
 		SQ_PS_SIF,
 		SQ_PS_SWHILE,
 		SQ_PS_SLABEL,
 		SQ_PS_SCOMEFROM,
-		SQ_PS_SRETURN,
-		SQ_PS_STRYCATCH,
-		SQ_PS_STHROW,
+
 		SQ_PS_SUNDO,
 		SQ_PS_SEXPR,
 	} kind;

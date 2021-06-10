@@ -1,8 +1,22 @@
+i=N;
+bar:
+proclaim(3);
+whence bar;
+proclaim("spot I: \(i=i+1)\n");
+
+whence bar;
+proclaim("spot II: \(i=i+1)\n");
+
+whence bar;
+proclaim("spot III: \(i=i+1)\n");
+
+__END__
+
 a=["a=", 0, ";"];a[1]=string(a)
 proclaim(a)
 
 __END__
-# journey sieve(n){
+# journey sieve(n){	
 # 	insert(sieve=[],n,null);
 # 	reward sieve
 # }
