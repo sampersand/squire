@@ -1,3 +1,10 @@
+@henceforth $a($x) = $x;
+@henceforth $b($a) = $a("A");
+
+dump($b(((()));
+#dump($add(4, 5))
+
+__END__
 @henceforth $form = form $name { matter x, y };
 @henceforth $name = foo;
 $form;

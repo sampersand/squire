@@ -28,9 +28,8 @@ static void strip_whitespace(bool strip_newline) {
 		if (!isspace(c) || (!strip_newline && c == '\n'))
 			break;
 
-		while (isspace(c) && c != '\n') {
+		while (isspace(c) && c != '\n')
 			c = *++sq_stream;
-		}
 	}
 }
 
@@ -200,6 +199,7 @@ static struct sq_token parse_identifier(void) {
 	return token;
 }
 
+// TODO: an entire program `a + 4` doesn't work.
 struct sq_token sq_next_token() {
 	struct sq_token token = next_macro_token();
 

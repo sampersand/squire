@@ -22,10 +22,9 @@ ifdef COMPUTED_GOTOS
 CFLAGS+=-DKN_COMPUTED_GOTOS -Wno-gnu-label-as-value -Wno-gnu-designator
 endif
 
-CFLAGS+=$(CEXTRA)
+CFLAGS+=$(CEXTRA) $(EFLAGS)
 .PHONY: all optimized clean shared
 
-CFLAGS+= $(EFLAGS)
 all: $(exe)
 shared: $(dyn)
 
@@ -48,6 +47,9 @@ $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
 $(objects): | $(OBJDIR)
+
+$(OBJDIR)/token.o: $(SRCDIR)/token.c $(SRCDIR)/macro.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
