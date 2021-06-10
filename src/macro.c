@@ -36,13 +36,12 @@ ab = "ab"
 #ifndef SQ_MACRO_INCLUDE
 struct _ignored__;
 #else
-#include "macros.h"
 #include <string.h>
 
 struct macro_variable {
-	char *name;
+	char *name, **args;
 	struct sq_token *tokens;
-	unsigned tokenlen;
+	unsigned tokenlen, arglen;
 };
 
 static struct {
@@ -64,7 +63,6 @@ bool is_in_macro_declaration;
 static struct sq_token next_macro_token(void) {
 	struct sq_token token;
 	token.kind = SQ_TK_UNDEFINED;
-
 
 	if (!expansion_pos)
 		return token;
@@ -113,6 +111,8 @@ done:
 
 	variables.vars[i].tokens = xrealloc(tokens, sizeof(struct sq_token[len]));
 	variables.vars[i].tokenlen = len;
+	variables.vars[i].args = NULL;
+	variables.vars[i].arglen = 0;
 }
 
 static void parse_henceforth_function(unsigned i) {
@@ -145,7 +145,7 @@ static void parse_henceforth(void) {
 
 found_token:;
 
-	struct sq_token token = sq_next_token_nointerpolate();
+	struct sq_token token = next_normal_token();
 	if (token.kind == SQ_TK_ASSIGN)
 		parse_henceforth_literal(i);
 	else if (token.kind == SQ_TK_LPAREN)
@@ -165,7 +165,7 @@ static bool parse_macro_identifier(char *name) {
 
 	for (unsigned i = 0; i < variables.len; ++i) {
 		if (!strcmp(name, variables.vars[i].name)) {
-			free(name);
+			// free(name);
 			expansions[++expansion_pos].tokens = variables.vars[i].tokens;
 			expansions[expansion_pos].len = variables.vars[i].tokenlen;
 			expansions[expansion_pos].pos = 0;

@@ -1,8 +1,12 @@
-@henceforth $foo = $a + $b;
-@henceforth $a = 4;
-@henceforth $b = $a;
+@henceforth $form = form $name { matter x, y };
+@henceforth $name = foo;
+$form;
+@henceforth $name = bar;
+$form;
 
-proclaim("Hear ye, hear ye. $foo=\($foo)\n")
+dump(foo(3,4));
+dump(bar(3,4));
+#proclaim("Hear ye, hear ye. $foo=\($foo)\n")
 
 
 

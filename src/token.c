@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include "shared.h"
 #include "roman.h"
-#include "macros.h"
 
 const char *sq_stream;
 static char put_back_quote;
@@ -69,13 +68,13 @@ static struct sq_token parse_arabic_numeral(void) {
 	return token;
 }
 
-static struct sq_token sq_next_token_nointerpolate(void);
+static struct sq_token next_normal_token(void);
 
 #define MAX_INTERPOLATIONS 256
 static struct { int stage; unsigned depth; char quote; } interpolations[MAX_INTERPOLATIONS];
 static unsigned interpolation_length;
 
-static struct sq_token next_string_interpolate(void) {
+static struct sq_token next_interpolation_token(void) {
 	struct sq_token token;
 
 	switch (interpolations[interpolation_length].stage++){
@@ -96,7 +95,7 @@ static struct sq_token next_string_interpolate(void) {
 		return token;
 	}
 
-	token = sq_next_token_nointerpolate();
+	token = next_normal_token();
 
 	if (token.kind == SQ_TK_LPAREN) {
 		++interpolations[interpolation_length].depth;
@@ -207,10 +206,10 @@ struct sq_token sq_next_token() {
 	if (token.kind != SQ_TK_UNDEFINED)
 		return token;
 
-	return interpolation_length ? next_string_interpolate() : sq_next_token_nointerpolate();
+	return interpolation_length ? next_interpolation_token() : next_normal_token();
 }
 
-static struct sq_token sq_next_token_nointerpolate(void) {
+static struct sq_token next_normal_token(void) {
 	struct sq_token token;
 
 	if (put_back_quote) return parse_string();
