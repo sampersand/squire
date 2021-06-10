@@ -2,7 +2,11 @@
 @henceforth $a = 4;
 @henceforth $b = $a;
 
-dump($foo * 2)
+proclaim("Hear ye, hear ye. $foo=\($foo)\n")
+
+
+
+
 
 __END__
 i=N;

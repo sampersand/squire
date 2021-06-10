@@ -32,6 +32,7 @@ ab = "ab"
 # ^-- maybe fix?
 */
 
+#define foo
 #ifndef SQ_MACRO_INCLUDE
 struct _ignored__;
 #else
