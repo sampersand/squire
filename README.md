@@ -3,12 +3,19 @@ I originally wanted to have "Knight" and "Squire" languages---the Knight would b
 So instead I decided to write this in one weekend. It turned out to be a fun project, but i never intended it to be anything. So I just keep adding to it without ever going back to refactor.
 
 Possible additions:
-[ ] Static fields on `form`s
-[ ] Inheritence for `form`s
-[ ] macros
-[ ] pattern matching
-[ ] varidict functions and keyword parameters
-[ ] modules
-[ ] dictionaries
-[x] interpolation
-[ ] pattern matching on functions
+
+- [ ] Static fields on `form`s
+- [ ] Inheritence for `form`s
+- [x] macros
+	- [x] Declarative
+	- [x] Function
+	- [ ] conditional compilation
+	- [ ] `foreach`
+	- [ ] `evaluate`
+- [ ] pattern matching
+- [ ] varidict functions and keyword parameters
+- [ ] modules
+- [ ] dictionaries
+- [x] interpolation
+- [ ] overload
+- [ ] pattern matching on functions

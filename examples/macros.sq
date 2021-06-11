@@ -1,0 +1,14 @@
+@henceforth $opfn($name, $op, $precheck) = <<
+	journey $name(lhs, rhs) {
+		$precheck;
+		reward lhs $op rhs;
+	} >> ;
+
+$opfn(sub, -, );
+$opfn(div, /, if !rhs { hark "cant divide by zero"; });
+
+attempt {
+	proclaim("4 / (3 - 3) = \(div(4, sub(3, 3)))");
+} retreat err {
+	proclaim("oops: \(err)\n")
+}

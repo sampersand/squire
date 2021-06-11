@@ -1,3 +1,23 @@
+form Fraction {
+	matter numer, denom;
+
+	substantiate(numer, denom) {
+		my.numer = numer;
+
+		if !(my.denom = denom) {
+			hark "cannot divide by zero";
+		}
+	}
+
+	action +(rhs) {
+		reward Fraction(my.numer * rhs, my.denom)
+	}
+}
+
+fr = Fraction(3, 4);
+dump(fr.+(43));
+
+__END__
 @henceforth $opfn($name, $op, $precheck) = <<
 	journey $name(lhs, rhs) {
 		$precheck;

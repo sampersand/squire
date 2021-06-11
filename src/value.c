@@ -185,10 +185,19 @@ sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 }
 
 sq_value sq_value_neg(sq_value arg) {
-	if (!sq_value_is_number(arg))
-		die("cannot numerically negate '%s'", TYPENAME(arg));
+	switch (SQ_VTAG(arg)) {
+	case SQ_TNUMBER:
+		return sq_value_new_number(-AS_NUMBER(arg));
 
-	return sq_value_new_number(-AS_NUMBER(arg));
+	case SQ_TINSTANCE: {
+		struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "-@");
+
+		if (neg != NULL)
+			return sq_function_run(neg, 1, &arg);
+	}
+	}
+
+	die("cannot numerically negate '%s'", TYPENAME(arg));
 }
 
 sq_value sq_value_add(sq_value lhs, sq_value rhs) {
@@ -209,16 +218,36 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		strcpy(result->ptr, AS_STR(lhs));
 		strcat(result->ptr, AS_STR(rhs));
 		return sq_value_new_string(result);
+
+	case SQ_TINSTANCE: {
+		struct sq_function *add = sq_instance_method(AS_INSTANCE(lhs), "+");
+		sq_value args[2] = { lhs, rhs };
+
+		if (add != NULL)
+			return sq_function_run(add, 2, args);
+	}
 	}
 
 	die("cannot add '%s' to '%s'", TYPENAME(lhs), TYPENAME(rhs));
 }
 
 sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
-	if (!sq_value_is_number(lhs) && !sq_value_is_number(rhs))
-		die("cannot subtract '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	switch (SQ_VTAG(lhs)) {
+	case SQ_TNUMBER:
+		if (!sq_value_is_number(rhs))
+			break;
+		return sq_value_new_number(AS_NUMBER(lhs) - AS_NUMBER(rhs));
 
-	return sq_value_new_number(AS_NUMBER(lhs) - AS_NUMBER(rhs));
+	case SQ_TINSTANCE: {
+		struct sq_function *sub = sq_instance_method(AS_INSTANCE(lhs), "-");
+		sq_value args[2] = { lhs, rhs };
+
+		if (sub != NULL)
+			return sq_function_run(sub, 2, args);
+	}
+	}
+
+	die("cannot subtract '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
 }
 
 sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
@@ -241,6 +270,14 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 			strcat(result->ptr, AS_STR(lhs));
 
 		return sq_value_new_string(result);
+
+	case SQ_TINSTANCE: {
+		struct sq_function *mul = sq_instance_method(AS_INSTANCE(lhs), "*");
+		sq_value args[2] = { lhs, rhs };
+
+		if (mul != NULL)
+			return sq_function_run(mul, 2, args);
+	}
 	}
 
 	die("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));

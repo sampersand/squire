@@ -37,7 +37,7 @@ static void parse_field_names(bool is_method) {
 	field_name_count = 0;
 
 	if (is_method)
-		field_names[field_name_count++] = strdup("thine");
+		field_names[field_name_count++] = strdup("my");
 
 	while (take().kind == SQ_TK_IDENT) {
 		if (field_name_count > 255) die("too many fields!");
@@ -58,11 +58,29 @@ static void parse_field_names(bool is_method) {
 static struct expression *parse_expression(void);
 
 
-static struct variable *parse_variable(void) {
-	GUARD(SQ_TK_IDENT);
+static char *token_to_identifier(struct sq_token token) {
+	switch (token.kind) {
+	case SQ_TK_IDENT: return last.identifier;
+	case SQ_TK_EQL: return strdup("==");
+	case SQ_TK_LTH: return strdup("<");
+	case SQ_TK_LEQ: return strdup("<=");
+	case SQ_TK_GTH: return strdup(">");
+	case SQ_TK_GEQ: return strdup(">=");
+	case SQ_TK_ADD: return strdup("+");
+	case SQ_TK_SUB: return strdup("-");
+	case SQ_TK_MUL: return strdup("*");
+	case SQ_TK_DIV: return strdup("/");
+	case SQ_TK_MOD: return strdup("%");
+	default: return NULL;
+	}
 
+}
+static struct variable *parse_variable(void) {
 	struct variable *var = xmalloc(sizeof(struct variable));
-	var->name = last.identifier;
+
+	if (!(var->name = token_to_identifier(take())))
+		return untake(), free(var), NULL;
+
 	if (take().kind == SQ_TK_DOT) {
 		var->field = parse_variable();
 	} else {
@@ -561,11 +579,11 @@ static struct func_declaration *parse_func_declaration(bool guard, bool is_metho
 	struct func_declaration *fdecl = xmalloc(sizeof(struct func_declaration));
 
 	// optional name
-	if (take().kind == SQ_TK_IDENT) {
-		fdecl->name = last.identifier;
-	} else {
+	if (take().kind == SQ_TK_LPAREN) {
 		untake();
 		fdecl->name = strdup("<anonymous>");
+	} else if (!(fdecl->name = token_to_identifier(last))) {
+		die("unexpected token in func declaration list");
 	}
 
 	// require a lparen.
