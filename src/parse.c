@@ -68,6 +68,7 @@ static char *token_to_identifier(struct sq_token token) {
 	case SQ_TK_GEQ: return strdup(">=");
 	case SQ_TK_ADD: return strdup("+");
 	case SQ_TK_SUB: return strdup("-");
+	case SQ_TK_NEG: return strdup("-@");
 	case SQ_TK_MUL: return strdup("*");
 	case SQ_TK_DIV: return strdup("/");
 	case SQ_TK_MOD: return strdup("%");
@@ -226,6 +227,7 @@ static struct unary_expression *parse_unary_expression() {
 	case SQ_TK_NOT:
 		unary.kind = SQ_PS_UNOT;
 		break;
+	case SQ_TK_NEG:
 	case SQ_TK_SUB:
 		unary.kind = SQ_PS_UNEG;
 		break;

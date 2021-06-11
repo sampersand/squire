@@ -9,13 +9,22 @@ form Fraction {
 		}
 	}
 
+	action -@() {
+		reward Fraction(-my.numer, my.denom)
+	}
+
 	action +(rhs) {
 		reward Fraction(my.numer * rhs, my.denom)
 	}
+
+	action to_string() {
+		reward "\(my.numer)/\(my.denom)"
+	}
 }
 
-fr = Fraction(3, 4);
-dump(fr.+(43));
+proclaim('a' + 3);
+fr = Fraction(III, IV);
+proclaim("-(3/4+43) = \(-fr.+(XLIII))\n"); # => -(3/4+43) = -CXXIX/IV
 
 __END__
 @henceforth $opfn($name, $op, $precheck) = <<

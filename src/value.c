@@ -161,24 +161,39 @@ bool sq_value_not(sq_value arg) {
 }
 
 bool sq_value_eql(sq_value lhs, sq_value rhs) {
-	if (lhs == rhs) return true;
+	switch (SQ_VTAG(lhs)) {
+	case SQ_TSTRING:
+		return IS_STRING(rhs) && !strcmp(AS_STR(lhs), AS_STR(rhs));
 
-	if (!IS_STRING(lhs) || !IS_STRING(rhs))
-		return false;
+	case SQ_TINSTANCE: {
+		struct sq_function *eql = sq_instance_method(AS_INSTANCE(lhs), "==");
+		sq_value args[2] = { lhs, rhs };
 
-	return !strcmp(AS_STR(lhs), AS_STR(rhs));
+		if (eql != NULL) return sq_function_run(eql, 2, args);
+	}
+
+	default:
+		return lhs == rhs;
+	}
 }
 
 sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER:
-		if (!sq_value_is_number(rhs))
-			break;
-		return AS_NUMBER(lhs) - AS_NUMBER(rhs);
+		return AS_NUMBER(lhs) - sq_value_to_number(rhs);
+
 	case SQ_TSTRING:
-		if (!sq_value_is_string(rhs))
-			break;
-		return strcmp(AS_STR(lhs), AS_STR(rhs));
+		// todo: free string
+		return strcmp(AS_STR(lhs), sq_value_to_string(rhs)->ptr);
+
+	case SQ_TINSTANCE: {
+		die("todo: cmp instance");
+	}
+	// 	struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "<=>");
+
+	// 	if (neg != NULL) return sq_function_run(neg, 1, &arg);
+	// }
+
 	}
 
 	die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
@@ -192,8 +207,7 @@ sq_value sq_value_neg(sq_value arg) {
 	case SQ_TINSTANCE: {
 		struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "-@");
 
-		if (neg != NULL)
-			return sq_function_run(neg, 1, &arg);
+		if (neg != NULL) return sq_function_run(neg, 1, &arg);
 	}
 	}
 
@@ -201,30 +215,35 @@ sq_value sq_value_neg(sq_value arg) {
 }
 
 sq_value sq_value_add(sq_value lhs, sq_value rhs) {
+	bool free_lhs = false;
+
+	if (sq_value_is_string(rhs)) {
+		free_lhs = true;
+		lhs = sq_value_new_string(sq_value_to_string(lhs));
+	}
+
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER:
-		if (!sq_value_is_number(rhs))
-			break;
-		return sq_value_new_number(AS_NUMBER(lhs) + AS_NUMBER(rhs));
+		return sq_value_new_number(AS_NUMBER(lhs) + sq_value_to_number(rhs));
 
-	case SQ_TSTRING:
-		if (!sq_value_is_string(rhs))
-			break;
-
+	case SQ_TSTRING: {
+		struct sq_string *rstr = sq_value_to_string(rhs);
 		struct sq_string *result = sq_string_alloc(
-			AS_STRING(lhs)->length + AS_STRING(rhs)->length + 1
+			AS_STRING(lhs)->length + rstr->length + 1
 		);
 
 		strcpy(result->ptr, AS_STR(lhs));
-		strcat(result->ptr, AS_STR(rhs));
+		strcat(result->ptr, rstr->ptr);
+		sq_string_free(rstr);
+		if (free_lhs) sq_value_free(lhs);
 		return sq_value_new_string(result);
+	}
 
 	case SQ_TINSTANCE: {
 		struct sq_function *add = sq_instance_method(AS_INSTANCE(lhs), "+");
 		sq_value args[2] = { lhs, rhs };
 
-		if (add != NULL)
-			return sq_function_run(add, 2, args);
+		if (add != NULL) return sq_function_run(add, 2, args);
 	}
 	}
 
@@ -234,16 +253,13 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER:
-		if (!sq_value_is_number(rhs))
-			break;
-		return sq_value_new_number(AS_NUMBER(lhs) - AS_NUMBER(rhs));
+		return sq_value_new_number(AS_NUMBER(lhs) - sq_value_to_number(rhs));
 
 	case SQ_TINSTANCE: {
 		struct sq_function *sub = sq_instance_method(AS_INSTANCE(lhs), "-");
 		sq_value args[2] = { lhs, rhs };
 
-		if (sub != NULL)
-			return sq_function_run(sub, 2, args);
+		if (sub != NULL) return sq_function_run(sub, 2, args);
 	}
 	}
 
@@ -253,13 +269,10 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER:
-		if (!sq_value_is_number(rhs))
-			break;
-		return sq_value_new_number(AS_NUMBER(lhs) * AS_NUMBER(rhs));
+		return sq_value_new_number(AS_NUMBER(lhs) * sq_value_to_number(rhs));
 
 	case SQ_TSTRING:
-		if (!sq_value_is_number(rhs))
-			break;
+		if (!sq_value_is_number(rhs)) break;
 
 		struct sq_string *result = sq_string_alloc(
 			AS_STRING(lhs)->length * AS_NUMBER(rhs) + 1
@@ -275,8 +288,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		struct sq_function *mul = sq_instance_method(AS_INSTANCE(lhs), "*");
 		sq_value args[2] = { lhs, rhs };
 
-		if (mul != NULL)
-			return sq_function_run(mul, 2, args);
+		if (mul != NULL) return sq_function_run(mul, 2, args);
 	}
 	}
 
@@ -285,21 +297,42 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 }
 
 sq_value sq_value_div(sq_value lhs, sq_value rhs) {
-	if (!sq_value_is_number(lhs) && !sq_value_is_number(rhs))
-		die("cannot divide '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	switch (SQ_VTAG(lhs)) {
+	case SQ_TNUMBER: {
+		sq_number rnum = sq_value_to_number(rhs);
+		if (!AS_NUMBER(rnum)) die("cannot divide by zero");
+		return sq_value_new_number(AS_NUMBER(lhs) / rnum);
+	}
 
-	if (!AS_NUMBER(rhs)) die("cannot divide by zero");
+	case SQ_TINSTANCE: {
+		struct sq_function *div = sq_instance_method(AS_INSTANCE(lhs), "/");
+		sq_value args[2] = { lhs, rhs };
 
-	return sq_value_new_number(AS_NUMBER(lhs) / AS_NUMBER(rhs));
+		if (div != NULL) return sq_function_run(div, 2, args);
+	}
+	}
+
+	die("cannot divide '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+
 }
 
 sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
-	if (!sq_value_is_number(lhs) && !sq_value_is_number(rhs))
-		die("cannot modulo '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	switch (SQ_VTAG(lhs)) {
+	case SQ_TNUMBER: {
+		sq_number rnum = sq_value_to_number(rhs);
+		if (!AS_NUMBER(rnum)) die("cannot modulo by zero");
+		return sq_value_new_number(AS_NUMBER(lhs) % rnum);
+	}
 
-	if (!AS_NUMBER(rhs)) die("cannot modulo by zero");
+	case SQ_TINSTANCE: {
+		struct sq_function *mod = sq_instance_method(AS_INSTANCE(lhs), "%");
+		sq_value args[2] = { lhs, rhs };
 
-	return sq_value_new_number(AS_NUMBER(lhs) % AS_NUMBER(rhs));
+		if (mod != NULL) return sq_function_run(mod, 2, args);
+	}
+	}
+
+	die("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 }
 
 struct sq_string *sq_value_to_string(sq_value value) {

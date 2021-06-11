@@ -297,6 +297,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("<", SQ_TK_LTH);
 	CHECK_FOR_START(">", SQ_TK_GTH);
 	CHECK_FOR_START("+", SQ_TK_ADD);
+	CHECK_FOR_START("-@", SQ_TK_NEG);
 	CHECK_FOR_START("-", SQ_TK_SUB);
 	CHECK_FOR_START("*", SQ_TK_MUL);
 	CHECK_FOR_START("/", SQ_TK_DIV);
