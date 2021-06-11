@@ -300,7 +300,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER: {
 		sq_number rnum = sq_value_to_number(rhs);
-		if (!AS_NUMBER(rnum)) die("cannot divide by zero");
+		if (!rnum) die("cannot divide by zero");
 		return sq_value_new_number(AS_NUMBER(lhs) / rnum);
 	}
 
@@ -320,7 +320,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER: {
 		sq_number rnum = sq_value_to_number(rhs);
-		if (!AS_NUMBER(rnum)) die("cannot modulo by zero");
+		if (!rnum) die("cannot modulo by zero");
 		return sq_value_new_number(AS_NUMBER(lhs) % rnum);
 	}
 
@@ -450,6 +450,7 @@ bool sq_value_to_boolean(sq_value value) {
 		die("cannot convert %s to a boolean", TYPENAME(value));
 
 	default:
+*		(volatile int *)0;
 		bug("<UNDEFINED: %lld>", value);
 	}
 }

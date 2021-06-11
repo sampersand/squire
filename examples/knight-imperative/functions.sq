@@ -38,7 +38,7 @@ journey sq_false(_args) {
 }
 
 journey sq_null(_args) {
-	reward null
+	reward unbenknownst
 }
 
 # Arity one
@@ -77,7 +77,7 @@ journey sq_dump(args) {
 	if kindof(arg) == 'string' { proclaim('String(' + arg + ')') }
 	alas if kindof(arg) == 'number' { proclaim('Number(' + string(arg) + ')') }
 	alas if kindof(arg) == 'boolean' { proclaim('Boolean(' + string(arg) + ')') }
-	alas if kindof(arg) == 'null' { proclaim('Null()') }
+	alas if kindof(arg) == 'unbenknownst' { proclaim('Null()') }
 	alas { dump(arg) }
 
 	proclaim("\n")
@@ -253,7 +253,7 @@ journey sq_set(args) {
 journey parse_function(fn) {
 	renowned parse_expr
 
-	args = Args(null, null, null, null)
+	args = Args(unbenknownst, unbenknownst, unbenknownst, unbenknownst)
 
 	if fn == 'P' { reward Ast(sq_prompt, args) }
 	if fn == 'R' { reward Ast(sq_random, args) }
@@ -261,7 +261,7 @@ journey parse_function(fn) {
 	if fn == 'F' { reward Ast(sq_false, args) }
 	if fn == 'N' { reward Ast(sq_null, args) }
 
-	if null == (args.a1 = parse_expr()) { die("unable to parse argument 1 for '" + fn + "'") }
+	if unbenknownst == (args.a1 = parse_expr()) { die("unable to parse argument 1 for '" + fn + "'") }
 
 	if fn == 'E' { reward Ast(sq_eval, args) }
 	if fn == 'B' { reward Ast(sq_block, args) }
@@ -273,7 +273,7 @@ journey parse_function(fn) {
 	if fn == 'D' { reward Ast(sq_dump, args) }
 	if fn == 'O' { reward Ast(sq_output, args) }
 
-	if null == (args.a2 = parse_expr()) { die("unable to parse argument 2 for '" + fn + "'") }
+	if unbenknownst == (args.a2 = parse_expr()) { die("unable to parse argument 2 for '" + fn + "'") }
 
 	if fn == '+' { reward Ast(sq_add, args) }
 	if fn == '-' { reward Ast(sq_sub, args) }
@@ -290,12 +290,12 @@ journey parse_function(fn) {
 	if fn == '=' { reward Ast(sq_assign, args) }
 	if fn == 'W' { reward Ast(sq_while, args) }
 
-	if null == (args.a3 = parse_expr()) { die("unable to parse argument 3 for '" + fn + "'") }
+	if unbenknownst == (args.a3 = parse_expr()) { die("unable to parse argument 3 for '" + fn + "'") }
 
 	if fn == 'I' { reward Ast(sq_if, args) }
 	if fn == 'G' { reward Ast(sq_get, args) }
 
-	if null == (args.a4 = parse_expr()) { die("unable to parse argument 4 for '" + fn + "'") }
+	if unbenknownst == (args.a4 = parse_expr()) { die("unable to parse argument 4 for '" + fn + "'") }
 
 	if fn == 'S' { reward Ast(sq_set, args) }
 

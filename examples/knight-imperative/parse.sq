@@ -18,7 +18,7 @@ journey take_while(cond) {
 	}
 
 	if idx == 0 {
-		reward null
+		reward unbenknownst
 	}
 
 	result = substr(parse_stream, 0, idx)

@@ -162,14 +162,19 @@ static void parse_henceforth_function(struct macro_variable *var) {
 	var->is_function = true;
 }
 
-static void parse_henceforth(void) {
-	struct macro_variable *var;
+static char *parse_macro_identifier_name(void) {
 	strip_whitespace(true);
 
 	if (*sq_stream++ != '$')
 		die("expected a macro identifier");
 
-	char *name = parse_identifier().identifier;
+	return parse_identifier().identifier;
+}
+
+static void parse_henceforth(void) {
+	struct macro_variable *var;
+	char *name = parse_macro_identifier_name();
+
 	for (unsigned i = 0; i < variables.len; ++i)
 		if (!strcmp((var = &variables.vars[i])->name, name)) {
 			free(name);
@@ -198,14 +203,27 @@ found_token:;
 	}
 }
 
+static void parse_nevermore(void) {
+	char *name = parse_macro_identifier_name();
+	for (unsigned i = 0; i < variables.len; ++i) {
+		if (strcmp(variables.vars[i].name, name)) continue;
+		free(name);
+		variables.vars[i].name = "<impossible>"; // impossible name
+		return;
+	}
+}
+
 
 static void parse_macro_statement(char *name) {
 	if (!strcmp(name, "henceforth")) {
-		free(name);
 		parse_henceforth();
+	} else if (!strcmp(name, "nevermore")) {
+		parse_nevermore();
 	} else {
 		die("unknown macro statement kind '%s'", name);
 	}
+
+	free(name);
 }
 
 static void	parse_macro_identifier_invocation(struct expansion *exp, struct macro_variable *var) {

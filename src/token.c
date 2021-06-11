@@ -274,7 +274,7 @@ static struct sq_token next_normal_token(void) {
 
 	CHECK_FOR_START_KW("yay",          SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);
-	CHECK_FOR_START_KW("null",         SQ_TK_NULL); // `naught`?
+	CHECK_FOR_START_KW("unbeknownst",  SQ_TK_NULL);
 
 	if (isalpha(*sq_stream) || *sq_stream == '_')
 		return parse_identifier();

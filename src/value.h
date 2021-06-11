@@ -23,6 +23,7 @@ typedef enum {
 	SQ_TINSTANCE,
 	SQ_TFUNCTION,
 	SQ_TARRAY,
+	SQ_TDICT,
 } sq_vtag;
 
 #define SQ_VSHIFT 3

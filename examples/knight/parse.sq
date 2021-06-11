@@ -29,7 +29,7 @@ myth Parser {
 		}
 
 		if idx == 0 {
-			reward null
+			reward unbenknownst
 		}
 
 		result = substr(my.stream, 0, idx)

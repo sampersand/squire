@@ -1,8 +1,19 @@
+foo:
+proclaim("Spot I\n");
+
+whence foo
+proclaim("Spot II\n");
+
+whence foo
+proclaim("Spot III\n");
+
+__END__
 i = I
 whilst i < XL {
 	proclaim("\(i)\n")
+
 	if i >= X {
-		 more_than_ten:
+		more_than_ten:
 	} alas {
 		i = i + 1
 	}

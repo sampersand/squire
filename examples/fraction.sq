@@ -81,104 +81,14 @@ form Fraction {
 	}
 }
 
-dump(Fraction(10, 3) / 5);
-
-
-dump(Fraction.gcd(12, 8));
-
 fr = Fraction(III, IV);
-
 proclaim("-(3/4+43) = \(-fr.+(XLII))\n"); # => -(3/4+43) = -CXXIX/IV
 
-__END__
-@henceforth $opfn($name, $op, $precheck) = <<
-	journey $name(lhs, rhs) {
-		$precheck;
-		reward lhs $op rhs;
-	} >> ;
-
-$opfn(sub, -, );
-$opfn(div, /, if !rhs { hark "cant divide by zero"; });
+dump(Fraction(10, 3) / 5);
+dump(Fraction.gcd(12, 8));
 
 attempt {
-	proclaim("4 / (3 - 3) = \(div(4, sub(3, 3)))");
+	Fraction(I, N);
 } retreat err {
-	proclaim("oops: \(err)\n")
+	proclaim("uh oh: \(err)\n");
 }
-
-__END__
-@henceforth $opfn($name, $op, $precheck) =
-	journey $name(lhs, rhs) {
-		$precheck;
-		reward lhs $op rhs
-	};
-
-$opfn(add, +, 3);
-dump(add(3, 4));
-
-
-__END__
-@henceforth $form = form $name { matter x, y };
-@henceforth $name = foo;
-$form;
-@henceforth $name = bar;
-$form;
-
-dump(foo(3,4));
-dump(bar(3,4));
-#proclaim("Hear ye, hear ye. $foo=\($foo)\n")
-
-
-
-
-
-__END__
-i=N;
-bar:
-proclaim(3);
-whence bar;
-proclaim("spot I: \(i=i+1)\n");
-
-whence bar;
-proclaim("spot II: \(i=i+1)\n");
-
-whence bar;
-proclaim("spot III: \(i=i+1)\n");
-
-__END__
-
-a=["a=", 0, ";"];a[1]=string(a)
-proclaim(a)
-
-__END__
-# journey sieve(n){	
-# 	insert(sieve=[],n,unbenknownst);
-# 	reward sieve
-# }
-# 
-# dump
-
-# `journey`s are functions
-journey fizzbuzz() {
-	nigh i = I # numbers are roman numerals
-
-	# while i is less than 100
-	whilst i <= C {
-		nigh txt = ""
-
-		if !(i % III) { txt = txt + "Fizz" }
-		if !(i % V) { txt = txt + "Buzz" }
-
-		# `proclaim` is print
-		if txt {
-			proclaim(txt + "\n")
-		} alas { # `alas` is `else`
-			# `arabic` is used to convert output to roman numerals.
-			proclaim(arabic(i) + "\n")
-		}
-
-		i = i + I
-	}
-}
-
-fizzbuzz()

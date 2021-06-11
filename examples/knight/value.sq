@@ -1,3 +1,38 @@
+form Variable {
+	matter name, value;
+
+	substantiate(name) {
+		my.name = name;
+		my.value = unbenknownst;
+	}
+
+	describe fetch(name) {
+		renowned _variable_names;
+		nigh name;
+
+		if !_variable_names { _variable_names = {} } # initializer
+
+		if !(var = _variable_names[name]) {
+			var = _variable_names[name] = Variable(name);
+		}
+
+		reward var;
+	}
+
+	action run() {
+		if my.value == unbenknownst {
+			hark "undeifned variable '\(my.name)' ran.";
+		}
+
+		reward my.value;
+	}
+
+	action set(value) {
+		my.value = value;
+	}
+}
+
+__END__
 myth Value {
 	equip data
 

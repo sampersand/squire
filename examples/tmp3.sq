@@ -1,0 +1,11 @@
+journey gcd(numer, denom) {
+	dump(12 % 3);
+	dismount(0);
+	whilst (tmp = denom) {
+		denom = numer % denom;
+		numer = tmp;
+	}
+	reward numer;
+}
+
+dump(gcd(12, 3));
