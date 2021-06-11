@@ -304,24 +304,6 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		tokens[len++] = var->tokens[i];
 	next_argument:
 		;
-		// assert(!is_in_macro_declaration);
-
-		// expansions[++expansion_pos].len = var->tokenlen;
-		// expansions[expansion_pos].pos = i;
-		// expansions[expansion_pos].tokens = var->tokens;
-
-		// unsigned pos = expansion_pos;
-		// do {
-		// 	if (cap == len) tokens = xrealloc(tokens, sizeof(struct sq_token [cap *= 2]));
-		// 	tokens[len++] = sq_next_token();
-		// } while (pos < expansion_pos);
-
-		// // ie we're done with the entire macro parsing
-		// if (expansion_pos < pos) break;
-
-		// assert(pos == expansion_pos);
-		// i += expansions[expansion_pos--].pos;
-		// i--; // will wraparound but that's ok, as we add one.
 	}
 
 	exp->tokens = xrealloc(tokens, sizeof(struct sq_token [len]));
