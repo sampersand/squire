@@ -72,6 +72,8 @@ static char *token_to_identifier(struct sq_token token) {
 	case SQ_TK_MUL: return strdup("*");
 	case SQ_TK_DIV: return strdup("/");
 	case SQ_TK_MOD: return strdup("%");
+	case SQ_TK_INDEX: return strdup("[]");
+	case SQ_TK_INDEX_ASSIGN: return strdup("[]=");
 	default: return NULL;
 	}
 
@@ -119,12 +121,12 @@ static struct function_call *parse_func_call(struct variable *func) {
 	return fncall;
 }
 
-static struct array_index *parse_array_index(struct variable *array) {
-	struct array_index *array_index = xmalloc(sizeof(struct array_index));
-	array_index->array = array;
-	if (!(array_index->index = parse_expression())) die("Cant compile array index");
+static struct index *parse_index(struct variable *array) {
+	struct index *index = xmalloc(sizeof(struct index));
+	index->into = array;
+	if (!(index->index = parse_expression())) die("Cant compile index");
 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
-	return array_index;
+	return index;
 }
 
 static struct array *parse_array() {
@@ -133,7 +135,7 @@ static struct array *parse_array() {
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
 		if (last.kind == SQ_TK_UNDEFINED)
-			die("missing rparen for array call");
+			die("missing rparen for array initialization");
 
 		if (len == cap)
 			args = xrealloc(args, sizeof(struct expression[cap *= 2]));
@@ -154,6 +156,48 @@ static struct array *parse_array() {
 	return array;
 }
 
+static struct dict *parse_dict() {
+	unsigned len = 0, cap = 8;
+	struct expression **keys = xmalloc(sizeof(struct expression[cap]));
+	struct expression **vals = xmalloc(sizeof(struct expression[cap]));
+
+	while ((take(),untake(),last.kind != SQ_TK_RBRACE)) {
+		if (last.kind == SQ_TK_UNDEFINED)
+			die("missing rparen for codex call");
+
+		if (len == cap) {
+			cap *= 2;
+			keys = xrealloc(keys, sizeof(struct expression[cap]));
+			vals = xrealloc(vals, sizeof(struct expression[cap]));
+		}
+
+		bool was_label;
+		if (take(), untake(), was_label = (last.kind == SQ_TK_LABEL))
+			last.kind = SQ_TK_IDENT;
+
+		keys[len] = parse_expression();
+
+		if (!was_label)
+			EXPECT(SQ_TK_COLON, "expected a ':' after codex key");
+
+		vals[len] = parse_expression();
+		++len;
+
+		if (take().kind != SQ_TK_COMMA) {
+			untake();
+			break;
+		}
+	}
+
+	EXPECT(SQ_TK_RBRACE, "expected a '}' at end of codex");
+
+	struct dict *dict = xmalloc(sizeof(struct dict));
+	dict->neles = len;
+	dict->keys = keys;
+	dict->vals = vals;
+	return dict;
+}
+
 static struct func_declaration *parse_func_declaration(bool, bool);
 static struct primary *parse_primary() {
 	struct primary primary;
@@ -164,9 +208,19 @@ static struct primary *parse_primary() {
 		primary.expr = parse_expression();
 		EXPECT(SQ_TK_RPAREN, "expected a ')' at end of paren expr");
 		break;
+	case SQ_TK_INDEX:
+		primary.kind = SQ_PS_PARRAY;
+		primary.array = xmalloc(sizeof(struct array));
+		primary.array->nargs = 0;
+		primary.array->args = NULL;
+		break;
 	case SQ_TK_LBRACKET:
 		primary.kind = SQ_PS_PARRAY;
 		primary.array = parse_array();
+		break;
+	case SQ_TK_LBRACE:
+		primary.kind = SQ_PS_PDICT;
+		primary.dict = parse_dict();
 		break;
 	case SQ_TK_NUMBER:
 		primary.kind = SQ_PS_PNUMBER;
@@ -197,8 +251,8 @@ static struct primary *parse_primary() {
 			primary.expr->kind = SQ_PS_EFNCALL;
 			primary.expr->fncall = parse_func_call(var);
 		} else if (last.kind == SQ_TK_LBRACKET) {
-			primary.kind = SQ_PS_PARRAY_INDEX;
-			primary.array_index = parse_array_index(var);
+			primary.kind = SQ_PS_PINDEX;
+			primary.index = parse_index(var);
 		} else {
 			untake();
 			primary.kind = SQ_PS_PVARIABLE;
@@ -391,12 +445,12 @@ static struct assignment *parse_assignment(struct variable *var) {
 	return asgn;
 }
 
-static struct array_assignment *parse_array_assignment(struct array_index *aidx) {
+static struct index_assign *parse_index_assign(struct index *aidx) {
 	GUARD(SQ_TK_ASSIGN);
 
-	struct array_assignment *ary_asgn = xmalloc(sizeof(struct array_assignment));
+	struct index_assign *ary_asgn = xmalloc(sizeof(struct index_assign));
 
-	ary_asgn->var = aidx->array;
+	ary_asgn->var = aidx->into;
 	ary_asgn->index = aidx->index;
 	free(aidx);
 
@@ -420,7 +474,7 @@ static struct expression *parse_expression() {
 		|| expr.math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
 		|| expr.math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
 		|| (expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
-		&& expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PARRAY_INDEX)
+		&& expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PINDEX)
 	) goto done;
 
 	struct primary *prim = expr.math->lhs->lhs->lhs->lhs->lhs->rhs;
@@ -434,7 +488,7 @@ static struct expression *parse_expression() {
 			expr.asgn = parse_assignment(prim->variable);
 		} else {
 			expr.kind = SQ_PS_EARRAY_ASSIGN;
-			expr.ary_asgn = parse_array_assignment(prim->array_index);
+			expr.ary_asgn = parse_index_assign(prim->index);
 		}
 	}
 

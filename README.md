@@ -19,3 +19,8 @@ Possible additions:
 - [x] interpolation
 - [ ] overload
 - [ ] pattern matching on functions
+
+
+# Glossary
+Squire doth contain a multitude of fancy parlance:
+- `tome`s are dictionaries.

@@ -2,29 +2,28 @@
 #define SQ_BYTECODE_H
 
 enum sq_interrupts {
-	SQ_INT_TONUMBER           =  1,
-	SQ_INT_TOSTRING           =  2,
-	SQ_INT_TOBOOLEAN          =  3,
-	SQ_INT_KINDOF             =  4,
+	SQ_INT_TONUMBER           = 0x01,
+	SQ_INT_TOSTRING           = 0x02,
+	SQ_INT_TOBOOLEAN          = 0x03,
+	SQ_INT_KINDOF             = 0x04,
 
-	SQ_INT_PRINT              = 10,
-	SQ_INT_DUMP               = 11,
-	SQ_INT_PROMPT             = 12,
-	SQ_INT_SYSTEM             = 13,
-	SQ_INT_EXIT               = 14,
-	SQ_INT_RANDOM             = 15,
+	SQ_INT_PRINT              = 0x10,
+	SQ_INT_DUMP               = 0x11,
+	SQ_INT_PROMPT             = 0x12,
+	SQ_INT_SYSTEM             = 0x13,
+	SQ_INT_EXIT               = 0x14,
+	SQ_INT_RANDOM             = 0x15,
 
-	SQ_INT_SUBSTR             = 20,
-	SQ_INT_LENGTH             = 21,
+	SQ_INT_SUBSTR             = 0x20,
+	SQ_INT_LENGTH             = 0x21,
 
-	SQ_INT_ARRAY_NEW          = 30,
-	SQ_INT_ARRAY_INSERT       = 31,
-	SQ_INT_ARRAY_DELETE       = 32,
-	SQ_INT_ARRAY_INDEX        = 33,
-	SQ_INT_ARRAY_INDEX_ASSIGN = 34,
+	SQ_INT_DICT_NEW           = 0x30,
+	SQ_INT_ARRAY_NEW          = 0x31,
+	SQ_INT_ARRAY_INSERT       = 0x32,
+	SQ_INT_ARRAY_DELETE       = 0x33,
 
-	SQ_INT_ARABIC             = 40,
-	SQ_INT_ROMAN              = 41,
+	SQ_INT_ARABIC             = 0x40,
+	SQ_INT_ROMAN              = 0x41,
 };
 
 enum sq_opcode {
@@ -58,6 +57,8 @@ enum sq_opcode {
 	SQ_OC_MOD          = 0x2A,
 	SQ_OC_NOT          = 0x2B,
 	SQ_OC_NEG          = 0x2C,
+	SQ_OC_INDEX        = 0x2D,
+	SQ_OC_INDEX_ASSIGN = 0x2E,
 
 	SQ_OC_CLOAD        = 0x30, // load a constant
 

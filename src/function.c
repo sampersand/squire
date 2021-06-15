@@ -5,6 +5,7 @@
 #include "class.h"
 #include "array.h"
 #include "roman.h"
+#include "dict.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -281,6 +282,19 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				break;
 			}
 
+			case SQ_INT_DICT_NEW: {
+				unsigned amnt = NEXT_INDEX();
+				struct sq_dict_entry *entries = xmalloc(sizeof(struct sq_dict_entry [amnt]));
+
+				for (unsigned i = 0; i < amnt; ++i) {
+					entries[i].key = NEXT_LOCAL();
+					entries[i].value = NEXT_LOCAL();
+				}
+
+				NEXT_LOCAL() = sq_value_new_dict(sq_dict_new(amnt, entries));
+				break;
+			}
+
 
 			case SQ_INT_ARRAY_INSERT: {
 				value = NEXT_LOCAL();
@@ -299,27 +313,6 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				struct sq_array *array = sq_value_as_array(value);
 				unsigned index = sq_value_to_number(NEXT_LOCAL());
 				NEXT_LOCAL() = sq_array_delete(array, index);
-				break;
-			}
-
-			case SQ_INT_ARRAY_INDEX: {
-				value = NEXT_LOCAL();
-				if (!sq_value_is_array(value)) die("can only index into arrays");
-				struct sq_array *array = sq_value_as_array(value);
-
-				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_array_index(array, index);
-				break;
-			}
-
-			case SQ_INT_ARRAY_INDEX_ASSIGN: {
-				value = NEXT_LOCAL();
-				if (!sq_value_is_array(value)) die("can only index assign into arrays");
-				struct sq_array *array = sq_value_as_array(value);
-
-				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				sq_array_index_assign(array, index, value = NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_clone(value);
 				break;
 			}
 
@@ -439,7 +432,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			continue;
 		}
 
-	/*** Math ***/
+	/*** Operators ***/
 		case SQ_OC_EQL:
 			value = sq_value_new_boolean(sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
@@ -527,7 +520,20 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			NEXT_LOCAL() = value;
 			continue;
 
+		case SQ_OC_INDEX:
+			value = NEXT_LOCAL();
+			value = sq_value_index(value, NEXT_LOCAL());
+			NEXT_LOCAL() = value;
+			break;
 
+		case SQ_OC_INDEX_ASSIGN: {
+			value = NEXT_LOCAL();
+			sq_value key = NEXT_LOCAL();
+			sq_value val = NEXT_LOCAL();
+			sq_value_index_assign(value, key, val);
+			NEXT_LOCAL() = val;
+			break;
+		}
 	/*** Constants ***/
 
 		case SQ_OC_CLOAD:
@@ -560,17 +566,16 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 		case SQ_OC_ILOAD: {
 			value = NEXT_LOCAL();
+			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
 
 			if (sq_value_is_class(value)) {
 				struct sq_class *class = sq_value_as_class(value);
-				const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
 				value = sq_class_field(class, field);
 
 				if (value == SQ_UNDEFINED)
 					die("unknown static field '%s' for type '%s'", field, class->name);
 			} else if (sq_value_is_instance(value)) {
 				struct sq_instance *instance = sq_value_as_instance(value);
-				const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
 				sq_value *valueptr = sq_instance_field(instance, field);
 				struct sq_function *method;
 
@@ -582,7 +587,12 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 					value =  sq_value_new_function(sq_function_clone(method));
 				else
 					die("unknown field '%s' for type '%s'", field, instance->class->name);
-			} else  {
+			} else if (sq_value_is_array(value)) {
+				if (!strcmp(field, "length"))
+					value = sq_value_new_number((sq_number) sq_value_length(value));
+				else
+					die("unknown array method '%s'", field);
+			} else {
 				die("can only access fields on instances.");
 			}
 

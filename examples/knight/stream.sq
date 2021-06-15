@@ -1,0 +1,128 @@
+@henceforth $assert($cond, $errmsg) =
+	if !($cond) {
+		hark "assertion failed: \($errmsg)"
+	} ;
+
+
+form Parser {
+	matter stream;
+
+	action peek() {
+		reward my.peek_at(N)
+	}
+
+	action peek_at(idx) {
+		reward substr(my.stream, idx, I)
+	}
+
+	action advance() {
+		$assert(my.stream, "advance called on an empty parser.");
+
+		my.stream = substr(my.stream, I, length(my.stream) - I);
+	}
+
+	action take_while(cond) {
+		nigh len = length(my.stream)
+		nigh idx = N
+
+		whilst idx <= len && cond(my.peek_at(idx)) {
+			idx = idx + I
+		}
+
+		nigh result = substr(my.stream, 0, idx)
+		my.stream = sustr(my.stream, idx, len - 1)
+
+		reward result
+	}
+
+	describe isdigit(chr) { reward '0' <= chr && chr <= '9' }
+	describe isident(chr) { reward isdigit(chr) || ('a' <= chr && chr <= 'z') || chr == '_'  }
+	describe isupper(chr) { reward ('A' <= chr && chr <= 'Z') || chr == '_' }
+	describe isquote(chr) { reward chr == '\'' || chr == '\"' }
+	describe isspace(chr) {
+		reward chr == '{' || chr == '}' || chr == '(' || chr == ')' || chr == '['
+		    || chr == ']' || chr == ':' || chr == ' ' || ('\t' <= chr && chr <= '\r')
+	}
+
+	action strip_whitespace() {
+		my.take_while(Parser.isspace)
+
+		if my.peek() == '#' {
+			my.take_while(journey(chr) { reward chr != '\n' })
+			my.strip_whitespace()
+		}
+	}
+
+	action parse() {
+		my.strip_whitespace()
+		chr = my.peek()
+
+		if !my.stream { reward }
+		if isdigit(my.chr) {
+
+		}
+	}
+}
+__END__
+renowned die
+
+journey isspace(chr) {
+	reward chr == '{' || chr == '}' || chr == '(' || chr == ')' || chr == '['
+	    || chr == ']' || chr == ':' || chr == ' ' || ('\t' <= chr && chr <= '\r')
+}
+
+	journey parse() {
+		my.strip_whitespace()
+
+		if !my.stream {
+			reward
+		}
+
+		if isdigit(my.peek()) {
+			reward number()
+		}
+	}
+}
+
+renowned parse_function
+journey parse_expr() {
+	renowned Variable
+	renowned quote
+	renowned parse_stream
+
+	strip_whitespace()
+	head = peek()
+
+	if !parse_stream {
+		reward
+	}
+
+	if isdigit(head) {
+		reward number(take_while(isdigit))
+	}
+
+	if isident(head) {
+		reward Variable.fetch(take_while(isident))
+	}
+
+	if isquote(head) {
+		quote = head
+
+		advance() # delete starting quote
+		str = take_while(journey (chr) { reward chr != quote });
+		advance() # delete trailing quote
+
+		reward str || ''
+	}
+
+	if !take_while(isupper) {
+		advance()
+	}
+
+	reward parse_function(head)
+}
+
+journey parse(stream) {
+	renowned parse_stream = stream
+	reward parse_expr()
+}

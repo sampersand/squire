@@ -1,4 +1,5 @@
 foo:
+whence foo
 proclaim("Spot I\n");
 
 whence foo
@@ -14,8 +15,9 @@ whilst i < XL {
 
 	if i >= X {
 		more_than_ten:
+		#...;
 	} alas {
-		i = i + 1
+		i = i + I
 	}
 }
 

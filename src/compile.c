@@ -206,7 +206,7 @@ static unsigned new_local_variable(struct sq_code *code, char *name) {
 }
 
 
-static unsigned lookup_identifier(struct sq_code *code, char *name) {
+static int lookup_identifier(struct sq_code *code, char *name) {
 	int index;
 
 	if ((index = lookup_local_variable(code, name)) != -1)
@@ -379,18 +379,40 @@ static unsigned compile_array(struct sq_code *code, struct array *array) {
 	return index;
 }
 
-static unsigned compile_array_index(struct sq_code *code, struct array_index *array_index) {
-	unsigned array = load_variable_class(code, array_index->array, NULL);
-	free(array_index->array); // OR SHOULD THIS BE FREED IN `load_variable_class`?
-	unsigned index = compile_expression(code, array_index->index);
+static unsigned compile_dict(struct sq_code *code, struct dict *dict) {
+	unsigned keys[dict->neles], vals[dict->neles];
+
+	for (unsigned i = 0; i < dict->neles; ++i) {
+		keys[i] = compile_expression(code, dict->keys[i]);
+		vals[i] = compile_expression(code, dict->vals[i]);
+	}
 
 	set_opcode(code, SQ_OC_INT);
-	set_index(code, SQ_INT_ARRAY_INDEX);
-	set_index(code, array);
+	set_index(code, SQ_INT_DICT_NEW);
+	set_index(code, dict->neles);
+
+	for (unsigned i = 0; i < dict->neles; ++i) {
+		set_index(code, keys[i]);
+		set_index(code, vals[i]);
+	}
+
+	unsigned index = next_local(code);
 	set_index(code, index);
-	set_index(code, index = next_local(code));
 
 	return index;
+}
+
+static unsigned compile_index(struct sq_code *code, struct index *index) {
+	unsigned array = load_variable_class(code, index->into, NULL);
+	free(index->into); // OR SHOULD THIS BE FREED IN `load_variable_class`?
+	unsigned idx = compile_expression(code, index->index);
+
+	set_opcode(code, SQ_OC_INDEX);
+	set_index(code, array);
+	set_index(code, idx);
+	set_index(code, idx = next_local(code));
+
+	return idx;
 }
 
 static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
@@ -405,8 +427,12 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		result = compile_array(code, primary->array);
 		break;
 
-	case SQ_PS_PARRAY_INDEX:
-		result = compile_array_index(code, primary->array_index);
+	case SQ_PS_PDICT:
+		result = compile_dict(code, primary->dict);
+		break;
+
+	case SQ_PS_PINDEX:
+		result = compile_index(code, primary->index);
 		break;
 
 	case SQ_PS_PLAMBDA: {
@@ -627,11 +653,11 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	}
 
 	BUILTIN_FN("proclaim", SQ_INT_PRINT, 1);
-	BUILTIN_FN("number",   SQ_INT_TONUMBER, 1);
-	BUILTIN_FN("string",   SQ_INT_TOSTRING, 1);
-	BUILTIN_FN("boolean",  SQ_INT_TOBOOLEAN, 1);
+	BUILTIN_FN("tally",    SQ_INT_TONUMBER, 1);
+	BUILTIN_FN("string",   SQ_INT_TOSTRING, 1); // `prose`
+	BUILTIN_FN("boolean",  SQ_INT_TOBOOLEAN, 1); // `veracity`
 	BUILTIN_FN("dump",     SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
-	BUILTIN_FN("length",   SQ_INT_LENGTH, 1); // `fathoms` ?
+	BUILTIN_FN("length",   SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",   SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("dismount", SQ_INT_EXIT, 1);
 	BUILTIN_FN("kindof",   SQ_INT_KINDOF, 1);
@@ -650,7 +676,6 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	set_index(code, fncall->arglen);
 
 arguments:
-
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		set_index(code, args[i]);
 
@@ -670,11 +695,17 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		return compile_function_call(code, expr->fncall);
 
 	case SQ_PS_EARRAY_ASSIGN: {
-		unsigned var = lookup_identifier(code, expr->ary_asgn->var->name);
+		int var = lookup_identifier(code, expr->ary_asgn->var->name);
+
+		if (var < 0) {
+			set_opcode(code, SQ_OC_GLOAD);
+			set_index(code, ~var);
+			set_index(code, var = next_local(code));
+		}
+
 		index = compile_expression(code, expr->ary_asgn->index);
 		unsigned val = compile_expression(code, expr->ary_asgn->value);
-		set_opcode(code, SQ_OC_INT);
-		set_index(code, SQ_INT_ARRAY_INDEX_ASSIGN);
+		set_opcode(code, SQ_OC_INDEX_ASSIGN);
 		set_index(code, var);
 		set_index(code, index);
 		set_index(code, val);

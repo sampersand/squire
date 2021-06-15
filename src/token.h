@@ -28,7 +28,6 @@ enum sq_token_kind {
 	SQ_TK_THROW,
 	SQ_TK_UNDO,
 	// TODO: `assert` as `challenge`?
-	// TODOO: `alias` is `henceforth`
 
 	SQ_TK_MACRO_VAR = 0x40,
 
@@ -50,6 +49,7 @@ enum sq_token_kind {
 	SQ_TK_ENDL,
 	SQ_TK_SOFT_ENDL,
 	SQ_TK_COMMA,
+	SQ_TK_COLON,
 	SQ_TK_DOT,
 
 	SQ_TK_EQL = 0x80,
@@ -68,6 +68,8 @@ enum sq_token_kind {
 	SQ_TK_AND,
 	SQ_TK_OR,
 	SQ_TK_ASSIGN,
+	SQ_TK_INDEX,
+	SQ_TK_INDEX_ASSIGN,
 };
 
 struct sq_token {

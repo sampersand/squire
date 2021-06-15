@@ -5,6 +5,7 @@
 #include "shared.h"
 #include "string.h"
 #include "roman.h"
+#include "dict.h"
 #include <string.h>
 
 #define IS_STRING sq_value_is_string
@@ -14,6 +15,7 @@
 #define AS_INSTANCE sq_value_as_instance
 #define AS_FUNCTION sq_value_as_function
 #define AS_ARRAY sq_value_as_array
+#define AS_DICT sq_value_as_dict
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_STRING(c)->ptr)
 
@@ -56,6 +58,10 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		sq_array_dump(out, AS_ARRAY(value));
 		break;
 
+	case SQ_TDICT:
+		sq_dict_dump(out, AS_DICT(value));
+		break;
+
 	default:
 		bug("<UNDEFINED: %lld>", value);
 	}
@@ -77,6 +83,9 @@ sq_value sq_value_clone(sq_value value) {
 
 	case SQ_TARRAY:
 		return sq_value_new_array(sq_array_clone(AS_ARRAY(value)));
+
+	case SQ_TDICT:
+		return sq_value_new_dict(sq_dict_clone(AS_DICT(value)));
 
 	default:
 		return value;
@@ -104,6 +113,10 @@ void sq_value_free(sq_value value) {
 	case SQ_TARRAY:
 		sq_array_free(AS_ARRAY(value));
 		return;
+
+	case SQ_TDICT:
+		sq_dict_free(AS_DICT(value));
+		return;
 	}
 }
 
@@ -116,6 +129,7 @@ const char *sq_value_typename(sq_value value) {
 	case SQ_TFUNCTION: return "function";
 	case SQ_TCLASS: return "class";
 	case SQ_TARRAY: return "array";
+	case SQ_TDICT: return "dict";
 	default: bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
@@ -128,6 +142,7 @@ sq_value sq_value_kindof(sq_value value) {
 	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("function");
 	static struct sq_string KIND_CLASS = SQ_STRING_STATIC("class");
 	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("array");
+	static struct sq_string KIND_DICT = SQ_STRING_STATIC("dict");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
@@ -151,6 +166,9 @@ sq_value sq_value_kindof(sq_value value) {
 	case SQ_TARRAY:
 		return sq_value_new_string(&KIND_ARRAY);
 
+	case SQ_TDICT:
+		return sq_value_new_string(&KIND_DICT);
+
 	default:
 		bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
@@ -165,11 +183,39 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 	case SQ_TSTRING:
 		return IS_STRING(rhs) && !strcmp(AS_STR(lhs), AS_STR(rhs));
 
+	case SQ_TARRAY:
+		if (!sq_value_is_array(rhs)) return false;
+		struct sq_array *lary = AS_ARRAY(lhs), *rary = AS_ARRAY(rhs);
+
+		if (lary->len != rary->len) return false;
+		for (unsigned i = 0; i < lary->len; ++i)
+			if (!sq_value_eql(lary->eles[i], rary->eles[i]))
+				return false;
+		return true;
+
+	case SQ_TDICT:
+		if (!sq_value_is_dict(rhs))
+			return false;
+
+		struct sq_dict *ldict = AS_DICT(lhs), *rdict = AS_DICT(rhs);
+
+		if (sq_dict_length(ldict) != sq_dict_length(rdict))
+			return false;
+
+		for (unsigned i = 0; i < sq_dict_length(ldict); ++i)
+			if (!sq_value_eql(sq_dict_entry_index(ldict, i)->value, sq_dict_entry_index(rdict, i)->value))
+				return false;
+
+		return true;
+
+
 	case SQ_TINSTANCE: {
 		struct sq_function *eql = sq_instance_method(AS_INSTANCE(lhs), "==");
 		sq_value args[2] = { lhs, rhs };
 
-		if (eql != NULL) return sq_function_run(eql, 2, args);
+		if (eql != NULL)
+			return sq_function_run(eql, 2, args);
+		// fallthrough
 	}
 
 	default:
@@ -186,17 +232,16 @@ sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 		// todo: free string
 		return strcmp(AS_STR(lhs), sq_value_to_string(rhs)->ptr);
 
-	case SQ_TINSTANCE: {
-		die("todo: cmp instance");
-	}
+	case SQ_TINSTANCE:
+		todo("cmp instance");
+
+	default:
+		die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	// 	struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "<=>");
 
 	// 	if (neg != NULL) return sq_function_run(neg, 1, &arg);
 	// }
-
 	}
-
-	die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
 }
 
 sq_value sq_value_neg(sq_value arg) {
@@ -207,11 +252,79 @@ sq_value sq_value_neg(sq_value arg) {
 	case SQ_TINSTANCE: {
 		struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "-@");
 
-		if (neg != NULL) return sq_function_run(neg, 1, &arg);
-	}
+		if (neg != NULL)
+			return sq_function_run(neg, 1, &arg);
+		// fallthrough
 	}
 
-	die("cannot numerically negate '%s'", TYPENAME(arg));
+	default:
+		die("cannot numerically negate '%s'", TYPENAME(arg));
+	}
+}
+
+sq_value sq_value_index(sq_value value, sq_value key) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TSTRING: {
+		int index = sq_value_to_number(key);
+
+		if (index < 0)
+			index += AS_STRING(value)->length;
+
+		if (index < 0 || AS_STRING(value)->length <= (unsigned) index)
+			return SQ_NULL;
+
+		char *c = xmalloc(sizeof(char [2]));
+		c[0] = AS_STR(value)[index];
+		c[1] = '\0';
+		return sq_value_new_string(sq_string_new2(c, 2));
+	}
+
+	case SQ_TARRAY:
+		return sq_array_index(AS_ARRAY(value), sq_value_to_number(key));
+
+	case SQ_TDICT:
+		return sq_dict_index(AS_DICT(value), key);
+
+	case SQ_TINSTANCE: {
+		struct sq_function *index = sq_instance_method(AS_INSTANCE(value), "[]");
+		sq_value args[2] = { value, key };
+
+		if (index != NULL)
+			return sq_function_run(index, 2, args);
+		// fallthrough
+	}
+
+	default:
+		die("cannot index into '%s'", TYPENAME(value));
+	}
+}
+
+
+void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TARRAY:
+		sq_array_index_assign(AS_ARRAY(value), sq_value_to_number(key), val);
+		return;
+
+	case SQ_TDICT:
+		sq_dict_index_assign(AS_DICT(value), key, val);
+		return;
+
+	case SQ_TINSTANCE: {
+		struct sq_function *index_assign = sq_instance_method(AS_INSTANCE(value), "[]=");
+		sq_value args[3] = { value, key, val };
+
+		if (index_assign != NULL) {
+			sq_function_run(index_assign, 2, args);
+			return;
+		}
+
+		// fallthrough
+	}
+
+	default:
+		die("cannot index assign into '%s'", TYPENAME(value));
+	}
 }
 
 sq_value sq_value_add(sq_value lhs, sq_value rhs) {
@@ -239,15 +352,52 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		return sq_value_new_string(result);
 	}
 
+	case SQ_TARRAY: {
+		struct sq_array *lary = AS_ARRAY(lhs), *rary = sq_value_to_array(rhs);
+
+		unsigned len = lary->len + rary->len;
+		sq_value *eles = xmalloc(sizeof(sq_value[len]));
+
+		for (unsigned i = 0; i < lary->len; ++i)
+			eles[i] = sq_value_clone(lary->eles[i]);
+
+		for (unsigned i = 0; i < rary->len; ++i)
+			eles[lary->len + i] = sq_value_clone(rary->eles[i]);
+
+		sq_array_free(rary);
+		return sq_value_new_array(sq_array_new(len, eles));
+	}
+
+	case SQ_TDICT: {
+		todo("'+' dicts");
+		// struct sq_dict *ldict = AS_DICT(lhs), *rdict = sq_value_to_dict(rhs);
+
+		// unsigned i = 0, len = lhs->len + rhs->len;
+		// sq_value *eles = xmalloc(sizeof(sq_value[len]));
+
+		// for (; i < lhs->len; ++i)
+		// 	eles[i] = sq_value_clone(lary->eles[i]);
+		// for (; i < lhs->len; ++i)
+		// 	eles[i] = sq_value_clone(rary->eles[i]);
+
+		// sq_array_free(rhs);
+		// return sq_value_new_array(lary);
+	}
+
+
 	case SQ_TINSTANCE: {
 		struct sq_function *add = sq_instance_method(AS_INSTANCE(lhs), "+");
 		sq_value args[2] = { lhs, rhs };
 
-		if (add != NULL) return sq_function_run(add, 2, args);
-	}
+		if (add != NULL)
+			return sq_function_run(add, 2, args);
+		// fallthrough
 	}
 
-	die("cannot add '%s' to '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	default:
+		die("cannot add '%s' to '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	}
+
 }
 
 sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
@@ -255,15 +405,25 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	case SQ_TNUMBER:
 		return sq_value_new_number(AS_NUMBER(lhs) - sq_value_to_number(rhs));
 
+	case SQ_TARRAY:
+		todo("set difference");
+
+	case SQ_TDICT:
+		todo("set difference for dict");
+
 	case SQ_TINSTANCE: {
 		struct sq_function *sub = sq_instance_method(AS_INSTANCE(lhs), "-");
 		sq_value args[2] = { lhs, rhs };
 
-		if (sub != NULL) return sq_function_run(sub, 2, args);
-	}
+		if (sub != NULL)
+			return sq_function_run(sub, 2, args);
+		// fallthrough
 	}
 
-	die("cannot subtract '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	default:
+		die("cannot subtract '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	}
+
 }
 
 sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
@@ -271,29 +431,32 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 	case SQ_TNUMBER:
 		return sq_value_new_number(AS_NUMBER(lhs) * sq_value_to_number(rhs));
 
-	case SQ_TSTRING:
-		if (!sq_value_is_number(rhs)) break;
-
-		struct sq_string *result = sq_string_alloc(
-			AS_STRING(lhs)->length * AS_NUMBER(rhs) + 1
-		);
+	case SQ_TSTRING: {
+		sq_number amnt = sq_value_to_number(rhs);
+		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length * amnt + 1);
 		*result->ptr = '\0';
 
-		for (unsigned i = 0; i < AS_NUMBER(rhs); ++i)
+		for (unsigned i = 0; i < amnt; ++i)
 			strcat(result->ptr, AS_STR(lhs));
 
 		return sq_value_new_string(result);
+	}
+
+	case SQ_TARRAY:
+		todo("array multiply");
 
 	case SQ_TINSTANCE: {
 		struct sq_function *mul = sq_instance_method(AS_INSTANCE(lhs), "*");
 		sq_value args[2] = { lhs, rhs };
 
-		if (mul != NULL) return sq_function_run(mul, 2, args);
-	}
+		if (mul != NULL)
+			return sq_function_run(mul, 2, args);
+		// fallthrough
 	}
 
-	die("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
-
+	default:
+		die("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	}
 }
 
 sq_value sq_value_div(sq_value lhs, sq_value rhs) {
@@ -308,11 +471,15 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 		struct sq_function *div = sq_instance_method(AS_INSTANCE(lhs), "/");
 		sq_value args[2] = { lhs, rhs };
 
-		if (div != NULL) return sq_function_run(div, 2, args);
-	}
+		if (div != NULL)
+			return sq_function_run(div, 2, args);
+
+		// fallthrough
 	}
 
-	die("cannot divide '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	default:
+		die("cannot divide '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	}
 
 }
 
@@ -328,11 +495,15 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		struct sq_function *mod = sq_instance_method(AS_INSTANCE(lhs), "%");
 		sq_value args[2] = { lhs, rhs };
 
-		if (mod != NULL) return sq_function_run(mod, 2, args);
-	}
+		if (mod != NULL)
+			return sq_function_run(mod, 2, args);
+
+		// fallthrough
 	}
 
-	die("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	default:
+		die("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	}
 }
 
 struct sq_string *sq_value_to_string(sq_value value) {
@@ -375,8 +546,14 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		}
 		// else fallthrough
 	}
-	case SQ_TFUNCTION:
+
 	case SQ_TARRAY:
+		return sq_array_to_string(AS_ARRAY(value));
+
+	case SQ_TDICT:
+		todo("dict to string");
+
+	case SQ_TFUNCTION:
 		die("cannot convert %s to a string", TYPENAME(value));
 
 	default:
@@ -396,12 +573,12 @@ sq_number sq_value_to_number(sq_value value) {
 		return strtoll(AS_STR(value), NULL, 10);
 
 	case SQ_TINSTANCE: {
-		struct sq_function *to_number = sq_instance_method(AS_INSTANCE(value), "to_number");
+		struct sq_function *tally = sq_instance_method(AS_INSTANCE(value), "tally");
 
-		if (to_number != NULL) {
-			sq_value number = sq_function_run(to_number, 1, &value);
+		if (tally != NULL) {
+			sq_value number = sq_function_run(tally, 1, &value);
 			if (!sq_value_is_number(number))
-				die("to_number for an instance of '%s' didn't return a number", AS_INSTANCE(value)->class->name);
+				die("tally for an instance of '%s' didn't return a number", AS_INSTANCE(value)->class->name);
 			return AS_NUMBER(number);
 		}
 		// else fallthrough
@@ -412,6 +589,7 @@ sq_number sq_value_to_number(sq_value value) {
 
 	case SQ_TCLASS:
 	case SQ_TFUNCTION:
+	case SQ_TDICT:
 		die("cannot convert %s to a number", TYPENAME(value));
 
 	default:
@@ -433,13 +611,16 @@ bool sq_value_to_boolean(sq_value value) {
 	case SQ_TARRAY:
 		return AS_ARRAY(value)->len;
 
-	case SQ_TINSTANCE: {
-		struct sq_function *to_boolean = sq_instance_method(AS_INSTANCE(value), "to_boolean");
+	case SQ_TDICT:
+		return sq_dict_length(AS_DICT(value));
 
-		if (to_boolean != NULL) {
-			sq_value boolean = sq_function_run(to_boolean, 1, &value);
+	case SQ_TINSTANCE: {
+		struct sq_function *veracity = sq_instance_method(AS_INSTANCE(value), "veracity");
+
+		if (veracity != NULL) {
+			sq_value boolean = sq_function_run(veracity, 1, &value);
 			if (!sq_value_is_boolean(boolean))
-				die("to_boolean for an instance of '%s' didn't return a boolean", AS_INSTANCE(value)->class->name);
+				die("veracity for an instance of '%s' didn't return a boolean", AS_INSTANCE(value)->class->name);
 			return sq_value_as_boolean(boolean);
 		}
 		// else fallthrough
@@ -459,6 +640,9 @@ size_t sq_value_length(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TARRAY:
 		return sq_value_as_array(value)->len;
+
+	case SQ_TDICT:
+		return sq_dict_length(sq_value_as_dict(value));
 
 	case SQ_TSTRING:
 		return AS_STRING(value)->length;
@@ -484,4 +668,19 @@ size_t sq_value_length(sq_value value) {
 	default:
 		bug("<UNDEFINED: %lld>", value);
 	}
+}
+
+struct sq_array *sq_value_to_array(sq_value value) {
+	switch (SQ_VTAG(value)) {
+	case SQ_TARRAY:
+		++AS_ARRAY(value)->refcount;
+		return AS_ARRAY(value);
+	default:
+		todo("others to array");
+	}
+}
+
+struct sq_dict *sq_value_to_dict(sq_value value) {
+	(void) value;
+	die("todo");
 }

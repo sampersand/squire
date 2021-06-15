@@ -1,3 +1,29 @@
+form Value {
+	matter name, value;
+
+	describe parse(stream) {
+		hark "todo";
+	}
+
+	action run() {
+		renowned Variable
+
+		attempt {
+			nigh run = my.value.run;
+		} retreat _ {
+			reward run.run
+		} alas {
+
+		} bow {
+		
+		}
+		if kindof(my.value) == Variable {
+			my.value.run()
+		}
+	}
+}
+
+__END__
 form Variable {
 	matter name, value;
 
@@ -21,7 +47,7 @@ form Variable {
 
 	action run() {
 		if my.value == unbenknownst {
-			hark "undeifned variable '\(my.name)' ran.";
+			catapult "undeifned variable '\(my.name)' ran.";
 		}
 
 		reward my.value;
@@ -53,11 +79,11 @@ myth Value {
 		reward string(my.run())
 	}
 
-	journey to_number() {
+	journey tally() {
 		reward number(my.run())
 	}
 
-	journey to_boolean() {
+	journey veracity() {
 		reward boolean(my.run())
 	}
 }
@@ -78,7 +104,7 @@ myth Fraction {
 		reward string(my.numer) + "/" + string(my.denom)
 	}
 
-	journey to_boolean() {
+	journey veracity() {
 		reward boolean(my.numer)
 	}
 }

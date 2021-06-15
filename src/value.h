@@ -12,6 +12,7 @@ struct sq_class;
 struct sq_instance;
 struct sq_function;
 struct sq_array;
+struct sq_dict;
 
 typedef uint64_t sq_value;
 
@@ -26,7 +27,7 @@ typedef enum {
 	SQ_TDICT,
 } sq_vtag;
 
-#define SQ_VSHIFT 3
+#define SQ_VSHIFT 4 // todo: dict
 #define SQ_VMASK_BITS ((1<<SQ_VSHIFT)-1)
 #define SQ_VMASK(value, kind) ((value) | (kind))
 #define SQ_VTAG(value) ((value) & SQ_VMASK_BITS)
@@ -70,6 +71,11 @@ static inline sq_value sq_value_new_array(struct sq_array *array) {
 	return SQ_VMASK((sq_value) array, SQ_TARRAY);
 }
 
+static inline sq_value sq_value_new_dict(struct sq_dict *dict) {
+	assert(!SQ_VTAG((sq_value) dict));
+	return SQ_VMASK((sq_value) dict, SQ_TDICT);
+}
+
 static inline bool sq_value_is_null(sq_value value) {
 	return value == SQ_NULL;
 }
@@ -100,6 +106,10 @@ static inline bool sq_value_is_function(sq_value value) {
 
 static inline bool sq_value_is_array(sq_value value) {
 	return SQ_VTAG(value) == SQ_TARRAY;
+}
+
+static inline bool sq_value_is_dict(sq_value value) {
+	return SQ_VTAG(value) == SQ_TDICT;
 }
 
 static inline sq_number sq_value_as_number(sq_value value) {
@@ -137,6 +147,11 @@ static inline struct sq_array *sq_value_as_array(sq_value value) {
 	return (struct sq_array *) SQ_VUNMASK(value);
 }
 
+static inline struct sq_dict *sq_value_as_dict(sq_value value) {
+	assert(sq_value_is_dict(value));
+	return (struct sq_dict *) SQ_VUNMASK(value);
+}
+
 sq_value sq_value_clone(sq_value value);
 void sq_value_dump(sq_value value);
 void sq_value_dump_to(FILE *out, sq_value value);
@@ -153,10 +168,14 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs);
 sq_value sq_value_mul(sq_value lhs, sq_value rhs);
 sq_value sq_value_div(sq_value lhs, sq_value rhs);
 sq_value sq_value_mod(sq_value lhs, sq_value rhs);
+sq_value sq_value_index(sq_value value, sq_value key);
+void sq_value_index_assign(sq_value value, sq_value key, sq_value val);
 
 size_t sq_value_length(sq_value value);
 struct sq_string *sq_value_to_string(sq_value value);
 sq_number sq_value_to_number(sq_value value);
 bool sq_value_to_boolean(sq_value value);
+struct sq_array *sq_value_to_array(sq_value value);
+struct sq_dict *sq_value_to_dict(sq_value value);
 
 #endif /* !SQ_VALUE_H */

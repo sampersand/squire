@@ -72,11 +72,11 @@ form Fraction {
 		}
 	}
 
-	action to_boolean() {
+	action veracity() {
 		reward boolean(my.numer)
 	}
 
-	action to_number() {
+	action tally() {
 		reward my.numer / my.denom
 	}
 }

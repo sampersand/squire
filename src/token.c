@@ -267,19 +267,21 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("whence",       SQ_TK_COMEFROM);
 	CHECK_FOR_START_KW("whilst",       SQ_TK_WHILE);
 	CHECK_FOR_START_KW("reward",       SQ_TK_RETURN);
-	CHECK_FOR_START_KW("attempt",      SQ_TK_TRY);
-	CHECK_FOR_START_KW("retreat",      SQ_TK_CATCH);
-	CHECK_FOR_START_KW("hark",         SQ_TK_THROW);
+	CHECK_FOR_START_KW("quest",        SQ_TK_TRY);
+	CHECK_FOR_START_KW("abandon",      SQ_TK_THROW);
 	CHECK_FOR_START_KW("feint",        SQ_TK_UNDO);
 
 	CHECK_FOR_START_KW("yay",          SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);
-	CHECK_FOR_START_KW("unbeknownst",  SQ_TK_NULL);
+	CHECK_FOR_START_KW("ni",           SQ_TK_NULL);
 
 	if (isalpha(*sq_stream) || *sq_stream == '_')
 		return parse_identifier();
 
+	CHECK_FOR_START("[]", SQ_TK_INDEX);
+	CHECK_FOR_START("[]=", SQ_TK_INDEX_ASSIGN);
 	CHECK_FOR_START("{", SQ_TK_LBRACE);
+	CHECK_FOR_START("}", SQ_TK_RBRACE);
 	CHECK_FOR_START("}", SQ_TK_RBRACE);
 	CHECK_FOR_START("(", SQ_TK_LPAREN);
 	CHECK_FOR_START(")", SQ_TK_RPAREN);
@@ -289,6 +291,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 	CHECK_FOR_START(",", SQ_TK_COMMA);
 	CHECK_FOR_START(".", SQ_TK_DOT);
+	CHECK_FOR_START(":", SQ_TK_COLON);
 
 	CHECK_FOR_START("==", SQ_TK_EQL);
 	CHECK_FOR_START("!=", SQ_TK_NEQ);

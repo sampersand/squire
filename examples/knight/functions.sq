@@ -54,11 +54,11 @@ journey sq_system(args) {
 }
 
 journey sq_quit(args) {
-	dismount(to_number(args.a1))
+	dismount(tally(args.a1))
 }
 
 journey sq_not(args) {
-	reward !to_boolean(args.a1)
+	reward !veracity(args.a1)
 }
 
 journey sq_length(args) {
@@ -100,7 +100,7 @@ journey sq_add(args) {
 	kind = kindof(lhs = run(args.a1))
 
 	if kind == "string" { reward lhs + to_string(args.a2) }
-	if kind == "number" { reward lhs + to_number(args.a2) }
+	if kind == "number" { reward lhs + tally(args.a2) }
 
 	die("cannot add to a '" + kind + "'")
 }
@@ -108,7 +108,7 @@ journey sq_add(args) {
 journey sq_sub(args) {
 	kind = kindof(lhs = run(args.a1))
 
-	if kind == "number" { reward lhs - to_number(args.a2) }
+	if kind == "number" { reward lhs - tally(args.a2) }
 
 	die("cannot subtract to a '" + kind + "'")
 }
@@ -116,8 +116,8 @@ journey sq_sub(args) {
 journey sq_mul(args) {
 	kind = kindof(lhs = run(args.a1))
 
-	if kind == "string" { reward lhs * to_number(args.a2) }
-	if kind == "number" { reward lhs * to_number(args.a2) }
+	if kind == "string" { reward lhs * tally(args.a2) }
+	if kind == "number" { reward lhs * tally(args.a2) }
 
 	die("cannot multiply a '" + kind + "'")
 }
@@ -126,7 +126,7 @@ journey sq_div(args) {
 	kind = kindof(lhs = run(args.a1))
 
 	if kind != "number" { die("cannot divide a '" + kind + "'") }
-	if !(rhs = to_number(args.a2)) { die("cannot divide by zero") }
+	if !(rhs = tally(args.a2)) { die("cannot divide by zero") }
 
 	reward lhs / rhs
 }
@@ -135,14 +135,14 @@ journey sq_mod(args) {
 	kind = kindof(lhs = run(args.a1))
 
 	if kind != "number" { die("cannot modulo a '" + kind + "'") }
-	if !(rhs = to_number(args.a2)) { die("cannot modulo by zero") }
+	if !(rhs = tally(args.a2)) { die("cannot modulo by zero") }
 
 	reward lhs % rhs
 }
 
 journey sq_pow(args) {
 	if kindof(base = run(args.a1)) != 'number' { die("cannot exponentiate a '" + kindof(base) + "'") }
-	exp = to_number(args.a2)
+	exp = tally(args.a2)
 
 	if exp < 0 {
 		if base == -1 { if exp % 2 { reward -1 } alas { reward 1 } }
@@ -163,9 +163,9 @@ journey sq_pow(args) {
 journey sq_lth(args) {
 	kind = kindof(lhs = run(args.a1))
 
-	if kind == 'number' { reward lhs < to_number(args.a2) }
+	if kind == 'number' { reward lhs < tally(args.a2) }
 	if kind == 'string' { reward lhs < to_string(args.a2) }
-	if kind == 'boolean' { reward to_boolean(args.a2) && !lhs }
+	if kind == 'boolean' { reward veracity(args.a2) && !lhs }
 
 	die("cannot compare a '" + kind + "'")
 }
@@ -173,9 +173,9 @@ journey sq_lth(args) {
 journey sq_gth(args) {
 	kind = kindof(lhs = run(args.a1))
 
-	if kind == 'number' { reward lhs > to_number(args.a2) }
+	if kind == 'number' { reward lhs > tally(args.a2) }
 	if kind == 'string' { reward lhs > to_string(args.a2) }
-	if kind == 'boolean' { reward !to_boolean(args.a2) && lhs }
+	if kind == 'boolean' { reward !veracity(args.a2) && lhs }
 
 	die("cannot compare a '" + kind + "'")
 }
@@ -185,7 +185,7 @@ journey sq_eql(args) {
 }
 
 journey sq_and(args) {
-	if to_boolean(lhs = run(args.a1)) {
+	if veracity(lhs = run(args.a1)) {
 		reward run(args.a2)
 	} alas {
 		reward lhs
@@ -193,7 +193,7 @@ journey sq_and(args) {
 }
 
 journey sq_or(args) {
-	if to_boolean(lhs = run(args.a1)) {
+	if veracity(lhs = run(args.a1)) {
 		reward lhs
 	} alas {
 		reward run(args.a2)
@@ -212,7 +212,7 @@ journey sq_assign(args) {
 }
 
 journey sq_while(args) {
-	whilst to_boolean(args.a1) {
+	whilst veracity(args.a1) {
 		run(args.a2)
 	}
 }
@@ -220,7 +220,7 @@ journey sq_while(args) {
 # Arity three
 
 journey sq_if(args) {
-	if to_boolean(args.a1) {
+	if veracity(args.a1) {
 		reward run(args.a2)
 	} alas {
 		reward run(args.a3)
@@ -229,16 +229,16 @@ journey sq_if(args) {
 
 journey sq_get(args) {
 	str = to_string(args.a1)
-	start = to_number(args.a2)
-	len = to_number(args.a3)
+	start = tally(args.a2)
+	len = tally(args.a3)
 
 	reward substr(str, start, len)
 }
 
 journey sq_set(args) {
 	str = to_string(args.a1)
-	start = to_number(args.a2)
-	len = to_number(args.a3)
+	start = tally(args.a2)
+	len = tally(args.a3)
 	repl = to_string(args.a4)
 
 	reward substr(str, 0, start) + repl + substr(str, start + len, length(str))

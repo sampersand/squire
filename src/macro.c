@@ -213,12 +213,61 @@ static void parse_nevermore(void) {
 	}
 }
 
+// void expand_out(char *name) {
+// 	char *old_stream = sq_stream;
+// 	sq_stream = name;
+// 	// todo: parse out name into an expansion
+	
+// 	char *name = parse_macro_identifier_name();
+
+// 	FILE *stream = fopen(import, "r");
+// 	if (!stream) die("unable to open file: '%s': %s", import, strerror(errno));
+
+// 	if (fseek(stream, 0, SEEK_END)) die("unable to seek to end: %s", strerror(errno));
+// 	long length = ftell(stream);
+// 	if (fseek(stream, 0, SEEK_SET)) die("unable to seek to start: %s", strerror(errno));
+
+// 	char contents[length + 1];
+// 	contents[length] = '\0';
+// 	fread(contents, 1, length, stream);
+
+// 	if (ferror(stream)) die("unable to read contents: %s", strerror(errno));
+// 	if (fclose(stream) == EOF) die("unable to close stream: %s", strerror(errno));
+
+// 	struct statements *stmts = sq_parse_statements(contents);
+// 	if (!stmts) die("invalid syntax.");
+
+// 	compile_statements(code, stmts);
+// }
+// static void parse_import(struct sq_code *code, char *import) {
+// 	FILE *stream = fopen(import, "r");
+// 	if (!stream) die("unable to open file: '%s': %s", import, strerror(errno));
+
+// 	if (fseek(stream, 0, SEEK_END)) die("unable to seek to end: %s", strerror(errno));
+// 	long length = ftell(stream);
+// 	if (fseek(stream, 0, SEEK_SET)) die("unable to seek to start: %s", strerror(errno));
+
+// 	char contents[length + 1];
+// 	contents[length] = '\0';
+// 	fread(contents, 1, length, stream);
+
+// 	if (ferror(stream)) die("unable to read contents: %s", strerror(errno));
+// 	if (fclose(stream) == EOF) die("unable to close stream: %s", strerror(errno));
+
+// 	struct statements *stmts = sq_parse_statements(contents);
+// 	if (!stmts) die("invalid syntax.");
+
+// 	compile_statements(code, stmts);
+// }
+
 
 static void parse_macro_statement(char *name) {
 	if (!strcmp(name, "henceforth")) {
 		parse_henceforth();
 	} else if (!strcmp(name, "nevermore")) {
 		parse_nevermore();
+	} else if (!strcmp(name, "expand")) {
+		// parse_expand();
 	} else {
 		die("unknown macro statement kind '%s'", name);
 	}

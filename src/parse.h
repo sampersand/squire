@@ -94,7 +94,7 @@ struct expression {
 	union {
 		struct function_call *fncall;
 		struct assignment *asgn;
-		struct array_assignment *ary_asgn;
+		struct index_assign *ary_asgn;
 		struct bool_expression *math;
 	};
 };
@@ -110,7 +110,7 @@ struct assignment {
 	struct expression *expr;
 };
 
-struct array_assignment {
+struct index_assign {
 	struct variable *var;
 	struct expression *index;
 	struct expression *value;
@@ -161,8 +161,13 @@ struct array {
 	struct expression **args;
 };
 
-struct array_index {
-	struct variable *array;
+struct dict {
+	unsigned neles;
+	struct expression **keys, **vals;
+};
+
+struct index {
+	struct variable *into;
 	struct expression *index;
 };
 
@@ -176,7 +181,8 @@ struct primary {
 		SQ_PS_PNULL,
 		SQ_PS_PVARIABLE,
 		SQ_PS_PARRAY,
-		SQ_PS_PARRAY_INDEX,
+		SQ_PS_PDICT,
+		SQ_PS_PINDEX,
 	} kind;
 	union {
 		struct expression *expr;
@@ -186,7 +192,8 @@ struct primary {
 		bool boolean;
 		struct variable *variable;
 		struct array *array;
-		struct array_index *array_index;
+		struct dict *dict;
+		struct index *index;
 	};
 };
 
