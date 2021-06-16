@@ -79,3 +79,7 @@ void sq_string_free(struct sq_string *string) {
 
 	free(string);
 }
+
+// void sq_string_sprintf_repr(const struct sq_string *string, char **out, unsigned *len, unsigned *cap, unsigned *pos) {
+	// todo
+// }

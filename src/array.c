@@ -2,125 +2,119 @@
 #include "shared.h"
 #include "exception.h"
 #include <stdio.h>
+#include <string.h>
 
-struct sq_array *sq_array_new(unsigned len, sq_value *eles) {
+struct sq_array *sq_array_new(size_t length, size_t capacity, sq_value *elements) {
+	assert(length <= capacity);
+	assert(!(length != 0 && elements == NULL));
+
 	struct sq_array *array = xmalloc(sizeof(struct sq_array));
 
-	array->cap = array->len = len;
-	array->eles = eles;
+	array->capacity = capacity;
+	array->length = length;
+	array->elements = elements;
 	array->refcount = 1;
 
 	return array;
 }
 
 void sq_array_dump(FILE *out, const struct sq_array *array) {
-	putc('[', out);
+	fprintf(out, "Array(");
 
-	for (unsigned i = 0; i < array->len; ++i) {
-		if (i != 0) fprintf(out, ", ");
-		sq_value_dump(array->eles[i]);
+	for (size_t i = 0; i < array->length; ++i) {
+		if (i) fprintf(out, ", ");
+
+		sq_value_dump(array->elements[i]);
 	}
 
-	putc(']', out);
+	putc(')', out);
 }
 
-struct sq_array *sq_array_clone(struct sq_array *array) {
-	assert(array->refcount);
+void sq_array_deallocate(struct sq_array *array) {
+	assert(!array->refcount);
 
-	array->refcount++;
+	for (size_t i = 0; i < array->length; ++i)
+		sq_value_free(array->elements[i]);
 
-	return array;
-}
-
-void sq_array_free(struct sq_array *array) {
-	return; // todo: free things properly rip...
-	assert(array->refcount);
-
-	if (--array->refcount) return;
-
-	for (unsigned i = 0; i < array->len; ++i)
-		sq_value_free(array->eles[i]);
-
-	free(array->eles);
+	free(array->elements);
 	free(array);
 }
 
-static unsigned fix_index(const struct sq_array *array, int index) {
+static size_t fix_index(const struct sq_array *array, ssize_t index) {
 	if (index < 0)
-		index += array->len;
+		index += array->length;
 
 	if (index < 0)
-		sq_throw("index '%d' out of bounds!", index - array->len);
+		sq_throw("index '-%zu' out of bounds!", (size_t) index);
 
 	return index;
 }
 
-void sq_array_resize(struct sq_array *array) {
-	if (array->cap == 0) {
-		array->eles = xmalloc(sizeof(sq_value[array->cap=8]));
-	} else {
-		if (array->cap < 8) array->cap = 8; // minimum bound.
 
-		array->eles = xrealloc(array->eles, sizeof(sq_value[array->cap*=2]));
-	}
-}
-
-
-void sq_array_insert(struct sq_array *array, int sindex, sq_value value) {
-	unsigned index = fix_index(array, sindex);
-
-	if (array->len < index) {
-		sq_array_index_assign(array, index, value);
+static void expand_array(struct sq_array *array, size_t length) {
+	if (length < array->length)
 		return;
+
+	if (array->capacity <= length) {
+		// todo: increase capacity by two.
+		array->capacity = length * 2 + 1;
+		array->elements = xrealloc(array->elements, sizeof(sq_value[array->capacity]));
 	}
 
-	if (array->cap <= array->len)
-		sq_array_resize(array);
-
-	for (unsigned i = array->len++; i != index; --i)
-		array->eles[i] = array->eles[i - 1];
-
-	sq_value_free(array->eles[index]);
-	array->eles[index] = value;
+	while (array->length < length)
+		array->elements[array->length++] = SQ_NULL;
 }
 
-sq_value sq_array_delete(struct sq_array *array, int sindex) {
-	unsigned index = fix_index(array, sindex);
+void sq_array_insert(struct sq_array *array, ssize_t sindex, sq_value value) {
+	size_t index = fix_index(array, sindex);
 
-	if (index > array->len) return SQ_NULL;
+	expand_array(array, (array->length < index ? index : array->length) + 1);
 
-	sq_value result = array->eles[index];
+	memmove(
+		&array->elements[index + 1],
+		&array->elements[index],
+		sizeof(sq_value[array->length - index])
+	);
 
-	for (unsigned i = index; i < array->len - 1; ++i)
-		array->eles[i] = array->eles[i + 1];
+	sq_value_free(array->elements[index]);
+	array->elements[index] = value;
+}
 
-	--array->len;
+sq_value sq_array_delete(struct sq_array *array, ssize_t sindex) {
+	size_t index = fix_index(array, sindex);
+
+	if (array->length <= index)
+		return SQ_NULL;
+
+	sq_value result = array->elements[index];
+
+	memmove(
+		&array->elements[index],
+		&array->elements[index + 1],
+		sizeof(sq_value[array->length - index])
+	);
+
+	--array->length;
+
 	return result;
 }
 
-sq_value sq_array_index(struct sq_array *array, int sindex) {
-	unsigned index = fix_index(array, sindex);
+sq_value sq_array_index(const struct sq_array *array, ssize_t sindex) {
+	size_t index = fix_index(array, sindex);
 
-	if (array->len <= index)
+	if (array->length <= index)
 		return SQ_NULL;
 
-	return sq_value_clone(array->eles[index]);
+	return sq_value_clone(array->elements[index]);
 }
 
-void sq_array_index_assign(struct sq_array *array, int sindex, sq_value value) {
-	unsigned index = fix_index(array, sindex);
+void sq_array_index_assign(struct sq_array *array, ssize_t sindex, sq_value value) {
+	size_t index = fix_index(array, sindex);
 
-	if (array->cap <= index)
-		array->eles = xrealloc(array->eles, sizeof(sq_value[array->cap = index + 1]));
+	expand_array(array, index + 1);
 
-	if (index < array->len) {
-		sq_value_free(array->eles[index]);
-	} else {
-		while (array->len <= index)
-			array->eles[array->len++] = SQ_NULL;
-	}
-
-	array->eles[index] = value;
+	sq_value_free(array->elements[index]);
+	array->elements[index] = value;
 }
 
 struct sq_string *sq_array_to_string(const struct sq_array *array) {

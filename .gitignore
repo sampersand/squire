@@ -2,3 +2,4 @@ squire
 squire.DSYM
 bin/*
 obj/*
+rust

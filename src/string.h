@@ -26,5 +26,6 @@ struct sq_string *sq_string_borrowed(char *ptr);
 struct sq_string *sq_string_clone(struct sq_string *string);
 void sq_string_free(struct sq_string *string);
 void sq_string_combine(const struct sq_string *lhs, const struct sq_string *rhs);
+void sq_string_sprintf_repr(const struct sq_string *string, char **out, unsigned *len, unsigned *cap, unsigned *pos);
 
 #endif /* !SQ_STRING_H */

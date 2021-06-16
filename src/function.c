@@ -278,7 +278,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 					eles[i] = NEXT_LOCAL();
 				}
 
-				NEXT_LOCAL() = sq_value_new_array(sq_array_new(amnt, eles));
+				NEXT_LOCAL() = sq_value_new_array(sq_array_new2(amnt, eles));
 				break;
 			}
 

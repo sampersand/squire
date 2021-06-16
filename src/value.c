@@ -187,9 +187,11 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 		if (!sq_value_is_array(rhs)) return false;
 		struct sq_array *lary = AS_ARRAY(lhs), *rary = AS_ARRAY(rhs);
 
-		if (lary->len != rary->len) return false;
-		for (unsigned i = 0; i < lary->len; ++i)
-			if (!sq_value_eql(lary->eles[i], rary->eles[i]))
+		if (lary->length != rary->length)
+			return false;
+
+		for (unsigned i = 0; i < lary->length; ++i)
+			if (!sq_value_eql(lary->elements[i], rary->elements[i]))
 				return false;
 		return true;
 
@@ -355,30 +357,30 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	case SQ_TARRAY: {
 		struct sq_array *lary = AS_ARRAY(lhs), *rary = sq_value_to_array(rhs);
 
-		unsigned len = lary->len + rary->len;
-		sq_value *eles = xmalloc(sizeof(sq_value[len]));
+		unsigned length = lary->length + rary->length;
+		sq_value *elements = xmalloc(sizeof(sq_value[length]));
 
-		for (unsigned i = 0; i < lary->len; ++i)
-			eles[i] = sq_value_clone(lary->eles[i]);
+		for (unsigned i = 0; i < lary->length; ++i)
+			elements[i] = sq_value_clone(lary->elements[i]);
 
-		for (unsigned i = 0; i < rary->len; ++i)
-			eles[lary->len + i] = sq_value_clone(rary->eles[i]);
+		for (unsigned i = 0; i < rary->length; ++i)
+			elements[lary->length + i] = sq_value_clone(rary->elements[i]);
 
 		sq_array_free(rary);
-		return sq_value_new_array(sq_array_new(len, eles));
+		return sq_value_new_array(sq_array_new2(length, elements));
 	}
 
 	case SQ_TDICT: {
 		todo("'+' dicts");
 		// struct sq_dict *ldict = AS_DICT(lhs), *rdict = sq_value_to_dict(rhs);
 
-		// unsigned i = 0, len = lhs->len + rhs->len;
-		// sq_value *eles = xmalloc(sizeof(sq_value[len]));
+		// unsigned i = 0, length = lhs->length + rhs->length;
+		// sq_value *elements = xmalloc(sizeof(sq_value[length]));
 
-		// for (; i < lhs->len; ++i)
-		// 	eles[i] = sq_value_clone(lary->eles[i]);
-		// for (; i < lhs->len; ++i)
-		// 	eles[i] = sq_value_clone(rary->eles[i]);
+		// for (; i < lhs->length; ++i)
+		// 	elements[i] = sq_value_clone(lary->elements[i]);
+		// for (; i < lhs->length; ++i)
+		// 	elements[i] = sq_value_clone(rary->elements[i]);
 
 		// sq_array_free(rhs);
 		// return sq_value_new_array(lary);
@@ -609,7 +611,7 @@ bool sq_value_to_boolean(sq_value value) {
 		return *AS_STR(value) ? SQ_TRUE : SQ_FALSE;
 
 	case SQ_TARRAY:
-		return AS_ARRAY(value)->len;
+		return AS_ARRAY(value)->length;
 
 	case SQ_TDICT:
 		return sq_dict_length(AS_DICT(value));
@@ -639,7 +641,7 @@ bool sq_value_to_boolean(sq_value value) {
 size_t sq_value_length(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TARRAY:
-		return sq_value_as_array(value)->len;
+		return sq_value_as_array(value)->length;
 
 	case SQ_TDICT:
 		return sq_dict_length(sq_value_as_dict(value));
