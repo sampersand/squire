@@ -11,7 +11,7 @@ proclaim($add(2, 3)); # => same as `proclaim(2 + 3)`.
 
 ab = "ab"
 # Conditional compilation
-@if $ab == ab # you can just use arbitrary expressions here, including referencing surroudning scope
+@if $ab == "ab"
     @henceforth $life = 42
 @alasif $ab == "bc"
     @henceforth $life = 43
@@ -32,7 +32,6 @@ ab = "ab"
 # ^-- maybe fix?
 */
 
-#define foo
 #ifndef SQ_MACRO_INCLUDE
 struct _ignored__;
 #else

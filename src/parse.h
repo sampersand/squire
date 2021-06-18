@@ -24,8 +24,8 @@ struct statement {
 		SQ_PS_SWHILE,
 		SQ_PS_SLABEL,
 		SQ_PS_SCOMEFROM,
+		SQ_PS_SSWITCH,
 
-		SQ_PS_SUNDO,
 		SQ_PS_SEXPR,
 	} kind;
 
@@ -38,6 +38,7 @@ struct statement {
 		struct while_statement *wstmt;
 		struct return_statement *rstmt;
 		struct trycatch_statement *tcstmt;
+		struct switch_statement *sw_stmt;
 		struct expression *throwstmt;
 		char *label, *comefrom;
 		struct expression *expr;
@@ -68,6 +69,17 @@ struct if_statement {
 	struct expression *cond;
 	struct statements *iftrue;
 	struct statements *iffalse;
+};
+
+struct switch_statement {
+	struct expression *cond;
+	struct statements *alas;
+
+	struct case_statement {
+		struct expression *expr;
+		struct statements *body;
+	} *cases;
+	unsigned ncases;
 };
 
 struct while_statement {

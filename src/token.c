@@ -273,6 +273,8 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("attempt",      SQ_TK_TRY);
 	CHECK_FOR_START_KW("catapult",     SQ_TK_THROW);
 	CHECK_FOR_START_KW("retreat",      SQ_TK_CATCH);
+	CHECK_FOR_START_KW("fork",         SQ_TK_SWITCH);
+	CHECK_FOR_START_KW("path",         SQ_TK_CASE);
 
 	CHECK_FOR_START_KW("yay",          SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);

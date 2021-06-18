@@ -706,6 +706,58 @@ static struct if_statement *parse_if_statement() {
 	return if_stmt;
 }
 
+static struct switch_statement *parse_switch_statement() {
+	GUARD(SQ_TK_SWITCH);
+	struct switch_statement *sw_stmt = xmalloc(sizeof(struct switch_statement));
+	sw_stmt->alas = NULL;
+	sw_stmt->ncases = 0;
+	unsigned capacity = 8;
+	sw_stmt->cases = xmalloc(sizeof(struct case_statement[capacity]));
+
+	if (!(sw_stmt->cond = parse_expression()))
+		die("missing condition for 'fork'");
+
+	EXPECT(SQ_TK_LBRACE, "expected a '{' after fork condition");
+
+	while (true) {
+		bool wasnt_label = true;
+		switch (take().kind) {
+		case SQ_TK_ELSE:
+			EXPECT(SQ_TK_COLON, "expected a ':' after alas");
+			if (sw_stmt->alas) die("cannot declare 'alas' case twice.");
+			sw_stmt->alas = parse_statements();
+			break;
+
+		case SQ_TK_LABEL:
+			last.kind = SQ_TK_IDENT;
+			wasnt_label = false;
+			// fallthrough
+
+		case SQ_TK_CASE:
+			if (sw_stmt->ncases == capacity)
+				sw_stmt->cases = xrealloc(sw_stmt->cases, sizeof(struct case_statement[capacity *= 2]));
+
+			sw_stmt->cases[sw_stmt->ncases].expr = parse_expression();
+
+			if (wasnt_label)
+				EXPECT(SQ_TK_COLON, "expected a ':' after path description");
+
+			if (!(sw_stmt->cases[sw_stmt->ncases].body = parse_statements())->len) {
+				free(sw_stmt->cases[sw_stmt->ncases].body);
+				sw_stmt->cases[sw_stmt->ncases].body = NULL;
+			}
+
+			sw_stmt->ncases++;
+			break;
+		case SQ_TK_RBRACE:
+			return sw_stmt;
+
+		default:
+			die("unexpected token; expecting `path` or `}` after fork body");
+		}
+	}
+}
+
 static struct while_statement *parse_while_statement() {
 	GUARD(SQ_TK_WHILE);
 	struct while_statement *while_stmt = xmalloc(sizeof(struct while_statement));
@@ -730,11 +782,6 @@ static struct expression *parse_throw_statement() {
 	struct expression *expression = parse_expression();
 	if (!expression) die("expected expression after 'hark'");
 	return expression;
-}
-
-static bool parse_undo_statement() {
-	GUARD(SQ_TK_THROW);
-	return true;
 }
 
 static struct trycatch_statement *parse_trycatch_statement() {
@@ -781,11 +828,11 @@ static struct statement *parse_statement() {
 	else if ((stmt.cdecl = parse_form_declaration())) stmt.kind = SQ_PS_SCLASS;
 	else if ((stmt.fdecl = parse_func_declaration(true, false))) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
+	else if ((stmt.sw_stmt = parse_switch_statement())) stmt.kind = SQ_PS_SSWITCH;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;
 	else if ((stmt.rstmt = parse_return_statement())) stmt.kind = SQ_PS_SRETURN;
 	else if ((stmt.tcstmt = parse_trycatch_statement())) stmt.kind = SQ_PS_STRYCATCH;
 	else if ((stmt.throwstmt = parse_throw_statement())) stmt.kind = SQ_PS_STHROW;
-	else if (parse_undo_statement()) stmt.kind = SQ_PS_SUNDO;
 	else if ((stmt.expr = parse_expression())) stmt.kind = SQ_PS_SEXPR;
 	else return NULL;
 

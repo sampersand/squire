@@ -4,18 +4,26 @@
 
 struct sq_codex {
 	unsigned length, capacity, refcount;
-	struct sq_codex_entry *entries;
+	struct sq_codex_page *pages;
 };
 
-struct sq_codex_entry {
+struct sq_codex_page {
 	sq_value key, value;
 };
 
-struct sq_codex *sq_codex_new(unsigned length, struct sq_codex_entry *entries);
-void sq_dixct_dump(FILE *, const struct sq_codex *codex);
+struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages);
+
+static inline struct sq_codex *sq_codex_new2(unsigned length, struct sq_codex_page *pages) {
+	return sq_codex_new(length, length, pages);
+}
+
+void sq_dixct_dump(FILE *out, const struct sq_codex *codex);
 
 static inline struct sq_codex *sq_codex_clone(struct sq_codex *codex) {
+	assert(codex->refcount);
+
 	++codex->refcount;
+
 	return codex;
 }
 
@@ -30,7 +38,7 @@ static inline void sq_codex_free(struct sq_codex *codex) {
 
 struct sq_string *sq_codex_to_string(const struct sq_codex *codex);
 unsigned sq_codex_length(const struct sq_codex *codex);
-struct sq_codex_entry *sq_codex_fetch_entry(struct sq_codex *codex, sq_value key);
+struct sq_codex_page *sq_codex_fetch_page(struct sq_codex *codex, sq_value key);
 
 void sq_codex_dump(FILE *out, const struct sq_codex *codex);
 sq_value sq_codex_delete(struct sq_codex *codex, sq_value key);

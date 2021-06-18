@@ -199,13 +199,13 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 		if (!sq_value_is_codex(rhs))
 			return false;
 
-		struct sq_codex *ldict = AS_CODEX(lhs), *rdict = AS_CODEX(rhs);
+		struct sq_codex *lcodex = AS_CODEX(lhs), *rcodex = AS_CODEX(rhs);
 
-		if (ldict->length != rdict->length)
+		if (lcodex->length != rcodex->length)
 			return false;
 
-		for (unsigned i = 0; i < ldict->length; ++i)
-			if (!sq_value_eql(ldict->entries[i].value, rdict->entries[i].value))
+		for (unsigned i = 0; i < lcodex->length; ++i)
+			if (!sq_value_eql(lcodex->pages[i].value, rcodex->pages[i].value))
 				return false;
 
 		return true;

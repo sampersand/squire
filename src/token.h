@@ -27,7 +27,8 @@ enum sq_token_kind {
 	SQ_TK_TRY,
 	SQ_TK_CATCH,
 	SQ_TK_THROW,
-	SQ_TK_UNDO,
+	SQ_TK_SWITCH,
+	SQ_TK_CASE,
 	// TODO: `assert` as `challenge`?
 
 	SQ_TK_MACRO_VAR = 0x40,

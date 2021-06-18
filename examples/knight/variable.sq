@@ -8,10 +8,13 @@
 	}
 
 	recollect fetch(name) {
-		if ((var = my.list[name])) {
+		var = my.list[name];
+
+		if var {
 			reward var
 		} alas {
-			reward my.list[name] = me(name) # eyo segfault
+			l=my.list
+			reward l[name] = me(name) # eyo segfault
 		}
 	}
 
@@ -30,6 +33,8 @@
 }
 
 Variable.list = {};
+x=Variable.fetch("?");x.assign(34);
+x=Variable.fetch("?");x.assign(34);
 dump(Variable.fetch("?"));
 
 __END__

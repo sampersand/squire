@@ -12,6 +12,7 @@ struct sq_program *program;
 // total temporary hack...
 #define free(x) ((void)0)
 
+#define CURRENT_INDEX_PTR(code) (&(code)->bytecode[(code)->codelen].index)
 struct {
 	unsigned len, cap;
 	struct global {
@@ -366,6 +367,81 @@ static void compile_return_statement(struct sq_code *code, struct return_stateme
 
 	set_opcode(code, SQ_OC_RETURN);
 	set_index(code, index);
+}
+
+/* layout:
+<compile condition>
+for each case:
+	<compile case>
+	<compare case to condition>
+	<jeq bodies[case index]>
+if alas:
+	<compile alas>
+jump to end
+
+for each body:
+	if body isnt null:
+		<compile body>
+		<jump to end>
+	if body is null:
+		have the next non-nulll body set us.
+alas:
+
+*/
+static void compile_switch_statement(struct sq_code *code, struct switch_statement *sw) {
+	unsigned condition_index = compile_expression(code, sw->cond);
+	unsigned *jump_to_body_indices[sw->ncases];
+
+	for (unsigned i = 0; i < sw->ncases; ++i) {
+		unsigned case_index = compile_expression(code, sw->cases[i].expr);
+		set_opcode(code, SQ_OC_EQL);
+		set_index(code, condition_index);
+		set_index(code, case_index);
+		set_index(code, case_index); // overwrite the case with the destination
+
+		set_opcode(code, SQ_OC_JMP_TRUE);
+		set_index(code, case_index);
+		jump_to_body_indices[i] = CURRENT_INDEX_PTR(code);
+		set_index(code, 0xffff);
+	}
+
+	unsigned *jump_to_end_indices[sw->ncases + 1];
+
+	if (sw->alas)
+		compile_statements(code, sw->alas);
+
+	set_opcode(code, SQ_OC_JMP);
+	jump_to_end_indices[sw->ncases] = CURRENT_INDEX_PTR(code);
+	set_index(code, 0xffff);
+
+	unsigned amnt_of_blank = 0;
+	for (unsigned i = 0; i < sw->ncases; ++i) {
+		if (sw->cases[i].body == NULL) {
+			amnt_of_blank++;
+			jump_to_end_indices[i] = NULL;
+			continue;
+		}
+
+		for (unsigned j = 0; j < amnt_of_blank; ++j)
+			*jump_to_body_indices[i - j - 1] = code->codelen;
+		amnt_of_blank = 0;
+		*jump_to_body_indices[i] = code->codelen;
+		compile_statements(code, sw->cases[i].body);
+		set_opcode(code, SQ_OC_JMP);
+		jump_to_end_indices[i] = CURRENT_INDEX_PTR(code);
+		set_index(code, 0xffff);
+	}
+
+	for (unsigned j = 0; j < amnt_of_blank; ++j)
+		*jump_to_body_indices[sw->ncases - j - 1] = code->codelen;
+
+	for (unsigned i = 0; i < sw->ncases + 1; ++i) {
+		if (jump_to_end_indices[i])
+			*jump_to_end_indices[i] = code->codelen;
+	}
+
+	free(sw->cases);
+	free(sw);
 }
 
 static unsigned compile_array(struct sq_code *code, struct array *array) {
@@ -932,14 +1008,14 @@ static void compile_trycatch_statement(struct sq_code *code, struct trycatch_sta
 	unsigned *catchblock, *noerror, exception;
 
 	set_opcode(code, SQ_OC_TRYCATCH);
-	catchblock = &code->bytecode[code->codelen].index;
+	catchblock = CURRENT_INDEX_PTR(code);
 	set_index(code, -1);
 	set_index(code, exception = new_local_variable(code, tc->exception));
 
 	compile_statements(code, tc->try);
 	set_opcode(code, SQ_OC_POPTRYCATCH);
 	set_opcode(code, SQ_OC_JMP);
-	noerror = &code->bytecode[code->codelen].index;
+	noerror = CURRENT_INDEX_PTR(code);
 	set_index(code, -1);
 
 	*catchblock = code->codelen;
@@ -956,10 +1032,6 @@ static void compile_throw_statement(struct sq_code *code, struct expression *thr
 	set_index(code, dst);
 }
 
-static void compile_undo_statement(struct sq_code *code) {
-	set_opcode(code, SQ_OC_UNDO);
-}
-
 static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	switch (stmt->kind) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
@@ -974,7 +1046,7 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SRETURN: compile_return_statement(code, stmt->rstmt); break;
 	case SQ_PS_STRYCATCH: compile_trycatch_statement(code, stmt->tcstmt); break;
 	case SQ_PS_STHROW: compile_throw_statement(code, stmt->throwstmt); break;
-	case SQ_PS_SUNDO: compile_undo_statement(code); break;
+	case SQ_PS_SSWITCH: compile_switch_statement(code, stmt->sw_stmt); break;
 	case SQ_PS_SEXPR: compile_expression(code, stmt->expr); break;
 	default: bug("unknown statement kind '%d'", stmt->kind);
 	}

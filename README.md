@@ -4,7 +4,7 @@ So instead I decided to write this in one weekend. It turned out to be a fun pro
 
 Possible additions:
 
-- [ ] Static fields on `form`s
+- [x] Static fields on `form`s
 - [ ] Inheritence for `form`s
 - [x] macros
 	- [x] Declarative
@@ -15,7 +15,7 @@ Possible additions:
 - [ ] pattern matching
 - [ ] varidict functions and keyword parameters
 - [ ] modules
-- [ ] dictionaries
+- [x] dictionaries
 - [x] interpolation
 - [ ] overload
 - [ ] pattern matching on functions

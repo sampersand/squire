@@ -1,3 +1,24 @@
+proclaim("What is your favourite colour? ");
+fav_colour = "green"#inquire();
+
+fork fav_colour {
+	path 'green':
+		proclaim("I like green too\n"); 
+		# no `break` needed---no fallthrough exissts
+
+	path 'red':
+	path 'blue':
+		proclaim("\(fav_colour) is also good too I guess\n")
+
+	alas:
+		proclaim("I don't know \(fav_colour), but it's probably cool.\n")
+}
+
+@henceforth $proclaimeth = proclaim;
+$proclaimeth("Salutations, terra!\n");
+
+
+__END__
 form Foo {
 	matter bar;
 	essence bar

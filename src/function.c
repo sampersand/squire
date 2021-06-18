@@ -70,7 +70,6 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 	sq_value imitation = sq_value_new_imitation(sq_imitation_new(form, xmalloc(sizeof(sq_value[form->nmatter]))));
 	for (unsigned i = 0; i < form->nmatter; ++i)
 		sq_value_as_imitation(imitation)->matter[i] = SQ_NULL;
-	printf("i=%d\n", form->nmatter);
 
 	sq_value fn_args[argc + 1];
 	fn_args[0] = sq_value_clone(imitation);
@@ -282,14 +281,14 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 			case SQ_INT_CODEX_NEW: {
 				unsigned amnt = NEXT_INDEX();
-				struct sq_codex_entry *entries = xmalloc(sizeof(struct sq_codex_entry [amnt]));
+				struct sq_codex_page *pages = xmalloc(sizeof(struct sq_codex_page [amnt]));
 
 				for (unsigned i = 0; i < amnt; ++i) {
-					entries[i].key = NEXT_LOCAL();
-					entries[i].value = NEXT_LOCAL();
+					pages[i].key = NEXT_LOCAL();
+					pages[i].value = NEXT_LOCAL();
 				}
 
-				NEXT_LOCAL() = sq_value_new_codex(sq_codex_new(amnt, entries));
+				NEXT_LOCAL() = sq_value_new_codex(sq_codex_new2(amnt, pages));
 				break;
 			}
 
@@ -407,12 +406,6 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			sq_value_clone(value);
 			sq_value_clone(value);
 			goto done;
-
-		case SQ_OC_UNDO:
-		// todo: ensure we have a redo location
-			// longjmp(redo_location, 1);
-			die("todo: undo");
-			// if (current_exception_handler)
 
 		case SQ_OC_THROW:
 			sq_throw_value(NEXT_LOCAL());
