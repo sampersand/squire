@@ -2,10 +2,10 @@
 #include "string.h"
 #include "program.h"
 #include "shared.h"
-#include "class.h"
+#include "form.h"
 #include "array.h"
 #include "roman.h"
-#include "dict.h"
+#include "codex.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,32 +57,30 @@ void sq_function_dump(FILE *out, const struct sq_function *function) {
 // #define LOG(fmt, ...) printf(fmt "\n", __VA_ARGS__);
 #endif
 
-static sq_value create_class_instance(struct sq_class *class, sq_value *args, unsigned argc) {
+static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_value *args) {
 	// todo: this will fail with functions with an arity not the same as their field count.
-	if (class->constructor == NULL) {
-		if (argc != class->nfields)
-			die("fields mismatch (given %d, expected %d) for struct '%s'", argc, class->nfields, class->name);
-		return sq_value_new_instance(sq_instance_new(class, memdup(args, sizeof(sq_value[argc]))));
+	if (form->imitate == NULL) {
+		if (argc != form->nmatter)
+			die("matter count mismatch (given %d, expected %d) for struct '%s'", argc, form->nmatter, form->name);
+
+		printf("argc=%d\n", argc);
+		return sq_value_new_imitation(sq_imitation_new(form, args));
 	}
 
-	sq_value instance = sq_value_new_instance(sq_instance_new(class, xmalloc(sizeof(sq_value[class->nfields]))));
-	for (unsigned i = 0; i < class->nfields; ++i)
-		sq_value_as_instance(instance)->fields[i] = SQ_NULL;
+	sq_value imitation = sq_value_new_imitation(sq_imitation_new(form, xmalloc(sizeof(sq_value[form->nmatter]))));
+	for (unsigned i = 0; i < form->nmatter; ++i)
+		sq_value_as_imitation(imitation)->matter[i] = SQ_NULL;
+	printf("i=%d\n", form->nmatter);
 
-	sq_value fn_args[argc+1];
+	sq_value fn_args[argc + 1];
+	fn_args[0] = sq_value_clone(imitation);
 	for (unsigned i = 0; i < argc; ++i)
-		fn_args[i+1] = sq_value_clone(args[i]);
+		fn_args[i + 1] = sq_value_clone(args[i]);
 
-	fn_args[0] = sq_value_clone(instance);
-	sq_value_free(sq_function_run(class->constructor, argc+1, fn_args));
+	sq_value_free(sq_function_run(form->imitate, argc + 1, fn_args));
 
-	return instance;
+	return imitation;
 }
-
-
-#ifndef SQ_NUM_EXCEPTION_HANDLERS
-#define SQ_NUM_EXCEPTION_HANDLERS 2048
-#endif
 
 // jmp_buf redo_location;
 jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
@@ -198,8 +196,8 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 			case SQ_INT_KINDOF: {
 				value = NEXT_LOCAL();
-				if (sq_value_is_instance(value))
-					NEXT_LOCAL() = sq_value_new_class(sq_value_as_instance(value)->class);
+				if (sq_value_is_imitation(value))
+					NEXT_LOCAL() = sq_value_new_form(sq_value_as_imitation(value)->form);
 				else
 					NEXT_LOCAL() = sq_value_kindof(value);
 				break;
@@ -282,16 +280,16 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				break;
 			}
 
-			case SQ_INT_DICT_NEW: {
+			case SQ_INT_CODEX_NEW: {
 				unsigned amnt = NEXT_INDEX();
-				struct sq_dict_entry *entries = xmalloc(sizeof(struct sq_dict_entry [amnt]));
+				struct sq_codex_entry *entries = xmalloc(sizeof(struct sq_codex_entry [amnt]));
 
 				for (unsigned i = 0; i < amnt; ++i) {
 					entries[i].key = NEXT_LOCAL();
 					entries[i].value = NEXT_LOCAL();
 				}
 
-				NEXT_LOCAL() = sq_value_new_dict(sq_dict_new(amnt, entries));
+				NEXT_LOCAL() = sq_value_new_codex(sq_codex_new(amnt, entries));
 				break;
 			}
 
@@ -375,7 +373,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		}
 
 		case SQ_OC_CALL: {
-			sq_value instance_value = NEXT_LOCAL();
+			sq_value imitation_value = NEXT_LOCAL();
 			unsigned argc = NEXT_INDEX();
 
 			sq_value newargs[argc];
@@ -383,18 +381,22 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			for (unsigned i = 0; i < argc; ++i)
 				newargs[i] = NEXT_LOCAL();
 
-			if (sq_value_is_function(instance_value)) {
-				struct sq_function *fn = sq_value_as_function(instance_value);
+			if (sq_value_is_function(imitation_value)) {
+				struct sq_function *fn = sq_value_as_function(imitation_value);
 
 				if (argc != fn->argc)
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
 
 				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
-			} else if (sq_value_is_class(instance_value)) {
-				struct sq_class *class = sq_value_as_class(instance_value);
-				NEXT_LOCAL() = create_class_instance(class, newargs, argc);
+			} else if (sq_value_is_form(imitation_value)) {
+				struct sq_form *form = sq_value_as_form(imitation_value);
+				NEXT_LOCAL() = create_form_imitation(
+					form,
+					argc,
+					memdup(newargs, sizeof(sq_value[argc]))
+				);
 			} else {
-				die("can only call funcs, not '%s'", sq_value_typename(instance_value));
+				die("can only call funcs, not '%s'", sq_value_typename(imitation_value));
 			}
 
 			continue;
@@ -562,38 +564,31 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			continue;
 		}
 
-	/*** Struct & Instances ***/
+	/*** Struct & imitations ***/
 
 		case SQ_OC_ILOAD: {
 			value = NEXT_LOCAL();
 			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
 
-			if (sq_value_is_class(value)) {
-				struct sq_class *class = sq_value_as_class(value);
-				value = sq_class_field(class, field);
+			if (sq_value_is_form(value)) {
+				struct sq_form *form = sq_value_as_form(value);
+				value = sq_form_lookup(form, field);
 
 				if (value == SQ_UNDEFINED)
-					die("unknown static field '%s' for type '%s'", field, class->name);
-			} else if (sq_value_is_instance(value)) {
-				struct sq_instance *instance = sq_value_as_instance(value);
-				sq_value *valueptr = sq_instance_field(instance, field);
-				struct sq_function *method;
+					die("unknown static field '%s' for type '%s'", field, form->name);
+			} else if (sq_value_is_imitation(value)) {
+				struct sq_imitation *imitation = sq_value_as_imitation(value);
+				value = sq_imitation_lookup(imitation, field);
 
-				// i've given up on this function lol.
-
-				if (valueptr)
-					value = *valueptr;
-				else if ((method = sq_instance_method(instance, field)))
-					value =  sq_value_new_function(sq_function_clone(method));
-				else
-					die("unknown field '%s' for type '%s'", field, instance->class->name);
+				if (value == SQ_UNDEFINED)
+					die("unknown field '%s' for type '%s'", field, imitation->form->name);
 			} else if (sq_value_is_array(value)) {
 				if (!strcmp(field, "length"))
 					value = sq_value_new_number((sq_number) sq_value_length(value));
 				else
 					die("unknown array method '%s'", field);
 			} else {
-				die("can only access fields on instances.");
+				die("can only access fields on imitations.");
 			}
 
 			sq_value_clone(value);
@@ -603,16 +598,25 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		}
 
 		case SQ_OC_ISTORE: {
-			sq_value instance_value = NEXT_LOCAL();
-
-			if (!sq_value_is_instance(instance_value))
-				die("can only access fields on instances.");
-
-			struct sq_instance *instance = sq_value_as_instance(instance_value);
+			sq_value target = NEXT_LOCAL();
+			sq_value *valueptr;
 			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
-			sq_value *valueptr = sq_instance_field(instance, field);
-			if (!valueptr)
-				die("unknown field '%s' for type '%s'", field, instance->class->name);
+
+			if (sq_value_is_imitation(target)) {
+				struct sq_imitation *imitation = sq_value_as_imitation(target);
+				valueptr = sq_imitation_lookup_matter(imitation, field);
+
+				if (!valueptr)
+					die("unknown matter '%s' for type '%s'", field, imitation->form->name);
+			} else if (sq_value_is_form(target)) {
+				struct sq_form *form = sq_value_as_form(target);
+				valueptr = sq_form_lookup_essence(form, field);
+
+				if (!valueptr)
+					die("unknown essence '%s' for form '%s'", field, form->name);
+			} else {
+				die("can only access fields on imitations.");
+			}
 
 			value = NEXT_LOCAL();
 			sq_value_clone(value);

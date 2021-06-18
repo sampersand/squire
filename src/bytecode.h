@@ -17,7 +17,7 @@ enum sq_interrupts {
 	SQ_INT_SUBSTR             = 0x20,
 	SQ_INT_LENGTH             = 0x21,
 
-	SQ_INT_DICT_NEW           = 0x30,
+	SQ_INT_CODEX_NEW          = 0x30,
 	SQ_INT_ARRAY_NEW          = 0x31,
 	SQ_INT_ARRAY_INSERT       = 0x32,
 	SQ_INT_ARRAY_DELETE       = 0x33,

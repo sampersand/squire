@@ -8,11 +8,11 @@
 #include "number.h"
 
 struct sq_string;
-struct sq_class;
-struct sq_instance;
+struct sq_form;
+struct sq_imitation;
 struct sq_function;
 struct sq_array;
-struct sq_dict;
+struct sq_codex;
 
 typedef uint64_t sq_value;
 
@@ -20,14 +20,14 @@ typedef enum {
 	SQ_TCONST,
 	SQ_TNUMBER,
 	SQ_TSTRING,
-	SQ_TCLASS,
-	SQ_TINSTANCE,
+	SQ_TFORM,
+	SQ_TIMITATION,
 	SQ_TFUNCTION,
 	SQ_TARRAY,
-	SQ_TDICT,
+	SQ_TCODEX,
 } sq_vtag;
 
-#define SQ_VSHIFT 4 // todo: dict
+#define SQ_VSHIFT 4
 #define SQ_VMASK_BITS ((1<<SQ_VSHIFT)-1)
 #define SQ_VMASK(value, kind) ((value) | (kind))
 #define SQ_VTAG(value) ((value) & SQ_VMASK_BITS)
@@ -51,14 +51,14 @@ static inline sq_value sq_value_new_string(struct sq_string *string) {
 	return SQ_VMASK((sq_value) string, SQ_TSTRING);
 }
 
-static inline sq_value sq_value_new_class(struct sq_class *class) {
-	assert(!SQ_VTAG((sq_value) class));
-	return SQ_VMASK((sq_value) class, SQ_TCLASS);
+static inline sq_value sq_value_new_form(struct sq_form *form) {
+	assert(!SQ_VTAG((sq_value) form));
+	return SQ_VMASK((sq_value) form, SQ_TFORM);
 }
 
-static inline sq_value sq_value_new_instance(struct sq_instance *instance) {
-	assert(!SQ_VTAG((sq_value) instance));
-	return SQ_VMASK((sq_value) instance, SQ_TINSTANCE);
+static inline sq_value sq_value_new_imitation(struct sq_imitation *imitation) {
+	assert(!SQ_VTAG((sq_value) imitation));
+	return SQ_VMASK((sq_value) imitation, SQ_TIMITATION);
 }
 
 static inline sq_value sq_value_new_function(struct sq_function *function) {
@@ -71,9 +71,9 @@ static inline sq_value sq_value_new_array(struct sq_array *array) {
 	return SQ_VMASK((sq_value) array, SQ_TARRAY);
 }
 
-static inline sq_value sq_value_new_dict(struct sq_dict *dict) {
+static inline sq_value sq_value_new_codex(struct sq_codex *dict) {
 	assert(!SQ_VTAG((sq_value) dict));
-	return SQ_VMASK((sq_value) dict, SQ_TDICT);
+	return SQ_VMASK((sq_value) dict, SQ_TCODEX);
 }
 
 static inline bool sq_value_is_null(sq_value value) {
@@ -92,12 +92,12 @@ static inline bool sq_value_is_string(sq_value value) {
 	return SQ_VTAG(value) == SQ_TSTRING;
 }
 
-static inline bool sq_value_is_class(sq_value value) {
-	return SQ_VTAG(value) == SQ_TCLASS;
+static inline bool sq_value_is_form(sq_value value) {
+	return SQ_VTAG(value) == SQ_TFORM;
 }
 
-static inline bool sq_value_is_instance(sq_value value) {
-	return SQ_VTAG(value) == SQ_TINSTANCE;
+static inline bool sq_value_is_imitation(sq_value value) {
+	return SQ_VTAG(value) == SQ_TIMITATION;
 }
 
 static inline bool sq_value_is_function(sq_value value) {
@@ -108,8 +108,8 @@ static inline bool sq_value_is_array(sq_value value) {
 	return SQ_VTAG(value) == SQ_TARRAY;
 }
 
-static inline bool sq_value_is_dict(sq_value value) {
-	return SQ_VTAG(value) == SQ_TDICT;
+static inline bool sq_value_is_codex(sq_value value) {
+	return SQ_VTAG(value) == SQ_TCODEX;
 }
 
 static inline sq_number sq_value_as_number(sq_value value) {
@@ -127,14 +127,14 @@ static inline struct sq_string *sq_value_as_string(sq_value value) {
 	return (struct sq_string *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_class *sq_value_as_class(sq_value value) {
-	assert(sq_value_is_class(value));
-	return (struct sq_class *) SQ_VUNMASK(value);
+static inline struct sq_form *sq_value_as_form(sq_value value) {
+	assert(sq_value_is_form(value));
+	return (struct sq_form *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_instance *sq_value_as_instance(sq_value value) {
-	assert(sq_value_is_instance(value));
-	return (struct sq_instance *) SQ_VUNMASK(value);
+static inline struct sq_imitation *sq_value_as_imitation(sq_value value) {
+	assert(sq_value_is_imitation(value));
+	return (struct sq_imitation *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_function *sq_value_as_function(sq_value value) {
@@ -147,9 +147,9 @@ static inline struct sq_array *sq_value_as_array(sq_value value) {
 	return (struct sq_array *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_dict *sq_value_as_dict(sq_value value) {
-	assert(sq_value_is_dict(value));
-	return (struct sq_dict *) SQ_VUNMASK(value);
+static inline struct sq_codex *sq_value_as_codex(sq_value value) {
+	assert(sq_value_is_codex(value));
+	return (struct sq_codex *) SQ_VUNMASK(value);
 }
 
 sq_value sq_value_clone(sq_value value);
@@ -176,6 +176,6 @@ struct sq_string *sq_value_to_string(sq_value value);
 sq_number sq_value_to_number(sq_value value);
 bool sq_value_to_boolean(sq_value value);
 struct sq_array *sq_value_to_array(sq_value value);
-struct sq_dict *sq_value_to_dict(sq_value value);
+struct sq_codex *sq_value_to_codex(sq_value value);
 
 #endif /* !SQ_VALUE_H */

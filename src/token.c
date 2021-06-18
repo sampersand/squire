@@ -253,9 +253,12 @@ static struct sq_token next_normal_token(void) {
 
 	CHECK_FOR_START_KW("form",         SQ_TK_CLASS);
 	CHECK_FOR_START_KW("matter",       SQ_TK_FIELD);
-	CHECK_FOR_START_KW("action",       SQ_TK_METHOD);
-	CHECK_FOR_START_KW("describe",     SQ_TK_CLASSFN);
-	CHECK_FOR_START_KW("substantiate", SQ_TK_CONSTRUCTOR);
+	CHECK_FOR_START_KW("change",       SQ_TK_METHOD);
+	CHECK_FOR_START_KW("recollect",    SQ_TK_CLASSFN);
+	CHECK_FOR_START_KW("imitate",      SQ_TK_CONSTRUCTOR);
+	CHECK_FOR_START_KW("essence",      SQ_TK_ESSENCE);
+	// substance?
+	// essence is static  variable
 
 	CHECK_FOR_START_KW("journey",      SQ_TK_FUNC);
 	CHECK_FOR_START_KW("renowned",     SQ_TK_GLOBAL);
@@ -267,9 +270,9 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("whence",       SQ_TK_COMEFROM);
 	CHECK_FOR_START_KW("whilst",       SQ_TK_WHILE);
 	CHECK_FOR_START_KW("reward",       SQ_TK_RETURN);
-	CHECK_FOR_START_KW("quest",        SQ_TK_TRY);
-	CHECK_FOR_START_KW("abandon",      SQ_TK_THROW);
-	CHECK_FOR_START_KW("feint",        SQ_TK_UNDO);
+	CHECK_FOR_START_KW("attempt",      SQ_TK_TRY);
+	CHECK_FOR_START_KW("catapult",     SQ_TK_THROW);
+	CHECK_FOR_START_KW("retreat",      SQ_TK_CATCH);
 
 	CHECK_FOR_START_KW("yay",          SQ_TK_TRUE);
 	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);

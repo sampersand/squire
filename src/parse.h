@@ -51,8 +51,9 @@ struct scope_declaration {
 
 struct class_declaration {
 	char *name;
-	unsigned nfields, nfuncs, nmeths, nparents;
+	unsigned nfields, nfuncs, nmeths, nparents, nessences;
 	char **fields, **parents;
+	struct essence_declaration { char *name; struct expression *value; } *essences;
 	struct func_declaration **funcs, **meths, *constructor;
 };
 
@@ -181,7 +182,7 @@ struct primary {
 		SQ_PS_PNULL,
 		SQ_PS_PVARIABLE,
 		SQ_PS_PARRAY,
-		SQ_PS_PDICT,
+		SQ_PS_PCODEX,
 		SQ_PS_PINDEX,
 	} kind;
 	union {

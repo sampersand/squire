@@ -1,21 +1,21 @@
 #include "value.h"
 #include "array.h"
-#include "class.h"
+#include "form.h"
 #include "function.h"
 #include "shared.h"
 #include "string.h"
 #include "roman.h"
-#include "dict.h"
+#include "codex.h"
 #include <string.h>
 
 #define IS_STRING sq_value_is_string
 #define AS_STRING sq_value_as_string
 #define AS_NUMBER sq_value_as_number
-#define AS_CLASS sq_value_as_class
-#define AS_INSTANCE sq_value_as_instance
+#define AS_FORM sq_value_as_form
+#define AS_IMITATION sq_value_as_imitation
 #define AS_FUNCTION sq_value_as_function
 #define AS_ARRAY sq_value_as_array
-#define AS_DICT sq_value_as_dict
+#define AS_CODEX sq_value_as_codex
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_STRING(c)->ptr)
 
@@ -42,12 +42,12 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		fprintf(out, "String(%s)", AS_STR(value));
 		break;
 
-	case SQ_TCLASS:
-		sq_class_dump(out, AS_CLASS(value));
+	case SQ_TFORM:
+		sq_form_dump(out, AS_FORM(value));
 		break;
 
-	case SQ_TINSTANCE:
-		sq_instance_dump(out, AS_INSTANCE(value));
+	case SQ_TIMITATION:
+		sq_imitation_dump(out, AS_IMITATION(value));
 		break;
 
 	case SQ_TFUNCTION:
@@ -58,8 +58,8 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		sq_array_dump(out, AS_ARRAY(value));
 		break;
 
-	case SQ_TDICT:
-		sq_dict_dump(out, AS_DICT(value));
+	case SQ_TCODEX:
+		sq_codex_dump(out, AS_CODEX(value));
 		break;
 
 	default:
@@ -72,11 +72,11 @@ sq_value sq_value_clone(sq_value value) {
 	case SQ_TSTRING:
 		return sq_value_new_string(sq_string_clone(AS_STRING(value)));
 
-	case SQ_TCLASS:
-		return sq_value_new_class(sq_class_clone(AS_CLASS(value)));
+	case SQ_TFORM:
+		return sq_value_new_form(sq_form_clone(AS_FORM(value)));
 
-	case SQ_TINSTANCE:
-		return sq_value_new_instance(sq_instance_clone(AS_INSTANCE(value)));
+	case SQ_TIMITATION:
+		return sq_value_new_imitation(sq_imitation_clone(AS_IMITATION(value)));
 
 	case SQ_TFUNCTION:
 		return sq_value_new_function(sq_function_clone(AS_FUNCTION(value)));
@@ -84,8 +84,8 @@ sq_value sq_value_clone(sq_value value) {
 	case SQ_TARRAY:
 		return sq_value_new_array(sq_array_clone(AS_ARRAY(value)));
 
-	case SQ_TDICT:
-		return sq_value_new_dict(sq_dict_clone(AS_DICT(value)));
+	case SQ_TCODEX:
+		return sq_value_new_codex(sq_codex_clone(AS_CODEX(value)));
 
 	default:
 		return value;
@@ -98,12 +98,12 @@ void sq_value_free(sq_value value) {
 		sq_string_free(AS_STRING(value));
 		return;
 
-	case SQ_TCLASS:
-		sq_class_free(AS_CLASS(value));
+	case SQ_TFORM:
+		sq_form_free(AS_FORM(value));
 		return;
 
-	case SQ_TINSTANCE:
-		sq_instance_free(AS_INSTANCE(value));
+	case SQ_TIMITATION:
+		sq_imitation_free(AS_IMITATION(value));
 		return;
 
 	case SQ_TFUNCTION:
@@ -114,8 +114,8 @@ void sq_value_free(sq_value value) {
 		sq_array_free(AS_ARRAY(value));
 		return;
 
-	case SQ_TDICT:
-		sq_dict_free(AS_DICT(value));
+	case SQ_TCODEX:
+		sq_codex_free(AS_CODEX(value));
 		return;
 	}
 }
@@ -125,11 +125,11 @@ const char *sq_value_typename(sq_value value) {
 	case SQ_TCONST: return sq_value_is_null(value) ? "null" : "boolean";
 	case SQ_TNUMBER: return "number";
 	case SQ_TSTRING: return "string";
-	case SQ_TINSTANCE: return "object";
+	case SQ_TIMITATION: return "object";
 	case SQ_TFUNCTION: return "function";
-	case SQ_TCLASS: return "class";
+	case SQ_TFORM: return "form";
 	case SQ_TARRAY: return "array";
-	case SQ_TDICT: return "dict";
+	case SQ_TCODEX: return "codex";
 	default: bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
@@ -140,9 +140,9 @@ sq_value sq_value_kindof(sq_value value) {
 	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("number");
 	static struct sq_string KIND_STRING = SQ_STRING_STATIC("string");
 	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("function");
-	static struct sq_string KIND_CLASS = SQ_STRING_STATIC("class");
+	static struct sq_string KIND_form = SQ_STRING_STATIC("form");
 	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("array");
-	static struct sq_string KIND_DICT = SQ_STRING_STATIC("dict");
+	static struct sq_string KIND_CODEX = SQ_STRING_STATIC("codex");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
@@ -154,20 +154,20 @@ sq_value sq_value_kindof(sq_value value) {
 	case SQ_TSTRING:
 		return sq_value_new_string(&KIND_STRING);
 
-	case SQ_TINSTANCE:
-		return sq_value_new_class(sq_class_clone(sq_value_as_instance(value)->class));
+	case SQ_TIMITATION:
+		return sq_value_new_form(sq_form_clone(AS_IMITATION(value)->form));
 
 	case SQ_TFUNCTION:
 		return sq_value_new_string(&KIND_FUNCTION);
 
-	case SQ_TCLASS:
-		return sq_value_new_string(&KIND_CLASS);
+	case SQ_TFORM:
+		return sq_value_new_string(&KIND_form);
 
 	case SQ_TARRAY:
 		return sq_value_new_string(&KIND_ARRAY);
 
-	case SQ_TDICT:
-		return sq_value_new_string(&KIND_DICT);
+	case SQ_TCODEX:
+		return sq_value_new_string(&KIND_CODEX);
 
 	default:
 		bug("unknown tag '%d'", (int) SQ_VTAG(value));
@@ -195,24 +195,24 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 				return false;
 		return true;
 
-	case SQ_TDICT:
-		if (!sq_value_is_dict(rhs))
+	case SQ_TCODEX:
+		if (!sq_value_is_codex(rhs))
 			return false;
 
-		struct sq_dict *ldict = AS_DICT(lhs), *rdict = AS_DICT(rhs);
+		struct sq_codex *ldict = AS_CODEX(lhs), *rdict = AS_CODEX(rhs);
 
-		if (sq_dict_length(ldict) != sq_dict_length(rdict))
+		if (ldict->length != rdict->length)
 			return false;
 
-		for (unsigned i = 0; i < sq_dict_length(ldict); ++i)
-			if (!sq_value_eql(sq_dict_entry_index(ldict, i)->value, sq_dict_entry_index(rdict, i)->value))
+		for (unsigned i = 0; i < ldict->length; ++i)
+			if (!sq_value_eql(ldict->entries[i].value, rdict->entries[i].value))
 				return false;
 
 		return true;
 
 
-	case SQ_TINSTANCE: {
-		struct sq_function *eql = sq_instance_method(AS_INSTANCE(lhs), "==");
+	case SQ_TIMITATION: {
+		struct sq_function *eql = sq_imitation_lookup_change(AS_IMITATION(lhs), "==");
 		sq_value args[2] = { lhs, rhs };
 
 		if (eql != NULL)
@@ -234,12 +234,12 @@ sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 		// todo: free string
 		return strcmp(AS_STR(lhs), sq_value_to_string(rhs)->ptr);
 
-	case SQ_TINSTANCE:
-		todo("cmp instance");
+	case SQ_TIMITATION:
+		todo("cmp imitation");
 
 	default:
 		die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
-	// 	struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "<=>");
+	// 	struct sq_function *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "<=>");
 
 	// 	if (neg != NULL) return sq_function_run(neg, 1, &arg);
 	// }
@@ -251,8 +251,8 @@ sq_value sq_value_neg(sq_value arg) {
 	case SQ_TNUMBER:
 		return sq_value_new_number(-AS_NUMBER(arg));
 
-	case SQ_TINSTANCE: {
-		struct sq_function *neg = sq_instance_method(AS_INSTANCE(arg), "-@");
+	case SQ_TIMITATION: {
+		struct sq_function *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "-@");
 
 		if (neg != NULL)
 			return sq_function_run(neg, 1, &arg);
@@ -284,11 +284,11 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 	case SQ_TARRAY:
 		return sq_array_index(AS_ARRAY(value), sq_value_to_number(key));
 
-	case SQ_TDICT:
-		return sq_dict_index(AS_DICT(value), key);
+	case SQ_TCODEX:
+		return sq_codex_index(AS_CODEX(value), key);
 
-	case SQ_TINSTANCE: {
-		struct sq_function *index = sq_instance_method(AS_INSTANCE(value), "[]");
+	case SQ_TIMITATION: {
+		struct sq_function *index = sq_imitation_lookup_change(AS_IMITATION(value), "[]");
 		sq_value args[2] = { value, key };
 
 		if (index != NULL)
@@ -308,12 +308,12 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 		sq_array_index_assign(AS_ARRAY(value), sq_value_to_number(key), val);
 		return;
 
-	case SQ_TDICT:
-		sq_dict_index_assign(AS_DICT(value), key, val);
+	case SQ_TCODEX:
+		sq_codex_index_assign(AS_CODEX(value), key, val);
 		return;
 
-	case SQ_TINSTANCE: {
-		struct sq_function *index_assign = sq_instance_method(AS_INSTANCE(value), "[]=");
+	case SQ_TIMITATION: {
+		struct sq_function *index_assign = sq_imitation_lookup_change(AS_IMITATION(value), "[]=");
 		sq_value args[3] = { value, key, val };
 
 		if (index_assign != NULL) {
@@ -330,10 +330,10 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 }
 
 sq_value sq_value_add(sq_value lhs, sq_value rhs) {
-	bool free_lhs = false;
+	// bool free_rhs = false;
 
 	if (sq_value_is_string(rhs)) {
-		free_lhs = true;
+		// free_lhs = true;
 		lhs = sq_value_new_string(sq_value_to_string(lhs));
 	}
 
@@ -349,8 +349,8 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 		strcpy(result->ptr, AS_STR(lhs));
 		strcat(result->ptr, rstr->ptr);
-		sq_string_free(rstr);
-		if (free_lhs) sq_value_free(lhs);
+		// sq_string_free(rstr);
+		// if (free_lhs) sq_value_free(lhs);
 		return sq_value_new_string(result);
 	}
 
@@ -366,13 +366,13 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		for (unsigned i = 0; i < rary->length; ++i)
 			elements[lary->length + i] = sq_value_clone(rary->elements[i]);
 
-		sq_array_free(rary);
+		// sq_array_free(rary);
 		return sq_value_new_array(sq_array_new2(length, elements));
 	}
 
-	case SQ_TDICT: {
+	case SQ_TCODEX: {
 		todo("'+' dicts");
-		// struct sq_dict *ldict = AS_DICT(lhs), *rdict = sq_value_to_dict(rhs);
+		// struct sq_codex *ldict = AS_CODEX(lhs), *rdict = sq_value_to_codex(rhs);
 
 		// unsigned i = 0, length = lhs->length + rhs->length;
 		// sq_value *elements = xmalloc(sizeof(sq_value[length]));
@@ -387,8 +387,8 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	}
 
 
-	case SQ_TINSTANCE: {
-		struct sq_function *add = sq_instance_method(AS_INSTANCE(lhs), "+");
+	case SQ_TIMITATION: {
+		struct sq_function *add = sq_imitation_lookup_change(AS_IMITATION(lhs), "+");
 		sq_value args[2] = { lhs, rhs };
 
 		if (add != NULL)
@@ -410,11 +410,11 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	case SQ_TARRAY:
 		todo("set difference");
 
-	case SQ_TDICT:
+	case SQ_TCODEX:
 		todo("set difference for dict");
 
-	case SQ_TINSTANCE: {
-		struct sq_function *sub = sq_instance_method(AS_INSTANCE(lhs), "-");
+	case SQ_TIMITATION: {
+		struct sq_function *sub = sq_imitation_lookup_change(AS_IMITATION(lhs), "-");
 		sq_value args[2] = { lhs, rhs };
 
 		if (sub != NULL)
@@ -447,8 +447,8 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 	case SQ_TARRAY:
 		todo("array multiply");
 
-	case SQ_TINSTANCE: {
-		struct sq_function *mul = sq_instance_method(AS_INSTANCE(lhs), "*");
+	case SQ_TIMITATION: {
+		struct sq_function *mul = sq_imitation_lookup_change(AS_IMITATION(lhs), "*");
 		sq_value args[2] = { lhs, rhs };
 
 		if (mul != NULL)
@@ -469,8 +469,8 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 		return sq_value_new_number(AS_NUMBER(lhs) / rnum);
 	}
 
-	case SQ_TINSTANCE: {
-		struct sq_function *div = sq_instance_method(AS_INSTANCE(lhs), "/");
+	case SQ_TIMITATION: {
+		struct sq_function *div = sq_imitation_lookup_change(AS_IMITATION(lhs), "/");
 		sq_value args[2] = { lhs, rhs };
 
 		if (div != NULL)
@@ -493,8 +493,8 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		return sq_value_new_number(AS_NUMBER(lhs) % rnum);
 	}
 
-	case SQ_TINSTANCE: {
-		struct sq_function *mod = sq_instance_method(AS_INSTANCE(lhs), "%");
+	case SQ_TIMITATION: {
+		struct sq_function *mod = sq_imitation_lookup_change(AS_IMITATION(lhs), "%");
 		sq_value args[2] = { lhs, rhs };
 
 		if (mod != NULL)
@@ -534,16 +534,16 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		sq_string_clone(AS_STRING(value));
 		return AS_STRING(value);
 
-	case SQ_TCLASS:
-		return sq_string_new(strdup(AS_CLASS(value)->name));
+	case SQ_TFORM:
+		return sq_string_new(strdup(AS_FORM(value)->name));
 
-	case SQ_TINSTANCE: {
-		struct sq_function *to_string = sq_instance_method(AS_INSTANCE(value), "to_string");
+	case SQ_TIMITATION: {
+		struct sq_function *to_string = sq_imitation_lookup_change(AS_IMITATION(value), "to_string");
 
 		if (to_string != NULL) {
 			sq_value string = sq_function_run(to_string, 1, &value);
 			if (!sq_value_is_string(string))
-				die("to_string for an instance of '%s' didn't return a string", AS_INSTANCE(value)->class->name);
+				die("to_string for an imitation of '%s' didn't return a string", AS_IMITATION(value)->form->name);
 			return AS_STRING(string);
 		}
 		// else fallthrough
@@ -552,8 +552,8 @@ struct sq_string *sq_value_to_string(sq_value value) {
 	case SQ_TARRAY:
 		return sq_array_to_string(AS_ARRAY(value));
 
-	case SQ_TDICT:
-		todo("dict to string");
+	case SQ_TCODEX:
+		todo("codex to string");
 
 	case SQ_TFUNCTION:
 		die("cannot convert %s to a string", TYPENAME(value));
@@ -574,13 +574,13 @@ sq_number sq_value_to_number(sq_value value) {
 	case SQ_TSTRING:
 		return strtoll(AS_STR(value), NULL, 10);
 
-	case SQ_TINSTANCE: {
-		struct sq_function *tally = sq_instance_method(AS_INSTANCE(value), "tally");
+	case SQ_TIMITATION: {
+		struct sq_function *tally = sq_imitation_lookup_change(AS_IMITATION(value), "tally");
 
 		if (tally != NULL) {
 			sq_value number = sq_function_run(tally, 1, &value);
 			if (!sq_value_is_number(number))
-				die("tally for an instance of '%s' didn't return a number", AS_INSTANCE(value)->class->name);
+				die("tally for an imitation of '%s' didn't return a number", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(number);
 		}
 		// else fallthrough
@@ -589,9 +589,9 @@ sq_number sq_value_to_number(sq_value value) {
 	case SQ_TARRAY:
 		return sq_value_new_string(sq_array_to_string(AS_ARRAY(value)));
 
-	case SQ_TCLASS:
+	case SQ_TFORM:
 	case SQ_TFUNCTION:
-	case SQ_TDICT:
+	case SQ_TCODEX:
 		die("cannot convert %s to a number", TYPENAME(value));
 
 	default:
@@ -613,22 +613,22 @@ bool sq_value_to_boolean(sq_value value) {
 	case SQ_TARRAY:
 		return AS_ARRAY(value)->length;
 
-	case SQ_TDICT:
-		return sq_dict_length(AS_DICT(value));
+	case SQ_TCODEX:
+		return AS_CODEX(value)->length;
 
-	case SQ_TINSTANCE: {
-		struct sq_function *veracity = sq_instance_method(AS_INSTANCE(value), "veracity");
+	case SQ_TIMITATION: {
+		struct sq_function *veracity = sq_imitation_lookup_change(AS_IMITATION(value), "veracity");
 
 		if (veracity != NULL) {
 			sq_value boolean = sq_function_run(veracity, 1, &value);
 			if (!sq_value_is_boolean(boolean))
-				die("veracity for an instance of '%s' didn't return a boolean", AS_INSTANCE(value)->class->name);
+				die("veracity for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
 			return sq_value_as_boolean(boolean);
 		}
 		// else fallthrough
 	}
 
-	case SQ_TCLASS:
+	case SQ_TFORM:
 	case SQ_TFUNCTION:
 		die("cannot convert %s to a boolean", TYPENAME(value));
 
@@ -643,19 +643,19 @@ size_t sq_value_length(sq_value value) {
 	case SQ_TARRAY:
 		return sq_value_as_array(value)->length;
 
-	case SQ_TDICT:
-		return sq_dict_length(sq_value_as_dict(value));
+	case SQ_TCODEX:
+		return sq_value_as_codex(value)->length;
 
 	case SQ_TSTRING:
 		return AS_STRING(value)->length;
 
-	case SQ_TINSTANCE: {
-		struct sq_function *length = sq_instance_method(AS_INSTANCE(value), "length");
+	case SQ_TIMITATION: {
+		struct sq_function *length = sq_imitation_lookup_change(AS_IMITATION(value), "length");
 
 		if (length != NULL) {
 			sq_value boolean = sq_function_run(length, 1, &value);
 			if (!sq_value_is_number(boolean))
-				die("length for an instance of '%s' didn't return a boolean", AS_INSTANCE(value)->class->name);
+				die("length for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(boolean);
 		}
 		// else fallthrough
@@ -663,7 +663,7 @@ size_t sq_value_length(sq_value value) {
 
 	case SQ_TCONST:
 	case SQ_TNUMBER:
-	case SQ_TCLASS:
+	case SQ_TFORM:
 	case SQ_TFUNCTION:
 		die("cannot get length of %s", TYPENAME(value));
 
@@ -682,7 +682,7 @@ struct sq_array *sq_value_to_array(sq_value value) {
 	}
 }
 
-struct sq_dict *sq_value_to_dict(sq_value value) {
+struct sq_codex *sq_value_to_codex(sq_value value) {
 	(void) value;
 	die("todo");
 }

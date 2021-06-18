@@ -2,7 +2,7 @@
 #include "function.h"
 #include "shared.h"
 #include "parse.h"
-#include "class.h"
+#include "form.h"
 #include "string.h"
 #include <string.h>
 #include <errno.h>
@@ -188,6 +188,8 @@ static unsigned declare_local_variable(struct sq_code *code, char *name) {
 }
 
 static int lookup_local_variable(struct sq_code *code, char *name) {
+	if (!strcmp(name, "me")) return lookup_local_variable(code, strdup("my"));
+
 	// check to see if we've declared the local before
 	for (unsigned i = 0; i < code->vars.len; ++i) {
 		if (!strcmp(name, code->vars.ary[i].name)) {
@@ -208,7 +210,6 @@ static unsigned new_local_variable(struct sq_code *code, char *name) {
 
 static int lookup_identifier(struct sq_code *code, char *name) {
 	int index;
-
 	if ((index = lookup_local_variable(code, name)) != -1)
 		return index;
 
@@ -262,34 +263,41 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 static void compile_statements(struct sq_code *code, struct statements *stmts);
 static struct sq_function *compile_function(struct func_declaration *fndecl, bool is_method);
 
-static void compile_class_declaration(struct class_declaration *sdecl) {
-	struct sq_class *class = sq_class_new(sdecl->name);
+static void compile_form_declaration(struct sq_code *code, struct class_declaration *sdecl) {
+	struct sq_form *form = sq_form_new(sdecl->name);
 
-	class->nfields = sdecl->nfields;
-	class->fields = sdecl->fields;
+	form->nmatter = sdecl->nfields;
+	form->matter_names = sdecl->fields;
 
-	declare_global_variable(strdup(class->name), SQ_NULL);
+	declare_global_variable(strdup(form->name), SQ_NULL);
 
-	if (sdecl->constructor != NULL) {
-		class->constructor = compile_function(sdecl->constructor, true);
-	} else {
-		class->constructor = NULL;
+	form->imitate = sdecl->constructor ? compile_function(sdecl->constructor, true) : NULL;
+
+	form->nrecollections = sdecl->nfuncs;
+	form->recollections = xmalloc(sizeof(struct sq_function *[form->nrecollections]));
+	for (unsigned i = 0; i < form->nrecollections; ++i)
+		form->recollections[i] = compile_function(sdecl->funcs[i], false);
+
+	form->nchanges = sdecl->nmeths;
+	form->changes = xmalloc(sizeof(struct sq_function *[form->nchanges]));
+	for (unsigned i = 0; i < form->nchanges; ++i)
+		form->changes[i] = compile_function(sdecl->meths[i], true);
+
+	form->nessences = sdecl->nessences;
+	form->essences = xmalloc(sizeof(struct sq_form_essence[form->nessences]));
+	for (unsigned i = 0; i < sdecl->nessences; ++i) {
+		form->essences[i].name = sdecl->essences[i].name;
+		form->essences[i].value = SQ_NULL;
 	}
 
-	class->nfuncs = sdecl->nfuncs;
-	class->funcs = xmalloc(sizeof(struct sq_function *[class->nfuncs]));
-	for (unsigned i = 0; i < class->nfuncs; ++i)
-		class->funcs[i] = compile_function(sdecl->funcs[i], false);
+	declare_global_variable(strdup(form->name), sq_value_new_form(form));
 
-	class->nmeths = sdecl->nmeths;
-	class->meths = xmalloc(sizeof(struct sq_function *[class->nmeths]));
+	for (unsigned i = 0; i < sdecl->nessences; ++i) {
+		if (sdecl->essences[i].value)
+			form->essences[i].value = compile_expression(code, sdecl->essences[i].value);
+	}
 
-	for (unsigned i = 0; i < class->nmeths; ++i)
-		class->meths[i] = compile_function(sdecl->meths[i], true);
-
-	free(sdecl); // but none of the fields, as they're now owned by `class`.
-
-	declare_global_variable(strdup(class->name), sq_value_new_class(class));
+	free(sdecl); // but none of the fields, as they're now owned by `form`.
 }
 
 static void compile_func_declaration(struct func_declaration *fdecl) {
@@ -379,7 +387,7 @@ static unsigned compile_array(struct sq_code *code, struct array *array) {
 	return index;
 }
 
-static unsigned compile_dict(struct sq_code *code, struct dict *dict) {
+static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 	unsigned keys[dict->neles], vals[dict->neles];
 
 	for (unsigned i = 0; i < dict->neles; ++i) {
@@ -388,7 +396,7 @@ static unsigned compile_dict(struct sq_code *code, struct dict *dict) {
 	}
 
 	set_opcode(code, SQ_OC_INT);
-	set_index(code, SQ_INT_DICT_NEW);
+	set_index(code, SQ_INT_CODEX_NEW);
 	set_index(code, dict->neles);
 
 	for (unsigned i = 0; i < dict->neles; ++i) {
@@ -427,8 +435,8 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		result = compile_array(code, primary->array);
 		break;
 
-	case SQ_PS_PDICT:
-		result = compile_dict(code, primary->dict);
+	case SQ_PS_PCODEX:
+		result = compile_codex(code, primary->dict);
 		break;
 
 	case SQ_PS_PINDEX:
@@ -957,7 +965,7 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
 	case SQ_PS_SLOCAL: compile_local(code, stmt->ldecl); break;
 	case SQ_PS_SIMPORT: compile_import(code, stmt->import); break;
-	case SQ_PS_SCLASS: compile_class_declaration(stmt->cdecl); break;
+	case SQ_PS_SCLASS: compile_form_declaration(code, stmt->cdecl); break;
 	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;

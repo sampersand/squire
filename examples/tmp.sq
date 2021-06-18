@@ -1,3 +1,9 @@
+form Foo {
+	matter bar;
+	essence bar
+}
+
+__END__
 journey add(foo: int, bar: foo): foo {
 	
 }

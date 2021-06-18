@@ -3,7 +3,7 @@
 #include "function.h"
 #include "parse.h"
 #include "shared.h"
-#include "class.h"
+#include "form.h"
 #include <string.h>
 
 struct sq_token last;
@@ -156,7 +156,7 @@ static struct array *parse_array() {
 	return array;
 }
 
-static struct dict *parse_dict() {
+static struct dict *parse_codex() {
 	unsigned len = 0, cap = 8;
 	struct expression **keys = xmalloc(sizeof(struct expression[cap]));
 	struct expression **vals = xmalloc(sizeof(struct expression[cap]));
@@ -219,8 +219,8 @@ static struct primary *parse_primary() {
 		primary.array = parse_array();
 		break;
 	case SQ_TK_LBRACE:
-		primary.kind = SQ_PS_PDICT;
-		primary.dict = parse_dict();
+		primary.kind = SQ_PS_PCODEX;
+		primary.dict = parse_codex();
 		break;
 	case SQ_TK_NUMBER:
 		primary.kind = SQ_PS_PNUMBER;
@@ -534,29 +534,31 @@ static char *parse_import_declaration() {
 	return last.string->ptr;
 }
 
-static struct class_declaration *parse_class_declaration() {
+static struct class_declaration *parse_form_declaration() {
 	GUARD(SQ_TK_CLASS);
-	struct class_declaration *cdecl = xmalloc(sizeof(struct class_declaration));
+	struct class_declaration *fdecl = xmalloc(sizeof(struct class_declaration));
 
 	// optional name
 	if (take().kind == SQ_TK_IDENT) {
-		cdecl->name = last.identifier;
+		fdecl->name = last.identifier;
 	} else {
 		untake();
-		cdecl->name = strdup("<anonymous>");
+		fdecl->name = strdup("<anonymous>");
 	}
 
 	// require a lparen.
 	EXPECT(SQ_TK_LBRACE, "expected '{' before 'form' contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
-	cdecl->fields = xmalloc(sizeof(char *[MAX_LEN]));
-	cdecl->meths = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
-	cdecl->funcs = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
-	cdecl->constructor = NULL;
-	cdecl->nfields = 0;
-	cdecl->nfuncs = 0;
-	cdecl->nmeths = 0;
+	fdecl->fields = xmalloc(sizeof(char *[MAX_LEN]));
+	fdecl->meths = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
+	fdecl->funcs = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
+	fdecl->essences = xmalloc(sizeof(struct essence_declaration[MAX_LEN]));
+	fdecl->constructor = NULL;
+	fdecl->nfields = 0;
+	fdecl->nfuncs = 0;
+	fdecl->nmeths = 0;
+	fdecl->nessences = 0;
 
 	while (take().kind != SQ_TK_RBRACE) {
 		struct sq_token tkn = last;
@@ -565,19 +567,19 @@ static struct class_declaration *parse_class_declaration() {
 		case SQ_TK_METHOD:
 		case SQ_TK_CLASSFN:
 		case SQ_TK_CONSTRUCTOR: {
-			struct func_declaration *fn = parse_func_declaration(false, true);
+			struct func_declaration *fn = parse_func_declaration(false, 1);
 			if (tkn.kind == SQ_TK_CONSTRUCTOR) {
-				if (cdecl->constructor != NULL)
+				if (fdecl->constructor != NULL)
 					die("cannot have two constructors.");
-				cdecl->constructor = fn;
+				fdecl->constructor = fn;
 			} else if (tkn.kind == SQ_TK_METHOD) {
-				if (cdecl->nmeths >= MAX_LEN)
+				if (fdecl->nmeths >= MAX_LEN)
 					die("too many methods!");
-				cdecl->meths[cdecl->nmeths++] = fn;
+				fdecl->meths[fdecl->nmeths++] = fn;
 			} else if (tkn.kind == SQ_TK_CLASSFN) {
-				if (cdecl->nfuncs >= MAX_LEN)
-					die("too many class methods!");
-				cdecl->funcs[cdecl->nfuncs++] = fn;
+				if (fdecl->nfuncs >= MAX_LEN)
+					die("too many form methods!");
+				fdecl->funcs[fdecl->nfuncs++] = fn;
 			} else {
 				die("[bug] its not a constructor, func, or classfn?");
 			}
@@ -585,10 +587,30 @@ static struct class_declaration *parse_class_declaration() {
 			break;
 		}
 
+		case SQ_TK_ESSENCE:
+			while (take().kind == SQ_TK_IDENT) {
+				if (fdecl->nessences > MAX_LEN)
+					die("too many essences!");
+
+				fdecl->essences[fdecl->nessences++].name = last.identifier;
+				fdecl->essences[fdecl->nessences - 1].value = NULL;
+				if (take().kind == SQ_TK_COMMA)
+					continue;
+
+				if (last.kind != SQ_TK_ASSIGN) {
+					untake();
+					break;
+				}
+
+				fdecl->essences[fdecl->nessences - 1].value = parse_expression();
+			}
+
+			break;
+
 		case SQ_TK_FIELD:
 			while (take().kind == SQ_TK_IDENT) {
-				if (cdecl->nfields > MAX_LEN) die("too many fields!");
-				cdecl->fields[cdecl->nfields++] = last.identifier;
+				if (fdecl->nfields > MAX_LEN) die("too many fields!");
+				fdecl->fields[fdecl->nfields++] = last.identifier;
 				if (take().kind != SQ_TK_COMMA) {
 					untake();
 					break;
@@ -610,12 +632,12 @@ static struct class_declaration *parse_class_declaration() {
 
 #undef MAX_LEN
 
-	cdecl->fields = xrealloc(cdecl->fields, sizeof(char *[cdecl->nfields]));
-	cdecl->meths = xrealloc(cdecl->meths, sizeof(struct sq_function *[cdecl->nmeths]));
-	cdecl->funcs = xrealloc(cdecl->funcs, sizeof(struct sq_function *[cdecl->nfuncs]));
+	fdecl->fields = xrealloc(fdecl->fields, sizeof(char *[fdecl->nfields]));
+	fdecl->meths = xrealloc(fdecl->meths, sizeof(struct sq_function *[fdecl->nmeths]));
+	fdecl->funcs = xrealloc(fdecl->funcs, sizeof(struct sq_function *[fdecl->nfuncs]));
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' fields");
-	return cdecl;
+	return fdecl;
 }
 
 static struct statements *parse_statements(void);
@@ -756,7 +778,7 @@ static struct statement *parse_statement() {
 	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
 	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
 	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;
-	else if ((stmt.cdecl = parse_class_declaration())) stmt.kind = SQ_PS_SCLASS;
+	else if ((stmt.cdecl = parse_form_declaration())) stmt.kind = SQ_PS_SCLASS;
 	else if ((stmt.fdecl = parse_func_declaration(true, false))) stmt.kind = SQ_PS_SFUNC;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;

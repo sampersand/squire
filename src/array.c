@@ -40,7 +40,7 @@ void sq_array_deallocate(struct sq_array *array) {
 	free(array);
 }
 
-static size_t fix_index(const struct sq_array *array, ssize_t index) {
+size_t sq_array_fix_index(const struct sq_array *array, ssize_t index) {
 	if (index < 0)
 		index += array->length;
 
@@ -65,9 +65,7 @@ static void expand_array(struct sq_array *array, size_t length) {
 		array->elements[array->length++] = SQ_NULL;
 }
 
-void sq_array_insert(struct sq_array *array, ssize_t sindex, sq_value value) {
-	size_t index = fix_index(array, sindex);
-
+void sq_array_insert(struct sq_array *array, size_t index, sq_value value) {
 	expand_array(array, (array->length < index ? index : array->length) + 1);
 
 	memmove(
@@ -80,9 +78,7 @@ void sq_array_insert(struct sq_array *array, ssize_t sindex, sq_value value) {
 	array->elements[index] = value;
 }
 
-sq_value sq_array_delete(struct sq_array *array, ssize_t sindex) {
-	size_t index = fix_index(array, sindex);
-
+sq_value sq_array_delete(struct sq_array *array, size_t index) {
 	if (array->length <= index)
 		return SQ_NULL;
 
@@ -99,25 +95,21 @@ sq_value sq_array_delete(struct sq_array *array, ssize_t sindex) {
 	return result;
 }
 
-sq_value sq_array_index(const struct sq_array *array, ssize_t sindex) {
-	size_t index = fix_index(array, sindex);
-
+sq_value sq_array_index(const struct sq_array *array, size_t index) {
 	if (array->length <= index)
 		return SQ_NULL;
 
 	return sq_value_clone(array->elements[index]);
 }
 
-void sq_array_index_assign(struct sq_array *array, ssize_t sindex, sq_value value) {
-	size_t index = fix_index(array, sindex);
-
+void sq_array_index_assign(struct sq_array *array, size_t index, sq_value value) {
 	expand_array(array, index + 1);
-
 	sq_value_free(array->elements[index]);
 	array->elements[index] = value;
 }
 
 struct sq_string *sq_array_to_string(const struct sq_array *array) {
-	(void)array;
+	(void) array;
+
 	die("todo!");
 }
