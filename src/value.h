@@ -37,6 +37,8 @@ typedef enum {
 #define SQ_NULL SQ_VMASK((2 << SQ_VSHIFT), SQ_TCONST)
 #define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_TCONST)
 
+#define SQ_VALUE_ALIGN _Alignas(1<<SQ_VSHIFT)
+
 static inline sq_value sq_value_new_number(sq_number number) {
 	assert(number == (((sq_number) (((sq_value) number << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) number) << SQ_VSHIFT, SQ_TNUMBER);

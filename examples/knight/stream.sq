@@ -1,50 +1,56 @@
 @henceforth $assert($cond, $errmsg) =
 	if !($cond) {
-		hark "assertion failed: \($errmsg)"
+		catapult "assertion failed: " + $errmsg
 	} ;
 
 
 form Parser {
 	matter stream;
 
-	action peek() {
-		reward my.peek_at(N)
+	change peek() {
+		reward my[I]
 	}
 
-	action peek_at(idx) {
-		reward substr(my.stream, idx, I)
+	change [](index) {
+		$assert(0 < index && index <= length(my.stream), "index out of bounds!");
+
+		if genus(index) == 'array' {
+			reward substr(my.stream, index[I], index[II])
+		} alas {
+			reward my.stream[index]
+		}
 	}
 
-	action advance() {
+	change advance() {
 		$assert(my.stream, "advance called on an empty parser.");
 
-		my.stream = substr(my.stream, I, length(my.stream) - I);
+		my.stream = substr(my.stream, II, length(my.stream));
 	}
 
-	action take_while(cond) {
+	change take_while(cond) {
 		nigh len = length(my.stream)
-		nigh idx = N
+		nigh idx = I
 
 		whilst idx <= len && cond(my.peek_at(idx)) {
 			idx = idx + I
 		}
 
-		nigh result = substr(my.stream, 0, idx)
-		my.stream = sustr(my.stream, idx, len - 1)
+		nigh result = substr(my.stream, I, idx)
+		my.stream = sustr(my.stream, idx, len)
 
 		reward result
 	}
 
-	describe isdigit(chr) { reward '0' <= chr && chr <= '9' }
-	describe isident(chr) { reward isdigit(chr) || ('a' <= chr && chr <= 'z') || chr == '_'  }
-	describe isupper(chr) { reward ('A' <= chr && chr <= 'Z') || chr == '_' }
-	describe isquote(chr) { reward chr == '\'' || chr == '\"' }
-	describe isspace(chr) {
+	recollect isdigit(chr) { reward '0' <= chr && chr <= '9' }
+	recollect isident(chr) { reward isdigit(chr) || ('a' <= chr && chr <= 'z') || chr == '_'  }
+	recollect isupper(chr) { reward ('A' <= chr && chr <= 'Z') || chr == '_' }
+	recollect isquote(chr) { reward chr == '\'' || chr == '\"' }
+	recollect isspace(chr) {
 		reward chr == '{' || chr == '}' || chr == '(' || chr == ')' || chr == '['
 		    || chr == ']' || chr == ':' || chr == ' ' || ('\t' <= chr && chr <= '\r')
 	}
 
-	action strip_whitespace() {
+	change strip_whitespace() {
 		my.take_while(Parser.isspace)
 
 		if my.peek() == '#' {
@@ -53,7 +59,7 @@ form Parser {
 		}
 	}
 
-	action parse() {
+	change parse() {
 		my.strip_whitespace()
 		chr = my.peek()
 

@@ -63,7 +63,6 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 		if (argc != form->nmatter)
 			die("matter count mismatch (given %d, expected %d) for struct '%s'", argc, form->nmatter, form->name);
 
-		printf("argc=%d\n", argc);
 		return sq_value_new_imitation(sq_imitation_new(form, args));
 	}
 
@@ -175,6 +174,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			case SQ_INT_SUBSTR: {
 				string = sq_value_to_string(NEXT_LOCAL());
 				sq_number start = sq_value_to_number(NEXT_LOCAL());
+				if (!start--) sq_throw("cannot index by N.");
 				sq_number count = sq_value_to_number(NEXT_LOCAL());
 				struct sq_string *result;
 

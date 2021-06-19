@@ -47,6 +47,10 @@ size_t sq_array_fix_index(const struct sq_array *array, ssize_t index) {
 	if (index < 0)
 		sq_throw("index '-%zu' out of bounds!", (size_t) index);
 
+	if (!index--)
+		sq_throw("cannot index by N.");
+
+
 	return index;
 }
 
@@ -79,6 +83,7 @@ void sq_array_insert(struct sq_array *array, size_t index, sq_value value) {
 }
 
 sq_value sq_array_delete(struct sq_array *array, size_t index) {
+
 	if (array->length <= index)
 		return SQ_NULL;
 

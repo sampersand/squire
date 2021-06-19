@@ -3,26 +3,28 @@ import "card.sq"
 form Pile {
 	matter cards
 
-	describe create() {
-		nigh deck = []
+	recollect create() {
+		nigh cards = []
 		nigh i = N
 
+		cards[LII] = ni # just for efficiency.
+
 		whilst i < LII {
-			deck[i] = Card(i % XIII, i / XIII)
+			cards[i + I] = Card(i % XIII, i / XIII)
 			i = i + I
 		}
 
-		reward Pile(deck)
+		reward Pile(cards)
 	}
 
-	action shuffle() {
-		nigh len = lengthmy()
+	change shuffle() {
+		nigh len = my.length()
 		nigh n = C + (random() % CCC)
 		nigh cards = my.cards
 
 		whilst n {
-			i = random() % len
-			j = random() % len
+			i = (random() % len) + I
+			j = (random() % len) + I
 
 			tmp = cards[i]
 			cards[i] = cards[j]
@@ -32,31 +34,27 @@ form Pile {
 		}
 	}
 
-	action length() {
+	change length() {
 		reward length(my.cards)
 	}
 
-	action to_string() {
-		renowned cardstr
-		nigh i = N
+	change to_string() {
+		nigh i = I
 		nigh len = my.length()
 		nigh str = ""
 
 		whilst i < len {
-			nigh card = my.cards[i];
-
-			str = "\(str)\(card) "
-			i = i + I
+			str = "\(str)\(my.cards[i = i + I]) "
 		}
 
-		reward substr(str, N, length(str) - I)
+		reward substr(str, I, length(str))
 	}
 
-	action draw() {
-		reward delete(my.cards, N)
+	change draw() {
+		reward delete(my.cards, I)
 	}
 
-	action add(card) {
+	change add(card) {
 		insert(my.cards, my.length(), card)
 	}
 }

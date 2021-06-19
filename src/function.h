@@ -7,7 +7,7 @@
 #define MAX_ARGC 255
 
 struct sq_function {
-	char *name;
+	SQ_VALUE_ALIGN char *name;
 	int refcount; // negative indicates a global function.
 
 	unsigned argc, nlocals, nconsts, codelen;

@@ -79,6 +79,7 @@ sq_number sq_roman_to_number(const char *input, const char **output) {
 	sq_number number = 0;
 	enum roman_numeral stage = 0, parsed;
 
+	// ie if the input is just `N` (ie `0`).
 	if (*input == 'N' && !isalnum(input[1])) {
 		input++;
 		goto done;
@@ -93,7 +94,9 @@ sq_number sq_roman_to_number(const char *input, const char **output) {
 		case 'C': parsed = SQ_TK_ROMAN_C; break;
 		case 'D': parsed = SQ_TK_ROMAN_D; break;
 		case 'M': parsed = SQ_TK_ROMAN_M; break;
+		case '_': continue; // ignore `_` in roman numeral literals
 		default:
+			// followed by any other alphanumerics, we aren't a roman numeral.
 			if (isalnum(*input)) return -1;
 			goto done;
 		}

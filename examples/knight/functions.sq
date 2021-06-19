@@ -1,17 +1,50 @@
-renowned die
+form Function {
+	essence FUNCTIONS = {};
+	matter name, arity, func;
 
-myth Args {
-	equip a1, a2, a3, a4
-}
-
-myth Ast {
-	equip fn, args
-
-	journey run() {
-		fn = my.fn
-		reward fn(my.args)
+	recollect register(name, arity, func) {
+		funcs = my.FUNCTIONS;
+		funcs[name] = Function(name, arity, func)
 	}
 }
+
+form Ast {
+	matter func, args;
+
+	change run() {
+		renowned Value
+
+		nigh func = my.func;
+		func = func.func;
+		reward Value.new(func(my.args))
+	}
+}
+
+@henceforth $declfn($name, $arity, $body) = Function.register($name, $arity, journey(args) { $body }) ;
+@henceforth $declfn1($name, $arity, $body) = $declfn($name, $arity, reward $body);
+
+$declfn1('P', 0, inquire());
+$declfn1('R', 0, random());
+$declfn ('E', 1, << v = Value.parse(args[I]); v.run() >>);
+$declfn1('E', 1, args[I]);
+$declfn1('C', 1, args[I].run().run());
+
+#/*
+#
+#	4.2.1 [`:`](#421-unchanged)  
+#	4.2.2 [`EVAL`](#422-evalstring)  
+#	4.2.3 [`BLOCK`](#423-blockunevaluated)  
+#	4.2.4 [`CALL`](#424-callspecial)  
+#	4.2.5 [`` ` ``](#425-string)  
+#	4.2.6 [`QUIT`](#426-quitnumber)  
+#	4.2.7 [`!`](#427-boolean)  
+#	4.2.8 [`LENGTH`](#428-lengthstring)  
+#	4.2.9 [`DUMP`](#429-dumpunchanged)  
+#	4.2.10 [`OUTPUT`](#4210-outputstring)  
+#	4.2.11 [`ASCII`](#4211-asciiunchanged)  
+#*/
+
+__END__
 
 # Arity zero
 journey sq_prompt(_) {

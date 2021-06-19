@@ -3,8 +3,8 @@
 #include "value.h"
 
 struct sq_codex {
+	SQ_VALUE_ALIGN struct sq_codex_page *pages;
 	unsigned length, capacity, refcount;
-	struct sq_codex_page *pages;
 };
 
 struct sq_codex_page {

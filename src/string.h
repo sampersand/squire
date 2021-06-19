@@ -2,9 +2,10 @@
 #define SQ_STRING_H
 
 #include <stdbool.h>
+#include "value.h"
 
 struct sq_string {
-	char *ptr;
+	SQ_VALUE_ALIGN char *ptr;
 	int refcount;
 	unsigned length;
 	bool borrowed;

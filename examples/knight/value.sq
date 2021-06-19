@@ -1,25 +1,38 @@
 form Value {
 	matter name, value;
 
-	describe parse(stream) {
-		hark "todo";
+	imitate(value) {
+		renowned Variable;
+		renowned Ast;
+
+		fork genus(my.value = value) {
+			path 'number':
+			path 'string':
+			path 'boolean':
+			path 'null':
+			path Variable:
+			path Ast:
+				reward
+			alas:
+				catapult "unknown genus given: \(genus(my.value))"	
+		}
 	}
 
-	action run() {
-		renowned Variable
-
-		attempt {
-			nigh run = my.value.run;
-		} retreat _ {
-			reward run.run
-		} alas {
-
-		} bow {
-		
-		}
-		if kindof(my.value) == Variable {
-			my.value.run()
-		}
+	change run() {
+#		renowned Variable
+#
+#		attempt {
+#			nigh run = my.value.run;
+#		} retreat _ {
+#			reward run.run
+#		} alas {
+#
+#		} bow {
+		#
+#		}
+#		if kindof(my.value) == Variable {
+#			my.value.run()
+#		}
 	}
 }
 

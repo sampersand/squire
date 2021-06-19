@@ -292,10 +292,25 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	}
 
 	declare_global_variable(strdup(form->name), sq_value_new_form(form));
+	if (sdecl->nessences) {
+		unsigned global = lookup_global_variable(strdup(form->name));
+		set_opcode(code, SQ_OC_GLOAD);
+		set_index(code, global);
+		set_index(code, global = next_local(code));
 
-	for (unsigned i = 0; i < sdecl->nessences; ++i) {
-		if (sdecl->essences[i].value)
-			form->essences[i].value = compile_expression(code, sdecl->essences[i].value);
+		for (unsigned i = 0; i < sdecl->nessences; ++i) {
+			if (!sdecl->essences[i].value) {
+				form->essences[i].value = SQ_NULL;
+				continue;
+			}
+			unsigned index = compile_expression(code, sdecl->essences[i].value);
+
+			set_opcode(code, SQ_OC_ISTORE);
+			set_opcode(code, global);
+			set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(sdecl->essences[i].name)))));
+			set_index(code, index);
+			set_index(code, index);
+		}
 	}
 
 	free(sdecl); // but none of the fields, as they're now owned by `form`.
@@ -744,7 +759,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("length",   SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",   SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("dismount", SQ_INT_EXIT, 1);
-	BUILTIN_FN("kindof",   SQ_INT_KINDOF, 1);
+	BUILTIN_FN("genus",    SQ_INT_KINDOF, 1);
 	BUILTIN_FN("hex",      SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
 	BUILTIN_FN("inquire",  SQ_INT_PROMPT, 0);
 	BUILTIN_FN("random",   SQ_INT_RANDOM, 0);

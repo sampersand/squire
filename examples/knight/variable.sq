@@ -1,4 +1,4 @@
-	form Variable {
+form Variable {
 	matter name, value, assigned
 	essence list = {};
 
@@ -8,13 +8,13 @@
 	}
 
 	recollect fetch(name) {
-		var = my.list[name];
+		list = my.list
+		var = list[name]
 
-		if var {
-			reward var
+		if ni == var {
+			reward list[name] = me(name)
 		} alas {
-			l=my.list
-			reward l[name] = me(name) # eyo segfault
+			reward var
 		}
 	}
 
@@ -31,17 +31,3 @@
 		my.value = value
 	}
 }
-
-Variable.list = {};
-x=Variable.fetch("?");x.assign(34);
-x=Variable.fetch("?");x.assign(34);
-dump(Variable.fetch("?"));
-
-__END__
-x=Variable.list;
-x['a']=Variable(3);
-dump(x)
-__END__
-x=Variable.fetch("A");
-x.assign(34);
-dump(Variable.fetch("A"))

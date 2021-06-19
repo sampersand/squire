@@ -1,3 +1,10 @@
+form Foo {
+	essence Bar = 34;
+}
+
+dump(Foo.Bar)
+
+__END__
 journey gcd(numer, denom) {
 	dump(12 % 3);
 	dismount(0);

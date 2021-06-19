@@ -4,6 +4,7 @@
 #include "shared.h"
 #include <assert.h>
 #include <stddef.h>
+#include <stdalign.h>
 
 /** An array within Squire.
  * 
@@ -12,7 +13,7 @@
  */
 struct sq_array {
 	/* The elements associated with this array. */
-	sq_value *elements;
+	SQ_VALUE_ALIGN sq_value *elements;
 
 	/* How many elements are in this array. */
 	size_t length;

@@ -1,21 +1,20 @@
-proclaim("What is your favourite colour? ");
-fav_colour = "green"#inquire();
+@henceforth $proclaimeth(what) = proclaim("hark: \(what)\n");
+
+$proclaimeth("What is your favourite colour? ");
+fav_colour = inquire();
 
 fork fav_colour {
 	path 'green':
-		proclaim("I like green too\n"); 
-		# no `break` needed---no fallthrough exissts
+		$proclaimeth("I like green too\n"); 
+		# no `break` needed---no fallthrough exists
 
 	path 'red':
 	path 'blue':
-		proclaim("\(fav_colour) is also good too I guess\n")
+		$proclaimeth("\(fav_colour) is also good too I guess\n")
 
 	alas:
-		proclaim("I don't know \(fav_colour), but it's probably cool.\n")
+		$proclaimeth("I don't know \(fav_colour), but it's probably cool.\n")
 }
-
-@henceforth $proclaimeth = proclaim;
-$proclaimeth("Salutations, terra!\n");
 
 
 __END__

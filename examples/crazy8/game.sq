@@ -4,6 +4,8 @@ import "deck.sq"
 deck = Pile.create()
 deck.shuffle()
 discard = Pile([deck.draw()])
+dump(discard)
+__END__
 dump(length(deck))
 
 journey new_hand(deck, size) {

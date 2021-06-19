@@ -269,6 +269,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 	case SQ_TSTRING: {
 		int index = sq_value_to_number(key);
 
+		if (!index--) sq_throw("cannot index by N.");
 		if (index < 0)
 			index += AS_STRING(value)->length;
 
@@ -282,7 +283,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 	}
 
 	case SQ_TARRAY:
-		return sq_array_index(AS_ARRAY(value), sq_value_to_number(key));
+		return sq_array_index2(AS_ARRAY(value), sq_value_to_number(key));
 
 	case SQ_TCODEX:
 		return sq_codex_index(AS_CODEX(value), key);
@@ -305,7 +306,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TARRAY:
-		sq_array_index_assign(AS_ARRAY(value), sq_value_to_number(key), val);
+		sq_array_index_assign2(AS_ARRAY(value), sq_value_to_number(key), val);
 		return;
 
 	case SQ_TCODEX:
@@ -343,12 +344,11 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 	case SQ_TSTRING: {
 		struct sq_string *rstr = sq_value_to_string(rhs);
-		struct sq_string *result = sq_string_alloc(
-			AS_STRING(lhs)->length + rstr->length + 1
-		);
+		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length + rstr->length);
 
-		strcpy(result->ptr, AS_STR(lhs));
-		strcat(result->ptr, rstr->ptr);
+		memcpy(result->ptr, AS_STR(lhs), AS_STRING(lhs)->length);
+		memcpy(result->ptr + AS_STRING(lhs)->length, rstr->ptr, AS_STRING(rhs)->length);
+
 		// sq_string_free(rstr);
 		// if (free_lhs) sq_value_free(lhs);
 		return sq_value_new_string(result);
@@ -465,7 +465,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER: {
 		sq_number rnum = sq_value_to_number(rhs);
-		if (!rnum) die("cannot divide by zero");
+		if (!rnum) die("cannot divide by N");
 		return sq_value_new_number(AS_NUMBER(lhs) / rnum);
 	}
 
@@ -489,7 +489,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_TNUMBER: {
 		sq_number rnum = sq_value_to_number(rhs);
-		if (!rnum) die("cannot modulo by zero");
+		if (!rnum) die("cannot modulo by N");
 		return sq_value_new_number(AS_NUMBER(lhs) % rnum);
 	}
 

@@ -38,7 +38,7 @@ struct sq_string *sq_string_alloc(unsigned length) {
 
 	struct sq_string *string = allocate_string(length);
 
-	string->ptr = xmalloc(length);
+	string->ptr = xmalloc(length + 1);
 
 	return string;
 }
