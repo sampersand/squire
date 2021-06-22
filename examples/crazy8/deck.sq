@@ -18,7 +18,7 @@ form Pile {
 	}
 
 	change shuffle() {
-		nigh len = my.length()
+		nigh len = my.()
 		nigh n = C + (random() % CCC)
 		nigh cards = my.cards
 

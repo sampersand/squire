@@ -27,7 +27,8 @@ $declfn1('P', 0, inquire());
 $declfn1('R', 0, random());
 $declfn ('E', 1, << v = Value.parse(args[I]); v.run() >>);
 $declfn1('E', 1, args[I]);
-$declfn1('C', 1, args[I].run().run());
+#$declfn ('C', 1, << x = args[I].run(); reward x.run() >>);
+a = Ast(Function.FUNCTIONS['a'], 1);
 
 #/*
 #

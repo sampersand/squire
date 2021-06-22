@@ -377,8 +377,19 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 }
 
 static bool parse_macro_identifier(char *name) {
+	static unsigned long long unique_value;
+
 	if (is_in_macro_declaration)
 		return true;
+
+	if (!strcmp(name, "__ID__")) {
+	 	expansions[++expansion_pos].tokens = xmalloc(sizeof(struct sq_token));
+	 	expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMBER;
+	 	expansions[expansion_pos].tokens[0].number = unique_value++;
+	 	expansions[expansion_pos].len = 1;
+	 	expansions[expansion_pos].pos = 0;
+	 	return false;
+	}
 
 	struct macro_variable *var;
 

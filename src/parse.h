@@ -101,7 +101,8 @@ struct expression {
 		SQ_PS_EFNCALL,
 		SQ_PS_EASSIGN,
 		SQ_PS_EARRAY_ASSIGN,
-		SQ_PS_EMATH
+		SQ_PS_EMATH,
+		SQ_PS_EINDEX,
 	} kind;
 
 	union {
@@ -109,6 +110,7 @@ struct expression {
 		struct assignment *asgn;
 		struct index_assign *ary_asgn;
 		struct bool_expression *math;
+		struct index *index;
 	};
 };
 
@@ -124,9 +126,14 @@ struct assignment {
 };
 
 struct index_assign {
-	struct variable *var;
+	struct primary *into;
 	struct expression *index;
 	struct expression *value;
+};
+
+struct index {
+	struct primary *into;
+	struct expression *index;
 };
 
 struct variable {
@@ -177,11 +184,6 @@ struct array {
 struct dict {
 	unsigned neles;
 	struct expression **keys, **vals;
-};
-
-struct index {
-	struct variable *into;
-	struct expression *index;
 };
 
 struct primary {

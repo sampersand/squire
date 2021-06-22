@@ -121,9 +121,11 @@ static struct function_call *parse_func_call(struct variable *func) {
 	return fncall;
 }
 
-static struct index *parse_index(struct variable *array) {
+static struct index *parse_index(struct primary *primary) {
+	GUARD(SQ_TK_LBRACKET);
+
 	struct index *index = xmalloc(sizeof(struct index));
-	index->into = array;
+	index->into = primary;
 	if (!(index->index = parse_expression())) die("Cant compile index");
 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
 	return index;
@@ -250,9 +252,6 @@ static struct primary *parse_primary() {
 			primary.expr = xmalloc(sizeof(struct expression));
 			primary.expr->kind = SQ_PS_EFNCALL;
 			primary.expr->fncall = parse_func_call(var);
-		} else if (last.kind == SQ_TK_LBRACKET) {
-			primary.kind = SQ_PS_PINDEX;
-			primary.index = parse_index(var);
 		} else {
 			untake();
 			primary.kind = SQ_PS_PVARIABLE;
@@ -450,7 +449,7 @@ static struct index_assign *parse_index_assign(struct index *aidx) {
 
 	struct index_assign *ary_asgn = xmalloc(sizeof(struct index_assign));
 
-	ary_asgn->var = aidx->into;
+	ary_asgn->into = aidx->into;
 	ary_asgn->index = aidx->index;
 	free(aidx);
 
@@ -473,16 +472,17 @@ static struct expression *parse_expression() {
 		|| expr.math->lhs->lhs->lhs->kind != SQ_PS_AMUL
 		|| expr.math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
 		|| expr.math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
-		|| (expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
-		&& expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PINDEX)
 	) goto done;
+	// 	|| (expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
+	// 	&& expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PINDEX)
+	// ) goto done;
 
 	struct primary *prim = expr.math->lhs->lhs->lhs->lhs->lhs->rhs;
 
 	take();
 	untake();
 
-	if (last.kind == SQ_TK_ASSIGN) {
+	if ((prim->kind == SQ_PS_PVARIABLE || prim->kind == SQ_PS_PINDEX) && last.kind == SQ_TK_ASSIGN) {
 		if (prim->kind == SQ_PS_PVARIABLE) {
 			expr.kind = SQ_PS_EASSIGN;
 			expr.asgn = parse_assignment(prim->variable);
@@ -490,7 +490,11 @@ static struct expression *parse_expression() {
 			expr.kind = SQ_PS_EARRAY_ASSIGN;
 			expr.ary_asgn = parse_index_assign(prim->index);
 		}
+	} else if (last.kind == SQ_TK_LBRACKET) {
+		expr.kind = SQ_PS_EINDEX;
+		expr.index = parse_index(prim);
 	}
+
 
 done:
 

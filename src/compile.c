@@ -501,13 +501,15 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 	return index;
 }
 
+static unsigned compile_primary(struct sq_code *code, struct primary *primary);
+
 static unsigned compile_index(struct sq_code *code, struct index *index) {
-	unsigned array = load_variable_class(code, index->into, NULL);
+	unsigned into = compile_primary(code, index->into);
 	free(index->into); // OR SHOULD THIS BE FREED IN `load_variable_class`?
 	unsigned idx = compile_expression(code, index->index);
 
 	set_opcode(code, SQ_OC_INDEX);
-	set_index(code, array);
+	set_index(code, into);
 	set_index(code, idx);
 	set_index(code, idx = next_local(code));
 
@@ -794,7 +796,10 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		return compile_function_call(code, expr->fncall);
 
 	case SQ_PS_EARRAY_ASSIGN: {
-		int var = lookup_identifier(code, expr->ary_asgn->var->name);
+		
+		int var = 0;
+		die("!");
+		// int var = lookup_identifier(code, expr->ary_asgn->var->name);
 
 		if (var < 0) {
 			set_opcode(code, SQ_OC_GLOAD);
