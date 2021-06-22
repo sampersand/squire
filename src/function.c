@@ -81,9 +81,9 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 }
 
 // jmp_buf redo_location;
-jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
-sq_value exception;
-unsigned current_exception_handler;
+// jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
+// sq_value exception;
+// unsigned current_exception_handler;
 
 // struct function_vm_state {
 // 	unsigned ip;
