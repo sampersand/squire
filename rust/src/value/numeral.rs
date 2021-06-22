@@ -30,14 +30,11 @@ impl Numeral {
 pub enum NumeralParseError {
 	Empty,
 	UnexpectedStartingChar,
-	AlphanumericTrailingChar {
-		so_far: Numeral,
-		bad_byte_index: usize
-	}
+	BadTrailingChar(char)
 }
 
 impl Numeral {
-	pub fn parse_from_arabic_str(input: &mut &str) -> Result<Self, NumeralParseError> {
+	pub fn from_str_arabic(input: &str) -> Result<Self, NumeralParseError> {
 		let mut chars = input.trim_start().chars();
 		let mut is_neg = false;
 		let mut numeral = Self::default();
@@ -54,8 +51,9 @@ impl Numeral {
 				continue;
 			} else if let Some(num) = digit.to_digit(10) {
 				numeral = numeral * 10 + (num as i64);
+			} else if digit.is_alphanumeric() {
+				return Err(NumeralParseError::BadTrailingChar(digit))
 			} else {
-				is_valid = digit.is_alphanumeric();
 				break;
 			}
 		}
@@ -64,18 +62,10 @@ impl Numeral {
 			numeral = -numeral;
 		}
 
-		if is_valid {
-			*input = chars.as_str();
-			Ok(numeral)
-		} else {
-			Err(NumeralParseError::AlphanumericTrailingChar {
-				so_far: numeral,
-				bad_byte_index: 0 // todo
-			})
-		}
+		Ok(numeral)
 	}
 
-	pub fn parse_from_roman_str(_input: &mut &str) -> Result<Self, NumeralParseError> {
+	pub fn from_str_roman(_input: &str) -> Result<Self, NumeralParseError> {
 		todo!();
 	}
 // // 	pub fn parse_from_arabic_str(input: &mut &str) -> Option<Self> {
@@ -221,8 +211,8 @@ impl FromStr for Numeral {
 	fn from_str(input: &str) -> Result<Self, Self::Err> {
 		let mut input = input.trim_start();
 
-		match Self::parse_from_arabic_str(&mut input) {
-			Err(NumeralParseError::UnexpectedStartingChar) => Self::parse_from_roman_str(&mut input),
+		match Self::from_str_arabic(&mut input) {
+			Err(NumeralParseError::UnexpectedStartingChar) => Self::from_str_roman(&mut input),
 			other => other
 		}
 	}
