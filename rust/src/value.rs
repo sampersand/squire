@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 mod array;
 mod codex;
 pub mod numeral;
-mod text;
+pub mod text;
 
 pub use text::Text;
 pub use array::Array;
@@ -17,7 +17,7 @@ pub enum Value {
 	Null,
 	Veracity(bool),
 	Numeral(Numeral),
-	Text(String),
+	Text(Text),
 	Journey(Journey),
 	Form(Arc<Form>),
 	Imitation(Arc<Imitation>)

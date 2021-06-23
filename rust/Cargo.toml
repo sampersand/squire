@@ -6,8 +6,11 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = ["roman-numeral-tostring"]
+default = ["roman-numeral-tostring", "unicode"]
+
 roman-numeral-tostring = []
+unicode-roman-numerals = []
+unicode = ["unicode-roman-numerals"]
 
 [dependencies]
 parking_lot = "0.11"

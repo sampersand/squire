@@ -70,14 +70,17 @@ impl<'a, I: Iterator<Item=char>> Stream<'a, I> {
 		}
 	}
 
-	pub fn strip_comment(&mut self) {
-		assert_eq!(self.next(), Some('#'), "called `strip_comment` without a leading `#`");
-
-		self.take_while(|chr| chr != '\n');
+	pub fn strip_comment(&mut self) -> bool {
+		if self.peek().map_or(false, |chr| chr == '#') {
+			self.take_while(|chr| chr != '\n');
+			true
+		} else {
+			false
+		}
 	}
 
-	pub fn strip_whitespace(&mut self) {
-		self.take_while(char::is_whitespace);
+	pub fn strip_whitespace(&mut self) -> bool {
+		self.take_while(char::is_whitespace).is_some()
 	}
 
 	pub fn take_while(&mut self, mut condition: impl FnMut(char) -> bool) -> Option<String> {
