@@ -1,4 +1,5 @@
 use crate::value::numeral::NumeralParseError;
+use super::Token;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
@@ -11,6 +12,7 @@ pub enum ErrorKind {
 	UnknownEscapeCharacter(char),
 	UnknownMacroInvocation(String),
 	UnknownTokenStart(char),
+	BadToken { given: Option<Token>, expected: Vec<Token> },
 	Message(&'static str),
 }
 

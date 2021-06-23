@@ -4,8 +4,10 @@ extern crate tracing;
 pub mod form;
 
 pub mod journey;
-pub mod parse;
 pub mod value;
+
+pub mod parse;
+pub mod compile;
 pub mod runtime;
 
 pub use value::Value;

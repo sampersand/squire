@@ -94,12 +94,14 @@ pub enum Token {
 #[derive(Debug)]
 pub struct Tokenizer<'a, I> {
 	stream: &'a mut Stream<'a, I>,
-	macros: Macros
+	macros: Macros,
+	last: Option<Token>,
+	put_back: bool
 }
 
 impl<'a, I> Tokenizer<'a, I> {
 	pub fn new(stream: &'a mut Stream<'a, I>) -> Self {
-		Self { stream, macros: Macros::default() }
+		Self { stream, macros: Macros::default(), last: None, put_back: false }
 	}
 }
 
@@ -133,6 +135,11 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 
 	pub fn error(&self, error: impl Into<ErrorKind>) -> super::Error {
 		self.stream.error(error)
+	}
+
+	pub fn _hack_is_next_token_colon(&mut self) -> bool {
+		self.stream.strip_whitespace_and_comments();
+		self.stream.peek() == Some(':')
 	}
 
 	pub fn next_keyword(&mut self) -> Option<Keyword> {
@@ -207,8 +214,13 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		if self.stream.peek().map_or(false, |chr| chr.is_alphanumeric()) {
 			Err(self.error(ErrorKind::BadFrakturSuffix))
 		} else {
-			Ok(Text::new_fraktur(fraktur))
+			Ok(Text::new_fraktur(fraktur.trim().to_string()))
 		}
+	}
+
+	pub fn undo(&mut self) {
+		assert!(!self.put_back);
+		self.put_back = true;
 	}
 
 	fn parse_quoted(&mut self) -> Result<Token> {
@@ -331,7 +343,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		}
 	}
 
-	fn next_identifier(&mut self) -> Option<String> {
+	pub fn next_identifier(&mut self) -> Option<String> {
 		if self.stream.peek().map_or(false, |chr| chr.is_alphabetic() || chr == '_') {
 			Some(self.stream.take_while(|chr| chr.is_alphanumeric() || chr == '_').unwrap())
 		} else {
@@ -445,10 +457,17 @@ impl<I: Iterator<Item=char>> Iterator for Tokenizer<'_, I> {
 	type Item = Result<Token>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		// if let Some(macro_) = self.macros.last_mut() {
-			// macro_.next().map(Ok).or_else(|| self.next())
-		// } else {
-			self.next_from_stream()
-		// }
+		if self.put_back {
+			self.put_back = false;
+			self.last.clone().map(Ok)
+		} else {
+			Some(self.next_from_stream()?.map(|value| { 
+				self.last = Some(value.clone());
+				value
+			}))
+		}
+	// if let Some(macro_) = self.macros.last_mut() {
+		// macro_.next().map(Ok).or_else(|| self.next())
+	// } else {
 	}
 }

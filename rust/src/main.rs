@@ -2,19 +2,21 @@
 
 use crate::value::Numeral;
 use squire::value::Codex;
-use squire::*;
+use squire::{*, parse::ast::*};
 use squire::value::Array;
 
 fn main() {
-    let arg = std::env::args().skip(1).next().unwrap();
-    let mut stream = parse::Stream::from_str(&arg/*r#"
-forma
-# @henceforth $foo=34
-#       "a\(yay + 4)[\]\(34)!", world
-    "#*/);
+//     // let arg = std::env::args().skip(1).next().unwrap();
+//     let mut stream = parse::Stream::from_str(&arg/*r#"
+// forma
+// # @henceforth $foo=34
+// #       "a\(yay + 4)[\]\(34)!", world
+//     "#*/);
+    let mut stream = parse::Stream::from_str("-a.b[d]()()");
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
+    let parse = parse::ast::Primary::parse(&mut tokenizer);
 
-    dbg!(tokenizer.next());
+    dbg!(parse);
     // dbg!(tokenizer);
 /*
 pub enum Keyword {
