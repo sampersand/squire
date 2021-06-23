@@ -59,6 +59,8 @@ pub enum Symbol {
 	HyphenEqual,
 	Asterisk,
 	AsteriskEqual,
+	AsteriskAsterisk,
+	AsteriskAsteriskEqual,
 	Solidus,
 	SolidusEqual,
 	PercentSign,
@@ -423,7 +425,12 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			'>' => if_equals!(GreaterThanOrEqual, GreaterThan),
 			'+' => if_equals!(PlusEqual, Plus),
 			'-' => if_equals!(HyphenEqual, Hyphen),
-			'*' => if_equals!(AsteriskEqual, Asterisk),
+			'*' => 
+				if self.stream.take_prefix("*") {
+					if_equals!(AsteriskAsteriskEqual, AsteriskAsterisk)
+				} else {
+					if_equals!(AsteriskEqual, Asterisk)
+				},
 			'/' => if_equals!(SolidusEqual, Solidus),
 			'%' => if_equals!(PercentSignEqual, PercentSign),
 			'&' if self.stream.take_prefix("&") => Token::Symbol(Symbol::AndAnd),

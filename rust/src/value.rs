@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::{Journey, Form, Imitation};
+use crate::runtime::{Vm, Result};
 use std::fmt::{self, Display, Formatter};
 
 mod array;
@@ -47,4 +48,38 @@ impl From<bool> for Value {
 	fn from(boolean: bool) -> Self {
 		Self::Veracity(boolean)
 	}
+}
+
+impl Value {
+	pub fn to_boolean(&self, vm: &mut Vm) -> Result<bool> {
+		let _ = vm; todo!()
+	}
+
+	pub fn to_text(&self, vm: &mut Vm) -> Result<Text> {
+		let _ = vm; todo!();
+	}
+
+	pub fn to_number(&self, vm: &mut Vm) -> Result<Numeral> {
+		let _ = vm; todo!();
+	}
+
+	pub fn try_neg(&self, vm: &mut Vm) -> Result<Value> { let _ = vm; todo!(); }
+	pub fn try_add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_sub(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_mul(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_div(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_rem(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_pow(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+
+	pub fn try_not(&self, vm: &mut Vm) -> Result<Value> { let _ = vm; todo!(); }
+	pub fn try_eql(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_neq(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_lth(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_leq(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_gth(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_geq(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_cmp(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+
+	pub fn try_index(&self, by: &Value, vm: &mut Vm) -> Result<Value> { let _ = (by, vm); todo!(); }
+	pub fn try_index_assign(&self, by: &Value, with: Value, vm: &mut Vm) -> Result<Value> { let _ = (by, with, vm); todo!(); }
 }
