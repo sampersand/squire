@@ -1,6 +1,9 @@
 use crate::value::{Numeral, Text};
 use super::{Stream, Result, ErrorKind};
 
+mod macros;
+use macros::Macros;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Keyword {
 	Class,
@@ -84,18 +87,17 @@ pub enum Token {
 	Literal(Literal),
 	StringInterpolation(Vec<(String, Vec<Token>)>, String),
 	Identifier(String),
-	Label(String),
 }
 
 #[derive(Debug)]
 pub struct Tokenizer<'a, I> {
 	stream: &'a mut Stream<'a, I>,
-	macros: Vec<std::vec::IntoIter<Token>>
+	macros: Macros
 }
 
 impl<'a, I> Tokenizer<'a, I> {
 	pub fn new(stream: &'a mut Stream<'a, I>) -> Self {
-		Self { stream, macros: Vec::new() }
+		Self { stream, macros: Macros::default() }
 	}
 }
 
@@ -126,6 +128,10 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 	pub const TRUE: &'static str            = "yay";
 	pub const FALSE: &'static str           = "nay";
 	pub const NULL: &'static str            = "ni";
+
+	pub fn error(&self, error: impl Into<ErrorKind>) -> super::Error {
+		self.stream.error(error)
+	}
 
 	pub fn next_keyword(&mut self) -> Option<Keyword> {
 		macro_rules! keyword {
@@ -168,7 +174,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		let parsed = self.stream.take_while(|chr| chr.is_ascii_digit() || chr == '_')?;
 
 		match self.stream.peek() {
-			Some(chr) if chr.is_alphanumeric() => Some(Err(self.stream.error(NumeralParseError::BadTrailingChar(chr)))),
+			Some(chr) if chr.is_alphanumeric() => Some(Err(self.error(NumeralParseError::BadTrailingChar(chr)))),
 			_ => Some(Ok(parsed.parse().unwrap()))
 		}
 	}
@@ -182,7 +188,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			return None;
 		}
 
-		Some(parsed.parse().map_err(|err| self.stream.error(err)))
+		Some(parsed.parse().map_err(|err| self.error(err)))
 	}
 
 	fn parse_numeral(&mut self) -> Option<Result<Token>> {
@@ -197,7 +203,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		let fraktur = self.stream.take_while(|chr| is_fraktur(chr) || chr.is_whitespace()).unwrap();
 
 		if self.stream.peek().map_or(false, |chr| chr.is_alphanumeric()) {
-			Err(self.stream.error(ErrorKind::BadFrakturSuffix))
+			Err(self.error(ErrorKind::BadFrakturSuffix))
 		} else {
 			Ok(Text::new_fraktur(fraktur))
 		}
@@ -219,7 +225,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 				continue;
 			} else if quote == '\'' {
 				// for single quoting, we only have basic escapes
-				match self.stream.next().ok_or_else(|| self.stream.error(ErrorKind::UnterminatedEscapeSequence))? {
+				match self.stream.next().ok_or_else(|| self.error(ErrorKind::UnterminatedEscapeSequence))? {
 					chr @ ('\\' | '\'') => text.push(chr),
 					other => { text.push('\\'); text.push(other); }
 				}
@@ -231,13 +237,13 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 				() => {
 					match self.stream.next().map(|chr| (chr, chr.to_digit(16))) {
 						Some((_, Some(digit))) => Ok(digit),
-						Some((bad, None)) => Err(self.stream.error(ErrorKind::InvalidHexDigit(bad))),
-						None => Err(self.stream.error(ErrorKind::UnterminatedEscapeSequence))
+						Some((bad, None)) => Err(self.error(ErrorKind::InvalidHexDigit(bad))),
+						None => Err(self.error(ErrorKind::UnterminatedEscapeSequence))
 					};
 				}
 			}
 
-			match self.stream.next().ok_or_else(|| self.stream.error(ErrorKind::UnterminatedEscapeSequence))? {
+			match self.stream.next().ok_or_else(|| self.error(ErrorKind::UnterminatedEscapeSequence))? {
 				chr @ ('\\' | '\"' | '\'') => text.push(chr),
 				'\r' if self.stream.next() == Some('\n') => continue, // ignore `\` at the end of lines
 				'\n' => continue, // ignore `\` at the end of lines
@@ -259,7 +265,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 					let lowermost = next_hex_char!()? * 0x00;
 					let escape = uppermost | upper | lower | lowermost;
 
-					text.push(char::from_u32(escape).ok_or_else(|| self.stream.error(ErrorKind::InvalidHexEscape(escape)))?);
+					text.push(char::from_u32(escape).ok_or_else(|| self.error(ErrorKind::InvalidHexEscape(escape)))?);
 				},
 				'(' => {
 					let mut inner = vec![];
@@ -267,7 +273,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 
 					loop {
 						let token = self.next()
-							.unwrap_or_else(|| Err(self.stream.error(ErrorKind::UnterminatedEscapeSequence)))?;
+							.unwrap_or_else(|| Err(self.error(ErrorKind::UnterminatedEscapeSequence)))?;
 
 						if token == Token::LeftParen(ParenKind::Round) {
 							nesting += 1;
@@ -284,7 +290,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 					interpolations.push((Text::new(text), inner));
 					text = String::new();
 				},
-				other => return Err(self.stream.error(ErrorKind::UnknownEscapeCharacter(other)))
+				other => return Err(self.error(ErrorKind::UnknownEscapeCharacter(other)))
 			}
 		}
 
@@ -323,6 +329,43 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		}
 	}
 
+	fn next_identifier(&mut self) -> Option<String> {
+		if self.stream.peek().map_or(false, |chr| chr.is_alphabetic() || chr == '_') {
+			Some(self.stream.take_while(|chr| chr.is_alphanumeric() || chr == '_').unwrap())
+		} else {
+			None
+		}
+	}
+
+	fn next_macro_invocation(&mut self) -> Option<Result<()>> {
+		if self.stream.peek() != Some('@') {
+			return None;
+		}
+
+		self.stream.strip_whitespace_and_comments();
+
+		if let Some(identifier) = self.next_identifier() {
+			// Some(self.parse_macro_invocation_for(&identifier))
+			let _ = identifier;
+			todo!();
+		} else {
+			Some(Err(self.error("no macro invocation supplied")))
+		}
+	}
+
+	fn next_macro_variable(&mut self) -> Option<String> {
+		if self.stream.peek() != Some('$') {
+			None
+		} else {
+			self.stream.strip_whitespace_and_comments();
+			Some(self.next_identifier().unwrap())
+		}
+	}
+
+	fn parse_macro_variable(&mut self) -> Result<Token> {
+		todo!();
+	}
+
 	fn next_from_stream(&mut self) -> Option<Result<Token>> {
 		macro_rules! if_equals {
 			($if_eql:ident, $if_not:ident) => {
@@ -334,17 +377,28 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			};
 		}
 
-		while self.stream.strip_whitespace() || self.stream.strip_comment() {
-			// do nothing
-		}
+		self.stream.strip_whitespace_and_comments();
 
 		if let Some(kw) = self.next_keyword() {
 			return Some(Ok(Token::Keyword(kw)));
 		} else if let Some(literal) = self.next_literal() {
 			return Some(literal);
+		} else if let Some(invocation) = self.next_macro_invocation() {
+			if let Err(err) = invocation {
+				return Some(Err(err));
+			} else {
+				return self.next();
+			}
+		} else if let Some(identifier) = self.next_identifier() {
+			return Some(Ok(Token::Identifier(identifier)))
 		}
+		// } else if let Some(identifier) = self.next_macro_variable() {
+		// 	self.parse_
 
 		Some(Ok(match self.stream.next()? {
+			// macros
+			'$' => return Some(self.parse_macro_variable()),
+
 			// parens
 			'(' => Token::LeftParen(ParenKind::Round),
 			'[' => Token::LeftParen(ParenKind::Square),
@@ -375,7 +429,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			'&' if self.stream.take_prefix("&") => Token::Symbol(Symbol::AndAnd),
 			'|' if self.stream.take_prefix("|") => Token::Symbol(Symbol::OrOr),
 			// '0'..='9' => self.parse_
-			other => todo!("parse '{}'", other)
+			other => return Some(Err(self.error(ErrorKind::UnknownTokenStart(other))))
 		}))
 	}
 }
@@ -384,6 +438,10 @@ impl<I: Iterator<Item=char>> Iterator for Tokenizer<'_, I> {
 	type Item = Result<Token>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		self.next_from_stream()
+		// if let Some(macro_) = self.macros.last_mut() {
+			// macro_.next().map(Ok).or_else(|| self.next())
+		// } else {
+			self.next_from_stream()
+		// }
 	}
 }

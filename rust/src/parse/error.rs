@@ -9,6 +9,8 @@ pub enum ErrorKind {
 	InvalidHexDigit(char),
 	InvalidHexEscape(u32),
 	UnknownEscapeCharacter(char),
+	UnknownMacroInvocation(String),
+	UnknownTokenStart(char),
 	Message(&'static str),
 }
 

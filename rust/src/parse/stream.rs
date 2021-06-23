@@ -70,7 +70,13 @@ impl<'a, I: Iterator<Item=char>> Stream<'a, I> {
 		}
 	}
 
-	pub fn strip_comment(&mut self) -> bool {
+	pub fn strip_whitespace_and_comments(&mut self) {
+		while self.strip_whitespace() || self.strip_comments() {
+			// do nothing
+		}
+	}
+
+	pub fn strip_comments(&mut self) -> bool {
 		if self.peek().map_or(false, |chr| chr == '#') {
 			self.take_while(|chr| chr != '\n');
 			true
@@ -104,8 +110,11 @@ impl<'a, I: Iterator<Item=char>> Stream<'a, I> {
 
 	pub fn take_prefix(&mut self, prefix: &str) -> bool {
 		let mut prefix_chars = prefix.chars();
+		let mut amount = 0;
 
 		for (prefix_chr, our_chr) in prefix_chars.by_ref().zip(self.by_ref()) {
+			amount += 1;
+
 			if prefix_chr == our_chr {
 				continue;
 			}
@@ -120,11 +129,17 @@ impl<'a, I: Iterator<Item=char>> Stream<'a, I> {
 					self.put_back.insert(len, chr);
 				}
 			}
+
 			self.put_back.insert(len, our_chr);
 			return false;
 		}
 
-		true
+		if amount != prefix.len() {
+			self.put_back(prefix.chars().take(amount));
+			false
+		} else {
+			true
+		}
 	}
 
 	pub fn take_identifier(&mut self, identifier: &str) -> bool {
