@@ -12,6 +12,76 @@ static struct sq_token next_macro_token(void);
 static void parse_macro_statement(char *);
 static bool parse_macro_identifier(char *);
 
+typedef uint32_t rune;
+
+const rune FRAKTUR[26 * 2] = {
+	0xf09d9484,
+	// 0xf09d9484,
+	/*U'𝔄',*/ U'𝔅', U'ℭ', U'𝔇', U'𝔈', U'𝔉', U'𝔊',
+	U'ℌ', U'ℑ', U'𝔍', U'𝔎', U'𝔏', U'𝔐', U'𝔑',
+	U'𝔒', U'𝔓', U'𝔔', U'ℜ', U'𝔖', U'𝔗', U'𝔘',
+	U'𝔙', U'𝔚', U'𝔛', U'𝔜', U'ℨ',
+
+	U'𝔞', U'𝔟', U'𝔠', U'𝔡', U'𝔢', U'𝔣', U'𝔤',
+	U'𝔥', U'𝔦', U'𝔧', U'𝔨', U'𝔩', U'𝔪', U'𝔫',
+	U'𝔬', U'𝔭', U'𝔮', U'𝔯', U'𝔰', U'𝔱', U'𝔲',
+	U'𝔳', U'𝔴', U'𝔵', U'𝔶', U'𝔷', 
+};
+
+static unsigned fraktur_length(const char *stream, unsigned *index) {
+	unsigned i, j, bytes;
+	rune fraktur;
+
+	for (i = 0; i < (26*2); ++i) {
+		fraktur = FRAKTUR[i];
+		bytes = (fraktur & 0xff0000) ? 3 : 2;
+		for (j = 0; j < bytes; ++j)
+			if ((unsigned char) stream[j] != ((fraktur >> ((bytes - j) << 3)) & 0xff))
+				goto not_equal;
+
+		*index = i;
+		return bytes;
+	not_equal:;
+	}
+
+	return 0;
+}
+
+static struct sq_string *parse_fraktur_bareword(void) {
+	unsigned fraktur_len, fraktur_pos;
+
+	if (!(fraktur_len = fraktur_length(sq_stream, &fraktur_pos)))
+		return NULL;
+
+	char *fraktur = xmalloc(16);
+	unsigned cap = 16, len = 0;
+
+	do {
+		if (cap == len)
+			fraktur = xrealloc(fraktur, cap *= 2);
+
+		if ((fraktur_len = fraktur_length(sq_stream, &fraktur_pos))) {
+			sq_stream += fraktur_len + 1;
+			fraktur[len++] = (fraktur_pos < 26) ? ('A' + fraktur_pos) : ('a' + (fraktur_pos - 26));
+			continue;
+		}
+
+		if (isspace(*sq_stream)) {
+			fraktur[len++] = *(sq_stream++);
+			continue;
+		}
+
+		break;
+	} while (*sq_stream != '\0');
+
+	while (isspace(fraktur[len - 1]))
+		--len;
+
+	fraktur[len] = '\0';
+	return sq_string_new2(fraktur, len);
+}
+
+
 static void strip_whitespace(bool strip_newline) {
 	char c;
 
@@ -235,6 +305,13 @@ static struct sq_token next_normal_token(void) {
 		token.number = sq_roman_to_number(sq_stream, &sq_stream);
 		if (token.number >= 0)
 			return (token.kind = SQ_TK_NUMBER), token;
+	}
+
+	struct sq_string *fraktur;
+	if ((fraktur = parse_fraktur_bareword()) != NULL)  {
+		token.kind = SQ_TK_STRING;
+		token.string = fraktur;
+		return token;
 	}
 
 	if (*sq_stream == '\'' || *sq_stream == '\"')
