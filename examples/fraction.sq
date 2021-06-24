@@ -1,7 +1,7 @@
 form Fraction {
 	matter numer, denom;
 
-	describe coerce(what) {
+	recollect coerce(what) {
 		if kindof(what) == Fraction {
 			reward what
 		} alas {
@@ -9,7 +9,7 @@ form Fraction {
 		}
 	}
 
-	describe gcd(numer, denom) {
+	recollect gcd(numer, denom) {
 		nigh tmp;
 
 		whilst (tmp = denom) {
@@ -20,7 +20,7 @@ form Fraction {
 		reward numer;
 	}
 
-	substantiate(numer, denom) {
+	imitate(numer, denom) {
 		nigh is_neg = nay;
 
 		if !denom {
@@ -47,10 +47,10 @@ form Fraction {
 		}
 	}
 
-	action -@() { reward Fraction(-my.numer, -my.denom) }
+	change -@() { reward Fraction(-my.numer, -my.denom) }
 
 	@henceforth $fracfn($fn, $numer, $denom) =
-		<< action $fn(rhs) {
+		<< change $fn(rhs) {
 			rhs = Fraction.coerce(rhs);
 			reward Fraction($numer, $denom)
 		} >>;
@@ -60,11 +60,11 @@ form Fraction {
 	$fracfn(/, my.numer * rhs.denom, my.denom * rhs.numer);
 	@nevermore $fracfn
 
-	action is_whole() {
+	change is_whole() {
 		reward my.denom == I
 	}
 
-	action to_string() {
+	change to_string() {
 		if my.is_whole() {
 			reward string(my.numer)
 		} alas {
@@ -72,11 +72,11 @@ form Fraction {
 		}
 	}
 
-	action veracity() {
+	change veracity() {
 		reward boolean(my.numer)
 	}
 
-	action tally() {
+	change tally() {
 		reward my.numer / my.denom
 	}
 }

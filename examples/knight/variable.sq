@@ -8,11 +8,12 @@ form Variable {
 	}
 
 	recollect fetch(name) {
-		list = my.list
-		var = list[name]
+		list = my.list;
+		var = list[name];
 
 		if ni == var {
-			reward list[name] = me(name)
+			list[name] = me(name);
+			reward list[name]
 		} alas {
 			reward var
 		}

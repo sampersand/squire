@@ -817,7 +817,6 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		return index;
 	}
 
-
 	case SQ_PS_EASSIGN: {
 		index = compile_expression(code, expr->asgn->expr);
 		struct variable *var = expr->asgn->var;
@@ -859,8 +858,10 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 	}
 
 	case SQ_PS_EMATH:
-
 		return compile_bool(code, expr->math);
+
+	case SQ_PS_EINDEX:
+		return compile_index(code, expr->index);
 
 	default:
 		bug("unknown expr kind '%d'", expr->kind);

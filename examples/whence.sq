@@ -1,4 +1,6 @@
 foo:
+proclaim("Never run\n");
+
 whence foo
 proclaim("Spot I\n");
 

@@ -36,6 +36,7 @@ ab = "ab"
 struct _ignored__;
 #else
 #include <string.h>
+#include <errno.h>
 
 
 static struct {
@@ -212,6 +213,34 @@ static void parse_nevermore(void) {
 	}
 }
 
+static void parse_compile(void) {
+	strip_whitespace(true);
+	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
+	char *filename = parse_string().string->ptr; // lol memfree?
+
+	errno = 0;
+	FILE *file = fopen(filename, "rb");
+	if (errno) perror("cannot open file"), exit(1);
+
+	fseek(file, 0, SEEK_END);
+	size_t file_size = ftell(file);
+	rewind(file);
+	if (errno) perror("cannot get file size"), exit(1);
+
+	size_t stream_len = strlen(sq_stream);
+	char *new_stream = xmalloc(stream_len + file_size + 1);
+	fread(new_stream, 1, file_size, file);
+
+	if (errno) perror("cannot get read file contents"), exit(1);
+	fclose(file);
+	if (errno) perror("cannot get close file"), exit(1);
+
+	// this _will_ leak memory, but eh we're compiling who cares
+	new_stream[file_size] = '\0';
+	strcat(new_stream, sq_stream);
+	sq_stream = new_stream;
+}
+
 // void expand_out(char *name) {
 // 	char *old_stream = sq_stream;
 // 	sq_stream = name;
@@ -261,15 +290,11 @@ static void parse_nevermore(void) {
 
 
 static void parse_macro_statement(char *name) {
-	if (!strcmp(name, "henceforth")) {
-		parse_henceforth();
-	} else if (!strcmp(name, "nevermore")) {
-		parse_nevermore();
-	} else if (!strcmp(name, "expand")) {
-		// parse_expand();
-	} else {
-		die("unknown macro statement kind '%s'", name);
-	}
+	if (!strcmp(name, "henceforth")) parse_henceforth();
+	else if (!strcmp(name, "nevermore")) parse_nevermore();
+	else if (!strcmp(name, "compile")) parse_compile();
+	else if (!strcmp(name, "expand")) { /* parse_expand(); */ }
+	else die("unknown macro statement kind '%s'", name);;
 
 	free(name);
 }

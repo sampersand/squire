@@ -347,7 +347,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length + rstr->length);
 
 		memcpy(result->ptr, AS_STR(lhs), AS_STRING(lhs)->length);
-		memcpy(result->ptr + AS_STRING(lhs)->length, rstr->ptr, AS_STRING(rhs)->length);
+		memcpy(result->ptr + AS_STRING(lhs)->length, rstr->ptr, AS_STRING(rhs)->length + 1);
 
 		// sq_string_free(rstr);
 		// if (free_lhs) sq_value_free(lhs);
