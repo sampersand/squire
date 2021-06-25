@@ -21,9 +21,9 @@ pub struct Parser<'a, I> {
 	tokenizer: &'a mut Tokenizer<'a, I>
 }
 
-pub trait TokenPattern {
+pub trait TokenPattern : Copy {
 	fn matches(&self, token: &Token) -> bool;
-	fn to_kinds(&self, out: &mut Vec<TokenKind>);
+	fn to_kinds(self, out: &mut Vec<TokenKind>);
 }
 
 impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
@@ -43,15 +43,23 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 		self.tokenizer.error(error)
 	}
 
-	pub fn require_ident(&mut self) -> Result<String> {
-		if let Token::Identifier(ident) = self.require(&TokenKind::Identifier)? {
+	pub fn expect_identifier(&mut self) -> Result<String> {
+		if let Token::Identifier(ident) = self.expect(TokenKind::Identifier)? {
 			Ok(ident)
 		} else {
 			unreachable!()
 		}
 	}
 
-	pub fn require<P: TokenPattern + ?Sized>(&mut self, patterns: &P) -> Result<Token> {
+	pub fn guard_identifier(&mut self) -> Result<Option<String>> {
+		match self.guard(TokenKind::Identifier)? {
+			Some(Token::Identifier(ident)) => Ok(Some(ident)),
+			Some(_) => unreachable!(),
+			None => Ok(None)
+		}
+	}
+
+	pub fn expect<P: TokenPattern>(&mut self, patterns: P) -> Result<Token> {
 		if let Some(token) = self.guard(patterns)? {
 			return Ok(token)
 		}
@@ -63,7 +71,7 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 		Err(self.error(ErrorKind::BadToken { given, expected }))
 	}
 
-	pub fn guard<P: TokenPattern + ?Sized>(&mut self, pattern: &P) -> Result<Option<Token>> {
+	pub fn guard<P: TokenPattern>(&mut self, pattern: P) -> Result<Option<Token>> {
 		if let Some(token) = self.next_token()? {
 			if pattern.matches(&token) {
 				return Ok(Some(token));
@@ -75,28 +83,62 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 		Ok(None)
 	}
 
-	pub fn parse_statements<T, F>(&mut self) -> Result<crate::ast::statement::Statements> {
-		self.take_paren_group(token::ParenKind::Curly, crate::ast::Statement::expect_parse)?
-			.ok_or_else(|| self.error("expected statements, none given..."))
+	pub fn collect<T, F>(&mut self, mut func: F) -> Result<Vec<T>>
+	where
+		F: FnMut(&mut Self) -> Result<Option<T>>
+	{
+		std::iter::from_fn(|| func(self).transpose()).collect()
+	}
+
+	// pub fn collect_until<T, C, F>(&mut self, close: C, mut func: F) -> Result<Vec<T>>
+	// where
+	// 	C: TokenPattern,
+	// 	F: FnMut(&mut Self) -> Result<Option<T>>
+	// {
+	// 	todo!()
+	// 	// std::iter::from_fn(|| func(self).transpose()).collect()
+	// }
+
+
+	pub fn take_enclosed<T, O, C, F>(&mut self, open: O, close: C, mut func: F) -> Result<Option<T>>
+	where
+		O: TokenPattern,
+		C: TokenPattern,
+		F: FnMut(&mut Self) -> Result<T>
+	{
+		if self.guard(open)?.is_none() {
+			Ok(None)
+		} else {
+			func(self).and_then(|t| self.expect(close).and(Ok(Some(t))))
+		}
 	}
 
 	pub fn take_paren_group<T, F>(&mut self, kind: token::ParenKind, func: F) -> Result<Option<Vec<T>>>
 	where
 		F: FnMut(&mut Self) -> Result<T>
 	{
-		self.take_group(&Token::LeftParen(kind), &Token::RightParen(kind), func)
+		self.take_group(TokenKind::LeftParen(kind), TokenKind::RightParen(kind), func)
 	}
 
-	pub fn take_group<T, O, C, F>(&mut self, open: &O, close: &C, mut func: F) -> Result<Option<Vec<T>>>
+	pub fn take_group<T, O, C, F>(&mut self, open: O, close: C, func: F) -> Result<Option<Vec<T>>>
 	where
-		O: TokenPattern + ?Sized,
-		C: TokenPattern + ?Sized,
+		O: TokenPattern,
+		C: TokenPattern,
 		F: FnMut(&mut Self) -> Result<T>
 	{
 		if self.guard(open)?.is_none() {
-			return Ok(None)
+			Ok(None)
+		} else {
+			self.take_group_opened(open, close, func).map(Some)
 		}
+	}
 
+	pub fn take_group_opened<T, O, C, F>(&mut self, open: O, close: C, mut func: F) -> Result<Vec<T>>
+	where
+		O: TokenPattern,
+		C: TokenPattern,
+		F: FnMut(&mut Self) -> Result<T>
+	{
 		let mut depth = 1;
 		let mut acc = Vec::new();
 
@@ -111,13 +153,14 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 			}
 		}
 
-		Ok(Some(acc))
+		Ok(acc)
 	}
 
-	pub fn take_separated<T, S, C, F>(&mut self, sep: &S, close: &C, mut func: F) -> Result<Vec<T>>
+
+	pub fn take_separated<T, S, C, F>(&mut self, sep: S, close: C, mut func: F) -> Result<Vec<T>>
 	where
-		S: TokenPattern + ?Sized,
-		C: TokenPattern + ?Sized,
+		S: TokenPattern,
+		C: TokenPattern,
 		F: FnMut(&mut Self) -> Result<T>
 	{
 		let mut acc = Vec::new();
@@ -131,7 +174,7 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 			}
 
 			// We now don't have a separator. If we don't have a `close`, then it's an error.
-			self.require(close)?;
+			self.expect(close)?;
 			break;
 		}
 
@@ -139,23 +182,6 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 	}
 }
 
-
-impl TokenPattern for Token {
-	fn matches(&self, token: &Token) -> bool {
-		self == token
-	}
-
-	fn to_kinds(&self, kinds: &mut Vec<TokenKind>) {
-		match self {
-			Token::Keyword(keyword) => kinds.push(TokenKind::Keyword(*keyword)),
-			Token::Symbol(symbol) => kinds.push(TokenKind::Symbol(*symbol)),
-			Token::LeftParen(paren) => kinds.push(TokenKind::LeftParen(*paren)),
-			Token::RightParen(paren) => kinds.push(TokenKind::RightParen(*paren)),
-			Token::Literal(_) => kinds.push(TokenKind::Literal),
-			Token::Identifier(_) => kinds.push(TokenKind::Identifier),
-		}
-	}
-}
 
 impl TokenPattern for TokenKind {
 	fn matches(&self, token: &Token) -> bool {
@@ -170,17 +196,17 @@ impl TokenPattern for TokenKind {
 		}
 	}
 
-	fn to_kinds(&self, kinds: &mut Vec<TokenKind>) {
-		kinds.push(*self)
+	fn to_kinds(self, kinds: &mut Vec<TokenKind>) {
+		kinds.push(self)
 	}
 }
 
-impl<P: TokenPattern> TokenPattern for [P] {
+impl<P: TokenPattern, const N: usize> TokenPattern for [P; N] {
 	fn matches(&self, token: &Token) -> bool {
 		self.iter().any(|pattern| pattern.matches(token))
 	}
 
-	fn to_kinds(&self, kinds: &mut Vec<TokenKind>) {
+	fn to_kinds(self, kinds: &mut Vec<TokenKind>) {
 		for pattern in self {
 			pattern.to_kinds(kinds);
 		}

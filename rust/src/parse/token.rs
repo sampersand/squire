@@ -18,16 +18,45 @@ pub enum Keyword {
 	Local,
 
 	If,
-	Else,
+	Alas,
 	ComeFrom,
 	While,
 	Return,
 	Try,
-	Catch,
+	Finally,
 	Throw,
 	Switch,
 	Case,
 	Assert,
+}
+
+impl Keyword {
+	pub const fn repr(self) -> &'static str {
+		match self {
+			Self::Class => "form",
+			Self::Method => "change",
+			Self::Field => "matter",
+			Self::ClassField => "essence",
+			Self::ClassFn => "recall",
+			Self::Constructor => "imitate",
+			Self::Function => "journey",
+
+			Self::Global => "renowned",
+			Self::Local => "nigh",
+
+			Self::If => "if",
+			Self::Alas => "alas",
+			Self::ComeFrom => "whence",
+			Self::While => "whilst",
+			Self::Return => "reward",
+			Self::Try => "attempt",
+			Self::Finally => "notwithstanding",
+			Self::Throw => "catapult",
+			Self::Switch => "fork",
+			Self::Case => "path",
+			Self::Assert => "challenge",
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -115,29 +144,6 @@ impl<'a, I> Tokenizer<'a, I> {
 }
 
 impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
-	pub const CLASS: &'static str           = "form";
-	pub const METHOD: &'static str          = "change";
-	pub const FIELD: &'static str           = "matter";
-	pub const CLASS_FIELD: &'static str     = "essence";
-	pub const CLASS_FN: &'static str        = "recall";
-	pub const CONSTRUCTOR: &'static str     = "imitate";
-	pub const FUNCTION: &'static str        = "journey";
-
-	pub const GLOBAL: &'static str          = "renowned";
-	pub const LOCAL: &'static str           = "nigh";
-
-	pub const IF: &'static str              = "if";
-	pub const ELSE: &'static str            = "alas";
-	pub const COME_FROM: &'static str       = "whence";
-	pub const WHILE: &'static str           = "whilst";
-	pub const RETURN: &'static str          = "reward";
-	pub const TRY: &'static str             = "attempt";
-	pub const CATCH: &'static str           = "retreat"; // todo: deprecate
-	pub const THROW: &'static str           = "catapult";
-	pub const SWITCH: &'static str          = "fork";
-	pub const CASE: &'static str            = "path";
-	pub const ASSERT: &'static str          = "challenge";
-
 	pub const TRUE: &'static str            = "yay";
 	pub const FALSE: &'static str           = "nay";
 	pub const NULL: &'static str            = "ni";
@@ -153,35 +159,35 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 
 	pub fn next_keyword(&mut self) -> Option<Keyword> {
 		macro_rules! keyword {
-			($string:ident, $name:ident) => {
-				if self.stream.take_identifier(Self::$string) {
+			($name:ident) => {
+				if self.stream.take_identifier(Keyword::$name.repr()) {
 					return Some(Keyword::$name)
 				}
 			};
 		}
 
-		keyword!(CLASS, Class);
-		keyword!(METHOD, Method);
-		keyword!(FIELD, Field);
-		keyword!(CLASS_FIELD, ClassField);
-		keyword!(CLASS_FN, ClassFn);
-		keyword!(CONSTRUCTOR, Constructor);
-		keyword!(FUNCTION, Function);
+		keyword!(Class);
+		keyword!(Method);
+		keyword!(Field);
+		keyword!(ClassField);
+		keyword!(ClassFn);
+		keyword!(Constructor);
+		keyword!(Function);
 
-		keyword!(GLOBAL, Global);
-		keyword!(LOCAL, Local);
+		keyword!(Global);
+		keyword!(Local);
 
-		keyword!(IF, If);
-		keyword!(ELSE, Else);
-		keyword!(COME_FROM, ComeFrom);
-		keyword!(WHILE, While);
-		keyword!(RETURN, Return);
-		keyword!(TRY, Try);
-		keyword!(CATCH, Catch);
-		keyword!(THROW, Throw);
-		keyword!(SWITCH, Switch);
-		keyword!(CASE, Case);
-		keyword!(ASSERT, Assert);
+		keyword!(If);
+		keyword!(Alas);
+		keyword!(ComeFrom);
+		keyword!(While);
+		keyword!(Return);
+		keyword!(Try);
+		keyword!(Finally);
+		keyword!(Throw);
+		keyword!(Switch);
+		keyword!(Case);
+		keyword!(Assert);
 
 		None
 	}

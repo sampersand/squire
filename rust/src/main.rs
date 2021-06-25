@@ -11,7 +11,17 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
-if 123 { ; } alas { 456 }
+fork "A" {
+    path "A":
+    path "B":
+    path yay:
+        if 123 { 456 }
+        alas {789}
+    alas:
+        ;;34;
+}
+
+#whilst 123 { 3 ; if 4 { 5 } } alas { 456 }
 
 # 
 # form Foo {
@@ -23,7 +33,7 @@ if 123 { ; } alas { 456 }
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
     let mut parser = parse::Parser::new(&mut tokenizer);
 
-    let parse = ast::statement::If::parse(&mut parser);
+    let parse = ast::statement::Statement::parse(&mut parser);
 
     dbg!(parse);
     // dbg!(tokenizer);
