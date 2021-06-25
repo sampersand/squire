@@ -87,8 +87,17 @@ pub enum Token {
 	LeftParen(ParenKind),
 	RightParen(ParenKind),
 	Literal(Literal),
-	StringInterpolation(Vec<(String, Vec<Token>)>, String),
 	Identifier(String),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TokenKind {
+	Keyword(Keyword),
+	Symbol(Symbol),
+	LeftParen(ParenKind),
+	RightParen(ParenKind),
+	Literal,
+	Identifier,
 }
 
 #[derive(Debug)]

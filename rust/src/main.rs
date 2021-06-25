@@ -1,9 +1,7 @@
 #![allow(unused)]
 
-use crate::value::Numeral;
-use squire::value::Codex;
-use squire::{*, parse::ast::*};
-use squire::value::Array;
+use squire::*;
+use squire::parse::Parsable;
 
 fn main() {
 //     // let arg = std::env::args().skip(1).next().unwrap();
@@ -12,9 +10,20 @@ fn main() {
 // # @henceforth $foo=34
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
-    let mut stream = parse::Stream::from_str("-a.b[d]()()");
+    let mut stream = parse::Stream::from_str(r##"
+if 123 { ; } alas { 456 }
+
+# 
+# form Foo {
+#     matter x, y;
+#     essence a, c;
+#     essence b = 3;
+# }
+"##);
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
-    let parse = parse::ast::Primary::parse(&mut tokenizer);
+    let mut parser = parse::Parser::new(&mut tokenizer);
+
+    let parse = ast::statement::If::parse(&mut parser);
 
     dbg!(parse);
     // dbg!(tokenizer);
