@@ -488,9 +488,6 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		|| expr->math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
 		|| expr->math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
 	) return expr;
-	// 	|| (expr->math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
-	// 	&& expr->math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PINDEX)
-	// ) goto done;
 
 	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->rhs;
 
