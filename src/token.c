@@ -12,53 +12,35 @@ static struct sq_token next_macro_token(void);
 static void parse_macro_statement(char *);
 static bool parse_macro_identifier(char *);
 
-static unsigned fraktur_length(const char *stream, unsigned *index) {
-	// Yes, it's terrible. On this day I learned that UTF-8 played nicely with
-	// strcmp. But I already wrote all this out and it works, so .. ¯\_(ツ)_/¯
-	const uint32_t FRAKTUR[26 * 2] = {
-		/*  A 𝔄  */  /*  B 𝔅  */ /*  C ℭ  */  /*  D 𝔇  */  /*  E 𝔈  */
-		0x0F09D9484, 0x0F09D9485, 0x000E284AD, 0x0F09D9487, 0x0F09D9488,
-		/*  F 𝔉  */  /*  G 𝔊  */ /*  H ℌ  */  /*  I ℑ  */  /*  J 𝔍  */
-		0x0F09D9489, 0x0F09D948A, 0x000E2848C, 0x000E28491, 0x0F09D948D,
-		/*  K 𝔎  */  /*  L 𝔏  */ /*  M 𝔐  */  /*  N 𝔑  */  /*  O 𝔒  */
-		0x0F09D948E, 0x0F09D948F, 0x0F09D9490, 0x0F09D9491, 0x0F09D9492,
-		/*  P 𝔓  */  /*  Q 𝔔  */ /*  R ℜ c*/  /*  S 𝔖  */  /*  T 𝔗  */
-		0x0F09D9493, 0x0F09D9494, 0x000E2849C, 0x0F09D9496, 0x0F09D9497,
-		/*  U 𝔘  */  /*  V 𝔙  */ /*  W 𝔚  */  /*  X 𝔛  */  /*  Y 𝔜  */  /*  Z ?  */
-		0x0F09D9498, 0x0F09D9499, 0x0F09D949A, 0x0F09D949B, 0x0F09D949C, 0x000E284A8,
+static size_t fraktur_length(const char *stream, size_t *index) {
+	static const char *const FRAKTUR[26 * 2] = {
+		// A    B    C    D    E    F    G    H    I
+		  "𝔄", "𝔅", "ℭ", "𝔇", "𝔈", "𝔉", "𝔊", "ℌ", "ℑ",
+		// J    K    L    M    N    O    P    Q    R
+		  "𝔍", "𝔎", "𝔏", "𝔐", "𝔑", "𝔒", "𝔓", "𝔔", "ℜ",
+		// S    T    U    V    W    X    Y    Z
+		  "𝔖", "𝔗", "𝔘", "𝔙", "𝔚", "𝔛", "𝔜", "ℨ",
 
-		/*  a 𝔞   */  /*  b 𝔟  */  /*  c 𝔠  */  /*  d 𝔡  */  /*  e 𝔢   */
-		0x0F09D949E, 0x0F09D949F, 0x0F09D94A0, 0x0F09D94A1, 0x0F09D94A2,
-		/*  f 𝔣   */  /*  g 𝔤  */  /*  h 𝔥  */  /*  i 𝔦  */  /*  j 𝔧   */
-		0x0F09D94A3, 0x0F09D94A4, 0x0F09D94A5, 0x0F09D94A6, 0x0F09D94A7,
-		/*  k 𝔨   */  /*  l 𝔩  */  /*  m 𝔪  */ /*  n 𝔫  */  /*  o 𝔬   */
-		0x0F09D94A8, 0x0F09D94A9, 0x0F09D94AA, 0x0F09D94AB, 0x0F09D94AC,
-		/*  p 𝔭  */  /*  q 𝔮  */  /*  r 𝔯  */   /*  s 𝔰  */  /*  t 𝔱  */
-		0x0F09D94AD, 0x0F09D94AE, 0x0F09D94AF, 0x0F09D94B0, 0x0F09D94B1,
-		/*  u 𝔲  */  /*  v 𝔳  */  /*  w 𝔴  */  /*  x 𝔵  */   /*  y 𝔶  */ /*  z 𝔷  */ 
-		0x0F09D94B2, 0x0F09D94B3, 0x0F09D94B4, 0x0F09D94B5, 0x0F09D94B6, 0x0F09D94B7
+		// a    b    c    d    e    f    g    h    i
+		  "𝔞", "𝔟", "𝔠", "𝔡", "𝔢", "𝔣", "𝔤", "𝔥", "𝔦",
+		// j    k    l    m    n    o    p    q    r
+		  "𝔧", "𝔨", "𝔩", "𝔪", "𝔫", "𝔬", "𝔭", "𝔮", "𝔯",
+		// s    t    u    v    w    x    y    z
+		  "𝔰", "𝔱", "𝔲", "𝔳", "𝔴", "𝔵", "𝔶", "𝔷"
 	};
 
-	unsigned i, j, bytes;
-	uint32_t fraktur;
-
-	for (i = 0; i < (26*2); ++i) {
-		fraktur = FRAKTUR[i];
-		bytes = (fraktur & 0xff000000) ? 4 : 3;
-		for (j = 0; j < bytes; ++j)
-			if ((unsigned char) stream[j] != ((fraktur >> ((bytes - j - 1) << 3)) & 0xff))
-				goto not_equal;
-
-		*index = i;
-		return bytes;
-	not_equal:;
+	for (size_t i = 0; i < 26 * 2; ++i) {
+		size_t len = strlen(FRAKTUR[i]);
+		if (!strncmp(stream, FRAKTUR[i], len)) {
+			*index = i;
+			return len;
+		}
 	}
-
 	return 0;
 }
 
 static struct sq_string *parse_fraktur_bareword(void) {
-	unsigned fraktur_len, fraktur_pos;
+	size_t fraktur_len, fraktur_pos;
 
 	if (!(fraktur_len = fraktur_length(sq_stream, &fraktur_pos)))
 		return NULL;

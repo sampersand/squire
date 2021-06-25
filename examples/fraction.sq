@@ -2,10 +2,10 @@ form Fraction {
 	matter numer, denom;
 
 	recollect coerce(what) {
-		if kindof(what) == Fraction {
+		if genus(what) == Fraction {
 			reward what
 		} alas {
-			reward Fraction(number(what), I)
+			reward Fraction(tally(what), I)
 		}
 	}
 

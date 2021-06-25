@@ -2,6 +2,7 @@
 #include "shared.h"
 #include <ctype.h>
 #include <string.h>
+#include <inttypes.h>
 
 enum roman_numeral {
 	SQ_TK_ROMAN_I = 1,
@@ -71,7 +72,7 @@ char *sq_number_to_roman(sq_number number) {
 // note that this returns an owned string.
 char *sq_number_to_arabic(sq_number number) {
 	char *buf = xmalloc(40);
-	snprintf(buf, 40, "%lld", number);
+	snprintf(buf, 40, "%"PRId64, number);
 	return buf;
 }
 

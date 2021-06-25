@@ -7,6 +7,8 @@
 #include "roman.h"
 #include "codex.h"
 #include <string.h>
+#include <inttypes.h>
+#include <limits.h>
 
 #define IS_STRING sq_value_is_string
 #define AS_STRING sq_value_as_string
@@ -35,7 +37,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		break;
 
 	case SQ_TNUMBER:
-		fprintf(out, "Number(%lld)", AS_NUMBER(value));
+		fprintf(out, "Number(%"PRId64")", AS_NUMBER(value));
 		break;
 
 	case SQ_TSTRING:
@@ -63,7 +65,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		break;
 
 	default:
-		bug("<UNDEFINED: %lld>", value);
+		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -435,11 +437,20 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 	case SQ_TSTRING: {
 		sq_number amnt = sq_value_to_number(rhs);
-		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length * amnt + 1);
-		*result->ptr = '\0';
+		if (amnt == 0 || AS_STRING(lhs)->length == 0)
+			return sq_value_new_string(&sq_string_empty);
+		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_STRING(lhs)->length) >= UINT_MAX)
+			sq_throw("string multiplication by %"PRId64" is out of range", amnt);
+		if (amnt == 1)
+			return sq_value_new_string(sq_string_clone(AS_STRING(lhs)));
 
-		for (unsigned i = 0; i < amnt; ++i)
-			strcat(result->ptr, AS_STR(lhs));
+		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length * amnt);
+		char *ptr = result->ptr;
+
+		for (unsigned i = 0; i < amnt; ++i) {
+			memcpy(ptr, AS_STR(lhs), AS_STRING(lhs)->length + 1);
+			ptr += AS_STRING(lhs)->length;
+		}
 
 		return sq_value_new_string(result);
 	}
@@ -559,7 +570,7 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		die("cannot convert %s to a string", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %lld>", value);
+		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -595,7 +606,7 @@ sq_number sq_value_to_number(sq_value value) {
 		die("cannot convert %s to a number", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %lld>", value);
+		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -633,8 +644,7 @@ bool sq_value_to_boolean(sq_value value) {
 		die("cannot convert %s to a boolean", TYPENAME(value));
 
 	default:
-*		(volatile int *)0;
-		bug("<UNDEFINED: %lld>", value);
+		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -668,7 +678,7 @@ size_t sq_value_length(sq_value value) {
 		die("cannot get length of %s", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %lld>", value);
+		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 

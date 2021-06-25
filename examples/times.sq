@@ -5,7 +5,7 @@ journey timestr(time) {
 
 	rawhours = time / 2;
 
-	if rawhours % 12 { hours = string(rawhours % 12) }
+	if rawhours % 12 { hours = arabic(rawhours % 12) }
 	alas { hours = "12"};
 
 	if rawhours >= 12 { ampm = "pm" }
