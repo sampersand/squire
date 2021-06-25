@@ -39,6 +39,13 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 		self.tokenizer.undo();
 	}
 
+	#[doc(hidden)]
+	pub fn _hack_is_next_token_colon(&mut self) -> bool {
+		// this owuldn't be necessary if `parser` also kept state
+		self.tokenizer._hack_is_next_token_colon()
+	}
+
+
 	pub fn error(&self, error: impl Into<ErrorKind>) -> Error {
 		self.tokenizer.error(error)
 	}

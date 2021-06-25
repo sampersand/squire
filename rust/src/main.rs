@@ -11,6 +11,8 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
+journey x(a, b=3, c: int, d: (int; 34; int) = 3, *e, **f){}
+__END__
 fork "A" {
     path "A":
     path "B":

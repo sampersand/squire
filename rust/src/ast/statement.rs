@@ -1,7 +1,9 @@
+use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::token::{Token, TokenKind, Symbol, ParenKind};
 use crate::ast::Expression;
 
 mod class;
-mod function;
+pub mod function;
 mod attempt;
 mod catapult;
 mod reward;
@@ -45,15 +47,10 @@ pub enum Statement {
 	Expression(Expression),
 }
 
-use crate::parse::{Error as ParseError, Parsable, Parser};
-
-
 impl Parsable for Statements {
 	const TYPE_NAME: &'static str = "Statements";
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		use crate::parse::token::{Token, TokenKind, Symbol, ParenKind};
-
 		if parser.guard(TokenKind::LeftParen(ParenKind::Curly))?.is_none() {
 			return Ok(None);
 		}
@@ -83,8 +80,6 @@ impl Parsable for Statement {
 	const TYPE_NAME: &'static str = "Statement";
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		use crate::parse::token::{TokenKind, Symbol};
-
 		while parser.guard(TokenKind::Symbol(Symbol::Endline))?.is_some() {
 			// strip leading `;`s.
 		}

@@ -152,6 +152,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		self.stream.error(error)
 	}
 
+	#[doc(hidden)]
 	pub fn _hack_is_next_token_colon(&mut self) -> bool {
 		self.stream.strip_whitespace_and_comments();
 		self.stream.peek() == Some(':')
@@ -407,6 +408,11 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		}
 
 		self.stream.strip_whitespace_and_comments();
+
+		if self.stream.take_identifier("__END__") {
+			self.stream.put_back("__END__".chars());
+			return None;
+		}
 
 		if let Some(kw) = self.next_keyword() {
 			return Some(Ok(Token::Keyword(kw)));
