@@ -4,19 +4,19 @@ form RobinHood {
 	matter weapon
 
 	# constructor
-	substantiate(weapon) {
+	imitate(weapon) {
 		my.weapon = weapon
 	}
 
 	# member function
-	action steal_from(whom) {
+	change steal_from(whom) {
 		proclaim("Hello, \(whom.name)\n")
 		proclaim("Give me your money or i'll shoot you with my \(my.weapon)\n")
 		reward whom.take()
 	}
 
 	# class function
-	describe please_help() {
+	recollect please_help() {
 		proclaim("Oh, robinhood, please help us!\n");
 	}
 }
@@ -26,7 +26,7 @@ form Rich {
 	matter money, name
 
 	# member function
-	journey take() {
+	change take() {
 		money = my.money
 		my.money = 0
 		reward money
