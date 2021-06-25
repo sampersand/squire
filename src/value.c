@@ -7,6 +7,7 @@
 #include "roman.h"
 #include "codex.h"
 #include <string.h>
+#include <inttypes.h>
 #include <limits.h>
 
 #define IS_STRING sq_value_is_string
@@ -436,20 +437,20 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 	case SQ_TSTRING: {
 		sq_number amnt = sq_value_to_number(rhs);
-		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_STRING(lhs)->length) >= UINT_MAX) {
-			sq_throw("string multiplication by '%"PRId64"' is out of range", amnt);
-		}
-		if (amnt == 0 || AS_STRING(lhs)->length == 0) {
+		if (amnt == 0 || AS_STRING(lhs)->length == 0)
 			return sq_value_new_string(&sq_string_empty);
-		}
-		if (amnt == 1) {
+		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_STRING(lhs)->length) >= UINT_MAX)
+			sq_throw("string multiplication by %"PRId64" is out of range", amnt);
+		if (amnt == 1)
 			return sq_value_new_string(sq_string_clone(AS_STRING(lhs)));
-		}
+
 		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length * amnt);
 		char *ptr = result->ptr;
 
-		for (unsigned i = 0; i < amnt; ++i, ptr += AS_STRING(lhs)->length)
+		for (unsigned i = 0; i < amnt; ++i) {
 			memcpy(ptr, AS_STR(lhs), AS_STRING(lhs)->length + 1);
+			ptr += AS_STRING(lhs)->length;
+		}
 
 		return sq_value_new_string(result);
 	}

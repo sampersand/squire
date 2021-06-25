@@ -2,6 +2,7 @@
 #include "shared.h"
 #include <ctype.h>
 #include <string.h>
+#include <inttypes.h>
 
 enum roman_numeral {
 	SQ_TK_ROMAN_I = 1,
