@@ -459,6 +459,8 @@ static struct index_assign *parse_index_assign(struct index *aidx) {
 	return ary_asgn;
 }
 
+static struct expression *parse_expression_inner(struct expression *);
+
 static struct expression *parse_expression() {
 	struct expression expr;
 	expr.kind = SQ_PS_EMATH;
@@ -466,39 +468,44 @@ static struct expression *parse_expression() {
 	if (!(expr.math = parse_bool_expression()))
 		return NULL;
 
-	if (expr.math->kind != SQ_PS_BEQL
-		|| expr.math->lhs->kind != SQ_PS_ECMP
-		|| expr.math->lhs->lhs->kind != SQ_PS_CADD
-		|| expr.math->lhs->lhs->lhs->kind != SQ_PS_AMUL
-		|| expr.math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
-		|| expr.math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
-	) goto done;
-	// 	|| (expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
-	// 	&& expr.math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PINDEX)
-	// ) goto done;
+	return parse_expression_inner(memdup(&expr, sizeof(struct expression)));
+}
 
-	struct primary *prim = expr.math->lhs->lhs->lhs->lhs->lhs->rhs;
-
+static struct expression *parse_expression_inner(struct expression *expr) {
 	take();
 	untake();
 
-	if ((prim->kind == SQ_PS_PVARIABLE || prim->kind == SQ_PS_PINDEX) && last.kind == SQ_TK_ASSIGN) {
-		if (prim->kind == SQ_PS_PVARIABLE) {
-			expr.kind = SQ_PS_EASSIGN;
-			expr.asgn = parse_assignment(prim->variable);
-		} else {
-			expr.kind = SQ_PS_EARRAY_ASSIGN;
-			expr.ary_asgn = parse_index_assign(prim->index);
-		}
-	} else if (last.kind == SQ_TK_LBRACKET) {
-		expr.kind = SQ_PS_EINDEX;
-		expr.index = parse_index(prim);
+	if (expr->kind == SQ_PS_EINDEX && last.kind == SQ_TK_ASSIGN) {
+		expr->kind = SQ_PS_EARRAY_ASSIGN;
+		expr->ary_asgn = parse_index_assign(expr->index);
+		return expr;
 	}
 
+	if (expr->math->kind != SQ_PS_BEQL
+		|| expr->math->lhs->kind != SQ_PS_ECMP
+		|| expr->math->lhs->lhs->kind != SQ_PS_CADD
+		|| expr->math->lhs->lhs->lhs->kind != SQ_PS_AMUL
+		|| expr->math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
+		|| expr->math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
+	) return expr;
+	// 	|| (expr->math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PVARIABLE
+	// 	&& expr->math->lhs->lhs->lhs->lhs->lhs->rhs->kind != SQ_PS_PINDEX)
+	// ) goto done;
 
-done:
+	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->rhs;
 
-	return memdup(&expr, sizeof(struct expression));
+	if (last.kind == SQ_TK_LBRACKET) {
+		expr->kind = SQ_PS_EINDEX;
+		expr->index = parse_index(prim);
+		return parse_expression_inner(expr);
+	}
+
+	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
+		expr->kind = SQ_PS_EASSIGN;
+		expr->asgn = parse_assignment(prim->variable);
+	}
+
+	return expr;
 }
 
 static struct scope_declaration *parse_global_declaration() {

@@ -797,23 +797,16 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 
 	case SQ_PS_EARRAY_ASSIGN: {
 		
-		int var = 0;
-		die("!");
-		// int var = lookup_identifier(code, expr->ary_asgn->var->name);
-
-		if (var < 0) {
-			set_opcode(code, SQ_OC_GLOAD);
-			set_index(code, ~var);
-			set_index(code, var = next_local(code));
-		}
-
+		int into = compile_primary(code, expr->ary_asgn->into);
 		index = compile_expression(code, expr->ary_asgn->index);
 		unsigned val = compile_expression(code, expr->ary_asgn->value);
+
 		set_opcode(code, SQ_OC_INDEX_ASSIGN);
-		set_index(code, var);
+		set_index(code, into);
 		set_index(code, index);
 		set_index(code, val);
 		set_index(code, index = next_local(code));
+
 		return index;
 	}
 
