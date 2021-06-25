@@ -1,5 +1,9 @@
 #!/usr/bin/env squire
 
+@compile "assert.sq"
+$assert(yay, "oops");
+
+
 @compile "./variable.sq"
 __END__
 @compile "./parse.sq"

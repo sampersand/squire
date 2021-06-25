@@ -1,4 +1,4 @@
 @henceforth $assert($cond, $errmsg) =
 	if !($cond) {
-		hark "assertion failed: \($errmsg)"
+		catapult "assertion failed: \($errmsg)"
 	} ;
