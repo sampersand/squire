@@ -9,9 +9,6 @@
 
 struct sq_program *program;
 
-// total temporary hack...
-#define free(x) ((void)0)
-
 #define CURRENT_INDEX_PTR(code) (&(code)->bytecode[(code)->codelen].index)
 struct {
 	unsigned len, cap;
@@ -106,7 +103,6 @@ static int lookup_constant(struct sq_code *code, sq_value value) {
 	// check to see if we've declared the constant before. if so, reuse that.
 	for (unsigned i = 0; i < code->consts.len; ++i) {
 		if (sq_value_eql(code->consts.ary[i], value)) {
-			// sq_value_free(value); // free it as we're no longer using it.
 			return -1; // TODO: THIS does not work because of a bug...
 		}
 	}
@@ -133,11 +129,10 @@ static unsigned load_constant(struct sq_code *code, sq_value value) {
 	return index;
 }
 
-static unsigned lookup_global_variable(char *name) {
+static unsigned lookup_global_variable(const char *name) {
 	// check to see if we've declared the global before
 	for (unsigned i = 0; i < globals.len; ++i) {
 		if (!strcmp(globals.ary[i].name, name)) {
-			free(name); // we have, free the name.
 			return i;
 		}
 	}
@@ -145,13 +140,12 @@ static unsigned lookup_global_variable(char *name) {
 	return -1;
 }
 
-static unsigned declare_global_variable(char *name, sq_value value) {
+static unsigned declare_global_variable(const char *name, sq_value value) {
 	int index = lookup_global_variable(name);
 
 	if (index != -1) {
 		if (globals.ary[index].value != SQ_NULL && value != SQ_NULL)
 			die("attempted to redefine global variable '%s'", name);
-		free(name);
 		globals.ary[index].value = value;
 		return index;
 	}
@@ -165,36 +159,35 @@ static unsigned declare_global_variable(char *name, sq_value value) {
 	LOG("global[%d]: %s\n", globals.len, name);
 
 	// initialize the global
-	globals.ary[globals.len].name = name;
+	globals.ary[globals.len].name = strdup(name);
 	globals.ary[globals.len].value = value;
 
 	// return the index of the global for future use.
 	return globals.len++;
 }
 
-static int new_global(char *name) {
+static int new_global(const char *name) {
 	int index = lookup_global_variable(name);
 
 	return (index == -1) ? declare_global_variable(name, SQ_NULL) : index;
 }
 
-static unsigned declare_local_variable(struct sq_code *code, char *name) {
+static unsigned declare_local_variable(struct sq_code *code, const char *name) {
 	// reallocate if necessary
 	RESIZE(vars.cap, vars.len, vars.ary, struct local);
 
 	LOG("local[%d]: %s\n", globals.len, name);
 
-	code->vars.ary[code->vars.len].name = name;
+	code->vars.ary[code->vars.len].name = strdup(name);
 	return code->vars.ary[code->vars.len++].index = next_local(code);
 }
 
-static int lookup_local_variable(struct sq_code *code, char *name) {
-	if (!strcmp(name, "me")) return lookup_local_variable(code, strdup("my"));
+static int lookup_local_variable(struct sq_code *code, const char *name) {
+	if (!strcmp(name, "me")) return lookup_local_variable(code, "my");
 
 	// check to see if we've declared the local before
 	for (unsigned i = 0; i < code->vars.len; ++i) {
 		if (!strcmp(name, code->vars.ary[i].name)) {
-			free(name);
 			return code->vars.ary[i].index;
 		}
 	}
@@ -202,14 +195,14 @@ static int lookup_local_variable(struct sq_code *code, char *name) {
 	return -1;
 }
 
-static unsigned new_local_variable(struct sq_code *code, char *name) {
+static unsigned new_local_variable(struct sq_code *code, const char *name) {
 	int index = lookup_local_variable(code, name);
 
 	return (index == -1) ? declare_local_variable(code, name) : index;
 }
 
 
-static int lookup_identifier(struct sq_code *code, char *name) {
+static int lookup_identifier(struct sq_code *code, const char *name) {
 	int index;
 	if ((index = lookup_local_variable(code, name)) != -1)
 		return index;
@@ -220,7 +213,7 @@ static int lookup_identifier(struct sq_code *code, char *name) {
 	return new_local_variable(code, name);
 }
 
-static unsigned load_identifier(struct sq_code *code, char *name) {
+static unsigned load_identifier(struct sq_code *code, const char *name) {
 	int index = lookup_identifier(code, name);
 
 	if (index < 0) {
@@ -270,7 +263,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	form->nmatter = sdecl->nfields;
 	form->matter_names = sdecl->fields;
 
-	declare_global_variable(strdup(form->name), SQ_NULL);
+	declare_global_variable(form->name, SQ_NULL);
 
 	form->imitate = sdecl->constructor ? compile_function(sdecl->constructor, true) : NULL;
 
@@ -291,9 +284,9 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		form->essences[i].value = SQ_NULL;
 	}
 
-	declare_global_variable(strdup(form->name), sq_value_new_form(form));
+	declare_global_variable(form->name, sq_value_new_form(form));
 	if (sdecl->nessences) {
-		unsigned global = lookup_global_variable(strdup(form->name));
+		unsigned global = lookup_global_variable(form->name);
 		set_opcode(code, SQ_OC_GLOAD);
 		set_index(code, global);
 		set_index(code, global = next_local(code));
@@ -322,7 +315,7 @@ static void compile_func_declaration(struct func_declaration *fdecl) {
 	struct sq_function *func = compile_function(fdecl, false);
 	free(fdecl); // but none of the fields, as they're now owned by `func`.
 
-	declare_global_variable(strdup(func->name), sq_value_new_function(func));
+	declare_global_variable(func->name, sq_value_new_function(func));
 }
 
 static void compile_if_statement(struct sq_code *code, struct if_statement *ifstmt) {
@@ -505,7 +498,6 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary);
 
 static unsigned compile_index(struct sq_code *code, struct index *index) {
 	unsigned into = compile_primary(code, index->into);
-	free(index->into); // OR SHOULD THIS BE FREED IN `load_variable_class`?
 	unsigned idx = compile_expression(code, index->index);
 
 	set_opcode(code, SQ_OC_INDEX);
