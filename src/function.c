@@ -248,8 +248,10 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				size_t cap, length;
 
 				if ((length = getline(&line, &cap, stdin)) == (size_t) -1) {
+					free(line);
 					line = strdup("");
 					cap = 0;
+					length = 0;
 				}
 
 				if (length && line[length-1] == '\n') {
