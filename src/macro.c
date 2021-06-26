@@ -228,7 +228,7 @@ static void parse_whereupon(void) {
 	struct sq_token token, *tokens = xmalloc(sizeof(struct sq_token[cap]));
 
 	while (true) {
-		strip_whitespace(true);
+		strip_whitespace_maybe_ignore_slash(true, true);
 
 		if (*sq_stream == '@') {
 			//exit(0);
@@ -240,6 +240,13 @@ static void parse_whereupon(void) {
 				is_defined = !is_defined; // i mean technically it works...
 				continue;
 			}
+		}
+
+		// lol we'll take `@nowhere` within strings and comments....
+		if (!is_defined) {
+			// strip_whitespace(true);
+			++sq_stream;
+			continue;
 		}
 
 		if ((token = sq_next_token()).kind == SQ_TK_UNDEFINED)

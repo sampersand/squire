@@ -74,7 +74,7 @@ static struct sq_string *parse_fraktur_bareword(void) {
 }
 
 
-static void strip_whitespace(bool strip_newline) {
+static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_slash) {
 	char c;
 
 	// strip whitespace
@@ -91,7 +91,7 @@ static void strip_whitespace(bool strip_newline) {
 		if (*sq_stream == '\\') {
 			++sq_stream;
 
-			if (*sq_stream && *sq_stream++ != '\n') 
+			if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash) 
 				die("unexpected '\\' on its own.");
 			continue;
 		}
@@ -102,6 +102,10 @@ static void strip_whitespace(bool strip_newline) {
 		while (isspace(c) && (strip_newline ? true : c != '\n'))
 			c = *++sq_stream;
 	}
+}
+
+static void strip_whitespace(bool strip_newline) {
+	strip_whitespace_maybe_ignore_slash(strip_newline, false);
 }
 
 #define CHECK_FOR_START(str, tkn) \
