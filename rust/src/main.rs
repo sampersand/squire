@@ -11,7 +11,8 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
-journey x(a, b=3, c: int, d: (int; 34; int) = 3, *e, **f){}
+x=y=1
+#journey x(a, b=3, c: int, d: (int; 34; int) = 3, *e, **f){}
 __END__
 fork "A" {
     path "A":
@@ -35,7 +36,7 @@ fork "A" {
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
     let mut parser = parse::Parser::new(&mut tokenizer);
 
-    let parse = ast::statement::Statement::parse(&mut parser);
+    let parse = ast::Expression::parse(&mut parser);
 
     dbg!(parse);
     // dbg!(tokenizer);
