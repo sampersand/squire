@@ -5,6 +5,7 @@ form Value {
 		renowned Variable;
 		renowned Ast;
 
+@whereupon $DEBUG
 		fork genus(my.value = value) {
 			path 'number':
 			path 'string':
@@ -12,7 +13,7 @@ form Value {
 			path 'null':
 			path Variable:
 			path Ast:
-				reward
+				reward 1
 			alas:
 				catapult "unknown genus given: \(genus(my.value))"	
 		}

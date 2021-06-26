@@ -87,6 +87,7 @@ static void strip_whitespace(bool strip_newline) {
 			continue;
 		}
 
+
 		if (*sq_stream == '\\') {
 			++sq_stream;
 
@@ -98,7 +99,7 @@ static void strip_whitespace(bool strip_newline) {
 		if (!isspace(c) || (!strip_newline && c == '\n'))
 			break;
 
-		while (isspace(c) && c != '\n')
+		while (isspace(c) && (strip_newline ? true : c != '\n'))
 			c = *++sq_stream;
 	}
 }

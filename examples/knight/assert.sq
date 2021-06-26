@@ -1,4 +1,2 @@
-@henceforth $assert($cond, $errmsg) =
-	if !($cond) {
-		catapult "assertion failed: \($errmsg)"
-	} ;
+@henceforth $DEBUG=yay;
+proclaim("debug=\(@whereupon$DEBUG yay@alas nay @nowhere)\n");

@@ -213,6 +213,52 @@ static void parse_nevermore(void) {
 	}
 }
 
+
+static void parse_whereupon(void) {
+	char *name = parse_macro_identifier_name();
+
+	// if we find something with the name, jsut return. a `@nowhere` won't do
+	// anything.
+	bool is_defined = false;
+
+	for (unsigned i = 0; i < variables.len; ++i)
+		if (!strcmp(variables.vars[i].name, name)) { is_defined = true; break; }
+
+	unsigned len = 0, cap = 128;
+	struct sq_token token, *tokens = xmalloc(sizeof(struct sq_token[cap]));
+
+	while (true) {
+		strip_whitespace(true);
+
+		if (*sq_stream == '@') {
+			//exit(0);
+			if (!strncmp(sq_stream, "@nowhere", 8) && !isalpha(sq_stream[8])) {
+				sq_stream += 8;
+				break;
+			} else if (!strncmp(sq_stream, "@alas", 5) && !isalpha(sq_stream[5])) {
+				sq_stream += 5;
+				is_defined = !is_defined; // i mean technically it works...
+				continue;
+			}
+		}
+
+		if ((token = sq_next_token()).kind == SQ_TK_UNDEFINED)
+			die("`@nowhere` found nowhere.");
+
+		if (!is_defined) continue;
+
+		if (cap == len)
+			tokens = xrealloc(tokens, sizeof(struct sq_token[cap *= 2]));
+
+		tokens[len++] = token;
+	}
+
+	expansions[++expansion_pos].len = len;
+	expansions[expansion_pos].pos = 0;
+	expansions[expansion_pos].tokens = tokens;
+}
+
+
 static void parse_compile(void) {
 	strip_whitespace(true);
 	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
@@ -241,58 +287,14 @@ static void parse_compile(void) {
 	sq_stream = new_stream;
 }
 
-// void expand_out(char *name) {
-// 	char *old_stream = sq_stream;
-// 	sq_stream = name;
-// 	// todo: parse out name into an expansion
-	
-// 	char *name = parse_macro_identifier_name();
-
-// 	FILE *stream = fopen(import, "r");
-// 	if (!stream) die("unable to open file: '%s': %s", import, strerror(errno));
-
-// 	if (fseek(stream, 0, SEEK_END)) die("unable to seek to end: %s", strerror(errno));
-// 	long length = ftell(stream);
-// 	if (fseek(stream, 0, SEEK_SET)) die("unable to seek to start: %s", strerror(errno));
-
-// 	char contents[length + 1];
-// 	contents[length] = '\0';
-// 	fread(contents, 1, length, stream);
-
-// 	if (ferror(stream)) die("unable to read contents: %s", strerror(errno));
-// 	if (fclose(stream) == EOF) die("unable to close stream: %s", strerror(errno));
-
-// 	struct statements *stmts = sq_parse_statements(contents);
-// 	if (!stmts) die("invalid syntax.");
-
-// 	compile_statements(code, stmts);
-// }
-// static void parse_import(struct sq_code *code, char *import) {
-// 	FILE *stream = fopen(import, "r");
-// 	if (!stream) die("unable to open file: '%s': %s", import, strerror(errno));
-
-// 	if (fseek(stream, 0, SEEK_END)) die("unable to seek to end: %s", strerror(errno));
-// 	long length = ftell(stream);
-// 	if (fseek(stream, 0, SEEK_SET)) die("unable to seek to start: %s", strerror(errno));
-
-// 	char contents[length + 1];
-// 	contents[length] = '\0';
-// 	fread(contents, 1, length, stream);
-
-// 	if (ferror(stream)) die("unable to read contents: %s", strerror(errno));
-// 	if (fclose(stream) == EOF) die("unable to close stream: %s", strerror(errno));
-
-// 	struct statements *stmts = sq_parse_statements(contents);
-// 	if (!stmts) die("invalid syntax.");
-
-// 	compile_statements(code, stmts);
-// }
-
 
 static void parse_macro_statement(char *name) {
 	if (!strcmp(name, "henceforth")) parse_henceforth();
 	else if (!strcmp(name, "nevermore")) parse_nevermore();
 	else if (!strcmp(name, "compile")) parse_compile();
+	else if (!strcmp(name, "whereupon")) parse_whereupon();
+	else if (!strcmp(name, "nowhere")) die("unexpected '@nowhere'");
+	else if (!strcmp(name, "alas")) die("unexpected '@alas'");
 	else if (!strcmp(name, "expand")) { /* parse_expand(); */ }
 	else die("unknown macro statement kind '%s'", name);;
 
