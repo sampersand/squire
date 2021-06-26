@@ -12,8 +12,7 @@ form Variable {
 		var = list[name];
 
 		if ni == var {
-			list[name] = me(name);
-			reward list[name]
+			reward list[name] = me(name);
 		} alas {
 			reward var
 		}
@@ -31,4 +30,9 @@ form Variable {
 		my.assigned = yay
 		my.value = value
 	}
+
+	change veracity() { reward nay }
+	change !@() { reward nay }
 }
+
+proclaim(!Variable(3))

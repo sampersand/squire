@@ -1,27 +1,8 @@
-#@henceforth $DEBUG = 1;
+@henceforth $DEBUG = 1;
 
-@whereupon $DEBUG
-	@henceforth $assert($cond, $errmsg) =
-		if !($cond) {
-			catapult "assertion failed: \($errmsg)"
-		};
-@alas
-	@henceforth $assert($a, $b) = 1;
-@nowhere
-
-@nevermore $assert;
 @henceforth $assert($cond, $errmsg) =
 	@whereupon $DEBUG
 		if !($cond) {
 			catapult "assertion failed: \($errmsg)"
 		};
-	@alas
-		proclaim("lol\n");
 	@nowhere;
-
-
-attempt {
-	$assert(nay, "!");
-} retreat err {
-	dump(err);
-} 
