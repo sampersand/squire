@@ -1,8 +1,9 @@
 use super::{Form, Change};
-use crate::Value;
+use crate::value::{Value, ValueKind, Text, Numeral};
 use std::sync::Arc;
 use parking_lot::RwLock;
 use std::hash::{Hash, Hasher};
+use crate::runtime::{Result, Error, Vm};
 
 #[derive(Debug)]
 pub struct Imitation {
@@ -69,4 +70,46 @@ impl PartialEq for Imitation {
 	fn eq(&self, _rhs: &Self) -> bool {
 		todo!()
 	}
+}
+
+impl Imitation {
+	pub fn to_veracity(&self, vm: &mut Vm) -> Result<bool> {
+		let _ = vm; todo!()
+	}
+
+	pub fn to_text(&self, vm: &mut Vm) -> Result<Text> {
+		let _ = vm; todo!();
+	}
+
+	pub fn to_numeral(&self, vm: &mut Vm) -> Result<Numeral> {
+		let _ = vm; todo!();
+	}
+
+	fn valuekind(&self) -> ValueKind {
+		ValueKind::Imitation(self.form().clone())
+	}
+
+	pub fn try_neg(&self, vm: &mut Vm) -> Result<Value> {
+		let _ = vm;
+		Err(Error::OperationNotSupported { kind: self.valuekind(), func: "-@" })
+	}
+
+	pub fn try_add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_sub(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_mul(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_div(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_rem(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+	pub fn try_pow(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+
+	pub fn try_not(&self, vm: &mut Vm) -> Result<bool> { let _ = vm; todo!(); }
+	pub fn try_eql(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
+	pub fn try_neq(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
+	pub fn try_lth(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
+	pub fn try_leq(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
+	pub fn try_gth(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
+	pub fn try_geq(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
+	pub fn try_cmp(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+
+	pub fn try_index(&self, by: &Value, vm: &mut Vm) -> Result<Value> { let _ = (by, vm); todo!(); }
+	pub fn try_index_assign(&self, by: Value, with: Value, vm: &mut Vm) -> Result<()> { let _ = (by, with, vm); todo!(); }
 }

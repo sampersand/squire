@@ -25,7 +25,7 @@ impl<'a> StackFrame<'a> {
 	fn next(&mut self) -> Bytecode {
 		let code = self.codeblock.code()[self.ip];
 		self.ip += 1;
-		trace!(?code, ?self.ip, "next instruction read");
+		trace!(?self.ip, ?code, "next instruction read");
 		code
 	}
 
@@ -51,26 +51,46 @@ impl<'a> StackFrame<'a> {
 		&mut self.locals[self.next_local_index()]
 	}
 
-	fn next_global(&mut self) -> &Value {
-		todo!()
+	fn next_global(&mut self) -> Value {
+		match self.next() {
+			Bytecode::Global(index) => self.vm.get_global(index),
+			other => panic!("expected a 'Global' but was given {:?}", other)
+		}
 	}
 
 	fn next_constant(&mut self) -> &Value {
 		match self.next() {
 			Bytecode::Constant(index) => &self.codeblock.constants()[index],
-			other => panic!("expected a 'Local' but was given {:?}", other)
+			other => panic!("expected a 'Constant' but was given {:?}", other)
 		}
 	}
 
 	fn next_label(&mut self) -> usize {
 		match self.next() {
 			Bytecode::Offset(index) => (self.ip as isize).checked_add(index).unwrap() as usize,
-			other => panic!("expected a 'Local' but was given {:?}", other)
+			other => panic!("expected a 'Label' but was given {:?}", other)
+		}
+	}
+
+	fn next_count(&mut self) -> usize {
+		match self.next()  {
+			Bytecode::Count(count) => count,
+			other => panic!("expected an 'Count' but was given {:?}", other)
 		}
 	}
 
 	fn next_locals_and_vm<const N: usize>(&mut self) -> ([&Value; N], &mut Vm) {
-		todo!()
+		let mut locals = std::mem::MaybeUninit::<[&Value; N]>::uninit();
+
+		for i in 0..N {
+			let local = self.next_local();
+
+			unsafe {
+				(locals.as_mut_ptr() as *mut &Value).offset(i as isize).write(local);
+			}
+		}
+
+		(unsafe { locals.assume_init() }, self.vm)
 	}
 
 	#[tracing::instrument(level="trace")]
@@ -89,8 +109,8 @@ impl StackFrame<'_> {
 	}
 
 	fn do_move(&mut self) {
-		let target = self.next_local_index();
 		let source = self.next_local_index();
+		let target = self.next_local_index();
 
 		if source != target {
 			self.locals[target] = self.locals[source].clone();
@@ -106,7 +126,7 @@ impl StackFrame<'_> {
 		let to = self.next_label();
 		let cond = self.next_local().clone();
 
-		if !cond.to_boolean(self.vm)? {
+		if !cond.to_veracity(self.vm)? {
 			self.jump(to);
 		}
 
@@ -117,7 +137,7 @@ impl StackFrame<'_> {
 		let to = self.next_label();
 		let cond = self.next_local().clone();
 
-		if cond.to_boolean(self.vm)? {
+		if cond.to_veracity(self.vm)? {
 			self.jump(to);
 		}
 
@@ -125,44 +145,18 @@ impl StackFrame<'_> {
 	}
 
 	fn do_call(&mut self) -> Result<()> {
-		todo!()
-		// let target = self.next_local();
-		// let argc = self.next_argc
-		// match self.next_local() {
+		let func = self.next_local().clone();
+		let argc = self.next_count();
 
-		// }
-		// 	sq_value imitation_value = NEXT_LOCAL();
-		// 	unsigned argc = NEXT_INDEX();
+		let mut args = Vec::with_capacity(argc);
+		for _ in 0..argc {
+			args.push(self.next_local().clone());
+		}
 
-		// 	sq_value newargs[argc];
+		let result = func.call(&args, self.vm)?;
 
-		// 	for (unsigned i = 0; i < argc; ++i)
-		// 		newargs[i] = NEXT_LOCAL();
-
-		// 	if (sq_value_is_function(imitation_value)) {
-		// 		struct sq_function *fn = sq_value_as_function(imitation_value);
-
-		// 		if (argc != fn->argc)
-		// 			die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
-
-		// 		NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
-		// 	} else if (sq_value_is_form(imitation_value)) {
-		// 		struct sq_form *form = sq_value_as_form(imitation_value);
-		// 		NEXT_LOCAL() = create_form_imitation(
-		// 			form,
-		// 			argc,
-		// 			memdup(newargs, sizeof(sq_value[argc]))
-		// 		);
-		// 	} else {
-		// 		die("can only call funcs, not '%s'", sq_value_typename(imitation_value));
-		// 	}
-
-		// 	continue;
-		// }
-	}
-
-	fn do_callbuiltin(&mut self) -> Result<()> {
-		todo!();
+		self.set_result(result);
+		Ok(())
 	}
 
 	fn do_return(&mut self) -> Result<Value> {
@@ -201,40 +195,32 @@ impl StackFrame<'_> {
 		Ok(())
 	}
 
-	fn do_ternary_op(&mut self, op: fn(&Value, &Value, Value, &mut Vm) -> Result<Value>) -> Result<()> {
-		let ([this, key, value], vm) = self.next_locals_and_vm();
-		let result = (op)(this, key, value.clone(), vm)?;
-
-		self.set_result(result);
-		Ok(())
-	}
-
 	fn do_not(&mut self) -> Result<()> {
-		self.do_unary_op(Value::try_not)
+		self.do_unary_op(|arg, vm| arg.try_not(vm).map(Value::Veracity))
 	}
 
 	fn do_equals(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_eql)
+		self.do_binary_op(|lhs, rhs, vm| lhs.try_eql(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_not_equals(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_neq)
+		self.do_binary_op(|lhs, rhs, vm| lhs.try_neq(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_less_than(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_lth)
+		self.do_binary_op(|lhs, rhs, vm| lhs.try_lth(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_less_than_or_equal(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_gth)
+		self.do_binary_op(|lhs, rhs, vm| lhs.try_gth(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_greater_than(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_gth)
+		self.do_binary_op(|lhs, rhs, vm| lhs.try_gth(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_greater_than_or_equal(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_geq)
+		self.do_binary_op(|lhs, rhs, vm| lhs.try_geq(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_compare(&mut self) -> Result<()> {
@@ -270,7 +256,7 @@ impl StackFrame<'_> {
 		self.do_binary_op(Value::try_rem)
 	}
 
-	fn do_exponentiate(&mut self) -> Result<()> {
+	fn do_power(&mut self) -> Result<()> {
 		self.do_binary_op(Value::try_pow)
 	}
 
@@ -280,7 +266,11 @@ impl StackFrame<'_> {
 	}
 
 	fn do_index_assign(&mut self) -> Result<()> {
-		self.do_ternary_op(Value::try_index_assign)
+		let index = self.next_local_index();
+		let key = self.next_local().clone();
+		let value = self.next_local().clone();
+
+		self.locals[index].try_index_assign(key, value, self.vm)
 	}
 
 	fn do_load_constant(&mut self) -> Result<()> {
@@ -290,7 +280,9 @@ impl StackFrame<'_> {
 	}
 
 	fn do_load_global(&mut self) -> Result<()> {
-		todo!();
+		let global = self.next_global();
+		self.set_result(global);
+		Ok(())
 	}
 
 	fn do_store_global(&mut self) -> Result<()> {
@@ -307,9 +299,11 @@ impl StackFrame<'_> {
 	}
 
 
-	#[tracing::instrument(level="debug")]
+	#[tracing::instrument(level="debug", skip(self))]
 	pub fn run(mut self) -> Result<Value> {
 		while !self.is_finished() {
+			trace!(?self.locals);
+
 			match self.next_opcode() {
 				// Misc
 				Opcode::NoOp => self.do_noop(),
@@ -321,7 +315,6 @@ impl StackFrame<'_> {
 				Opcode::JumpIfFalse => self.do_jump_if_false()?,
 				Opcode::JumpIfTrue => self.do_jump_if_true()?,
 				Opcode::Call => self.do_call()?,
-				Opcode::CallBuiltin => self.do_callbuiltin()?,
 				Opcode::Return => return self.do_return(),
 				Opcode::ComeFrom => self.do_comefrom()?,
 				Opcode::Throw => self.do_throw()?,
@@ -346,7 +339,7 @@ impl StackFrame<'_> {
 				Opcode::Multiply => self.do_multiply()?,
 				Opcode::Divide => self.do_divide()?,
 				Opcode::Modulo => self.do_modulo()?,
-				Opcode::Exponentiate => self.do_exponentiate()?,
+				Opcode::Power => self.do_power()?,
 
 				// Misc Operators
 				Opcode::Index => self.do_index()?,

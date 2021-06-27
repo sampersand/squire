@@ -33,6 +33,7 @@ impl CodeBlock {
 
 		let mut locals = Vec::with_capacity(self.num_locals);
 		locals.extend(args.iter().cloned());
+
 		while locals.len() < self.num_locals {
 			locals.push(Value::Null);
 		}

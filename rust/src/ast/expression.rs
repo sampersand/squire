@@ -29,7 +29,7 @@ impl Compilable for Expression {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
 		match self {
 			Self::Primary(primary) => primary.compile(compiler, target),
-			Self::BinaryOperator(binary_operator) => { let _ = binary_operator; todo!() }
+			Self::BinaryOperator(binary_operator) => binary_operator.compile(compiler, target)
 		}
 	}
 }

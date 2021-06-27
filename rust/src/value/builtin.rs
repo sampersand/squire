@@ -1,0 +1,54 @@
+use crate::runtime::{Value, Vm, Error as RuntimeError};
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
+use std::fmt::{self, Debug, Formatter};
+
+pub struct BuiltinJourney {
+	name: &'static str,
+	func: Box<dyn Fn(&[Value], &mut Vm) -> Result<Value, RuntimeError>>
+}
+
+impl Debug for BuiltinJourney {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		f.debug_tuple("BuiltinJourney")
+			.field(&self.name)
+			.finish()
+	}
+}
+
+impl Eq for BuiltinJourney {}
+impl PartialEq for BuiltinJourney {
+	fn eq(&self, rhs: &Self) -> bool {
+		self.name == rhs.name
+	}
+}
+
+impl Hash for BuiltinJourney {
+	fn hash<H: Hasher>(&self, h: &mut H) {
+		self.name.hash(h);
+	}
+}
+
+impl BuiltinJourney {
+	pub fn new<F: 'static>(name: &'static str, func: F) -> Self
+	where
+		F: Fn(&[Value], &mut Vm) -> Result<Value, RuntimeError>
+	{
+		Self { name, func: Box::new(func) }
+	}
+
+	pub fn name(&self) -> &str {
+		self.name
+	}
+
+	pub fn run(&self, args: &[Value], vm: &mut Vm) -> Result<Value, RuntimeError> {
+		(self.func)(args, vm)
+	}
+}
+
+pub fn defaults() -> Vec<Arc<BuiltinJourney>> {
+	vec![Arc::new(BuiltinJourney::new("dump", |args, _| {
+		println!("{:?}", args[0]);
+		Ok(args[0].clone())
+	}))]
+}

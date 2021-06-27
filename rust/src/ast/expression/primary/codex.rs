@@ -78,7 +78,8 @@ impl Compilable for Codex {
 		}
 
 		compiler.opcode(Opcode::Interrupt);
-		compiler.interrupt(Interrupt::NewCodex(pages.len()));
+		compiler.interrupt(Interrupt::NewCodex);
+		compiler.count(pages.len());
 
 		for (key, value) in pages {
 			compiler.target(key);

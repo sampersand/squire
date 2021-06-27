@@ -4,7 +4,46 @@ use squire::*;
 use squire::parse::Parsable;
 use squire::compile::Compilable;
 
+
+fn setup_tracing() {
+    use tracing::level_filters::LevelFilter;
+    use tracing_subscriber::{layer::SubscriberExt, registry::Registry};
+    use tracing_tree::HierarchicalLayer;
+
+    let loglevel = std::env::var("SQUIRE_LOGGING");
+    let filter = 
+        match loglevel.as_ref().map(|x| x.as_ref()) {
+            Ok("T") | Ok("TRACE") => LevelFilter::TRACE,
+            Ok("D") | Ok("DEBUG") => LevelFilter::DEBUG,
+            Ok("I") | Ok("INFO") => LevelFilter::INFO,
+            Ok("W") | Ok("WARN") => LevelFilter::WARN,
+            Ok("E") | Ok("ERROR") => LevelFilter::ERROR,
+            Ok("O") | Ok("OFF") => LevelFilter::OFF,
+            Ok("TREE") => {
+                let layer = HierarchicalLayer::default()
+                    .with_indent_lines(true)
+                    .with_indent_amount(2)
+                    .with_thread_names(true)
+                    .with_thread_ids(true)
+                    .with_verbose_exit(true)
+                    .with_verbose_entry(true)
+                    .with_targets(true);
+
+                let subscriber = Registry::default().with(layer);
+                tracing::subscriber::set_global_default(subscriber).unwrap();
+                return;
+            },
+            _ => return
+        };
+
+    tracing_subscriber::fmt()
+        .with_max_level(filter)
+        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
+        .init();
+}
+
 fn main() {
+    setup_tracing();
 //     // let arg = std::env::args().skip(1).next().unwrap();
 //     let mut stream = parse::Stream::from_str(&arg/*r#"
 // forma
@@ -12,7 +51,9 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
--34
+a=1;
+dump(-a);
+#[3 + 4, 5 - 9 - 2]
 #journey x(a, b=3, c: int, d: (int; 34; int) = 3, *e, **f){}
 __END__
 fork "A" {
@@ -34,15 +75,16 @@ fork "A" {
 #     essence b = 3;
 # }
 "##);
+
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
     let mut parser = parse::Parser::new(&mut tokenizer);
-
-    let parsed = ast::Expression::parse(&mut parser).unwrap().unwrap();
     let mut compiler = compile::Compiler::default();
+    compiler.compile_with(&mut parser).unwrap();
+    let block = compiler.finish();
 
-    let index = compiler.next_target();
-    parsed.compile(&mut compiler, Some(index)).unwrap();
-    dbg!(compiler);
+
+    let mut vm = runtime::Vm::default();
+    block.run(&[], &mut vm).unwrap();
     // dbg!(tokenizer);
 /*
 pub enum Keyword {

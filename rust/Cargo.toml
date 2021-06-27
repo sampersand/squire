@@ -15,3 +15,5 @@ unicode = ["unicode-roman-numerals"]
 [dependencies]
 parking_lot = "0.11"
 tracing = "0.1.26"
+tracing-subscriber = "*"
+tracing-tree = "*"

@@ -1,8 +1,8 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Interrupt {
-	NewArray(usize),
-	NewCodex(usize)
+	NewArray,
+	NewCodex,
 }
 
 	// // String stuff
@@ -45,7 +45,6 @@ pub enum Opcode {
 	JumpIfFalse,
 	JumpIfTrue,
 	Call,
-	CallBuiltin,
 	Return,
 	ComeFrom,
 	Throw,
@@ -70,7 +69,7 @@ pub enum Opcode {
 	Multiply,
 	Divide,
 	Modulo,
-	Exponentiate,
+	Power,
 
 	// Misc Operators
 	Index,
@@ -92,6 +91,7 @@ pub enum Bytecode {
 	Global(usize),
 	Constant(usize),
 	Offset(isize),
+	Count(usize)
 }
 
 // pub enum BuiltinFns {

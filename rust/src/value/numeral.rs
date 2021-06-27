@@ -1,5 +1,6 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
+use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Numeral(i64);
@@ -16,12 +17,27 @@ impl Numeral {
 	pub const fn abs(self) -> Self {
 		Self::new(self.get().abs())
 	}
+
+	pub fn pow(self, amount: u32) -> Self {
+		Self::new(self.get().pow(amount))
+	}
 }
 
 impl From<i64> for Numeral {
 	#[inline]
 	fn from(num: i64) -> Self {
 		Self::new(num)
+	}
+}
+
+impl From<Ordering> for Numeral {
+	#[inline]
+	fn from(ord: Ordering) -> Self {
+		match ord {
+			Ordering::Less => Self::new(-1),
+			Ordering::Equal => Self::new(0),
+			Ordering::Greater => Self::new(1),
+		}
 	}
 }
 
@@ -48,7 +64,7 @@ impl PartialEq<i64> for Numeral {
 	}
 }
 impl PartialOrd<i64> for Numeral {
-	fn partial_cmp(&self, rhs: &i64) -> Option<std::cmp::Ordering> {
+	fn partial_cmp(&self, rhs: &i64) -> Option<Ordering> {
 		self.get().partial_cmp(rhs)
 	}
 }
@@ -201,9 +217,23 @@ impl Display for RomanNumeral {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NumeralParseError {
 	Empty,
-	UnexpectedStartingChar,
+	UnexpectedStartingChar(char),
 	BadTrailingChar(char)
 }
+
+impl Display for NumeralParseError {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		write!(f, "bad numeral text: ")?;
+
+		match self {
+			Self::Empty => write!(f, "an empty string was given"),
+			Self::UnexpectedStartingChar(chr) => write!(f, "invalid leading character {:?}", chr),
+			Self::BadTrailingChar(chr) => write!(f, "invalid trailing character {:?}", chr),
+		}
+	}
+}
+
+impl std::error::Error for NumeralParseError {}
 
 impl Numeral {
 	pub fn from_str_arabic(input: &str) -> Result<Self, NumeralParseError> {
@@ -213,7 +243,7 @@ impl Numeral {
 
 		match chars.next() {
 			Some('-') => is_neg = true,
-			Some(digit) => numeral += digit.to_digit(10).ok_or(NumeralParseError::UnexpectedStartingChar)? as i64,
+			Some(digit) => numeral += digit.to_digit(10).ok_or(NumeralParseError::UnexpectedStartingChar(digit))? as i64,
 			None => return Err(NumeralParseError::Empty)
 		}
 
@@ -437,7 +467,7 @@ impl FromStr for Numeral {
 		let mut input = input.trim_start();
 
 		match Self::from_str_arabic(&mut input) {
-			Err(NumeralParseError::UnexpectedStartingChar) => Self::from_str_roman(&mut input),
+			Err(NumeralParseError::UnexpectedStartingChar(_)) => Self::from_str_roman(&mut input),
 			other => other
 		}
 	}

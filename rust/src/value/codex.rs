@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use crate::Value;
+use crate::runtime::{Value, Vm, Error as RuntimeError};
 // use std::cmp::Ordering;
-use std::ops::Index;
-use std::hash::{Hash, /*s*/};
+use std::ops::{Index, Add, Sub};
+use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -43,6 +43,10 @@ impl Codex {
 
 	pub fn is_empty(&self) -> bool {
 		self.0.is_empty()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item=(&Value, &Value)> {
+		self.0.iter()
 	}
 }
 
@@ -86,12 +90,55 @@ where
 	}
 }
 
-impl Codex {
-	pub fn merge<I: IntoIterator<Item=(Value, Value)>>(&mut self, rhs: I) {
-		self.0.extend(rhs)
+impl<I: IntoIterator<Item=(Value, Value)>> Add<I> for Codex {
+	type Output = Self;
+
+	fn add(mut self, rhs: I) -> Self::Output {
+		self.0.extend(rhs);
+		self
 	}
 }
 
+impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Codex {
+	type Output = Self;
+
+	fn sub(mut self, rhs: I) -> Self::Output {
+		// todo: optimize
+		let rhs = rhs.into_iter().collect::<Vec<_>>();
+		self.0.retain(|value, _| !rhs.contains(&value));
+		self
+	}
+}
+
+impl Hash for Codex {
+	fn hash<H: Hasher>(&self, h: &mut H) {
+		0.hash(h); // todo: actually hash.
+	}
+}
+
+impl Codex {
+	pub fn try_eql(&self, rhs: &Self, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		if (self as *const _) == (rhs as *const _) {
+			return Ok(true);
+		} else if self.len() != rhs.len() {
+			return Ok(false);
+		}
+
+		let _ = vm; todo!();
+		// for (key, value) in self.iter() {
+		// 	if !lhs.try_eql(rhs, vm)? {
+		// 		return Ok(false)
+		// 	}
+		// }
+
+		// Ok(true)
+	}
+
+	pub fn try_partial_cmp(&self, rhs: &Self, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
+		let _ = (rhs, vm); todo!()
+	}
+
+}
 // impl PartialOrd for Codex {
 // 	fn partial_cmp(&self, rhs: &Self) -> Option<Ordering> {
 // 		if (self as *const _) == (rhs as *const _) {

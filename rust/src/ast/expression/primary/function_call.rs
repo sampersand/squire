@@ -60,24 +60,32 @@ impl FunctionCall {
 
 impl Compilable for FunctionCall {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		// let mut args = Vec::new();
+		use crate::runtime::Opcode;
 
-		// for arg in self.
-// #[derive(Debug)]
-// enum Argument {
-// 	Positional(Expression),
-// 	Splat(Expression),
-// 	Keyword(String, Expression),
-// 	SplatSplat(Expression)
-// }
+		let func_target = target.unwrap_or_else(|| compiler.next_target());
+		self.func.compile(compiler, Some(func_target))?;
 
-// #[derive(Debug)]
-// pub struct FunctionCall {
-// 	func: Box<Primary>,
-// 	args: Vec<Argument>
-// }
+		let mut args = Vec::with_capacity(self.args.len());
+		for arg in self.args {
+			let arg_target = compiler.next_target();
+			args.push(arg_target);
 
-		let _ = target;
-		let _ = compiler; todo!();
+			match arg {
+				Argument::Positional(arg) => arg.compile(compiler, Some(arg_target))?,
+				_ => todo!()
+			}
+		}
+
+		compiler.opcode(Opcode::Call);
+		compiler.target(func_target);
+		compiler.count(args.len());
+
+		for arg in args {
+			compiler.target(arg);
+		}
+
+			compiler.target(func_target);
+
+		Ok(())
 	}
 }

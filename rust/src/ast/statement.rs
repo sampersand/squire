@@ -112,6 +112,25 @@ impl Parsable for Statement {
 
 impl Compilable for Statement {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		let _ = (compiler, target); todo!()
+		match self {
+			Self::Expression(expression) => expression.compile(compiler, target),
+			_ => todo!()
+	// Class(Class),
+	// Function(Function),
+	// Attempt(Attempt),
+	// Catapult(Catapult),
+	// Reward(Reward),
+
+	// Renowned(Renowned),
+	// Nigh(Nigh),
+
+	// If(If),
+	// Whilst(Whilst),
+	// Fork(Fork),
+	// Label(Label),
+	// ComeFrom(ComeFrom),
+
+	// Expression(Expression),
+		}
 	}
 }

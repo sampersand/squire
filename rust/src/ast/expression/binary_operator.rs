@@ -1,6 +1,7 @@
 use crate::parse::{Parser, Parsable, Error as ParseError};
-use crate::ast::Expression;
 use crate::parse::token::{Token, Symbol};
+use crate::ast::expression::{Expression, Primary};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -69,11 +70,7 @@ pub struct BinaryOperator {
 }
 
 impl BinaryOperator {
-	pub fn parse_with<I>(
-		lhs: Expression,
-		parser: &mut Parser<'_, I>,
-		level: Option<Operator>
-	)
+	pub fn parse_with<I>(lhs: Expression, parser: &mut Parser<'_, I>, level: Option<Operator>)
 		-> Result<Expression, ParseError>
 	where
 		I: Iterator<Item=char>
@@ -114,14 +111,112 @@ impl BinaryOperator {
 				None => return Ok(lhs)
 			};
 
-		if level.map_or(false, |level| level < op) {
-			parser.undo_next_token();
-			return Ok(lhs);
+		if level.map_or(false, |level| level <= op) {
+			todo!("actually handle the rhs");
+			// parser.undo_next_token();
+			// return Ok(lhs);
 		}
 
-		let rhs_primary = super::Primary::expect_parse(parser)?;
+		let rhs_primary = Primary::expect_parse(parser)?;
 		let rhs = Self::parse_with(Expression::Primary(rhs_primary), parser, Some(op))?;
 
 		Ok(Expression::BinaryOperator(Self { op, lhs: Box::new(lhs), rhs: Box::new(rhs) }))
 	}
+}
+
+impl Compilable for BinaryOperator {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		let target_ =
+			if let Some(target) = target {
+				target
+			} else if let Operator::Assignment(_) = self.op {
+				compiler.next_target()
+			} else {
+				self.lhs.compile(compiler, None)?;
+				self.rhs.compile(compiler, None)?;
+				return Ok(());
+			};
+
+		match self.op {
+			Operator::Assignment(op) => compile_assignment(op, self.lhs, self.rhs, compiler, target),
+			Operator::Math(op) => compile_math(op, self.lhs, self.rhs, compiler, target_),
+			Operator::Logic(op) => compile_logic(op, self.lhs, self.rhs, compiler, target_),
+			Operator::ShortCircuit(op) => compile_short_circuit(op, self.lhs, self.rhs, compiler, target_),
+		}
+	}
+}
+
+fn compile_assignment(op: Option<Math>, lhs: Box<Expression>, rhs: Box<Expression>, compiler: &mut Compiler, target: Option<Target>)
+	-> Result<(), CompileError>
+{
+	match *lhs {
+		Expression::Primary(Primary::Identifier(name)) => name.compile_assignment(op, rhs, compiler, target),
+		Expression::Primary(Primary::GetAttr(getattr)) => getattr.compile_assignment(op, rhs, compiler, target),
+		Expression::Primary(Primary::Index(index)) => index.compile_assignment(op, rhs, compiler, target),
+		_ => Err(CompileError::InvalidLhsForAssignment)
+	}
+}
+
+// TODO: make this take Option<Target>
+fn compile_math(op: Math, lhs: Box<Expression>, rhs: Box<Expression>, compiler: &mut Compiler, target: Target)
+	-> Result<(), CompileError>
+{
+	use crate::runtime::Opcode;
+
+	let rhs_target = compiler.next_target();
+	lhs.compile(compiler, Some(target))?;
+	rhs.compile(compiler, Some(rhs_target))?;
+
+	match op {
+		Math::Add => compiler.opcode(Opcode::Add),
+		Math::Sub => compiler.opcode(Opcode::Subtract),
+		Math::Mul => compiler.opcode(Opcode::Multiply),
+		Math::Div => compiler.opcode(Opcode::Divide),
+		Math::Mod => compiler.opcode(Opcode::Modulo),
+		Math::Pow => compiler.opcode(Opcode::Power),
+	}
+
+	compiler.target(target);
+	compiler.target(rhs_target);
+	compiler.target(target);
+
+	Ok(())
+}
+
+fn compile_logic(op: Logic, lhs: Box<Expression>, rhs: Box<Expression>, compiler: &mut Compiler, target: Target)
+	-> Result<(), CompileError>
+{
+	use crate::runtime::Opcode;
+
+	let rhs_target = compiler.next_target();
+	lhs.compile(compiler, Some(target))?;
+	rhs.compile(compiler, Some(rhs_target))?;
+
+	match op {
+		Logic::Eql => compiler.opcode(Opcode::Equals),
+		Logic::Neq => compiler.opcode(Opcode::NotEquals),
+		Logic::Lth => compiler.opcode(Opcode::LessThan),
+		Logic::Leq => compiler.opcode(Opcode::LessThanOrEqual),
+		Logic::Gth => compiler.opcode(Opcode::GreaterThan),
+		Logic::Geq => compiler.opcode(Opcode::GreaterThanOrEqual),
+		Logic::Cmp => compiler.opcode(Opcode::Compare),
+	}
+
+	compiler.target(target);
+	compiler.target(rhs_target);
+	compiler.target(target);
+
+	Ok(())
+
+}
+
+fn compile_short_circuit(
+	op: ShortCircuit,
+	lhs: Box<Expression>,
+	rhs: Box<Expression>,
+	compiler: &mut Compiler,
+	target: Target
+) -> Result<(), CompileError> {
+	let _ = (op, lhs, rhs, compiler, target);
+	todo!();
 }

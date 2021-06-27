@@ -24,6 +24,16 @@ impl Index {
 
 		Ok(Ok(Self { into: Box::new(into), key: Box::new(key) }))
 	}
+
+	pub fn compile_assignment(
+		self,
+		op: Option<crate::ast::expression::binary_operator::Math>,
+		rhs: Box<Expression>,
+		compiler: &mut Compiler,
+		target: Option<Target>
+	) -> Result<(), CompileError> {
+		let _ = (op, rhs, compiler, target); todo!()
+	}
 }
 
 impl Compilable for Index {

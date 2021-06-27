@@ -1,4 +1,4 @@
- use crate::Value;
+use crate::runtime::{Value, Vm, Error as RuntimeError};
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
 	Add, AddAssign,
@@ -67,6 +67,21 @@ impl Array {
 
 	pub fn get(&self, index: usize) -> Option<&Value> {
 		self.0.get(index)
+	}
+
+	pub fn get2__maybe_a_better_name(&self, index: isize) -> Option<&Value> {
+		if 0 <= index {
+			self.get(index as usize)
+		} else if let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
+			self.get(index)
+		} else {
+			None
+		}
+	}
+
+	pub fn set2__maybe_a_better_name(&mut self, index: isize, value: Value) {
+		let _ = (index, value);
+		todo!();
 	}
 
 	pub fn get_mut(&mut self, index: usize) -> Option<&mut Value> {
@@ -184,7 +199,7 @@ impl<I: IntoIterator<Item=Value>> AddAssign<I> for Array {
 	}
 }
 
-impl<I: IntoIterator<Item=Value>> Sub<I> for Array {
+impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Array {
 	type Output = Array;
 
 	#[inline]
@@ -195,11 +210,11 @@ impl<I: IntoIterator<Item=Value>> Sub<I> for Array {
 }
 
 
-impl<I: IntoIterator<Item=Value>> SubAssign<I> for Array {
+impl<'a, I: IntoIterator<Item=&'a Value>> SubAssign<I> for Array {
 	fn sub_assign(&mut self, rhs: I) {
 		// todo: optimize
 		let rhs = rhs.into_iter().collect::<Vec<_>>();
-		self.0.retain(|value| !rhs.contains(value))
+		self.0.retain(|value| !rhs.contains(&value))
 	}
 }
 
@@ -226,6 +241,28 @@ impl MulAssign<usize> for Array {
 		self.expand_to(self.len() * amount);
 		let dup = self.iter().map(Clone::clone).collect::<Vec<_>>();
 		self.extend(dup.into_iter().cycle().take(amount - 1));
+	}
+}
+
+impl Array {
+	pub fn try_eql(&self, rhs: &Self, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		if (self as *const _) == (rhs as *const _) {
+			return Ok(true);
+		} else if self.len() != rhs.len() {
+			return Ok(false);
+		}
+
+		for (lhs, rhs) in self.iter().zip(rhs.iter()) {
+			if !lhs.try_eql(rhs, vm)? {
+				return Ok(false)
+			}
+		}
+
+		Ok(true)
+	}
+
+	pub fn try_cmp(&self, rhs: &Self, vm: &mut Vm) -> Result<std::cmp::Ordering, RuntimeError> {
+		let _ = (rhs, vm); todo!()
 	}
 }
 

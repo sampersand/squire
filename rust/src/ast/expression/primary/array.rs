@@ -68,7 +68,8 @@ impl Compilable for Array {
 		}
 
 		compiler.opcode(Opcode::Interrupt);
-		compiler.interrupt(Interrupt::NewArray(elements.len()));
+		compiler.interrupt(Interrupt::NewArray);
+		compiler.count(elements.len());
 
 		for element in elements {
 			compiler.target(element);

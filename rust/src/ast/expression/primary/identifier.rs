@@ -1,3 +1,4 @@
+use crate::ast::Expression;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
@@ -14,6 +15,41 @@ impl Parsable for Identifier {
 			Some(_) => unreachable!(),
 			None => Ok(None)
 		}
+	}
+}
+
+impl Identifier {
+	pub fn compile_assignment(
+		self,
+		op: Option<crate::ast::expression::binary_operator::Math>,
+		rhs: Box<Expression>,
+		compiler: &mut Compiler,
+		target: Option<Target>
+	) -> Result<(), CompileError> {
+		use crate::runtime::Opcode;
+		if op.is_some() { todo!(); }
+
+		if let Some(global) = compiler.get_global(&self.0) {
+			let rhs_target = target.unwrap_or_else(|| compiler.next_target());
+			rhs.compile(compiler, Some(rhs_target))?;
+
+			compiler.opcode(Opcode::StoreGlobal);
+			compiler.global(global);
+			compiler.target(rhs_target);
+		} else {
+			let variable = compiler.define_local(self.0);
+			rhs.compile(compiler, Some(variable))?;
+
+			if let Some(target) = target {
+				if variable != target {
+					compiler.opcode(Opcode::Move);
+					compiler.target(variable);
+					compiler.target(target);
+				}
+			}
+		}
+
+		Ok(())
 	}
 }
 
@@ -45,6 +81,8 @@ impl Compilable for Identifier {
 			compiler.opcode(Opcode::LoadGlobal);
 			compiler.global(global);
 			compiler.target(target);
+
+			return Ok(())
 		}
 
 		Err(CompileError::UnknownIdentifier(self.0))
