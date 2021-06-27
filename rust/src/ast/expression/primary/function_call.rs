@@ -1,7 +1,7 @@
 use crate::ast::expression::{Expression, Primary};
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, ParenKind, Symbol, Token};
-
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 enum Argument {
@@ -55,5 +55,29 @@ impl FunctionCall {
 			})?;
 
 		Ok(Ok(Self { func: Box::new(func), args }))
+	}
+}
+
+impl Compilable for FunctionCall {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		// let mut args = Vec::new();
+
+		// for arg in self.
+// #[derive(Debug)]
+// enum Argument {
+// 	Positional(Expression),
+// 	Splat(Expression),
+// 	Keyword(String, Expression),
+// 	SplatSplat(Expression)
+// }
+
+// #[derive(Debug)]
+// pub struct FunctionCall {
+// 	func: Box<Primary>,
+// 	args: Vec<Argument>
+// }
+
+		let _ = target;
+		let _ = compiler; todo!();
 	}
 }

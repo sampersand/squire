@@ -64,3 +64,10 @@ impl Text {
 		Self::new(text)
 	}
 }
+
+impl From<String> for Text {
+	#[inline]
+	fn from(text: String) -> Self {
+		Self::new(text)
+	}
+}

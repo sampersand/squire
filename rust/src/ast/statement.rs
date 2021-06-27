@@ -1,6 +1,7 @@
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Symbol, ParenKind};
 use crate::ast::Expression;
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 mod class;
 pub mod function;
@@ -106,5 +107,11 @@ impl Parsable for Statement {
 		}
 
 		stmt
+	}
+}
+
+impl Compilable for Statement {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		let _ = (compiler, target); todo!()
 	}
 }

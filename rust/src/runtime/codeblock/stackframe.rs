@@ -241,6 +241,11 @@ impl StackFrame<'_> {
 		self.do_binary_op(Value::try_cmp)
 	}
 
+	fn do_pos(&mut self) -> Result<()> {
+		// self.do_unary_op(Value::try_neg)
+		todo!();
+	}
+
 	fn do_negate(&mut self) -> Result<()> {
 		self.do_unary_op(Value::try_neg)
 	}
@@ -270,7 +275,8 @@ impl StackFrame<'_> {
 	}
 
 	fn do_index(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_index)
+		todo!("the second value's going to be a constant index, not a target.");
+		// self.do_binary_op(Value::try_index)
 	}
 
 	fn do_index_assign(&mut self) -> Result<()> {
@@ -333,6 +339,7 @@ impl StackFrame<'_> {
 				Opcode::Compare => self.do_compare()?,
 
 				// Math
+				Opcode::Pos => self.do_pos()?,
 				Opcode::Negate => self.do_negate()?,
 				Opcode::Add => self.do_add()?,
 				Opcode::Subtract => self.do_subtract()?,

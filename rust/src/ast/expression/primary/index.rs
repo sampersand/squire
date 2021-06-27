@@ -1,6 +1,7 @@
 use crate::ast::expression::{Expression, Primary};
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, ParenKind};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 pub struct Index {
@@ -22,5 +23,32 @@ impl Index {
 		parser.expect(TokenKind::RightParen(ParenKind::Square))?;
 
 		Ok(Ok(Self { into: Box::new(into), key: Box::new(key) }))
+	}
+}
+
+impl Compilable for Index {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::Opcode;
+
+		let target =
+			if let Some(target) = target {
+				target
+			} else {
+				self.into.compile(compiler, None)?;
+				self.key.compile(compiler, None)?;
+				return Ok(());
+			};
+
+		let key_index = compiler.next_target();
+
+		self.into.compile(compiler, Some(target))?;
+		self.key.compile(compiler, Some(key_index))?;
+
+		compiler.opcode(Opcode::Index);
+		compiler.target(target);
+		compiler.target(key_index);
+		compiler.target(target);
+
+		Ok(())
 	}
 }

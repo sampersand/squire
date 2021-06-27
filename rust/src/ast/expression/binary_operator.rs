@@ -1,4 +1,4 @@
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::ast::Expression;
 use crate::parse::token::{Token, Symbol};
 use std::cmp::Ordering;

@@ -1,4 +1,5 @@
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 mod grouping;
 mod literal;
@@ -66,6 +67,23 @@ impl Parsable for Primary {
 				}
 			}
 		}
+	}
+}
 
+impl Compilable for Primary {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		match self {
+			Self::Grouping(grouping) => grouping.compile(compiler, target),
+			Self::Literal(literal) => literal.compile(compiler, target),
+			Self::Lambda(lambda) => lambda.compile(compiler, target),
+			Self::Identifier(identifier) => identifier.compile(compiler, target),
+			Self::Array(array) => array.compile(compiler, target),
+			Self::Codex(codex) => codex.compile(compiler, target),
+			Self::UnaryOp(unaryop) => unaryop.compile(compiler, target),
+
+			Self::Index(index) => index.compile(compiler, target),
+			Self::GetAttr(getattr) => getattr.compile(compiler, target),
+			Self::FunctionCall(functioncall) => functioncall.compile(compiler, target),
+		}
 	}
 }

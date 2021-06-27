@@ -1,5 +1,5 @@
 use crate::ast::Expression;
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword, Symbol};
 
 #[derive(Debug)]

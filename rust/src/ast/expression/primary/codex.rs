@@ -1,7 +1,7 @@
 use crate::ast::Expression;
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, ParenKind, Symbol};
-
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 enum CodexPageKind {
@@ -37,3 +37,56 @@ impl Parsable for Codex {
 	}
 }
 
+impl Compilable for Codex {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::{Opcode, Interrupt};
+
+		let target =
+			if let Some(target) = target {
+				target
+			} else {
+				for page in self.0 {
+					match page {
+						CodexPageKind::Normal(key, value) => {
+							key.compile(compiler, None)?;
+							value.compile(compiler, None)?;
+						},
+						CodexPageKind::SplatSplat(expr) => expr.compile(compiler, None)?
+					}
+				}
+
+				return Ok(());
+			};
+
+		let mut pages = Vec::new();
+
+		for page in self.0 {
+			let page_key_target = compiler.next_target();
+			let page_value_target = compiler.next_target();
+
+			match page {
+				CodexPageKind::Normal(key, value) => {
+					key.compile(compiler, Some(page_key_target))?;
+					value.compile(compiler, Some(page_value_target))?;
+					pages.push((page_key_target, page_value_target));
+				},
+
+				CodexPageKind::SplatSplat(splatsplat) => {
+					let _ = splatsplat; todo!();
+				}
+			}
+		}
+
+		compiler.opcode(Opcode::Interrupt);
+		compiler.interrupt(Interrupt::NewCodex(pages.len()));
+
+		for (key, value) in pages {
+			compiler.target(key);
+			compiler.target(value);
+		}
+
+		compiler.target(target);
+
+		Ok(())
+	}
+}

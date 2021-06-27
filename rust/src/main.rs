@@ -2,6 +2,7 @@
 
 use squire::*;
 use squire::parse::Parsable;
+use squire::compile::Compilable;
 
 fn main() {
 //     // let arg = std::env::args().skip(1).next().unwrap();
@@ -11,7 +12,7 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
-x=y=1
+-34
 #journey x(a, b=3, c: int, d: (int; 34; int) = 3, *e, **f){}
 __END__
 fork "A" {
@@ -36,9 +37,12 @@ fork "A" {
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
     let mut parser = parse::Parser::new(&mut tokenizer);
 
-    let parse = ast::Expression::parse(&mut parser);
+    let parsed = ast::Expression::parse(&mut parser).unwrap().unwrap();
+    let mut compiler = compile::Compiler::default();
 
-    dbg!(parse);
+    let index = compiler.next_target();
+    parsed.compile(&mut compiler, Some(index)).unwrap();
+    dbg!(compiler);
     // dbg!(tokenizer);
 /*
 pub enum Keyword {

@@ -1,5 +1,5 @@
 use crate::ast::{Expression, expression::Primary, Statements};
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 
 pub type Type = Primary;

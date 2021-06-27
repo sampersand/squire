@@ -1,4 +1,5 @@
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 mod primary;
 mod binary_operator;
@@ -20,6 +21,15 @@ impl Parsable for Expression {
 			BinaryOperator::parse_with(Expression::Primary(primary), parser, None).map(Some)
 		} else {
 			Ok(None)
+		}
+	}
+}
+
+impl Compilable for Expression {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		match self {
+			Self::Primary(primary) => primary.compile(compiler, target),
+			Self::BinaryOperator(binary_operator) => { let _ = binary_operator; todo!() }
 		}
 	}
 }

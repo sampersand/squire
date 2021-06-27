@@ -1,6 +1,7 @@
 use crate::ast::expression::Primary;
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Symbol};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 pub enum UnaryOperator {
@@ -37,5 +38,26 @@ impl Parsable for UnaryOp {
 		let expr = Primary::expect_parse(parser)?;
 
 		Ok(Some(Self { op, expr: Box::new(expr) }))
+	}
+}
+
+impl Compilable for UnaryOp {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::Opcode;
+
+		self.expr.compile(compiler, target)?;
+
+		if let Some(target) = target {
+			match self.op {
+				UnaryOperator::Pos => compiler.opcode(Opcode::Pos),
+				UnaryOperator::Neg => compiler.opcode(Opcode::Negate),
+				UnaryOperator::Not => compiler.opcode(Opcode::Not),
+			}
+
+			compiler.target(target); // argument
+			compiler.target(target); // destination
+		}
+
+		Ok(())
 	}
 }

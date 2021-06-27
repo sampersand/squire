@@ -1,5 +1,6 @@
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 pub struct Identifier(String);
@@ -13,5 +14,39 @@ impl Parsable for Identifier {
 			Some(_) => unreachable!(),
 			None => Ok(None)
 		}
+	}
+}
+
+impl Compilable for Identifier {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::Opcode;
+
+		if let Some(local) = compiler.get_local(&self.0) {
+			match target {
+				Some(target) if target != local => {
+					compiler.opcode(Opcode::Move);
+					compiler.target(local);
+					compiler.target(target);
+				},
+				_ => { /* do nothing, as target's either zero or is the local */ },
+			}
+
+			return Ok(());
+		}
+
+		if let Some(global) = compiler.get_global(&self.0) {
+			let target =
+				if let Some(target) = target {
+					target
+				} else {
+					return Ok(());
+				};
+
+			compiler.opcode(Opcode::LoadGlobal);
+			compiler.global(global);
+			compiler.target(target);
+		}
+
+		Err(CompileError::UnknownIdentifier(self.0))
 	}
 }

@@ -2,7 +2,8 @@ use crate::parse::Error as ParseError;
 
 #[derive(Debug)]
 pub enum Error {
-	Parse(ParseError)
+	Parse(ParseError),
+	UnknownIdentifier(String)
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

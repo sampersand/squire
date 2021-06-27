@@ -1,7 +1,7 @@
 use crate::ast::Expression;
-use crate::parse::{Error as ParseError, Parsable, Parser};
+use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, ParenKind, Symbol};
-
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 enum ArrayEleKind {
@@ -33,3 +33,49 @@ impl Parsable for Array {
 	}
 }
 
+impl Compilable for Array {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::{Opcode, Interrupt};
+
+		let target =
+			if let Some(target) = target {
+				target
+			} else {
+				for element in self.0 {
+					match element {
+						ArrayEleKind::Normal(ele) => ele.compile(compiler, None)?,
+						ArrayEleKind::Splat(splat) => splat.compile(compiler, None)?
+					}
+				}
+
+				return Ok(());
+			};
+
+		let mut elements = Vec::new();
+
+		for element in self.0 {
+			match element {
+				ArrayEleKind::Normal(ele) => {
+					let element_target = compiler.next_target();
+					elements.push(element_target);
+					ele.compile(compiler, Some(element_target))?;
+				},
+
+				ArrayEleKind::Splat(splat) => {
+					let _ = splat; todo!();
+				}
+			}
+		}
+
+		compiler.opcode(Opcode::Interrupt);
+		compiler.interrupt(Interrupt::NewArray(elements.len()));
+
+		for element in elements {
+			compiler.target(element);
+		}
+
+		compiler.target(target);
+
+		Ok(())
+	}
+}

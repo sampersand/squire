@@ -50,6 +50,20 @@ impl From<bool> for Value {
 	}
 }
 
+impl From<String> for Value {
+	#[inline]
+	fn from(text: String) -> Self {
+		Self::from(Text::new(text))
+	}
+}
+
+impl From<Text> for Value {
+	#[inline]
+	fn from(text: Text) -> Self {
+		Self::Text(text)
+	}
+}
+
 impl Value {
 	pub fn to_boolean(&self, vm: &mut Vm) -> Result<bool> {
 		let _ = vm; todo!()
