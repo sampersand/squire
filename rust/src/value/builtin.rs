@@ -1,11 +1,11 @@
-use crate::runtime::{Value, Vm, Error as RuntimeError};
+use crate::runtime::{Value, Vm, Error as RuntimeError, Args};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::fmt::{self, Debug, Formatter};
 
 pub struct BuiltinJourney {
 	name: &'static str,
-	func: Box<dyn Fn(&[Value], &mut Vm) -> Result<Value, RuntimeError>>
+	func: Box<dyn Fn(Args, &mut Vm) -> Result<Value, RuntimeError>>
 }
 
 impl Debug for BuiltinJourney {
@@ -32,7 +32,7 @@ impl Hash for BuiltinJourney {
 impl BuiltinJourney {
 	pub fn new<F: 'static>(name: &'static str, func: F) -> Self
 	where
-		F: Fn(&[Value], &mut Vm) -> Result<Value, RuntimeError>
+		F: Fn(Args, &mut Vm) -> Result<Value, RuntimeError>
 	{
 		Self { name, func: Box::new(func) }
 	}
@@ -41,14 +41,14 @@ impl BuiltinJourney {
 		self.name
 	}
 
-	pub fn run(&self, args: &[Value], vm: &mut Vm) -> Result<Value, RuntimeError> {
+	pub fn run(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
 		(self.func)(args, vm)
 	}
 }
 
 pub fn defaults() -> Vec<Arc<BuiltinJourney>> {
 	vec![Arc::new(BuiltinJourney::new("dump", |args, _| {
-		println!("{:?}", args[0]);
-		Ok(args[0].clone())
+		println!("{:?}", args.positional(0).unwrap());
+		Ok(args.positional(0).unwrap().clone())
 	}))]
 }

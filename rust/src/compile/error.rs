@@ -4,7 +4,8 @@ use crate::parse::Error as ParseError;
 pub enum Error {
 	Parse(ParseError),
 	UnknownIdentifier(String),
-	InvalidLhsForAssignment
+	InvalidLhsForAssignment,
+	GlobalAlreadyDefined(String)
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

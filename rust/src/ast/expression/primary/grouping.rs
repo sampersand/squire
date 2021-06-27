@@ -16,10 +16,6 @@ impl Parsable for Grouping {
 
 impl Compilable for Grouping {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		for statement in self.0 {
-			statement.compile(compiler, target)?;
-		}
-
-		Ok(())
+		self.0.compile(compiler, target)
 	}
 }

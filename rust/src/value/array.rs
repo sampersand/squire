@@ -69,7 +69,7 @@ impl Array {
 		self.0.get(index)
 	}
 
-	pub fn get2__maybe_a_better_name(&self, index: isize) -> Option<&Value> {
+	pub fn get2_maybe_a_better_name(&self, index: isize) -> Option<&Value> {
 		if 0 <= index {
 			self.get(index as usize)
 		} else if let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
@@ -79,7 +79,7 @@ impl Array {
 		}
 	}
 
-	pub fn set2__maybe_a_better_name(&mut self, index: isize, value: Value) {
+	pub fn set2_maybe_a_better_name(&mut self, index: isize, value: Value) {
 		let _ = (index, value);
 		todo!();
 	}

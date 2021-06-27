@@ -1,6 +1,7 @@
 use crate::ast::Statements;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 
 #[derive(Debug)]
@@ -35,5 +36,11 @@ impl Parsable for Attempt {
 			};
 
 		Ok(Some(Self { body, exception, catch, finally }))
+	}
+}
+
+impl Compilable for Attempt {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		let _ = (compiler, target); todo!();
 	}
 }

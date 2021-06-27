@@ -1,6 +1,8 @@
 use crate::ast::{Expression, expression::Primary, Statements};
+use crate::value::{Value, Journey};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 pub type Type = Primary;
 
@@ -99,5 +101,44 @@ impl Parsable for Function {
 		let body  = Statements::expect_parse(parser)?;
 
 		Ok(Some(Self { name, args, body }))
+	}
+}
+
+impl Compilable for Function {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::Opcode;
+
+		let mut body_compiler = Compiler::with_globals(compiler.globals().clone());
+
+		if self.args.vararg.is_some() || self.args.varkwarg.is_some() || self.args.return_type.is_some() {
+			todo!();
+		}
+
+		let mut arg_names = Vec::new();
+		for arg in self.args.normal {
+			if arg.kind.is_some() || arg.default.is_some() {
+				todo!();
+			}
+
+			arg_names.push(arg.name.clone());
+			body_compiler.define_local(arg.name);
+		}
+
+		let return_target = body_compiler.next_target();
+		self.body.compile(&mut body_compiler, Some(return_target))?;
+		// todo: what if `return_target` is just used for scratch?.
+		body_compiler.opcode(Opcode::Return);
+		body_compiler.target(return_target);
+
+		let journey = Value::Journey(Journey::new(self.name.clone(), false, arg_names, body_compiler.finish()).into());
+		let global = compiler.define_global(self.name, Some(journey.clone()))?;
+
+		if let Some(target) = target {
+			compiler.opcode(Opcode::LoadGlobal);
+			compiler.global(global);
+			compiler.target(target);
+		}
+
+		Ok(())
 	}
 }

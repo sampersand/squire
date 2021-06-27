@@ -91,7 +91,8 @@ pub enum Bytecode {
 	Global(usize),
 	Constant(usize),
 	Offset(isize),
-	Count(usize)
+	Count(usize),
+	Illegal
 }
 
 // pub enum BuiltinFns {

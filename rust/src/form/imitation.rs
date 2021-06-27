@@ -73,6 +73,9 @@ impl PartialEq for Imitation {
 }
 
 impl Imitation {
+	// pub fn call_method(&self, method: &str, args: Args, vm: &mut Vm) -> Result<Value> {
+	// 	self.get_method(method)
+	// }
 	pub fn to_veracity(&self, vm: &mut Vm) -> Result<bool> {
 		let _ = vm; todo!()
 	}

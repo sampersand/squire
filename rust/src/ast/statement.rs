@@ -1,5 +1,5 @@
 use crate::parse::{Parser, Parsable, Error as ParseError};
-use crate::parse::token::{Token, TokenKind, Symbol, ParenKind};
+use crate::parse::token::{TokenKind, Symbol, ParenKind};
 use crate::ast::Expression;
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
@@ -66,11 +66,11 @@ impl Parsable for Statements {
 	
 			statements.push(Statement::expect_parse(parser)?);
 
-			match parser.expect([TokenKind::Symbol(Symbol::Endline), TokenKind::RightParen(ParenKind::Curly)])? {
-				Token::Symbol(Symbol::Endline) => continue,
-				Token::RightParen(ParenKind::Curly) => break,
-				_ => unreachable!()
-			}
+			// match parser.expect([TokenKind::Symbol(Symbol::Endline), TokenKind::RightParen(ParenKind::Curly)])? {
+			// 	Token::Symbol(Symbol::Endline) => continue,
+			// 	Token::RightParen(ParenKind::Curly) => break,
+			// 	_ => unreachable!()
+			// }
 		}
 
 		Ok(Some(statements))
@@ -110,27 +110,35 @@ impl Parsable for Statement {
 	}
 }
 
+impl Compilable for Statements {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		for statement in self {
+			statement.compile(compiler, target)?;
+		}
+
+		Ok(())
+	}
+}
+
 impl Compilable for Statement {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
 		match self {
+			Self::Class(class) => class.compile(compiler, target),
+			Self::Function(function) => function.compile(compiler, target),
+			Self::Attempt(attempt) => attempt.compile(compiler, target),
+			Self::Catapult(catapult) => catapult.compile(compiler, target),
+			Self::Reward(reward) => reward.compile(compiler, target),
+
+			Self::Renowned(renowned) => renowned.compile(compiler, target),
+			Self::Nigh(nigh) => nigh.compile(compiler, target),
+
+			Self::If(r#if) => r#if.compile(compiler, target),
+			Self::Whilst(whilst) => whilst.compile(compiler, target),
+			Self::Fork(fork) => fork.compile(compiler, target),
+			Self::Label(label) => label.compile(compiler, target),
+			Self::ComeFrom(comefrom) => comefrom.compile(compiler, target),
+
 			Self::Expression(expression) => expression.compile(compiler, target),
-			_ => todo!()
-	// Class(Class),
-	// Function(Function),
-	// Attempt(Attempt),
-	// Catapult(Catapult),
-	// Reward(Reward),
-
-	// Renowned(Renowned),
-	// Nigh(Nigh),
-
-	// If(If),
-	// Whilst(Whilst),
-	// Fork(Fork),
-	// Label(Label),
-	// ComeFrom(ComeFrom),
-
-	// Expression(Expression),
 		}
 	}
 }

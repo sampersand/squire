@@ -1,11 +1,12 @@
 use crate::ast::Expression;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 
 #[derive(Debug)]
 pub struct Reward {
-	what: Expression,
+	what: Option<Expression>,
 }
 
 impl Parsable for Reward {
@@ -16,8 +17,29 @@ impl Parsable for Reward {
 			return Ok(None);
 		}
 
-		let what = Expression::expect_parse(parser)?;
+		let what = Expression::parse(parser)?;
 
 		Ok(Some(Self { what }))
+	}
+}
+
+impl Compilable for Reward {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::{Opcode, Value};
+		let target = target.unwrap_or_else(|| compiler.next_target());
+
+		if let Some(what) = self.what {
+			what.compile(compiler, Some(target))?;
+		} else {
+			let null = compiler.get_constant(Value::Null);
+			compiler.opcode(Opcode::LoadConstant);
+			compiler.constant(null);
+			compiler.target(target);
+		}
+
+		compiler.opcode(Opcode::Return);
+		compiler.target(target);
+
+		Ok(())
 	}
 }

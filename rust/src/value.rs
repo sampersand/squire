@@ -1,7 +1,7 @@
 use std::sync::Arc;
 // use parking_lot::RwLock;
-use crate::{Journey, Form, Imitation};
-use crate::runtime::{Vm, Result, Error};
+pub use crate::{Journey, Form, Imitation};
+use crate::runtime::{Vm, Result, Error, Args};
 use std::fmt::{self, Display, Formatter};
 
 mod array;
@@ -95,9 +95,9 @@ impl From<Numeral> for Value {
 }
 
 impl Value {
-	pub fn call(&self, args: &[Self], vm: &mut Vm) -> Result<Self> {
+	pub fn call(&self, args: Args, vm: &mut Vm) -> Result<Self> {
 		match self {
-			Self::Journey(_) => todo!(), //journey.run(args, vm),
+			Self::Journey(journey) => journey.call(args, vm),
 			Self::Form(_) => todo!(),
 			Self::Imitation(_) => todo!(),
 			Self::BuiltinJourney(builtin) => builtin.run(args, vm),
@@ -343,7 +343,7 @@ impl Value {
 
 			Self::Array(array) =>
 				Ok(array
-						.get2__maybe_a_better_name(by.to_numeral(vm)?.get() as isize)
+						.get2_maybe_a_better_name(by.to_numeral(vm)?.get() as isize)
 						.cloned()
 						.unwrap_or_default()),
 			Self::Codex(codex) => Ok(codex.get(by).cloned().unwrap_or_default()),
@@ -355,7 +355,7 @@ impl Value {
 	pub fn try_index_assign(&mut self, by: Self, with: Self, vm: &mut Vm) -> Result<()> {
 		match self {
 			Self::Array(array) => {
-				array.set2__maybe_a_better_name(by.to_numeral(vm)?.get() as isize, with);
+				array.set2_maybe_a_better_name(by.to_numeral(vm)?.get() as isize, with);
 				Ok(())
 			},
 			Self::Codex(codex) => {

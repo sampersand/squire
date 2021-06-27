@@ -1,12 +1,12 @@
-use crate::Value;
+use crate::runtime::{Value, CodeBlock, Args, Vm, Error as RuntimeError};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Journey {
 	name: String,
-	nlocals: usize,
-	consts: Vec<Value>,
 	is_method: bool,
+	args: Vec<String>,
+	codeblock: CodeBlock
 	// ...
 }
 
@@ -25,6 +25,20 @@ impl std::borrow::Borrow<str> for Journey {
 impl Hash for Journey {
 	fn hash<H: Hasher>(&self, hasher: &mut H) {
 		self.name.hash(hasher)
+	}
+}
+
+impl Journey {
+	pub fn new(name: String, is_method: bool, args: Vec<String>, codeblock: CodeBlock) -> Self {
+		Self { name, is_method, args, codeblock }
+	}
+
+	pub fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		if args._as_slice().len() != self.args.len() {
+			Err(RuntimeError::ArgumentError { given: args._as_slice().len(), expected: self.args.len() })
+		} else {
+			self.codeblock.run(args, vm)
+		}
 	}
 }
 

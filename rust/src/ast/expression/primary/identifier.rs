@@ -29,7 +29,7 @@ impl Identifier {
 		use crate::runtime::Opcode;
 		if op.is_some() { todo!(); }
 
-		if let Some(global) = compiler.get_global(&self.0) {
+		if let Some((global, _)) = compiler.get_global(&self.0) {
 			let rhs_target = target.unwrap_or_else(|| compiler.next_target());
 			rhs.compile(compiler, Some(rhs_target))?;
 
@@ -70,7 +70,7 @@ impl Compilable for Identifier {
 			return Ok(());
 		}
 
-		if let Some(global) = compiler.get_global(&self.0) {
+		if let Some((global, _)) = compiler.get_global(&self.0) {
 			let target =
 				if let Some(target) = target {
 					target

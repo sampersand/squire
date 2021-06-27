@@ -1,5 +1,5 @@
 use crate::Value;
-use super::{Bytecode, Vm, Result};
+use super::{Bytecode, Vm, Args, Result};
 
 mod stackframe;
 use stackframe::StackFrame;
@@ -28,16 +28,17 @@ impl CodeBlock {
 		&self.constants
 	}
 
-	pub fn run(&self, args: &[Value], vm: &mut Vm) -> Result<Value> {
-		assert!(self.num_locals >= args.len(), "not enough locals to store arguments!");
+	pub fn run(&self, args: Args, vm: &mut Vm) -> Result<Value> {
+
+		assert!(self.num_locals >= args._as_slice().len(), "not enough locals to store arguments!");
 
 		let mut locals = Vec::with_capacity(self.num_locals);
-		locals.extend(args.iter().cloned());
+		locals.extend(args._as_slice().iter().cloned());
 
 		while locals.len() < self.num_locals {
 			locals.push(Value::Null);
 		}
 
-		StackFrame::new(self, args, &mut locals, vm).run()
+		StackFrame::new(self, &mut locals, vm).run()
 	}
 }

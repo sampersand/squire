@@ -6,18 +6,18 @@ use crate::runtime::{Bytecode, Opcode, Vm, Result};
 pub struct StackFrame<'a> {
 	codeblock: &'a CodeBlock,
 	vm: &'a mut Vm,
-	args: &'a [Value],
 	ip: usize,
 	locals: &'a mut [Value]
 }
 
 impl<'a> StackFrame<'a> {
-	pub fn new(codeblock: &'a CodeBlock, args: &'a [Value], locals: &'a mut [Value], vm: &'a mut Vm) -> Self {
-		Self { codeblock, vm, args, ip: 0, locals }
+	pub fn new(codeblock: &'a CodeBlock, locals: &'a mut [Value], vm: &'a mut Vm) -> Self {
+		Self { codeblock, vm, ip: 0, locals }
 	}
 
 	fn is_finished(&self) -> bool {
-		debug_assert!(self.ip <= self.codeblock.code().len());
+		debug_assert!(self.ip <= self.codeblock.code().len(), "ip ({:?}) is too large (max={:?})",
+			self.ip, self.codeblock.code().len());
 
 		self.ip == self.codeblock.code().len()
 	}
@@ -65,10 +65,10 @@ impl<'a> StackFrame<'a> {
 		}
 	}
 
-	fn next_label(&mut self) -> usize {
+	fn next_offset(&mut self) -> isize {
 		match self.next() {
-			Bytecode::Offset(index) => (self.ip as isize).checked_add(index).unwrap() as usize,
-			other => panic!("expected a 'Label' but was given {:?}", other)
+			Bytecode::Offset(index) => index,
+			other => panic!("expected a 'Offset' but was given {:?}", other)
 		}
 	}
 
@@ -93,9 +93,12 @@ impl<'a> StackFrame<'a> {
 		(unsafe { locals.assume_init() }, self.vm)
 	}
 
-	#[tracing::instrument(level="trace")]
-	fn jump(&mut self, to: usize) {
-		self.ip += to;
+	fn jump(&mut self, to: isize) {
+		let new_ip = (self.ip as isize + to) as usize;
+
+		trace!(old_ip=%self.ip, new_ip=%new_ip, "jumped");
+
+		self.ip = new_ip;
 	}
 
 	fn set_result(&mut self, value: Value) {
@@ -118,27 +121,27 @@ impl StackFrame<'_> {
 	}
 
 	fn do_jump(&mut self) {
-		let to = self.next_label();
-		self.jump(to);
+		let to = self.next_offset();
+		self.jump(to - 1);
 	}
 
 	fn do_jump_if_false(&mut self) -> Result<()> {
-		let to = self.next_label();
 		let cond = self.next_local().clone();
+		let to = self.next_offset();
 
 		if !cond.to_veracity(self.vm)? {
-			self.jump(to);
+			self.jump(to - 1);
 		}
 
 		Ok(())
 	}
 
 	fn do_jump_if_true(&mut self) -> Result<()> {
-		let to = self.next_label();
 		let cond = self.next_local().clone();
+		let to = self.next_offset();
 
 		if cond.to_veracity(self.vm)? {
-			self.jump(to);
+			self.jump(to - 1);
 		}
 
 		Ok(())
@@ -153,7 +156,9 @@ impl StackFrame<'_> {
 			args.push(self.next_local().clone());
 		}
 
-		let result = func.call(&args, self.vm)?;
+		let args = crate::runtime::Args::new(args, Default::default());
+
+		let result = func.call(args, self.vm)?;
 
 		self.set_result(result);
 		Ok(())

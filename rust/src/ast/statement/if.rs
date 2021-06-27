@@ -1,7 +1,7 @@
 use crate::ast::{Expression, Statements};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
-
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 pub struct If {
@@ -28,5 +28,32 @@ impl Parsable for If {
 				.transpose()?;
 
 		Ok(Some(Self { condition, if_true, if_false }))
+	}
+}
+
+impl Compilable for If {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		use crate::runtime::Opcode;
+		let condition_target = target.unwrap_or_else(|| compiler.next_target());
+
+		self.condition.compile(compiler, Some(condition_target))?;
+		compiler.opcode(Opcode::JumpIfFalse);
+		compiler.target(condition_target);
+		let if_false_dst = compiler.defer_jump();
+
+		self.if_true.compile(compiler, target)?;
+
+		if let Some(if_false) = self.if_false {
+			compiler.opcode(Opcode::Jump);
+			let end = compiler.defer_jump();
+
+			if_false_dst.set_jump_to_current(compiler);
+			if_false.compile(compiler, target)?;
+			end.set_jump_to_current(compiler);
+		} else {
+			if_false_dst.set_jump_to_current(compiler);
+		}
+
+		Ok(())
 	}
 }

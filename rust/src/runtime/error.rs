@@ -8,7 +8,8 @@ pub enum Error {
 	ValueError(String),
 	DivisionByZero,
 	OutOfBounds,
-	Other(Box<dyn std::error::Error>)
+	ArgumentError { given: usize, expected: usize },
+	Other(Box<dyn std::error::Error>),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

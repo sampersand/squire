@@ -1,6 +1,7 @@
 use crate::ast::{Expression, Statements, Statement};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
+use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
 pub struct Fork {
@@ -58,5 +59,11 @@ impl Parsable for Fork {
 		}
 
 		Ok(Some(Self { condition, paths, alas }))
+	}
+}
+
+impl Compilable for Fork {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		let _ = (compiler, target); todo!();
 	}
 }

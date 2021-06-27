@@ -51,8 +51,25 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
+journey square(a) {
+    34 + a
+}
+dump(square(4))
+__END__
+#if yay{} alas{}
+#a=1;
+#if yay { dump(3) } alas { dump(4) } 
+i=1;
+whilst (i < 10) {
+    dump(i);
+    i = i + 1;
+}
+__END__
+if yay { dump(3) } alas { dump(4) } 
+dump(5)
+__END__
 a=1;
-dump(-a);
+dump(-a + 4);
 #[3 + 4, 5 - 9 - 2]
 #journey x(a, b=3, c: int, d: (int; 34; int) = 3, *e, **f){}
 __END__
@@ -80,11 +97,9 @@ fork "A" {
     let mut parser = parse::Parser::new(&mut tokenizer);
     let mut compiler = compile::Compiler::default();
     compiler.compile_with(&mut parser).unwrap();
-    let block = compiler.finish();
+    let (block, mut vm) = compiler.finish_with_vm();
 
-
-    let mut vm = runtime::Vm::default();
-    block.run(&[], &mut vm).unwrap();
+    block.run(Default::default(), &mut vm).unwrap();
     // dbg!(tokenizer);
 /*
 pub enum Keyword {
