@@ -51,11 +51,23 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
+attempt {
+    #catapult "!"
+    dump(1 / 0);
+} alas name {
+    dump(name)
+}
+__END__
+renowned foo = 34;
 journey square(a) {
+    renowned foo;
+    dump(foo);
+    foo = 45;
     { [34]: a }
 }
 
-dump(square(4)[[a=34]])
+dump(square(4)[[a=34]]);
+dump(foo);
 __END__
 #if yay{} alas{}
 #a=1;

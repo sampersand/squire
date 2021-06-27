@@ -41,6 +41,29 @@ impl Parsable for Attempt {
 
 impl Compilable for Attempt {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		let _ = (compiler, target); todo!();
+		use crate::runtime::Opcode;
+
+		compiler.opcode(Opcode::Attempt);
+		let set_handler = compiler.defer_jump();
+		let error = compiler.define_local(self.exception);
+		compiler.target(error);
+
+		for statement in self.body {
+			statement.compile(compiler, target)?;
+		}
+
+		compiler.opcode(Opcode::PopHandler);
+		compiler.opcode(Opcode::Jump);
+		let end_of_handler = compiler.defer_jump();
+		set_handler.set_jump_to_current(compiler);
+
+		for statement in self.catch {
+			statement.compile(compiler, target)?;
+		}
+
+
+		end_of_handler.set_jump_to_current(compiler);
+
+		Ok(())
 	}
 }

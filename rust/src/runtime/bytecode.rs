@@ -48,8 +48,8 @@ pub enum Opcode {
 	Return,
 	ComeFrom,
 	Throw,
-	TryCatch,
-	PopTryCatch,
+	Attempt,
+	PopHandler,
 
 	// Logical Operations
 	Not,

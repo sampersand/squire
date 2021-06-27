@@ -16,4 +16,8 @@ impl Vm {
 	pub fn get_global(&self, index: usize) -> Value {
 		self.globals[index].clone()
 	}
+
+	pub fn set_global(&mut self, index: usize, global: Value) {
+		self.globals[index] = global;
+	}
 }

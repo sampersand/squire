@@ -1,18 +1,25 @@
 use crate::Value;
 use super::CodeBlock;
-use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt};
+use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt, Error};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct StackFrame<'a> {
 	codeblock: &'a CodeBlock,
 	vm: &'a mut Vm,
 	ip: usize,
-	locals: &'a mut [Value]
+	locals: &'a mut [Value],
+	handlers: Vec<Handler>
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct Handler {
+	exception: usize,
+	start: usize
 }
 
 impl<'a> StackFrame<'a> {
 	pub fn new(codeblock: &'a CodeBlock, locals: &'a mut [Value], vm: &'a mut Vm) -> Self {
-		Self { codeblock, vm, ip: 0, locals }
+		Self { codeblock, vm, ip: 0, locals, handlers: Vec::new() }
 	}
 
 	fn is_finished(&self) -> bool {
@@ -51,9 +58,9 @@ impl<'a> StackFrame<'a> {
 		&mut self.locals[self.next_local_index()]
 	}
 
-	fn next_global(&mut self) -> Value {
+	fn next_global_index(&mut self) -> usize {
 		match self.next() {
-			Bytecode::Global(index) => self.vm.get_global(index),
+			Bytecode::Global(index) => index,
 			other => panic!("expected a Global but was given {:?}", other)
 		}
 	}
@@ -173,15 +180,26 @@ impl StackFrame<'_> {
 	}
 
 	fn do_throw(&mut self) -> Result<()> {
-		todo!();
+		let value = self.next_local();
+
+		Err(Error::Throw(value.clone()))
 	}
 
-	fn do_trycatch(&mut self) -> Result<()> {
-		todo!();
+	fn do_attempt(&mut self) -> Result<()> {
+		let start = ((self.ip as isize) + self.next_offset()) as usize;
+		let exception = self.next_local_index();
+
+		self.handlers.push(Handler { start, exception });
+
+		Ok(())
 	}
 
-	fn do_poptrycatch(&mut self) -> Result<()> {
-		todo!();
+	fn do_pop_handler(&mut self) -> Result<()> {
+		debug_assert_ne!(self.handlers.len(), 0);
+
+		self.handlers.pop();
+
+		Ok(())
 	}
 
 	fn do_unary_op(&mut self, op: fn(&Value, &mut Vm) -> Result<Value>) -> Result<()> {
@@ -285,17 +303,24 @@ impl StackFrame<'_> {
 	}
 
 	fn do_load_global(&mut self) -> Result<()> {
-		let global = self.next_global();
+		let global_index = self.next_global_index();
+		let global = self.vm.get_global(global_index);
 		self.set_result(global);
 		Ok(())
 	}
 
 	fn do_store_global(&mut self) -> Result<()> {
-		let _ = self.next_global();
-		todo!();
+		let global_index = self.next_global_index();
+		let value = self.next_local().clone();
+		self.vm.set_global(global_index, value);
+		Ok(())
 	}
 
 	fn do_get_attribute(&mut self) -> Result<()> {
+		// let ([name, value], vm) = self.next_locals_and_vm();
+		// match name {
+		// 	Valu
+		// }
 		todo!();
 	}
 
@@ -308,58 +333,81 @@ impl StackFrame<'_> {
 		while !self.is_finished() {
 			trace!(?self.locals);
 
-			match self.next_opcode() {
-				// Misc
-				Opcode::NoOp => self.do_noop(),
-				Opcode::Move => self.do_move(),
-				Opcode::Interrupt => self.do_interrupt(),
+			match self.run_inner() {
+				Ok(Some(return_value)) => return Ok(return_value),
+				Ok(None) => continue,
+				Err(err) if self.handlers.is_empty() => return Err(err),
+				Err(err) => {
+					let value = 
+						if let Error::Throw(value) = err {
+							value
+						} else {
+							err.to_string().into()
+						};
 
-				// Control flow
-				Opcode::Jump => self.do_jump(),
-				Opcode::JumpIfFalse => self.do_jump_if_false()?,
-				Opcode::JumpIfTrue => self.do_jump_if_true()?,
-				Opcode::Call => self.do_call()?,
-				Opcode::Return => return self.do_return(),
-				Opcode::ComeFrom => self.do_comefrom()?,
-				Opcode::Throw => self.do_throw()?,
-				Opcode::TryCatch => self.do_trycatch()?,
-				Opcode::PopTryCatch => self.do_poptrycatch()?,
-
-				// Logical Operations
-				Opcode::Not => self.do_not()?,
-				Opcode::Equals => self.do_equals()?,
-				Opcode::NotEquals => self.do_not_equals()?,
-				Opcode::LessThan => self.do_less_than()?,
-				Opcode::LessThanOrEqual => self.do_less_than_or_equal()?,
-				Opcode::GreaterThan => self.do_greater_than()?,
-				Opcode::GreaterThanOrEqual => self.do_greater_than_or_equal()?,
-				Opcode::Compare => self.do_compare()?,
-
-				// Math
-				Opcode::Pos => self.do_pos()?,
-				Opcode::Negate => self.do_negate()?,
-				Opcode::Add => self.do_add()?,
-				Opcode::Subtract => self.do_subtract()?,
-				Opcode::Multiply => self.do_multiply()?,
-				Opcode::Divide => self.do_divide()?,
-				Opcode::Modulo => self.do_modulo()?,
-				Opcode::Power => self.do_power()?,
-
-				// Misc Operators
-				Opcode::Index => self.do_index()?,
-				Opcode::IndexAssign => self.do_index_assign()?,
-
-				// VM-specific
-				Opcode::LoadConstant => self.do_load_constant()?,
-				Opcode::LoadGlobal => self.do_load_global()?,
-				Opcode::StoreGlobal => self.do_store_global()?,
-				Opcode::GetAttribute => self.do_get_attribute()?,
-				Opcode::SetAttribute => self.do_set_attribute()?,
+					let Handler { start, exception } = self.handlers.pop().unwrap();
+					self.locals[exception] = value;
+					self.ip = start;
+					continue;
+				},
 			}
 		}
 
 		// if we reach the end without a return, we just return Null.
 		Ok(Value::Null)
+	}
+
+	fn run_inner(&mut self) -> Result<Option<Value>> {
+		match self.next_opcode() {
+			// Misc
+			Opcode::NoOp => self.do_noop(),
+			Opcode::Move => self.do_move(),
+			Opcode::Interrupt => self.do_interrupt(),
+
+			// Control flow
+			Opcode::Jump => self.do_jump(),
+			Opcode::JumpIfFalse => self.do_jump_if_false()?,
+			Opcode::JumpIfTrue => self.do_jump_if_true()?,
+			Opcode::Call => self.do_call()?,
+			Opcode::Return => return self.do_return().map(Some),
+			Opcode::ComeFrom => self.do_comefrom()?,
+			Opcode::Throw => self.do_throw()?,
+			Opcode::Attempt => self.do_attempt()?,
+			Opcode::PopHandler => self.do_pop_handler()?,
+
+			// Logical Operations
+			Opcode::Not => self.do_not()?,
+			Opcode::Equals => self.do_equals()?,
+			Opcode::NotEquals => self.do_not_equals()?,
+			Opcode::LessThan => self.do_less_than()?,
+			Opcode::LessThanOrEqual => self.do_less_than_or_equal()?,
+			Opcode::GreaterThan => self.do_greater_than()?,
+			Opcode::GreaterThanOrEqual => self.do_greater_than_or_equal()?,
+			Opcode::Compare => self.do_compare()?,
+
+			// Math
+			Opcode::Pos => self.do_pos()?,
+			Opcode::Negate => self.do_negate()?,
+			Opcode::Add => self.do_add()?,
+			Opcode::Subtract => self.do_subtract()?,
+			Opcode::Multiply => self.do_multiply()?,
+			Opcode::Divide => self.do_divide()?,
+			Opcode::Modulo => self.do_modulo()?,
+			Opcode::Power => self.do_power()?,
+
+			// Misc Operators
+			Opcode::Index => self.do_index()?,
+			Opcode::IndexAssign => self.do_index_assign()?,
+
+			// VM-specific
+			Opcode::LoadConstant => self.do_load_constant()?,
+			Opcode::LoadGlobal => self.do_load_global()?,
+			Opcode::StoreGlobal => self.do_store_global()?,
+			Opcode::GetAttribute => self.do_get_attribute()?,
+			Opcode::SetAttribute => self.do_set_attribute()?,
+		}
+
+		Ok(None)
 	}
 
 	fn do_interrupt(&mut self) {

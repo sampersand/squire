@@ -366,4 +366,14 @@ impl Value {
 			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "[]=" })
 		}
 	}
+
+	pub fn try_get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Self> {
+		let _ = (attr, vm);
+		todo!();
+	}
+
+	pub fn try_set_attr(&mut self, attr: &str, value: Value, vm: &mut Vm) -> Result<()> {
+		let _ = (attr, value, vm);
+		todo!();
+	}
 }
