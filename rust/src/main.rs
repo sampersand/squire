@@ -51,6 +51,16 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
+fork 4 {
+    path 1:
+    path 2:
+        dump(34);
+    path 3:
+        dump(45);
+        dump(56)
+}
+dump(67);
+__END__
 attempt {
     #catapult "!"
     dump(1 / 0);
