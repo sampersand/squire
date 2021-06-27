@@ -1,6 +1,6 @@
 use crate::Value;
 use super::CodeBlock;
-use crate::runtime::{Bytecode, Opcode, Vm, Result};
+use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct StackFrame<'a> {
@@ -32,14 +32,14 @@ impl<'a> StackFrame<'a> {
 	fn next_opcode(&mut self) -> Opcode {
 		match self.next()  {
 			Bytecode::Opcode(opcode) => opcode,
-			other => panic!("expected an 'Opcode' but was given {:?}", other)
+			other => panic!("expected an Opcode but was given {:?}", other)
 		}
 	}
 
 	fn next_local_index(&mut self) -> usize {
 		match self.next() {
 			Bytecode::Local(index) => index,
-			other => panic!("expected a 'Local' but was given {:?}", other)
+			other => panic!("expected a Local but was given {:?}", other)
 		}
 	}
 
@@ -54,28 +54,28 @@ impl<'a> StackFrame<'a> {
 	fn next_global(&mut self) -> Value {
 		match self.next() {
 			Bytecode::Global(index) => self.vm.get_global(index),
-			other => panic!("expected a 'Global' but was given {:?}", other)
+			other => panic!("expected a Global but was given {:?}", other)
 		}
 	}
 
 	fn next_constant(&mut self) -> &Value {
 		match self.next() {
 			Bytecode::Constant(index) => &self.codeblock.constants()[index],
-			other => panic!("expected a 'Constant' but was given {:?}", other)
+			other => panic!("expected a Constant but was given {:?}", other)
 		}
 	}
 
 	fn next_offset(&mut self) -> isize {
 		match self.next() {
 			Bytecode::Offset(index) => index,
-			other => panic!("expected a 'Offset' but was given {:?}", other)
+			other => panic!("expected a Offset but was given {:?}", other)
 		}
 	}
 
 	fn next_count(&mut self) -> usize {
 		match self.next()  {
 			Bytecode::Count(count) => count,
-			other => panic!("expected an 'Count' but was given {:?}", other)
+			other => panic!("expected an Count but was given {:?}", other)
 		}
 	}
 
@@ -266,8 +266,8 @@ impl StackFrame<'_> {
 	}
 
 	fn do_index(&mut self) -> Result<()> {
-		todo!("the second value's going to be a constant index, not a target.");
-		// self.do_binary_op(Value::try_index)
+		// todo!("the second value's going to be a constant index, not a target.");
+		self.do_binary_op(Value::try_index)
 	}
 
 	fn do_index_assign(&mut self) -> Result<()> {
@@ -303,7 +303,6 @@ impl StackFrame<'_> {
 		todo!();
 	}
 
-
 	#[tracing::instrument(level="debug", skip(self))]
 	pub fn run(mut self) -> Result<Value> {
 		while !self.is_finished() {
@@ -313,7 +312,7 @@ impl StackFrame<'_> {
 				// Misc
 				Opcode::NoOp => self.do_noop(),
 				Opcode::Move => self.do_move(),
-				Opcode::Interrupt => todo!(),
+				Opcode::Interrupt => self.do_interrupt(),
 
 				// Control flow
 				Opcode::Jump => self.do_jump(),
@@ -362,5 +361,45 @@ impl StackFrame<'_> {
 		// if we reach the end without a return, we just return Null.
 		Ok(Value::Null)
 	}
+
+	fn do_interrupt(&mut self) {
+		let interrupt = 
+			match self.next() {
+				Bytecode::Interrupt(interrupt) => interrupt,
+				other => panic!("expected an Interrupt but was given {:?}", other)
+			};
+
+		match interrupt {
+			Interrupt::NewArray => self.do_interrupt_new_array(),
+			Interrupt::NewCodex => self.do_interrupt_new_codex()
+		}
+	}
+
+	fn do_interrupt_new_array(&mut self) {
+		let count = self.next_count();
+		let mut eles = Vec::with_capacity(count);
+
+		for _ in 0..count {
+			eles.push(self.next_local().clone());
+		}
+
+		self.set_result(Value::Array(eles.into_iter().collect()))
+	}
+
+	fn do_interrupt_new_codex(&mut self) {
+		let count = self.next_count();
+		let mut pages = Vec::with_capacity(count);
+
+		for _ in 0..count {
+			let key = self.next_local().clone();
+			let value = self.next_local().clone();
+
+			pages.push((key, value));
+		}
+
+		self.set_result(Value::Codex(pages.into_iter().collect()))
+	}
+
+
 }
 

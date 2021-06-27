@@ -52,9 +52,10 @@ fn main() {
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
 journey square(a) {
-    34 + a
+    { [34]: a }
 }
-dump(square(4))
+
+dump(square(4)[[a=34]])
 __END__
 #if yay{} alas{}
 #a=1;
