@@ -2,24 +2,24 @@ use crate::{Value, Journey};
 use std::hash::{Hash, Hasher};
 
 use std::sync::{Arc, Mutex};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use crate::runtime::{Vm, Error as RuntimeError};
 
 mod imitation;
+mod builder;
+pub use builder::*;
 pub use imitation::*;
-
-type Change = Journey;
-type Recollection = Journey;
 
 #[derive(Debug)]
 pub struct Form {
 	name: String,
 	parents: Vec<Arc<Form>>,
 
-	functions: HashMap<String, Recollection>,
-	statics: HashMap<String, Mutex<Value>>,
+	functions: HashMap<String, Arc<Journey>>,
+	essences: HashMap<String, Mutex<Value>>,
 
 	field_names: Vec<String>,
-	methods: HashSet<Change>,
+	methods: HashMap<String, Arc<Journey>>,
 	constructor: Option<Journey>
 }
 
@@ -31,19 +31,27 @@ impl PartialEq for Form {
 }
 
 impl Form {
-	pub fn new(name: impl ToString) -> Self {
-		Self {
+	pub fn builder(name: impl ToString) -> FormBuilder {
+		FormBuilder(Self {
 			name: name.to_string(),
 			parents: Default::default(),
 			functions: Default::default(),
-			statics: Default::default(),
+			essences: Default::default(),
 			field_names: Default::default(),
 			methods: Default::default(),
 			constructor: Default::default(),
-		}
+		})
 	}
 
-	pub fn get_recollection(&self, name: &str) -> Option<&Recollection> {
+	pub fn name(&self) -> &str {
+		&self.name
+	}
+
+	pub fn get_essence(&self, name: &str) -> Option<Value> {
+		self.essences.get(name).map(|x| x.lock().unwrap().clone())
+	}
+
+	pub fn get_recall(&self, name: &str) -> Option<&Arc<Journey>> {
 		self.functions.get(name)
 	}
 
@@ -51,7 +59,7 @@ impl Form {
 		&self.field_names
 	}
 
-	pub fn methods(&self) -> &HashSet<Change> {
+	pub fn methods(&self) -> &HashMap<String, Arc<Journey>> {
 		&self.methods
 	}
 
@@ -65,5 +73,13 @@ impl Form {
 impl Hash for Form {
 	fn hash<H: Hasher>(&self, h: &mut H) {
 		(self as *const _ as usize).hash(h)
+	}
+}
+
+impl crate::value::GetAttr for Form {
+	fn get_attr(&self, attr: &str, _vm: &mut Vm) -> Result<Value, RuntimeError> {
+		self.get_essence(attr)
+			.or_else(|| self.get_recall(attr).map(|recall| Value::Journey(recall.clone())))
+			.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
 	}
 }

@@ -1,9 +1,9 @@
-use super::{Form, Change};
-use crate::value::{Value, ValueKind, Text, Numeral};
+use super::Form;
+use crate::value::{Value, ValueKind, Text, Numeral, Journey};
 use std::sync::Arc;
 use parking_lot::RwLock;
 use std::hash::{Hash, Hasher};
-use crate::runtime::{Result, Error, Vm};
+use crate::runtime::{Result, Error as RuntimeError, Vm};
 
 #[derive(Debug)]
 pub struct Imitation {
@@ -48,13 +48,8 @@ impl Imitation {
 			.map(|index| func(&mut self.fields[index].write()))
 	}
 
-	pub fn get_method(&self, key: &str) -> Option<&Change> {
+	pub fn get_method(&self, key: &str) -> Option<&Arc<Journey>> {
 		self.form.methods().get(key)
-	}
-
-	pub fn get(&self, key: &str) -> Option<Value> {
-		self.get_field(key)
-			.or_else(|| self.get_method(key).map(|method| Value::from(Value::Journey(method.clone()))))
 	}
 }
 
@@ -94,7 +89,7 @@ impl Imitation {
 
 	pub fn try_neg(&self, vm: &mut Vm) -> Result<Value> {
 		let _ = vm;
-		Err(Error::OperationNotSupported { kind: self.valuekind(), func: "-@" })
+		Err(RuntimeError::OperationNotSupported { kind: self.valuekind(), func: "-@" })
 	}
 
 	pub fn try_add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
@@ -115,4 +110,13 @@ impl Imitation {
 
 	pub fn try_index(&self, by: &Value, vm: &mut Vm) -> Result<Value> { let _ = (by, vm); todo!(); }
 	pub fn try_index_assign(&self, by: Value, with: Value, vm: &mut Vm) -> Result<()> { let _ = (by, with, vm); todo!(); }
+}
+
+impl crate::value::GetAttr for Imitation {
+	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value> {
+		// in the future, we might want to have getters/setters
+		self.get_field(attr)
+			.or_else(|| self.get_method(attr).map(|method| Value::from(Value::Journey(method.clone()))))
+			.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
+	}
 }

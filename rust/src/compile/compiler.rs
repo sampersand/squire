@@ -25,7 +25,7 @@ pub struct JumpDestination(usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CodePosition(usize);
 
-type Globals = Rc<RefCell<HashMap<String, (Global, Option<Value>)>>>;
+pub type Globals = Rc<RefCell<HashMap<String, (Global, Option<Value>)>>>;
 
 #[derive(Debug)]
 pub struct Compiler {

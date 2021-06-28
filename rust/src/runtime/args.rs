@@ -22,7 +22,6 @@ impl Args {
 }
 
 
-
 impl Args {
 	pub fn len(&self) -> usize {
 		self.positional.len()

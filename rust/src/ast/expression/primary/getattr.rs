@@ -59,6 +59,7 @@ impl Compilable for GetAttr {
 			compiler.opcode(Opcode::GetAttribute);
 			compiler.target(target);
 			compiler.constant(attribute_index);
+			compiler.target(target);
 		}
 
 		Ok(())

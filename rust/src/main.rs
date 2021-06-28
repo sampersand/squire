@@ -51,6 +51,9 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
+form Foo { recall bar() {} }
+Foo.bar()
+__END__
 fork 4 {
     path 1:
     path 2:

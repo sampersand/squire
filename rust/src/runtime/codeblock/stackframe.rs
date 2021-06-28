@@ -284,7 +284,6 @@ impl StackFrame<'_> {
 	}
 
 	fn do_index(&mut self) -> Result<()> {
-		// todo!("the second value's going to be a constant index, not a target.");
 		self.do_binary_op(Value::try_index)
 	}
 
@@ -317,15 +316,28 @@ impl StackFrame<'_> {
 	}
 
 	fn do_get_attribute(&mut self) -> Result<()> {
-		// let ([name, value], vm) = self.next_locals_and_vm();
-		// match name {
-		// 	Valu
-		// }
-		todo!();
+		let value = self.next_local().clone();
+
+		match self.next_constant().clone() {
+			Value::Text(text) => {
+				let attr = value.try_get_attr(text.as_str(), self.vm)?;
+				self.set_result(attr);
+				Ok(())
+			},
+			other => unreachable!("tried getting a non-text attr {:?}", other)
+		}
 	}
 
 	fn do_set_attribute(&mut self) -> Result<()> {
-		todo!();
+		let index = self.next_local_index();
+		let attr = 
+			match self.next_local() {
+				Value::Text(text) => text.clone(),
+				other => unreachable!("tried setting a non-tex tattr {:?}", other)
+			};
+		let value = self.next_local().clone();
+
+		self.locals[index].try_set_attr(attr.as_str(), value, self.vm)
 	}
 
 	#[tracing::instrument(level="debug", skip(self))]

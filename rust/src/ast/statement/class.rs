@@ -3,8 +3,9 @@ use crate::parse::token::{Token, TokenKind, Symbol, Keyword, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 use std::collections::HashMap;
-use crate::ast::statement::Function;
+use crate::ast::statement::function::Function;
 use crate::ast::expression::Expression;
+use crate::value::{Value, Form};
 
 #[derive(Debug)]
 pub struct Class {
@@ -50,7 +51,9 @@ impl Class {
 	}
 
 	fn parse_class_function<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
-		let _ = parser; todo!();
+		self.functions.push(Function::parse_without_keyword(parser)?);
+
+		Ok(())
 	}
 
 	fn parse_field<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
@@ -126,6 +129,25 @@ impl Parsable for Class {
 
 impl Compilable for Class {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		let _ = (compiler, target); todo!();
+		use crate::runtime::Opcode;
+
+		let mut builder = Form::builder(self.name);
+
+		let globals = compiler.globals();
+
+		for func in self.functions {
+			builder.add_recall(func.build_journey(globals.clone())?)?;
+		}
+
+		let form = builder.build();
+		let global = compiler.define_global(form.name().to_string(), Some(Value::Form(form.into())))?;
+
+		if let Some(target) = target {
+			compiler.opcode(Opcode::LoadGlobal);
+			compiler.global(global);
+			compiler.target(target);
+		}
+
+		Ok(())
 	}
 }

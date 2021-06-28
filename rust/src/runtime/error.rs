@@ -11,6 +11,7 @@ pub enum Error {
 	OutOfBounds,
 	ArgumentError { given: usize, expected: usize },
 	Throw(Value),
+	UnknownAttribute(String),
 	Other(Box<dyn std::error::Error>),
 }
 
@@ -34,6 +35,7 @@ impl Display for Error {
 			Self::OutOfBounds => write!(f, "value was out of bounds"),
 			Self::ArgumentError { given, expected } => write!(f, "argc mismatch: given {}, expected {}", given, expected),
 			Self::Throw(value) => write!(f, "uncaught throw: {:?}", value),
+			Self::UnknownAttribute(attr) => write!(f, "unknown attribute accessed: {:?}", attr),
 			Self::Other(err) => Display::fmt(&err, f),
 		}
 

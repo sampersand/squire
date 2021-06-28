@@ -33,6 +33,10 @@ impl Journey {
 		Self { name, is_method, args, codeblock }
 	}
 
+	pub fn name(&self) -> &str {
+		&self.name
+	}
+
 	pub fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
 		if args._as_slice().len() != self.args.len() {
 			Err(RuntimeError::ArgumentError { given: args._as_slice().len(), expected: self.args.len() })

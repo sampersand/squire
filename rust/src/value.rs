@@ -1,15 +1,17 @@
 use std::sync::Arc;
 // use parking_lot::RwLock;
 pub use crate::{Journey, Form, Imitation};
-use crate::runtime::{Vm, Result, Error, Args};
+use crate::runtime::{Vm, Result, Error as RuntimeError, Args};
 use std::fmt::{self, Display, Formatter};
 
+mod null;
 mod array;
 mod codex;
 pub mod builtin;
 pub mod numeral;
 pub mod text;
 
+pub use null::Null;
 pub use text::Text;
 pub use array::Array;
 pub use codex::Codex;
@@ -29,7 +31,7 @@ pub enum Value {
 
 	Form(Arc<Form>),
 	Imitation(Arc<Imitation>),
-	Journey(Journey),
+	Journey(Arc<Journey>),
 	BuiltinJourney(Arc<BuiltinJourney>),
 }
 
@@ -45,6 +47,14 @@ pub enum ValueKind {
 	Imitation(Arc<Form>),
 	Journey,
 	BuiltinJourney
+}
+
+pub trait GetAttr {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value>;
+}
+
+pub trait SetAttr {
+	fn set_attr(&mut self, attr: &str, value: Value, vm: &mut Vm) -> Result<()>;
 }
 
 impl Default for Value {
@@ -101,7 +111,7 @@ impl Value {
 			Self::Form(_) => todo!(),
 			Self::Imitation(_) => todo!(),
 			Self::BuiltinJourney(builtin) => builtin.run(args, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "()" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "()" })
 		}
 	}
 
@@ -129,7 +139,7 @@ impl Value {
 			Self::Numeral(numeral) => Ok(*numeral != 0),
 			Self::Text(text) => Ok(!text.is_empty()),
 			Self::Imitation(imitation) => imitation.to_veracity(vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "to_veracity" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "to_veracity" })
 		}
 	}
 
@@ -140,7 +150,7 @@ impl Value {
 			Self::Numeral(numeral) => Ok(Text::new(numeral)),
 			Self::Text(text) => Ok(text.clone()),
 			Self::Imitation(imitation) => imitation.to_text(vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "to_text" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "to_text" })
 		}
 	}
 
@@ -151,7 +161,7 @@ impl Value {
 			Self::Numeral(numeral) => Ok(*numeral),
 			Self::Text(text) => Ok(text.as_str().parse()?),
 			Self::Imitation(imitation) => imitation.to_numeral(vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "to_numeral" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "to_numeral" })
 		}
 	}
 
@@ -159,7 +169,7 @@ impl Value {
 		match self {
 			Self::Numeral(numeral) => Ok(Self::Numeral(-*numeral)),
 			Self::Imitation(imitation) => imitation.try_neg(vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "-@" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "-@" })
 		}
 	}
 
@@ -174,19 +184,19 @@ impl Value {
 			Self::Text(text) => Ok(Self::Text(text.clone() + rhs.to_text(vm)?)),
 			Self::Array(array) =>
 				if let Self::Array(rhs) = rhs {
-					Ok(Self::Array(array.clone() + rhs.clone()))
+					Ok(Self::Array(/*Arc::new*/(/* * */*array).clone() + (/* * */*rhs).clone()))
 				} else {
-					Err(Error::InvalidOperand { kind: rhs.classify(), func: "+" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "+" })
 				},
 			Self::Codex(codex) =>
 				if let Self::Codex(rhs) = rhs {
-					Ok(Self::Codex(codex.clone() + rhs.clone()))
+					Ok(Self::Codex(/*Arc::new*/(/* * */*codex).clone() + (/* * */*rhs).clone()))
 				} else {
-					Err(Error::InvalidOperand { kind: rhs.classify(), func: "+" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "+" })
 				},
 
 			Self::Imitation(imitation) => imitation.try_add(rhs, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "+" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "+" })
 		}
 	}
 
@@ -195,19 +205,19 @@ impl Value {
 			Self::Numeral(numeral) => Ok(Self::Numeral(*numeral - rhs.to_numeral(vm)?)),
 			Self::Array(array) =>
 				if let Self::Array(rhs) = rhs {
-					Ok(Self::Array(array.clone() - rhs.iter()))
+					Ok(Self::Array(/*Arc::new*/(/* * */*array).clone() - rhs.iter()))
 				} else {
-					Err(Error::InvalidOperand { kind: rhs.classify(), func: "-" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "-" })
 				},
 			Self::Codex(codex) =>
 				if let Self::Codex(rhs) = rhs {
-					Ok(Self::Codex(codex.clone() - rhs.iter().map(|(key, _)| key)))
+					Ok(Self::Codex(/*Arc::new*/(/* * */*codex).clone() - rhs.iter().map(|(key, _)| key)))
 				} else {
-					Err(Error::InvalidOperand { kind: rhs.classify(), func: "-" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "-" })
 				},
 
 			Self::Imitation(imitation) => imitation.try_sub(rhs, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "-" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "-" })
 		}
 	}
 
@@ -218,11 +228,11 @@ impl Value {
 				if let Ok(amount) = <usize as std::convert::TryFrom<i64>>::try_from(rhs.to_numeral(vm)?.get()) {
 					Ok(Self::Text(text.clone() * amount))
 				} else {
-					Err(Error::ValueError("cannot repeat a text negative times.".to_string()))
+					Err(RuntimeError::ValueError("cannot repeat a text negative times.".to_string()))
 				},
 
 			Self::Imitation(imitation) => imitation.try_mul(rhs, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "*" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "*" })
 		}
 	}
 
@@ -230,11 +240,11 @@ impl Value {
 		match self {
 			Self::Numeral(numeral) => 
 				match rhs.to_numeral(vm)?.get() {
-					0 => Err(Error::DivisionByZero),
+					0 => Err(RuntimeError::DivisionByZero),
 					other => Ok(Self::Numeral(*numeral / other)),
 				},
 			Self::Imitation(imitation) => imitation.try_div(rhs, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "/" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "/" })
 		}
 	}
 
@@ -242,11 +252,11 @@ impl Value {
 		match self {
 			Self::Numeral(numeral) => 
 				match rhs.to_numeral(vm)?.get() {
-					0 => Err(Error::DivisionByZero),
+					0 => Err(RuntimeError::DivisionByZero),
 					other => Ok(Self::Numeral(*numeral % other)),
 				},
 			Self::Imitation(imitation) => imitation.try_rem(rhs, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "%" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "%" })
 		}
 	}
 
@@ -258,16 +268,16 @@ impl Value {
 				match rhs.to_numeral(vm)?.get() {
 					exp @ (i64::MIN..=-1) =>
 						match numeral.get() {
-							0 => Err(Error::DivisionByZero),
+							0 => Err(RuntimeError::DivisionByZero),
 							-1 if exp.abs() % 2 == 0 => Ok(Self::Numeral(Numeral::new(1))),
 							1 | -1 => Ok(Self::Numeral(*numeral)),
 							_ => Ok(Self::Numeral(Numeral::new(0)))
 						},
 					exp @ (0..=U32MAX_AS_I64) => Ok(Self::Numeral(numeral.pow(exp as u32))),
-					_ => Err(Error::OutOfBounds) // or should it be infinity or somethin? idk.
+					_ => Err(RuntimeError::OutOfBounds) // or should it be infinity or somethin? idk.
 				},
 			Self::Imitation(imitation) => imitation.try_pow(rhs, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "**" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "**" })
 		}
 	}
 
@@ -327,7 +337,7 @@ impl Value {
 					},
 				(Self::Imitation(imitation), _) => return imitation.try_cmp(rhs, vm),
 				(Self::Form(_) | Self::Journey(_) | Self::BuiltinJourney(_), _) => 
-					return Err(Error::OperationNotSupported { kind: self.classify(), func: "<=>" }),
+					return Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "<=>" }),
 				_ => return Ok(Self::Null)
 			};
 
@@ -348,7 +358,7 @@ impl Value {
 						.unwrap_or_default()),
 			Self::Codex(codex) => Ok(codex.get(by).cloned().unwrap_or_default()),
 			Self::Imitation(imitation) => imitation.try_index(by, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "[]" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "[]" })
 		}
 	}
 
@@ -363,13 +373,29 @@ impl Value {
 				Ok(())
 			},
 			Self::Imitation(imitation) => imitation.try_index_assign(by, with, vm),
-			_ => Err(Error::OperationNotSupported { kind: self.classify(), func: "[]=" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "[]=" })
 		}
 	}
 
 	pub fn try_get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Self> {
-		let _ = (attr, vm);
-		todo!();
+		match self {
+			Self::Null => Null.get_attr(attr, vm),
+			Self::Form(form) => form.get_attr(attr, vm),
+			// Form(Arc<Form>),
+			// Self::Veracity(veracity) => veracity.get_attr(attr, vm),
+			_ => todo!()
+			// Null,
+			// Veracity(bool),
+			// Numeral(Numeral),
+			// Text(Text),
+
+			// Array(Array),
+			// Codex(Codex),
+
+			// Imitation(Arc<Imitation>),
+			// Journey(Journey),
+			// BuiltinJourney(Arc<BuiltinJourney>),
+		}
 	}
 
 	pub fn try_set_attr(&mut self, attr: &str, value: Value, vm: &mut Vm) -> Result<()> {

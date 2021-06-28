@@ -5,7 +5,8 @@ pub enum Error {
 	Parse(ParseError),
 	UnknownIdentifier(String),
 	InvalidLhsForAssignment,
-	GlobalAlreadyDefined(String)
+	GlobalAlreadyDefined(String),
+	FormValueAlreadyDefined { name: String, kind: &'static str }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
