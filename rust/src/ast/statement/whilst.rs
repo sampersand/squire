@@ -2,6 +2,7 @@ use crate::ast::{Expression, Statements};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use crate::runtime::Opcode;
 
 #[derive(Debug)]
 pub struct Whilst {
@@ -26,11 +27,9 @@ impl Parsable for Whilst {
 
 impl Compilable for Whilst {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-
 		let start_of_condition = compiler.current_pos();
 
-		let condition_target = target.unwrap_or_else(|| compiler.next_target());
+		let condition_target = target.unwrap_or(Compiler::SCRATCH_TARGET);
 		self.condition.compile(compiler, Some(condition_target))?;
 
 		compiler.opcode(Opcode::JumpIfFalse);

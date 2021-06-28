@@ -16,6 +16,10 @@ impl Args {
 		&self.positional
 	}
 
+	pub fn add_me(&mut self, me: Value) {
+		self.positional.insert(0, me);
+	}
+
 	pub fn positional(&self, index: usize) -> Option<&Value> {
 		self.positional.get(index)
 	}

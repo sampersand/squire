@@ -1,6 +1,6 @@
 use super::CodeBlock;
 use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt, Error};
-use crate::value::Value;
+use crate::value::{Value, GetAttr, SetAttr};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct StackFrame<'a> {
@@ -320,7 +320,7 @@ impl StackFrame<'_> {
 
 		match self.next_constant().clone() {
 			Value::Text(text) => {
-				let attr = value.try_get_attr(text.as_str(), self.vm)?;
+				let attr = value.get_attr(text.as_str(), self.vm)?;
 				self.set_result(attr);
 				Ok(())
 			},
@@ -331,13 +331,13 @@ impl StackFrame<'_> {
 	fn do_set_attribute(&mut self) -> Result<()> {
 		let index = self.next_local_index();
 		let attr = 
-			match self.next_local() {
+			match self.next_constant() {
 				Value::Text(text) => text.clone(),
 				other => unreachable!("tried setting a non-tex tattr {:?}", other)
 			};
 		let value = self.next_local().clone();
 
-		self.locals[index].try_set_attr(attr.as_str(), value, self.vm)
+		self.locals[index].set_attr(attr.as_str(), value, self.vm)
 	}
 
 	#[tracing::instrument(level="debug", skip(self))]

@@ -2,25 +2,37 @@ use std::hash::{Hash, Hasher};
 
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
-use crate::runtime::{Vm, Error as RuntimeError};
+use crate::runtime::{Vm, Args, Error as RuntimeError};
 use crate::value::{Value, Journey};
+use std::fmt::{self, Debug, Formatter};
 
 mod imitation;
 mod builder;
 pub use builder::*;
 pub use imitation::*;
 
-#[derive(Debug)]
+/// A "Class" within Squire
 pub struct Form {
+	// Name of the class
 	name: String,
+
+	// Superclasses
 	parents: Vec<Arc<Form>>,
 
-	functions: HashMap<String, Arc<Journey>>,
+	// Class functions
+	recalls: HashMap<String, Arc<Journey>>,
+
+	// Static class fields
 	essences: HashMap<String, Mutex<Value>>,
 
-	field_names: Vec<String>,
-	methods: HashMap<String, Arc<Journey>>,
-	constructor: Option<Journey>
+	// Instance variable field names
+	matter_names: Vec<String>,
+
+	// Instance methods
+	changes: HashMap<String, Arc<Journey>>,
+
+	// Constructor
+	imitate: Option<Journey>
 }
 
 impl Eq for Form {}
@@ -30,16 +42,49 @@ impl PartialEq for Form {
 	}
 }
 
+struct NonAlternateDebug<'a, I: Debug>(&'a I);
+
+impl<I: Debug> Debug for NonAlternateDebug<'_, I> {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		write!(f, "{:?}", self.0)
+	}
+}
+
+
+impl Debug for Form {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		if !f.alternate() {
+			return f.debug_tuple("Form").field(&self.name).finish();
+		}
+
+		let parents = self.parents.iter().map(NonAlternateDebug).collect::<Vec<_>>();
+		let recalls = self.recalls.iter().map(|(key, val)| (key, NonAlternateDebug(val))).collect::<HashMap<_,_>>();
+		let essences = self.essences.iter().map(|(key, val)| (key, NonAlternateDebug(val))).collect::<HashMap<_,_>>();
+		let changes = self.changes.iter().map(|(key, val)| (key, NonAlternateDebug(val))).collect::<HashMap<_,_>>();
+		let imitate = self.imitate.as_ref().map(NonAlternateDebug);
+
+		f.debug_struct("Form")
+			.field("parents", &parents)
+			.field("recalls", &recalls)
+			.field("essences", &essences)
+			.field("matter_names", &self.matter_names)
+			.field("changes", &changes)
+			.field("imitate", &imitate)
+			.finish()
+	}
+}
+
+
 impl Form {
 	pub fn builder(name: impl ToString) -> FormBuilder {
 		FormBuilder(Self {
 			name: name.to_string(),
 			parents: Default::default(),
-			functions: Default::default(),
+			recalls: Default::default(),
 			essences: Default::default(),
-			field_names: Default::default(),
-			methods: Default::default(),
-			constructor: Default::default(),
+			matter_names: Default::default(),
+			changes: Default::default(),
+			imitate: Default::default(),
 		})
 	}
 
@@ -52,15 +97,33 @@ impl Form {
 	}
 
 	pub fn get_recall(&self, name: &str) -> Option<&Arc<Journey>> {
-		self.functions.get(name)
+		self.recalls.get(name)
 	}
 
-	pub fn field_names(&self) -> &[String] {
-		&self.field_names
+	pub fn matter_names(&self) -> &[String] {
+		&self.matter_names
 	}
 
-	pub fn methods(&self) -> &HashMap<String, Arc<Journey>> {
-		&self.methods
+	pub fn changes(&self) -> &HashMap<String, Arc<Journey>> {
+		&self.changes
+	}
+
+	pub fn imitate(self: &Arc<Self>, mut args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		if let Some(ref imitate) = self.imitate {
+			let fields = vec![Default::default(); self.matter_names.len()];
+			let imitation = Value::Imitation(Imitation::new(self.clone(), fields).into());
+
+			args.add_me(imitation.clone());
+			imitate.call(args, vm)?;
+
+			return Ok(imitation);
+		}
+
+		if args._as_slice().len() != self.matter_names.len() {
+			Err(RuntimeError::ArgumentError { given: args._as_slice().len(), expected: self.matter_names.len() })
+		} else {
+			Ok(Value::Imitation(Imitation::new(self.clone(), args._as_slice().to_owned()).into()))
+		}
 	}
 
 	// pub fn get_essence(&self, name: &str) -> Option<&Value> {

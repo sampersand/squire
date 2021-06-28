@@ -1,7 +1,7 @@
 use std::sync::Arc;
 // use parking_lot::RwLock;
 use crate::runtime::{Vm, Result, Error as RuntimeError, Args};
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 
 mod null;
 mod array;
@@ -21,7 +21,7 @@ pub use builtin::BuiltinJourney;
 pub use journey::Journey;
 pub use form::{Form, Imitation};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Value {
 	Null,
 	Veracity(bool),
@@ -57,7 +57,7 @@ pub trait GetAttr {
 }
 
 pub trait SetAttr {
-	fn set_attr(&mut self, attr: &str, value: Value, vm: &mut Vm) -> Result<()>;
+	fn set_attr(&self, attr: &str, value: Value, vm: &mut Vm) -> Result<()>;
 }
 
 impl Default for Value {
@@ -69,6 +69,25 @@ impl Default for Value {
 impl PartialOrd for Value {
 	fn partial_cmp(&self, _rhs: &Self) -> Option<std::cmp::Ordering> {
 		todo!()
+	}
+}
+
+impl Debug for Value {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		match self {
+			Self::Null => Debug::fmt(&Null, f),
+			Self::Veracity(veracity) => Debug::fmt(&veracity, f),
+			Self::Numeral(numeral) => Debug::fmt(&numeral, f),
+			Self::Text(text) => Debug::fmt(&text, f),
+
+			Self::Array(array) => Debug::fmt(&array, f),
+			Self::Codex(codex) => Debug::fmt(&codex, f),
+
+			Self::Form(form) => Debug::fmt(&form, f),
+			Self::Imitation(imitation) => Debug::fmt(&imitation, f),
+			Self::Journey(journey) => Debug::fmt(&journey, f),
+			Self::BuiltinJourney(builtinjourney) => Debug::fmt(&builtinjourney, f),
+		}
 	}
 }
 
@@ -111,7 +130,7 @@ impl Value {
 	pub fn call(&self, args: Args, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Journey(journey) => journey.call(args, vm),
-			Self::Form(_) => todo!(),
+			Self::Form(form) => form.imitate(args, vm),
 			Self::Imitation(_) => todo!(),
 			Self::BuiltinJourney(builtin) => builtin.run(args, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "()" })
@@ -379,29 +398,21 @@ impl Value {
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "[]=" })
 		}
 	}
+}
 
-	pub fn try_get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Self> {
+impl GetAttr for Value {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Null => Null.get_attr(attr, vm),
 			Self::Form(form) => form.get_attr(attr, vm),
-			// Form(Arc<Form>),
-			// Self::Veracity(veracity) => veracity.get_attr(attr, vm),
+			Self::Imitation(imitation) => imitation.get_attr(attr, vm),
 			_ => todo!()
-			// Null,
-			// Veracity(bool),
-			// Numeral(Numeral),
-			// Text(Text),
-
-			// Array(Array),
-			// Codex(Codex),
-
-			// Imitation(Arc<Imitation>),
-			// Journey(Journey),
-			// BuiltinJourney(Arc<BuiltinJourney>),
 		}
 	}
+}
 
-	pub fn try_set_attr(&mut self, attr: &str, value: Value, vm: &mut Vm) -> Result<()> {
+impl SetAttr for Value {
+	fn set_attr(&self, attr: &str, value: Value, vm: &mut Vm) -> Result<()> {
 		let _ = (attr, value, vm);
 		todo!();
 	}

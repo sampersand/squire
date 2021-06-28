@@ -5,11 +5,57 @@ use super::{Form, Journey};
 pub struct FormBuilder(pub(super) Form);
 
 impl FormBuilder {
+	fn form_key_exists(&self, key: &str) -> bool {
+		self.0.recalls.contains_key(key) || self.0.essences.contains_key(key)
+	}
+
+	fn imitation_key_exists(&self, key: &str) -> bool {
+		self.0.changes.contains_key(key) || self.0.matter_names.iter().any(|x| x == key)
+	}
+
 	pub fn add_recall(&mut self, recall: Journey) -> Result<(), CompilerError> {
-		if self.0.functions.contains_key(recall.name()) {
-			Err(CompilerError::FormValueAlreadyDefined { name: recall.name().to_string(), kind: "recall" })
+		let name = recall.name().to_string();
+		if self.form_key_exists(&name) {
+			Err(CompilerError::FormValueAlreadyDefined { name, kind: "recall" })
 		} else {
-			self.0.functions.insert(recall.name().to_string(), recall.into());
+			self.0.recalls.insert(name, recall.into());
+			Ok(())
+		}
+	}
+
+	pub fn add_essence(&mut self, name: String) -> Result<(), CompilerError> {
+		if self.form_key_exists(&name) {
+			Err(CompilerError::FormValueAlreadyDefined { name, kind: "essence" })
+		} else {
+			self.0.essences.insert(name, Default::default());
+			Ok(())
+		}
+	}
+
+	pub fn add_matter(&mut self, name: String) -> Result<(), CompilerError> {
+		if self.imitation_key_exists(&name) {
+			Err(CompilerError::FormValueAlreadyDefined { name, kind: "matter" })
+		} else {
+			self.0.matter_names.push(name);
+			Ok(())
+		}
+	}
+
+	pub fn add_change(&mut self, change: Journey) -> Result<(), CompilerError> {
+		let name = change.name().to_string();
+		if self.imitation_key_exists(&name) {
+			Err(CompilerError::FormValueAlreadyDefined { name, kind: "change" })
+		} else {
+			self.0.changes.insert(name, change.into());
+			Ok(())
+		}
+	}
+
+	pub fn add_imitate(&mut self, imitate: Journey) -> Result<(), CompilerError> {
+		if self.0.imitate.is_some() {
+			Err(CompilerError::FormValueAlreadyDefined { name: "imitate".to_string(), kind: "imitate" })
+		} else {
+			self.0.imitate = Some(imitate);
 			Ok(())
 		}
 	}
@@ -21,10 +67,10 @@ impl FormBuilder {
 // 	name: String,
 // 	parents: Vec<Arc<Form>>,
 
-// 	functions: HashMap<String, Recollection>,
+// 	essences: HashMap<String, Recollection>,
 // 	statics: HashMap<String, Mutex<Value>>,
 
-// 	field_names: Vec<String>,
+// 	matter_names: Vec<String>,
 // 	methods: HashSet<Change>,
 // 	constructor: Option<Journey>
 // }

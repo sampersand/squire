@@ -43,7 +43,6 @@ impl GetAttr {
 		compiler.target(lhs_target);
 		compiler.constant(constant);
 		compiler.target(rhs_target);
-		compiler.target(target.unwrap_or(lhs_target));
 
 		Ok(())
 	}

@@ -2,6 +2,7 @@ use crate::ast::expression::{Expression, Primary};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use crate::runtime::Opcode;
 
 #[derive(Debug)]
 pub struct Index {
@@ -32,14 +33,27 @@ impl Index {
 		compiler: &mut Compiler,
 		target: Option<Target>
 	) -> Result<(), CompileError> {
-		let _ = (op, rhs, compiler, target); todo!()
+		if op.is_some() { todo!(); }
+
+		let into_target = compiler.next_target();
+		let key_target = compiler.next_target();
+		let rhs_target = target.unwrap_or(Compiler::SCRATCH_TARGET);
+
+		self.into.compile(compiler, Some(into_target))?;
+		self.key.compile(compiler, Some(key_target))?;
+		rhs.compile(compiler, Some(rhs_target))?;
+
+		compiler.opcode(Opcode::IndexAssign);
+		compiler.target(into_target);
+		compiler.target(key_target);
+		compiler.target(rhs_target);
+
+		Ok(())
 	}
 }
 
 impl Compilable for Index {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-
 		let target =
 			if let Some(target) = target {
 				target

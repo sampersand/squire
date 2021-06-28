@@ -44,9 +44,13 @@ pub enum Opcode {
 	Jump,
 	JumpIfFalse,
 	JumpIfTrue,
-	Call,
+	
+	CallFast,
+	CallComplex,
 	Return,
+
 	ComeFrom,
+
 	Throw,
 	Attempt,
 	PopHandler,

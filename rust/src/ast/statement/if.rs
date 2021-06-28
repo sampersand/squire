@@ -2,6 +2,7 @@ use crate::ast::{Expression, Statements};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use crate::runtime::Opcode;
 
 #[derive(Debug)]
 pub struct If {
@@ -33,12 +34,9 @@ impl Parsable for If {
 
 impl Compilable for If {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-		let condition_target = target.unwrap_or_else(|| compiler.next_target());
-
-		self.condition.compile(compiler, Some(condition_target))?;
+		self.condition.compile(compiler, Some(Compiler::SCRATCH_TARGET))?;
 		compiler.opcode(Opcode::JumpIfFalse);
-		compiler.target(condition_target);
+		compiler.target(Compiler::SCRATCH_TARGET);
 		let if_false_dst = compiler.defer_jump();
 
 		self.if_true.compile(compiler, target)?;

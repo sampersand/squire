@@ -1,3 +1,4 @@
+// use parking_lot::RwLock;
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::Value;
 use std::fmt::{self, Display, Formatter};
@@ -80,9 +81,20 @@ impl Array {
 		}
 	}
 
+	pub fn set(&mut self, index: usize, value: Value) {
+		self.expand_to(index + 1);
+		self.0[index] = value;
+	}
+
+
 	pub fn set2_maybe_a_better_name(&mut self, index: isize, value: Value) {
-		let _ = (index, value);
-		todo!();
+		if 0 <= index {
+			self.set(index as usize, value)
+		} else if let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
+			self.set(index, value)
+		} else {
+			todo!()
+		}
 	}
 
 	pub fn get_mut(&mut self, index: usize) -> Option<&mut Value> {

@@ -29,7 +29,6 @@ impl CodeBlock {
 	}
 
 	pub fn run(&self, args: Args, vm: &mut Vm) -> Result<Value> {
-
 		assert!(self.num_locals >= args._as_slice().len(), "not enough locals to store arguments!");
 
 		let mut locals = Vec::with_capacity(self.num_locals);

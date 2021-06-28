@@ -3,6 +3,7 @@ use crate::value::{Value, Journey};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Globals, Error as CompileError};
+use crate::runtime::Opcode;
 
 pub type Type = Primary;
 
@@ -96,23 +97,25 @@ impl Parsable for Function {
 			return Ok(None);
 		}
 
-		Self::parse_without_keyword(parser).map(Some)
+		let name = parser.expect_identifier()?;
+		Self::parse_without_keyword(parser, name).map(Some)
 	}
 }
 
 impl Function {
-	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Self, ParseError> {
-		let name = parser.expect_identifier()?;
+	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String) -> Result<Self, ParseError> {
 		let args = Arguments::expect_parse(parser)?;
 		let body  = Statements::expect_parse(parser)?;
 
 		Ok(Self { name, args, body })
 	}
 
-	pub fn build_journey(self, globals: Globals) -> Result<Journey, CompileError> {
-		use crate::runtime::Opcode;
-
+	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<Journey, CompileError> {
 		let mut body_compiler = Compiler::with_globals(globals);
+
+		if is_method {
+			self.args.normal.insert(0, Argument { name: "my".into(), kind: None, default: None });
+		}
 
 		if self.args.vararg.is_some() || self.args.varkwarg.is_some() || self.args.return_type.is_some() {
 			todo!();
@@ -134,16 +137,14 @@ impl Function {
 		body_compiler.opcode(Opcode::Return);
 		body_compiler.target(return_target);
 
-		Ok(Journey::new(self.name.clone(), false, arg_names, body_compiler.finish()))
+		Ok(Journey::new(self.name.clone(), is_method, arg_names, body_compiler.finish()))
 	}
 }
 
 impl Compilable for Function {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-
 		let name = self.name.clone();
-		let journey = Value::Journey(self.build_journey(compiler.globals().clone())?.into());
+		let journey = Value::Journey(self.build_journey(compiler.globals().clone(), false)?.into());
 		let global = compiler.define_global(name, Some(journey))?;
 
 		if let Some(target) = target {

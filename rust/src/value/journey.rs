@@ -1,14 +1,33 @@
 use crate::runtime::{CodeBlock, Args, Vm, Error as RuntimeError};
 use crate::value::Value;
 use std::hash::{Hash, Hasher};
+use std::fmt::{self, Debug, Formatter};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+mod arguments;
+pub use arguments::Arguments;
+
+#[derive(Clone, PartialEq, Eq)]
 pub struct Journey {
 	name: String,
 	is_method: bool,
 	args: Vec<String>,
 	codeblock: CodeBlock
 	// ...
+}
+
+impl Debug for Journey {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		if !f.alternate() {
+			return f.debug_tuple("Journey").field(&self.name).finish()
+		}
+
+		f.debug_struct("Journey")
+			.field("name", &self.name)
+			.field("is_method", &self.is_method)
+			.field("args", &self.args)
+			.field("codeblock", &self.codeblock)
+			.finish()
+	}
 }
 
 impl PartialEq<str> for Journey {

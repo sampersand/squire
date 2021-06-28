@@ -34,7 +34,7 @@ pub struct Compiler {
 	ntargets: usize,
 	labels: Vec<Label>,
 	locals: HashMap<String, Target>,
-	constants: Vec<Value>
+	constants: Vec<Value>,
 }
 
 impl Default for Compiler {
@@ -48,7 +48,7 @@ impl Default for Compiler {
 		Self {
 			globals: Rc::new(RefCell::new(globals)),
 			code: Default::default(),
-			ntargets: Default::default(),
+			ntargets: 1, // as `0` is always reserved for temp
 			labels: Default::default(),
 			locals: Default::default(),
 			constants: Default::default(),
@@ -190,6 +190,12 @@ impl Compiler {
 	pub fn next_target(&mut self) -> Target {
 		self.ntargets += 1;
 		Target(self.ntargets - 1)
+	}
+
+	pub const SCRATCH_TARGET: Target = Target(0);
+
+	pub const fn temp_target(&self) -> Target {
+		Self::SCRATCH_TARGET
 	}
 
 	pub fn current_pos(&self) -> CodePosition {

@@ -2,6 +2,7 @@ use crate::ast::{Expression, Statements, Statement};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use crate::runtime::Opcode;
 
 #[derive(Debug)]
 pub struct Fork {
@@ -64,15 +65,10 @@ impl Parsable for Fork {
 
 impl Compilable for Fork {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-
 		let condition_target = target.unwrap_or_else(|| compiler.next_target());
-		let temp_target = compiler.next_target();
-
 		self.condition.compile(compiler, Some(condition_target))?;
 
 		let mut path_locations = Vec::with_capacity(self.paths.len());
-
 		let mut paths_bodies = Vec::with_capacity(self.paths.len());
 
 		for path in self.paths {
@@ -80,14 +76,15 @@ impl Compilable for Fork {
 			let mut path_jumps = Vec::with_capacity(path.exprs.len());
 
 			for expr in path.exprs {
-				expr.compile(compiler, Some(temp_target))?;
+				expr.compile(compiler, Some(Compiler::SCRATCH_TARGET))?;
 
 				compiler.opcode(Opcode::Equals);
 				compiler.target(condition_target);
-				compiler.target(temp_target);
-				compiler.target(temp_target);
+				compiler.target(Compiler::SCRATCH_TARGET);
+				compiler.target(Compiler::SCRATCH_TARGET);
+
 				compiler.opcode(Opcode::JumpIfTrue);
-				compiler.target(temp_target);
+				compiler.target(Compiler::SCRATCH_TARGET);
 				path_jumps.push(compiler.defer_jump());
 			}
 

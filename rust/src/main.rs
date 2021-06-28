@@ -51,8 +51,21 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
-form Foo { recall bar() {} }
-Foo.bar()
+journey foo(x = 34) {
+    reward x;
+}
+dump(foo());
+__END__
+form Foo {
+    matter a, b;
+    essence x;
+    recall bar() { dump(34) }
+    imitate () { my.a = 3; my.b = 4 }
+    change lol() { my.a + my.b }
+}
+#Foo.bar();
+#dump(Foo(1, 2));
+dump(Foo());
 __END__
 fork 4 {
     path 1:

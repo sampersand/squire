@@ -3,6 +3,7 @@ use crate::parse::token::{Token, Symbol};
 use crate::ast::expression::{Expression, Primary};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 use std::cmp::Ordering;
+use crate::runtime::Opcode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Math {
@@ -60,7 +61,6 @@ impl Ord for Operator {
 		}
 	}
 }
-
 
 #[derive(Debug)]
 pub struct BinaryOperator {
@@ -161,8 +161,6 @@ fn compile_assignment(op: Option<Math>, lhs: Box<Expression>, rhs: Box<Expressio
 fn compile_math(op: Math, lhs: Box<Expression>, rhs: Box<Expression>, compiler: &mut Compiler, target: Target)
 	-> Result<(), CompileError>
 {
-	use crate::runtime::Opcode;
-
 	let rhs_target = compiler.next_target();
 	lhs.compile(compiler, Some(target))?;
 	rhs.compile(compiler, Some(rhs_target))?;
@@ -186,8 +184,6 @@ fn compile_math(op: Math, lhs: Box<Expression>, rhs: Box<Expression>, compiler: 
 fn compile_logic(op: Logic, lhs: Box<Expression>, rhs: Box<Expression>, compiler: &mut Compiler, target: Target)
 	-> Result<(), CompileError>
 {
-	use crate::runtime::Opcode;
-
 	let rhs_target = compiler.next_target();
 	lhs.compile(compiler, Some(target))?;
 	rhs.compile(compiler, Some(rhs_target))?;
@@ -207,7 +203,6 @@ fn compile_logic(op: Logic, lhs: Box<Expression>, rhs: Box<Expression>, compiler
 	compiler.target(target);
 
 	Ok(())
-
 }
 
 fn compile_short_circuit(
@@ -217,6 +212,14 @@ fn compile_short_circuit(
 	compiler: &mut Compiler,
 	target: Target
 ) -> Result<(), CompileError> {
-	let _ = (op, lhs, rhs, compiler, target);
-	todo!();
+
+	lhs.compile(compiler, Some(target))?;
+	compiler.opcode(if op == ShortCircuit::And { Opcode::JumpIfFalse } else { Opcode::JumpIfTrue });
+	compiler.target(target);
+	let dst = compiler.defer_jump();
+
+	rhs.compile(compiler, Some(target))?;
+	dst.set_jump_to_current(compiler);
+
+	Ok(())
 }

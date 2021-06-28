@@ -2,6 +2,7 @@ use crate::ast::Expression;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use crate::runtime::Opcode;
 
 #[derive(Debug)]
 pub struct Catapult {
@@ -24,9 +25,7 @@ impl Parsable for Catapult {
 
 impl Compilable for Catapult {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-
-		let target = target.unwrap_or_else(|| compiler.next_target());
+		let target = target.unwrap_or(Compiler::SCRATCH_TARGET);
 
 		self.what.compile(compiler, Some(target))?;
 		compiler.opcode(Opcode::Throw);

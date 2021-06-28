@@ -61,7 +61,7 @@ impl Compilable for Renowned {
 		let global_target = compiler.define_global(self.name, None)?;
 
 		if let Some(init) = self.init {
-			let target = target.unwrap_or_else(|| compiler.next_target());
+			let target = target.unwrap_or(Compiler::SCRATCH_TARGET);
 			init.compile(compiler, Some(target))?;
 
 			compiler.opcode(Opcode::StoreGlobal);

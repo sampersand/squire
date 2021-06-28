@@ -2,6 +2,7 @@ use crate::ast::Statements;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use crate::runtime::Opcode;
 
 
 #[derive(Debug)]
@@ -41,8 +42,6 @@ impl Parsable for Attempt {
 
 impl Compilable for Attempt {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::Opcode;
-
 		compiler.opcode(Opcode::Attempt);
 		let set_handler = compiler.defer_jump();
 		let error = compiler.define_local(self.exception);
