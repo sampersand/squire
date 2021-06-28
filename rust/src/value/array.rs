@@ -1,4 +1,5 @@
-use crate::runtime::{Value, Vm, Error as RuntimeError};
+use crate::runtime::{Vm, Error as RuntimeError};
+use crate::value::Value;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
 	Add, AddAssign,

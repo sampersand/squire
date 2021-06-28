@@ -1,6 +1,6 @@
-use crate::Value;
 use super::CodeBlock;
 use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt, Error};
+use crate::value::Value;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct StackFrame<'a> {

@@ -1,6 +1,6 @@
 use std::fmt::{self, Display, Formatter};
-use super::GetAttr;
-use crate::runtime::{Value, Vm, Error as RuntimeError};
+use crate::runtime::{Vm, Error as RuntimeError};
+use crate::value::{Value, GetAttr};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Null;

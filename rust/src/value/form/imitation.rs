@@ -1,9 +1,9 @@
 use super::Form;
-use crate::value::{Value, ValueKind, Text, Numeral, Journey};
 use std::sync::Arc;
 use parking_lot::RwLock;
 use std::hash::{Hash, Hasher};
 use crate::runtime::{Result, Error as RuntimeError, Vm};
+use crate::value::{Value, ValueKind, Text, Numeral, Journey, GetAttr};
 
 #[derive(Debug)]
 pub struct Imitation {
@@ -112,7 +112,7 @@ impl Imitation {
 	pub fn try_index_assign(&self, by: Value, with: Value, vm: &mut Vm) -> Result<()> { let _ = (by, with, vm); todo!(); }
 }
 
-impl crate::value::GetAttr for Imitation {
+impl GetAttr for Imitation {
 	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value> {
 		// in the future, we might want to have getters/setters
 		self.get_field(attr)

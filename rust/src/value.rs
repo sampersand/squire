@@ -1,6 +1,5 @@
 use std::sync::Arc;
 // use parking_lot::RwLock;
-pub use crate::{Journey, Form, Imitation};
 use crate::runtime::{Vm, Result, Error as RuntimeError, Args};
 use std::fmt::{self, Display, Formatter};
 
@@ -10,6 +9,8 @@ mod codex;
 pub mod builtin;
 pub mod numeral;
 pub mod text;
+pub mod journey;
+pub mod form;
 
 pub use null::Null;
 pub use text::Text;
@@ -17,6 +18,8 @@ pub use array::Array;
 pub use codex::Codex;
 pub use numeral::Numeral;
 pub use builtin::BuiltinJourney;
+pub use journey::Journey;
+pub use form::{Form, Imitation};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Value {

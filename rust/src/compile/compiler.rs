@@ -1,10 +1,10 @@
 use super::{Error, Compilable};
 use std::collections::{HashMap, hash_map::Entry};
-use crate::Value;
 use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::runtime::{Bytecode, Opcode, Interrupt, CodeBlock, Vm};
+use crate::value::Value;
 use crate::parse::{Parsable, Parser};
 
 #[derive(Debug)]

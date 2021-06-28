@@ -1,4 +1,4 @@
-use crate::Value;
+use crate::value::Value;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Vm {

@@ -1,4 +1,5 @@
-use crate::runtime::{Value, CodeBlock, Args, Vm, Error as RuntimeError};
+use crate::runtime::{CodeBlock, Args, Vm, Error as RuntimeError};
+use crate::value::Value;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -25,13 +25,13 @@ impl Parsable for Reward {
 
 impl Compilable for Reward {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::{Opcode, Value};
+		use crate::runtime::Opcode;
 		let target = target.unwrap_or_else(|| compiler.next_target());
 
 		if let Some(what) = self.what {
 			what.compile(compiler, Some(target))?;
 		} else {
-			let null = compiler.get_constant(Value::Null);
+			let null = compiler.get_constant(Default::default());
 			compiler.opcode(Opcode::LoadConstant);
 			compiler.constant(null);
 			compiler.target(target);

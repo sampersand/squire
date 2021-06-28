@@ -1,9 +1,9 @@
-use crate::{Value, Journey};
 use std::hash::{Hash, Hasher};
 
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use crate::runtime::{Vm, Error as RuntimeError};
+use crate::value::{Value, Journey};
 
 mod imitation;
 mod builder;

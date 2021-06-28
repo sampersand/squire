@@ -1,4 +1,5 @@
-use crate::runtime::{Value, Vm, Error as RuntimeError, Args};
+use crate::runtime::{Vm, Error as RuntimeError, Args};
+use crate::value::Value;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::fmt::{self, Debug, Formatter};

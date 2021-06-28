@@ -21,7 +21,8 @@ impl Parsable for Literal {
 
 impl Compilable for Literal {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use crate::runtime::{Opcode, Value};
+		use crate::runtime::Opcode;
+		use crate::value::Value;
 
 		if target.is_none() && !matches!(self.0, TokenLiteral::TextInterpolation(_, _)) {
 			return Ok(());

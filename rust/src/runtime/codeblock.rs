@@ -1,5 +1,5 @@
-use crate::Value;
-use super::{Bytecode, Vm, Args, Result};
+use crate::runtime::{Bytecode, Vm, Args, Result};
+use crate::value::Value;
 
 mod stackframe;
 use stackframe::StackFrame;

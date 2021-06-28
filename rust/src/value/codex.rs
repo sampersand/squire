@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use crate::runtime::{Value, Vm, Error as RuntimeError};
+use crate::runtime::{Vm, Error as RuntimeError};
+use crate::value::Value;
 // use std::cmp::Ordering;
 use std::ops::{Index, Add, Sub};
 use std::hash::{Hash, Hasher};
