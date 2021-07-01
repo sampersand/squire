@@ -50,8 +50,7 @@ fn main() {
 // # @henceforth $foo=34
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
-    let mut stream = parse::Stream::from_str(r##"
-
+    let input = std::env::args().skip(1).next().unwrap_or(r##"
 x=[1];
 x[0]=2;
 dump(x);
@@ -130,8 +129,9 @@ fork "A" {
 #     essence a, c;
 #     essence b = 3;
 # }
-"##);
+"##.to_string());
 
+    let mut stream = parse::Stream::from_str(&input);
     let mut tokenizer = parse::Tokenizer::new(&mut stream);
     let mut parser = parse::Parser::new(&mut tokenizer);
     let mut compiler = compile::Compiler::default();
@@ -207,7 +207,7 @@ pub enum Symbol {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Literal {
-    Null,
+    Ni,
     Boolean(bool),
     Numeral(Numeral),
     Text(Text), // possibly with interpolation
@@ -241,6 +241,6 @@ pub enum Token {
 //     // let mut codex: Codex = vec![(true.into(), true.into()), (false.into(), false.into())].into_iter().collect();
 
 //     // println!("Hello, world! {:?}", codex);
-//     // codex.merge([(Value::Null, Value::Null)]);
+//     // codex.merge([(Value::Ni, Value::Ni)]);
 //     // println!("Hello, world! {:?}", codex);
 // }

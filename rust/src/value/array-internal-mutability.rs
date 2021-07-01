@@ -72,7 +72,7 @@ impl Array {
 		self.as_slice().contains(value)
 	}
 
-	// insert into the index, possibly filling empty slots with Null.
+	// insert into the index, possibly filling empty slots with Ni.
 	pub fn insert(&self, index: usize, value: Value) {
 		self.expand_to(index + 1); // TODO: _do_ we need the extra slot?
 		self.as_vec_mut().insert(index, value);

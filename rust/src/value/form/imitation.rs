@@ -1,38 +1,41 @@
 use super::Form;
 use std::sync::Arc;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use std::hash::{Hash, Hasher};
 use crate::runtime::{Result, Error as RuntimeError, Args, Vm};
 use std::fmt::{self, Debug, Formatter};
 use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex};
 use crate::value::ops::{
-	ConvertTo,
+	ConvertTo, Dump,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
 	IsEqual, Compare, Call,
 	GetAttr, SetAttr, GetIndex, SetIndex
 };
 
-pub struct Imitation {
-	form: Arc<Form>,
-	fields: Box<[RwLock<Value>]>
+#[derive(Clone)]
+pub struct Imitation(Arc<ImitationInner>);
+
+struct ImitationInner {
+	form: Form,
+	fields: Box<[Mutex<Value>]>
 }
 
 #[derive(Debug, Clone)]
 pub struct Change {
-	imitation: Arc<Imitation>,
-	journey: Arc<Journey>
+	imitation: Imitation,
+	journey: Journey
 }
 
 impl Debug for Imitation {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		struct FieldMapper<'a>(&'a Form, &'a [RwLock<Value>]);
+		struct FieldMapper<'a>(&'a Form, &'a [Mutex<Value>]);
 
 		impl Debug for FieldMapper<'_> {
 			fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 				let mut map = f.debug_map();
 
 				for (index, name) in self.0.matter_names().iter().enumerate() {
-					map.entry(name, &*self.1[index].read());
+					map.entry(name, &self.1[index].lock());
 				}
 
 				map.finish()
@@ -40,24 +43,24 @@ impl Debug for Imitation {
 		}
 
 		f.debug_tuple("Imitation")
-			.field(&self.form)
-			.field(&FieldMapper(&self.form, &self.fields))
+			.field(&self.form())
+			.field(&FieldMapper(&self.form(), &self.0.fields))
 			.finish()
 	}
 }
 
 impl Imitation {
-	pub fn new(form: Arc<Form>, fields: Vec<Value>) -> Self {
+	pub fn new(form: Form, fields: Vec<Value>) -> Self {
 		assert_eq!(form.matter_names().len(), fields.len());
 
-		Self {
+		Self(Arc::new(ImitationInner{
 			form,
-			fields: fields.into_iter().map(RwLock::new).collect()
-		}
+			fields: fields.into_iter().map(Mutex::new).collect()
+		}))
 	}
 
-	pub fn form(&self) -> &Arc<Form> {
-		&self.form
+	pub fn form(&self) -> &Form {
+		&self.0.form
 	}
 
 	// what should the return value be?
@@ -72,22 +75,22 @@ impl Imitation {
 	}
 
 	pub fn with_field<F: FnOnce(&Value) -> T, T>(&self, key: &str, func: F) -> Option<T> {
-		self.form
+		self.form()
 			.matter_names()
 			.iter()
 			.position(|name| name == key)
-			.map(|index| func(&self.fields[index].read()))
+			.map(|index| func(&self.0.fields[index].lock()))
 	}
 
 	pub fn with_field_mut<F: FnOnce(&mut Value) -> T, T>(&self, key: &str, func: F) -> Option<T> {
-		self.form.matter_names()
+		self.form().matter_names()
 			.iter()
 			.position(|name| name == key)
-			.map(|index| func(&mut self.fields[index].write()))
+			.map(|index| func(&mut self.0.fields[index].lock()))
 	}
 
-	pub fn get_change(&self, key: &str) -> Option<&Arc<Journey>> {
-		self.form.changes().get(key)
+	pub fn get_change(&self, key: &str) -> Option<&Journey> {
+		self.form().changes().get(key)
 			// .get(key)
 			// .map(|journey| Change { imitation: self.clone(), journey: journey.clone() })
 	}
@@ -99,13 +102,13 @@ impl PartialEq for Imitation {
 	///
 	/// To check for equality within Squire, use [`try_eq`].
 	fn eq(&self, rhs: &Self) -> bool {
-		(self as *const _) == (rhs as *const _)
+		Arc::ptr_eq(&self.0, &rhs.0)
 	}
 }
 
 impl Hash for Imitation {
 	fn hash<H: Hasher>(&self, h: &mut H) {
-		(self as *const _  as usize).hash(h);
+		(Arc::as_ptr(&self.0) as usize).hash(h);
 	}
 }
 
@@ -143,6 +146,14 @@ macro_rules! expect_a {
 				})
 		}
 	};
+}
+
+impl Dump for Imitation {
+	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<()> {
+		// todo: allow for builtin dumps
+		to.push_str(&expect_a!(self.call_method("dump", Args::default(), vm)?, Text, "dump")?.as_str());
+		Ok(())
+	}
 }
 
 impl ConvertTo<Veracity> for Imitation {

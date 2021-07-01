@@ -1,8 +1,8 @@
 use crate::compile::Error as CompilerError;
-use super::{Form, Journey};
+use super::{Form, FormInner, Journey};
+use std::sync::Arc;
 
-#[derive(Debug)]
-pub struct FormBuilder(pub(super) Form);
+pub struct FormBuilder(pub(super) FormInner);
 
 impl FormBuilder {
 	fn form_key_exists(&self, key: &str) -> bool {
@@ -61,16 +61,6 @@ impl FormBuilder {
 	}
 
 	pub fn build(self) -> Form {
-		self.0
+		Form(Arc::new(self.0))
 	}
 }
-// 	name: String,
-// 	parents: Vec<Arc<Form>>,
-
-// 	essences: HashMap<String, Recollection>,
-// 	statics: HashMap<String, Mutex<Value>>,
-
-// 	matter_names: Vec<String>,
-// 	methods: HashSet<Change>,
-// 	constructor: Option<Journey>
-// }

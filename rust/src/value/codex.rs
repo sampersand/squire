@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Veracity, Text, Book};
 use crate::value::ops::{
-	ConvertTo,
+	ConvertTo, Dump,
 	Add, Subtract,
 	IsEqual, Compare,
 	GetIndex, SetIndex
@@ -123,6 +123,28 @@ impl Hash for Codex {
 	}
 }
 
+impl Dump for Codex {
+	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError> {
+		to.push('{');
+
+		let mut is_first = true;
+
+		for (key, value) in &self.0 {
+			if is_first {
+				is_first = false;
+			} else {
+				to.push_str(", ");
+			}
+
+			key.dump(to, vm)?;
+			to.push_str(": ");
+			value.dump(to, vm)?;
+		}
+
+		to.push('}');
+		Ok(())
+	}
+}
 
 impl ConvertTo<Veracity> for Codex {
 	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
@@ -188,6 +210,7 @@ impl SetIndex for Codex {
 
 impl Codex {
 	pub fn try_eql(&self, rhs: &Self, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		// todo: arc ptr eq
 		if (self as *const _) == (rhs as *const _) {
 			return Ok(true);
 		} else if self.len() != rhs.len() {
@@ -246,4 +269,6 @@ impl Codex {
 // 		Some(self.cmp(rhs))
 // 	}
 // }
+
+
 

@@ -71,7 +71,7 @@ impl Compiler {
 
 	pub fn convert_globals(&self) -> Vec<Value> {
 		let globals = self.globals.borrow();
-		let mut globals_vec = vec![Value::Null; globals.len()];
+		let mut globals_vec = vec![Value::Ni; globals.len()];
 
 		for (Global(index), value) in globals.values() {
 			globals_vec[*index] = (*value).as_ref().cloned().unwrap_or_default();

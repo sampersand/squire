@@ -1,9 +1,12 @@
 #![allow(unused)]
-// use parking_lot::RwLock;
+use std::sync::Arc;
+use parking_lot::RwLock;
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Veracity, Numeral, Text, Codex};
-use std::fmt::{self, Display, Formatter};
+use std::hash::{Hash, Hasher};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::{
+	Deref, DerefMut,
 	Add, AddAssign,
 	Sub, SubAssign,
 	Mul, MulAssign,
@@ -15,69 +18,134 @@ use std::ops::{
 use crate::value::ops::{
 	ConvertTo,
 	Add as OpsAdd, Subtract, Multiply, IsEqual, Compare,
-	GetIndex, SetIndex
+	GetIndex, SetIndex,
+	Dump
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash, Default)]
-pub struct Book(Vec<Value>);
+#[derive(Clone, Default)]
+pub struct Book(Arc<RwLock<Vec<Value>>>);
+
+impl Debug for Book {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		let slice = &*self.as_slice();
+
+		if f.alternate() {
+			f.debug_tuple("Book")
+				.field(&slice)
+				.finish()		
+		} else {
+			Debug::fmt(slice, f)
+		}
+	}
+}
+
+impl Eq for Book {}
+impl PartialEq for Book {
+	fn eq(&self, rhs: &Self) -> bool {
+		Arc::ptr_eq(&self.0, &rhs.0) || *self.as_slice() == *rhs.as_slice()
+	}
+}
+
+impl Hash for Book {
+	fn hash<H: Hasher>(&self, h: &mut H) {
+		for i in &*self.as_slice() {
+			i.hash(h);
+		}
+	}
+}
 
 impl From<Vec<Value>> for Book {
 	#[inline]
 	fn from(vec: Vec<Value>) -> Self {
-		Self(vec)
+		vec.into_iter().collect()
 	}
 }
 
 impl Book {
-	pub const fn new() -> Self {
-		Self(Vec::new())
+	pub fn new() -> Self {
+		Self(Arc::new(RwLock::new(Vec::new())))
 	}
 
 	pub fn with_capacity(capacity: usize) -> Self {
-		Self(Vec::with_capacity(capacity))
+		Self(Arc::new(RwLock::new(Vec::with_capacity(capacity))))
+	}
+
+	pub fn as_slice(&self) -> impl Deref<Target=[Value]> + '_ {
+		struct SliceDeref<'a>(parking_lot::RwLockReadGuard<'a, Vec<Value>>);
+
+		impl Deref for SliceDeref<'_> {
+			type Target = [Value];
+		
+			fn deref(&self) -> &Self::Target {
+				&self.0
+			}
+		}
+
+		SliceDeref(self.0.read())
+	}
+
+	pub fn as_vec_mut(&self) -> impl DerefMut<Target=Vec<Value>> + '_ {
+		struct VecDerefMut<'a>(parking_lot::RwLockWriteGuard<'a, Vec<Value>>);
+
+		impl Deref for VecDerefMut<'_> {
+			type Target = Vec<Value>;
+		
+			fn deref(&self) -> &Self::Target {
+				&self.0
+			}
+		}
+
+		impl DerefMut for VecDerefMut<'_> {
+			fn deref_mut(&mut self) -> &mut Self::Target {
+				&mut self.0
+			}
+		}
+
+		VecDerefMut(self.0.write())
 	}
 
 	fn is_index_out_of_bounds(&self, index: usize) -> bool {
 		self.len() <= index
 	}
 
-	pub fn expand_to(&mut self, new_len: usize) {
+	pub fn expand_to(&self, new_len: usize) {
 		if self.len() < new_len {
-			self.0.resize_with(new_len, Value::default)
+			self.as_vec_mut().resize_with(new_len, Value::default)
 		}
 	}
 
-	pub fn push(&mut self, value: Value) {
-		self.0.push(value);
+	pub fn push(&self, value: Value) {
+		self.as_vec_mut().push(value);
 	}
 
-	pub fn pop(&mut self) -> Option<Value> {
-		self.0.pop()
+	pub fn pop(&self) -> Option<Value> {
+		self.as_vec_mut().pop()
 	}
 
 	pub fn contains(&self, value: &Value) -> bool {
-		self.0.contains(value)
+		self.as_slice().contains(value)
 	}
 
-	// insert into the index, possibly filling empty slots with Null.
-	pub fn insert(&mut self, index: usize, value: Value) {
+	// insert into the index, possibly filling empty slots with Ni.
+	pub fn insert(&self, index: usize, value: Value) {
 		self.expand_to(index + 1); // TODO: _do_ we need the extra slot?
-		self.0.insert(index, value);
+		self.as_vec_mut().insert(index, value);
 	}
 
-	pub fn remove(&mut self, index: usize) -> Option<Value> {
+	pub fn remove(&self, index: usize) -> Option<Value> {
+		// todo: lock before checking for out of bounds.
 		if self.is_index_out_of_bounds(index) {
 			None
 		} else {
-			Some(self.0.remove(index))
+			Some(self.as_vec_mut().remove(index))
 		}
 	}
 
-	pub fn get(&self, index: usize) -> Option<&Value> {
-		self.0.get(index)
+	pub fn get(&self, index: usize) -> Option<Value> {
+		self.as_slice().get(index).cloned()
 	}
 
-	pub fn get2_maybe_a_better_name(&self, index: isize) -> Option<&Value> {
+	pub fn get2_maybe_a_better_name(&self, index: isize) -> Option<Value> {
 		if 0 <= index {
 			self.get(index as usize)
 		} else if let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
@@ -87,179 +155,192 @@ impl Book {
 		}
 	}
 
-	pub fn set(&mut self, index: usize, value: Value) {
+	pub fn set(&self, index: usize, value: Value) {
 		self.expand_to(index + 1);
-		self.0[index] = value;
-	}
-
-
-	pub fn set2_maybe_a_better_name(&mut self, index: isize, value: Value) {
-		if 0 <= index {
-			self.set(index as usize, value)
-		} else if let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
-			self.set(index, value)
-		} else {
-			todo!()
-		}
-	}
-
-	pub fn get_mut(&mut self, index: usize) -> Option<&mut Value> {
-		self.0.get_mut(index)
+		self.as_vec_mut()[index] = value;
 	}
 
 	pub fn len(&self) -> usize {
-		self.0.len()
+		self.as_slice().len()
 	}
 
 	pub fn is_empty(&self) -> bool {
-		self.0.is_empty()
+		self.as_slice().is_empty()
 	}
 
-	pub fn as_slice(&self) -> &[Value] {
-		&self.0
+	pub fn clear(&self) {
+		self.as_vec_mut().clear();
 	}
 
-	pub fn as_slice_mut(&mut self) -> &mut [Value] {
-		&mut self.0
+	pub fn iter(&self) -> impl Iterator<Item=Value> + '_ {
+		struct Iter<'a>(parking_lot::RwLockReadGuard<'a, Vec<Value>>, usize);
+
+		impl Iterator for Iter<'_> {
+			type Item = Value;
+		
+			fn next(&mut self) -> Option<Self::Item> {
+				let page = self.0.get(self.1)?;
+				self.1 += 1;
+				Some(page.clone())
+			}
+		}
+
+		Iter(self.0.read(), 0)
 	}
 
-	pub fn clear(&mut self) {
-		self.0.clear();
-	}
-
-	pub fn iter<'a>(&'a self) -> impl Iterator<Item=&'a Value> + 'a {
-		self.0.iter()
-	}
-
-	pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item=&'a mut Value> + 'a {
-		self.0.iter_mut()
-	}
-
-	pub fn shrink_to_fit(&mut self) {
-		self.0.shrink_to_fit();
+	pub fn shrink_to_fit(& self) {
+		self.as_vec_mut().shrink_to_fit();
 	}
 }
 
 impl std::iter::FromIterator<Value> for Book {
     fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
-    	Self(iter.into_iter().collect())
+    	Self(Arc::new(RwLock::new(iter.into_iter().collect())))
     }
 }
 
-impl IntoIterator for Book {
-	type Item = Value;
-	type IntoIter = <Vec<Value> as IntoIterator>::IntoIter;
+// impl IntoIterator for Book {
+// 	type Item = Value;
+// 	type IntoIter = <Vec<Value> as IntoIterator>::IntoIter;
 
-	fn into_iter(self) -> Self::IntoIter {
-		self.0.into_iter()
-	}
-}
+// 	fn into_iter(self) -> Self::IntoIter {
+// 		self.0.into_iter()
+// 	}
+// }
 
-impl AsRef<[Value]> for Book {
-	fn as_ref(&self) -> &[Value] {
-		self.as_slice()
-	}
-}
+// impl AsRef<[Value]> for Book {
+// 	fn as_ref(&self) -> &[Value] {
+// 		&self.as_slice()
+// 	}
+// }
 
-impl AsMut<[Value]> for Book {
-	fn as_mut(&mut self) -> &mut [Value] {
-		self.as_slice_mut()
-	}
-}
+// impl AsMut<[Value]> for Book {
+// 	fn as_mut(&mut self) -> &mut [Value] {
+// 		self.as_slice_mut()
+// 	}
+// }
 
 impl Display for Book {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		write!(f, "[")?;
 
-		for value in self.as_slice() {
-			write!(f, "{:#}", value)?
+		for value in &*self.as_slice() {
+			write!(f, "{:?}", value)?
 		}
 
 		write!(f, "]")
 	}
 }
 
-impl std::iter::Extend<Value> for Book {
-	fn extend<I: IntoIterator<Item=Value>>(&mut self, iter: I) {
-		self.0.extend(iter)
-	}
-}
+// impl std::iter::Extend<Value> for Book {
+// 	fn extend<I: IntoIterator<Item=Value>>(&mut self, iter: I) {
+// 		// todo: if we're currently deadlocked, bail.
+// 		self.0.extend(iter)
+// 	}
+// }
 
-impl<I: std::slice::SliceIndex<[Value]>> Index<I> for Book {
-	type Output = I::Output;
+// impl<I: std::slice::SliceIndex<[Value]>> Index<I> for Book {
+// 	type Output = I::Output;
 
+// 	#[inline]
+// 	fn index(&self, index: I) -> &Self::Output {
+// 		&self.as_slice()[index]
+// 	}
+// }
+
+// impl<I: std::slice::SliceIndex<[Value]>> IndexMut<I> for Book {
+// 	#[inline]
+// 	fn index_mut(&mut self, index: I) -> &mut Self::Output {
+// 		// &mut self.0[index]
+// 		todo!()
+// 	}
+// }
+
+// impl<I: IntoIterator<Item=Value>> Add<I> for Book {
+// 	type Output = Self;
+
+// 	#[inline]
+// 	fn add(mut self, rhs: I) -> Self {
+// 		self += rhs;
+// 		self
+// 	}
+// }
+
+// impl<I: IntoIterator<Item=Value>> AddAssign<I> for Book {
+// 	#[inline]
+// 	fn add_assign(&mut self, rhs: I) {
+// 		self.extend(rhs);
+// 	}
+// }
+
+// impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Book {
+// 	type Output = Book;
+
+// 	#[inline]
+// 	fn sub(mut self, rhs: I) -> Book {
+// 		self -= rhs;
+// 		self
+// 	}
+// }
+
+
+// impl<'a, I: IntoIterator<Item=&'a Value>> SubAssign<I> for Book {
+// 	fn sub_assign(&mut self, rhs: I) {
+// 		// todo: optimize
+// 		let rhs = rhs.into_iter().collect::<Vec<_>>();
+// 		self.0.retain(|value| !rhs.contains(&value))
+// 	}
+// }
+
+// impl Mul<usize> for Book {
+// 	type Output = Book;
+
+// 	#[inline]
+// 	fn mul(mut self, amount: usize) -> Book {
+// 		self *= amount;
+// 		self
+// 	}
+// }
+
+// impl MulAssign<usize> for Book {
+// 	fn mul_assign(&mut self, amount: usize) {
+// 		if amount <= 1 {
+// 			if amount == 0 {
+// 				self.clear();
+// 			}
+
+// 			return;
+// 		}
+
+// 		self.expand_to(self.len() * amount);
+// 		let dup = self.iter().map(Clone::clone).collect::<Vec<_>>();
+// 		self.extend(dup.into_iter().cycle().take(amount - 1));
+// 	}
+// }
+
+impl From<Book> for Value {
 	#[inline]
-	fn index(&self, index: I) -> &Self::Output {
-		&self.0[index]
+	fn from(book: Book) -> Self {
+		Self::Book(book)
 	}
 }
 
-impl<I: std::slice::SliceIndex<[Value]>> IndexMut<I> for Book {
-	#[inline]
-	fn index_mut(&mut self, index: I) -> &mut Self::Output {
-		&mut self.0[index]
-	}
-}
+impl Dump for Book {
+	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError> {
+		let slice = &*self.as_slice();
+		to.push('[');
 
-impl<I: IntoIterator<Item=Value>> Add<I> for Book {
-	type Output = Self;
+		if let Some(first) = slice.get(0) {
+			first.dump(to, vm)?;
 
-	#[inline]
-	fn add(mut self, rhs: I) -> Self {
-		self += rhs;
-		self
-	}
-}
-
-impl<I: IntoIterator<Item=Value>> AddAssign<I> for Book {
-	#[inline]
-	fn add_assign(&mut self, rhs: I) {
-		self.extend(rhs);
-	}
-}
-
-impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Book {
-	type Output = Book;
-
-	#[inline]
-	fn sub(mut self, rhs: I) -> Book {
-		self -= rhs;
-		self
-	}
-}
-
-
-impl<'a, I: IntoIterator<Item=&'a Value>> SubAssign<I> for Book {
-	fn sub_assign(&mut self, rhs: I) {
-		// todo: optimize
-		let rhs = rhs.into_iter().collect::<Vec<_>>();
-		self.0.retain(|value| !rhs.contains(&value))
-	}
-}
-
-impl Mul<usize> for Book {
-	type Output = Book;
-
-	#[inline]
-	fn mul(mut self, amount: usize) -> Book {
-		self *= amount;
-		self
-	}
-}
-
-impl MulAssign<usize> for Book {
-	fn mul_assign(&mut self, amount: usize) {
-		if amount <= 1 {
-			if amount == 0 {
-				self.clear();
+			for page in &slice[1..] {
+				to.push_str(", ");
+				page.dump(to, vm)?;
 			}
-
-			return;
 		}
 
-		self.expand_to(self.len() * amount);
-		let dup = self.iter().map(Clone::clone).collect::<Vec<_>>();
-		self.extend(dup.into_iter().cycle().take(amount - 1));
+		to.push(']');
+		Ok(())
 	}
 }
 
@@ -270,8 +351,12 @@ impl ConvertTo<Veracity> for Book {
 }
 
 impl ConvertTo<Text> for Book {
-	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
-		todo!()
+	fn convert(&self, vm: &mut Vm) -> Result<Text, RuntimeError> {
+		let mut out = String::new();
+
+		self.dump(&mut out, vm)?;
+
+		Ok(Text::new(out))
 	}
 }
 
@@ -283,8 +368,17 @@ impl ConvertTo<Codex> for Book {
 
 impl OpsAdd for Book {
 	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (rhs, vm);
-		todo!()
+		let rhs = rhs.convert_to::<Self>(vm)?;
+
+		let us = self.as_slice();
+		let them = rhs.as_slice();
+
+		let mut sum = Vec::with_capacity(us.len() + them.len());
+
+		sum.extend(us.iter().cloned());
+		sum.extend(them.iter().cloned());
+
+		Ok(Self::from(sum).into())
 	}
 }
 
@@ -307,14 +401,14 @@ impl IsEqual for Book {
 	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
 		let rhs = rhs.convert_to::<Self>(vm)?;
 
-		if (self as *const _) == (&rhs as *const _) {
+		if Arc::ptr_eq(&self.0, &rhs.0) {
 			return Ok(true);
 		} else if self.len() != rhs.len() {
 			return Ok(false);
 		}
 
 		for (lhs, rhs) in self.iter().zip(rhs.iter()) {
-			if !lhs.is_equal(rhs, vm)? {
+			if !lhs.is_equal(&rhs, vm)? {
 				return Ok(false)
 			}
 		}
@@ -338,6 +432,26 @@ impl GetIndex for Book {
 
 impl SetIndex for Book {
 	fn set_index(&self, key: Value, value: Value, vm: &mut Vm) -> Result<(), RuntimeError> {
+		// todo: set ranges
+		if matches!(key, Value::Book(_)) {
+			todo!("set ranges");
+		}
+
+		// let mut index = value.convert_to::<Numeral>(vm)?.get() as isize;
+
+	// 	if 0 <= index {
+	// 		self.set(index as usize, value);
+	// 	} else {
+	// 		index += self.len() as isize;
+
+	// 		if 0 <= index
+	// 		let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
+	// 		self.set(index, value)
+	// 	} else {
+	// 		todo!()
+	// 	}
+	// }
+	// 	self.set2_maybe_a_better_name
 		let _ = (key, value, vm); todo!()
 	}
 }

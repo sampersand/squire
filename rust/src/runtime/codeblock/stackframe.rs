@@ -247,7 +247,7 @@ impl StackFrame<'_> {
 	}
 
 	fn do_compare(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| x.map_or(Value::Null, |x| Numeral::from(x).into())))
+		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| x.map_or(Value::Ni, |x| Numeral::from(x).into())))
 	}
 
 	fn do_pos(&mut self) -> Result<()> {
@@ -365,8 +365,8 @@ impl StackFrame<'_> {
 			}
 		}
 
-		// if we reach the end without a return, we just return Null.
-		Ok(Value::Null)
+		// if we reach the end without a return, we just return Ni.
+		Ok(Value::Ni)
 	}
 
 	fn run_inner(&mut self) -> Result<Option<Value>> {

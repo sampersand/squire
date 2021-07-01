@@ -5,6 +5,10 @@ pub trait ConvertTo<T> {
 	fn convert(&self, vm: &mut Vm) -> Result<T, RuntimeError>;
 }
 
+pub trait Dump {
+	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError>;
+}
+
 impl<T: Clone> ConvertTo<T> for T {
 	fn convert(&self, _: &mut Vm) -> Result<Self, RuntimeError> {
 		Ok(self.clone())

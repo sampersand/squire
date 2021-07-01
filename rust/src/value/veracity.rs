@@ -1,8 +1,21 @@
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Numeral, Text};
-use crate::value::ops::{ConvertTo, IsEqual, Compare};
+use crate::value::ops::{ConvertTo, IsEqual, Compare, Dump};
 
 pub type Veracity = bool;
+
+impl Dump for Veracity {
+	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
+		if *self {
+			to.push_str("yay");
+		} else {
+			to.push_str("nay");
+		}
+
+		Ok(())
+	}
+}
+
 
 impl ConvertTo<Numeral> for Veracity {
 	fn convert(&self, _: &mut Vm) -> Result<Numeral, RuntimeError> {
@@ -11,8 +24,12 @@ impl ConvertTo<Numeral> for Veracity {
 }
 
 impl ConvertTo<Text> for Veracity {
-	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
-		Ok(Text::new(if *self { "yay" } else { "nay" }))
+	fn convert(&self, vm: &mut Vm) -> Result<Text, RuntimeError> {
+		let mut text = String::with_capacity(3);
+
+		self.dump(&mut text, vm)?;
+
+		Ok(Text::new(text))
 	}
 }
 

@@ -102,7 +102,7 @@ pub enum Symbol {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Literal {
-	Null,
+	Ni,
 	Boolean(bool),
 	Numeral(Numeral),
 	Text(Text), // possibly with interpolation
@@ -353,7 +353,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		} else if self.stream.take_identifier(Self::FALSE) {
 			Some(Ok(Token::Literal(Literal::Boolean(false))))
 		} else if self.stream.take_identifier(Self::NULL) {
-			Some(Ok(Token::Literal(Literal::Null)))
+			Some(Ok(Token::Literal(Literal::Ni)))
 		} else {
 			None
 		}

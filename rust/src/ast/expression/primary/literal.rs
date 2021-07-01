@@ -30,7 +30,7 @@ impl Compilable for Literal {
 
 		let constant_index = 
 			match self.0 {
-				TokenLiteral::Null => compiler.get_constant(Value::Null),
+				TokenLiteral::Ni => compiler.get_constant(Value::Ni),
 				TokenLiteral::Boolean(boolean) => compiler.get_constant(Value::Veracity(boolean)),
 				TokenLiteral::Numeral(numeral) => compiler.get_constant(Value::Numeral(numeral)),
 				TokenLiteral::Text(text) => compiler.get_constant(Value::Text(text)),

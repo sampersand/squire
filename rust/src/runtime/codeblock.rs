@@ -35,7 +35,7 @@ impl CodeBlock {
 		locals.extend(args._as_slice().iter().cloned());
 
 		while locals.len() < self.num_locals {
-			locals.push(Value::Null);
+			locals.push(Value::Ni);
 		}
 
 		StackFrame::new(self, &mut locals, vm).run()

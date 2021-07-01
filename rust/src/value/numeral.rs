@@ -3,7 +3,11 @@ use std::str::FromStr;
 use std::cmp::Ordering;
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Veracity, Text};
-use crate::value::ops::{ConvertTo, Negate, Add, Subtract, Multiply, Divide, Modulo, Power, IsEqual, Compare};
+use crate::value::ops::{
+	ConvertTo, Dump,
+	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
+	IsEqual, Compare
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Numeral(i64);
@@ -74,6 +78,15 @@ impl PartialEq<i64> for Numeral {
 impl PartialOrd<i64> for Numeral {
 	fn partial_cmp(&self, rhs: &i64) -> Option<Ordering> {
 		self.get().partial_cmp(rhs)
+	}
+}
+
+impl Dump for Numeral {
+	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
+		// todo: optimize this 
+		to.push_str(&self.to_string());
+
+		Ok(())
 	}
 }
 

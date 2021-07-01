@@ -31,7 +31,7 @@ impl Compilable for Reward {
 		if let Some(what) = self.what {
 			what.compile(compiler, Some(target))?;
 		} else {
-			let null = compiler.get_constant(Value::Null);
+			let null = compiler.get_constant(Value::Ni);
 			compiler.opcode(Opcode::LoadConstant);
 			compiler.constant(null);
 			compiler.target(target);

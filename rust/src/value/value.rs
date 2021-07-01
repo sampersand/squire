@@ -1,13 +1,12 @@
 use super::{*, ops::*};
-use std::sync::Arc;
 // use parking_lot::RwLock;
 use crate::runtime::{Vm, Result, Error as RuntimeError, Args};
-use std::fmt::{self, Debug, Display, Formatter};
+use std::fmt::{self, Debug, Formatter};
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Value {
-	Null,
+	Ni,
 	Veracity(Veracity),
 	Numeral(Numeral),
 	// idea: fractions instead of floats.
@@ -16,29 +15,29 @@ pub enum Value {
 	Book(Book),
 	Codex(Codex),
 
-	Form(Arc<Form>),
-	Imitation(Arc<Imitation>),
-	Journey(Arc<Journey>),
-	BuiltinJourney(Arc<BuiltinJourney>),
+	Form(Form),
+	Imitation(Imitation),
+	Journey(Journey),
+	BuiltinJourney(BuiltinJourney),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ValueKind {
-	Null,
+	Ni,
 	Veracity,
 	Numeral,
 	Text,
 	Book,
 	Form,
 	Codex,
-	Imitation(Arc<Form>),
+	Imitation(Form),
 	Journey,
 	BuiltinJourney
 }
 
 impl Default for Value {
 	fn default() -> Self {
-		Self::Null
+		Self::Ni
 	}
 }
 
@@ -51,7 +50,7 @@ impl PartialOrd for Value {
 impl Debug for Value {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::Null => Debug::fmt(&Null, f),
+			Self::Ni => Debug::fmt(&Ni, f),
 			Self::Veracity(veracity) => Debug::fmt(&veracity, f),
 			Self::Numeral(numeral) => Debug::fmt(&numeral, f),
 			Self::Text(text) => Debug::fmt(&text, f),
@@ -64,13 +63,6 @@ impl Debug for Value {
 			Self::Journey(journey) => Debug::fmt(&journey, f),
 			Self::BuiltinJourney(builtinjourney) => Debug::fmt(&builtinjourney, f),
 		}
-	}
-}
-
-impl Display for Value {
-	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		let _ = f;
-		todo!("display (note that `{{:#}}` should be `repr()`)")
 	}
 }
 
@@ -103,16 +95,6 @@ impl From<Numeral> for Value {
 }
 
 impl Value {
-	pub fn call(&self, args: Args, vm: &mut Vm) -> Result<Self> {
-		match self {
-			Self::Journey(journey) => journey.call(args, vm),
-			Self::Form(form) => form.imitate(args, vm),
-			Self::Imitation(_) => todo!(),
-			Self::BuiltinJourney(builtin) => builtin.run(args, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "()" })
-		}
-	}
-
 	pub fn convert_to<T>(&self, vm: &mut Vm) -> Result<T>
 	where
 		Self: ConvertTo<T>
@@ -122,7 +104,7 @@ impl Value {
 
 	pub fn kind(&self) -> ValueKind {
 		match self {
-			Self::Null => ValueKind::Null,
+			Self::Ni => ValueKind::Ni,
 			Self::Veracity(_) => ValueKind::Veracity,
 			Self::Numeral(_) => ValueKind::Numeral,
 			Self::Text(_) => ValueKind::Text,
@@ -136,10 +118,26 @@ impl Value {
 	}
 }
 
+impl Dump for Value {
+	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<()> {
+		match self {
+			Self::Ni => Ni.dump(to, vm),
+			Self::Veracity(veracity) => veracity.dump(to, vm),
+			Self::Numeral(numeral) => numeral.dump(to, vm),
+			Self::Text(text) => text.dump(to, vm),
+			Self::Book(book) => book.dump(to, vm),
+			Self::Codex(codex) => codex.dump(to, vm),
+			Self::Form(form) => form.dump(to, vm),
+			Self::Imitation(imitation) => imitation.dump(to, vm),
+			Self::Journey(journey) => journey.dump(to, vm),
+			Self::BuiltinJourney(builtinjourney) => builtinjourney.dump(to, vm),
+		}
+	}
+}
 impl ConvertTo<Veracity> for Value {
 	fn convert(&self, vm: &mut Vm) -> Result<Veracity> {
 		match self {
-			Self::Null => Null.convert(vm),
+			Self::Ni => Ni.convert(vm),
 			Self::Veracity(veracity) => veracity.convert(vm),
 			Self::Numeral(numeral) => numeral.convert(vm),
 			Self::Text(text) => text.convert(vm),
@@ -154,7 +152,7 @@ impl ConvertTo<Veracity> for Value {
 impl ConvertTo<Numeral> for Value {
 	fn convert(&self, vm: &mut Vm) -> Result<Numeral> {
 		match self {
-			Self::Null => Null.convert(vm),
+			Self::Ni => Ni.convert(vm),
 			Self::Veracity(veracity) => veracity.convert(vm),
 			Self::Numeral(numeral) => numeral.convert(vm),
 			Self::Text(text) => text.convert(vm),
@@ -167,7 +165,7 @@ impl ConvertTo<Numeral> for Value {
 impl ConvertTo<Text> for Value {
 	fn convert(&self, vm: &mut Vm) -> Result<Text> {
 		match self {
-			Self::Null => Null.convert(vm),
+			Self::Ni => Ni.convert(vm),
 			Self::Veracity(veracity) => veracity.convert(vm),
 			Self::Numeral(numeral) => numeral.convert(vm),
 			Self::Text(text) => text.convert(vm),
@@ -182,7 +180,7 @@ impl ConvertTo<Text> for Value {
 impl ConvertTo<Book> for Value {
 	fn convert(&self, vm: &mut Vm) -> Result<Book> {
 		match self {
-			Self::Null => Null.convert(vm),
+			Self::Ni => Ni.convert(vm),
 			Self::Text(text) => text.convert(vm),
 			Self::Book(book) => book.convert(vm),
 			Self::Codex(codex) => codex.convert(vm),
@@ -195,7 +193,7 @@ impl ConvertTo<Book> for Value {
 impl ConvertTo<Codex> for Value {
 	fn convert(&self, vm: &mut Vm) -> Result<Codex> {
 		match self {
-			Self::Null => Null.convert(vm),
+			Self::Ni => Ni.convert(vm),
 			Self::Book(book) => book.convert(vm),
 			Self::Codex(codex) => codex.convert(vm),
 			Self::Imitation(imitation) => <Imitation as ConvertTo<Codex>>::convert(imitation, vm),
@@ -205,7 +203,7 @@ impl ConvertTo<Codex> for Value {
 }
 
 impl Negate for Value {
-	fn negate(&self, vm: &mut Vm) -> Result<Self> {
+	fn negate(&self, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Numeral(numeral) => numeral.negate(vm),
 			Self::Imitation(imitation) => imitation.negate(vm),
@@ -215,7 +213,7 @@ impl Negate for Value {
 }
 
 impl Add for Value {
-	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Self> {
+	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		if matches!(rhs, Self::Text(_)) {
 			return Self::Text(self.convert_to::<Text>(vm)?).add(rhs, vm);
 		}
@@ -256,7 +254,7 @@ impl Add for Value {
 }
 
 impl Subtract for Value {
-	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Self> {
+	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Numeral(numeral) => numeral.subtract(rhs, vm),
 			Self::Book(book) => book.subtract(rhs, vm),
@@ -287,7 +285,7 @@ impl Subtract for Value {
 }
 
 impl Multiply for Value {
-	fn multiply(&self, rhs: &Value, vm: &mut Vm) -> Result<Self> {
+	fn multiply(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Numeral(numeral) => numeral.multiply(rhs, vm),
 			Self::Text(text) => text.multiply(rhs, vm),
@@ -312,7 +310,7 @@ impl Multiply for Value {
 }
 
 impl Divide for Value {
-	fn divide(&self, rhs: &Value, vm: &mut Vm) -> Result<Self> {
+	fn divide(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Numeral(numeral) => numeral.divide(rhs, vm),
 			Self::Imitation(imitation) => imitation.divide(rhs, vm),
@@ -331,7 +329,7 @@ impl Divide for Value {
 }
 
 impl Modulo for Value {
-	fn modulo(&self, rhs: &Value, vm: &mut Vm) -> Result<Self> {
+	fn modulo(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Numeral(numeral) => numeral.modulo(rhs, vm),
 			Self::Text(text) => text.modulo(rhs, vm),
@@ -352,7 +350,7 @@ impl Modulo for Value {
 }
 
 impl Power for Value {
-	fn power(&self, rhs: &Value, vm: &mut Vm) -> Result<Self> {
+	fn power(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Numeral(numeral) => numeral.power(rhs, vm),
 			Self::Imitation(imitation) => imitation.power(rhs, vm),
@@ -383,7 +381,7 @@ impl Power for Value {
 impl IsEqual for Value {
 	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> {
 		match self {
-			Self::Null => Null.is_equal(rhs, vm),
+			Self::Ni => Ni.is_equal(rhs, vm),
 			Self::Veracity(veracity) => veracity.is_equal(rhs, vm),
 			Self::Numeral(numeral) => numeral.is_equal(rhs, vm),
 			Self::Text(text) => text.is_equal(rhs, vm),
@@ -413,8 +411,21 @@ impl Compare for Value {
 	}
 }
 
+impl Call for Value {
+	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value> {
+		match self {
+			Self::Journey(journey) => journey.call(args, vm),
+			Self::Form(form) => form.call(args, vm),
+			Self::Imitation(imitation) => imitation.call(args, vm),
+			Self::BuiltinJourney(builtin) => builtin.call(args, vm),
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "()" })
+		}
+	}
+}
+
+
 impl GetIndex for Value {
-	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Self> {
+	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value> {
 		match self {
 			Self::Text(text) => text.get_index(key, vm),
 			Self::Book(book) => book.get_index(key, vm),
@@ -437,10 +448,10 @@ impl SetIndex for Value {
 }
 
 impl GetAttr for Value {
-	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Self> {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value> {
 		let _ = (attr, vm); todo!();
 /*		match self {
-			Self::Null => Null.get_attr(attr, vm),
+			Self::Ni => Ni.get_attr(attr, vm),
 			Self::Form(form) => form.get_attr(attr, vm),
 			Self::Imitation(imitation) => imitation.get_attr(attr, vm),
 			_ => todo!()

@@ -1,9 +1,17 @@
 use crate::runtime::{Vm, Error as RuntimeError};
+use std::sync::Arc;
 use crate::value::{Value, Veracity, Numeral, Book};
-use crate::value::ops::{ConvertTo, IsEqual, Compare, Add, Multiply, Modulo, GetIndex};
+use crate::value::ops::{ConvertTo, Dump, IsEqual, Compare, Add, Multiply, Modulo, GetIndex};
+use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct Text(String);
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Text(Arc<str>);
+
+impl Default for Text {
+	fn default() -> Self {
+		Self(Arc::from(""))
+	}
+}
 
 pub const FRAKTUR_UPPER: [char; 26] = [
 	'𝔄', '𝔅', 'ℭ', '𝔇', '𝔈', '𝔉', '𝔊', // A, B, C, D, E, F, G
@@ -60,7 +68,10 @@ pub fn from_fraktur(chr: char) -> Option<char> {
 
 impl Text {
 	pub fn new(text: impl ToString) -> Self {
-		Self(text.to_string())
+		let mut text = text.to_string();
+		text.shrink_to_fit();
+
+		Self(Arc::from(text))
 	}
 
 	pub fn new_fraktur(text: String) -> Self {
@@ -88,6 +99,12 @@ impl Text {
 				None
 			}
 		}
+	}
+}
+
+impl Display for Text {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		Display::fmt(&self.as_str(), f)
 	}
 }
 
@@ -140,6 +157,14 @@ impl Modulo for Text {
 // 		}
 // 	}
 // }
+impl Dump for Text {
+	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
+		to.push_str(&format!("{:?}", self.as_str()));
+
+		Ok(())
+	}
+}
+
 
 impl ConvertTo<Veracity> for Text {
 	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {

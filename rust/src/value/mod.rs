@@ -1,5 +1,5 @@
 pub mod ops;
-mod null;
+mod ni;
 mod book;
 mod codex;
 mod veracity;
@@ -13,7 +13,7 @@ pub mod form;
 pub use text::Text;
 pub use numeral::Numeral;
 pub use veracity::Veracity;
-pub use null::Null;
+pub use ni::Ni;
 pub use book::Book;
 pub use codex::Codex;
 pub use builtin::BuiltinJourney;
