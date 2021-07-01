@@ -1,0 +1,38 @@
+# Naturally, Squire uses Roman Numerals for numbers.
+six = VI;
+fourteen = XIV;
+proclaim("eighty four is: \(six * fourteen)\n"); #=> eighty four: is LXXXIV
+
+# Just for sanity's sake, squire also supports zero and negative Roman Numerals.
+proclaim("0=\(I-I), -1=\(II-I)") #=> 0=N, -1=-I
+
+# If you wish to use arabic numerals, use the `arabic` function:
+proclaim("eighty four is: \(arabic(six * fourteen))\n"); #=> eighty four is: 84
+proclaim("2+4=\(arabic(2+4))\n"); #=> 2+4=6
+
+
+# Mr Boole was not alive in the middle ages. As such, we do not have "Booleans,"
+# but instead have Veracity---the truthiness of something.
+truth = yay;
+falsehood = nay;
+proclaim("is truth false? \(truth == falsehood)\n"); #=> is truth false? nay
+
+
+# As an homage to the Knights of Ni, we use `ni` for nonexistent values:
+proclaim("the knights of \(ni)!\n"); #=> the knights of ni!
+
+
+# Quoted string literals don't have anything special---they support hex escapes,
+# and most normal backslash escapes (eg `\t`). Interpolation is done via `\(`.
+# Single quoted strings will only only interpret `\\` escapes for `'`, `"`, and
+# `\` itself.
+squire = "squire";
+proclaim("What is cool? \(squire)!\n"); #=> What is cool? squire!\n
+proclaim('What is cool? \(squire)!\n'); #=> What is cool? \(squire)!\n
+
+# Squire also has *bare words*. However, they must be written in Fraktur unicode
+# characters exclusively, which will be converted to their ASCII equivalents.
+# Multiple words may be separated with whitespace, however leading and trailing
+# whitespace will be stripped. 
+squire = 𝔰𝔮𝔲𝔦𝔯𝔢 𝔦𝔰 𝔠𝔬𝔬𝔩;
+proclaim("What is cool? \(squire)!\n"); #=> What is cool? squire is cool!

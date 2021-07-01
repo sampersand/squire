@@ -1,0 +1,118 @@
+# Squire has basic `if` statements. We use `alas` here instead of `else`.
+fav_colour = 'blue'
+
+if fav_colour == 'green' {
+	proclaim("Huzzah, you like green!\n")
+} alas if fav_colour == 'red' || fav_colour == 'yellow' {
+	proclaim("\(fav_colour)'s also pretty cool\n")
+} alas {
+	proclaim("I do not know \(fav_colour), but it's probably cool too!\n")
+}
+
+
+# There are also "switch" statements, called `fork`s (in the path). Note that no 
+# `break` is required---all `path`s will exit the switch statement at the end.
+# (For `path`s with empty bodies, however, they will "fall through" to the next)
+fork fav_colour {
+	path 'green':
+		proclaim("Huzzah, you like green!\n")	
+
+	path 'red':
+	path 'yellow':
+		proclaim("\(fav_colour)'s also pretty cool\n")
+
+	# `alas` is used for the default case. It is optional.
+	alas:
+		proclaim("I do not know \(fav_colour), but it's probably cool too!\n")
+}
+
+
+# `path`s can be arbitrary expressions, which will be evaluated and compare
+# against the `fork` expression. This can be used to shorten `if` statements.
+age = XXIII
+fork yay {
+	path age < XVIII:
+		proclaim("You can't drive the carriage yet!\n")
+
+	path age < XXI:
+		proclaim("You can now hit the tavern.\n")
+
+	path age < XXV:
+		proclaim("You cannot rent a carriage\n")
+		#=> You cannot rent a carriage
+
+	alas:
+		proclaim("Whelp, now what?.\n")
+}
+
+
+# Squire does not have `for` loops. Instead, everything is done with a `whilst` 
+# loop. Also, we do not have `continue` or `break`s either... (that might be a 
+# future todo?).
+n = I
+whilst n < V {
+	proclaim("n=\(n)\n");
+	n = n + I
+}
+
+
+# Squire also supports very basic exception syntax through `catapult <expr>` and
+# attempt { ... } alas <errorname> { ... }`. You can catapult any value you want
+# and it'll be put into the `alas` block.
+attempt {
+	if n < XX {
+		catapult "uh oh, n is less than twenty!"
+	}
+} alas error {
+	proclaim("A problem occurred: \(error)\n")
+	# => A problem occurred: uh oh, n is less than twenty!
+}
+
+# Whilst Squire doesn't support `break` or `continue`s, it does have a way to 
+# exit nested loops: `whence` (called `COME FROM` in other languages.):
+i = I
+whilst i < V {
+	j = I
+	whilst j < V {
+		proclaim("j=\(j), i=\(i)\n")
+		j = j + I;
+		
+		if j + i == VII {
+		inner: # this label is executed when `j + i` is seven.
+			catapult "this will never be reached."
+		}
+	}
+
+	i = i + I
+}
+catapult "the `inner` label will be encountered first."
+
+# whenever the label `inner` is encountered, control flow actually jumps here
+# and resumes. The `catapult` following the `inner` is never run.
+whence inner
+proclaim("(whence'd) j=\(j), i=\(i)\n")
+# => (whence'd) j=V, i=II
+
+
+# When you have multiple whences, the process will spawn threads for all but the
+# first whence, and then execute them. (NB: Currently it `fork`s, but i plan
+# on making it use threading in the future).
+label:
+catapult "never run."
+
+whence label
+proclaim("spot I\n")
+dismount(N) # `dismount` is `exit`
+
+whence label
+proclaim("spot II\n")
+dismount(N)
+
+whence label
+proclaim("spot III\n")
+dismount(N)
+
+# (since we spawn multiple processes, the output isn't consistent):
+#=> spot III
+#=> spot I
+#=> spot II

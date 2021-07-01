@@ -1,8 +1,0 @@
-@henceforth $DEBUG = 1;
-
-@henceforth $assert($cond, $errmsg) =
-	@whereupon $DEBUG
-		if !($cond) {
-			catapult "assertion failed: \($errmsg)"
-		};
-	@nowhere;

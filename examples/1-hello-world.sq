@@ -1,0 +1,5 @@
+proclaim("Hello, world!\n");
+
+# or, using bare words (but without punctuation or a trailing newline):
+proclaim(ℌ𝔢𝔩𝔩𝔬 𝔴𝔬𝔯𝔩𝔡);
+
