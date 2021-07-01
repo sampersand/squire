@@ -87,6 +87,18 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 			continue;
 		}
 
+		if (c == '/' && sq_stream[1] == '*') {
+			sq_stream += 2;
+
+			while (true) {
+				if (sq_stream[0] == '*' && sq_stream[1] == '/') {
+					sq_stream += 2;
+					break;
+				}
+
+				if (!*sq_stream) die("unterminated block comment");
+		}
+
 
 		if (*sq_stream == '\\') {
 			++sq_stream;

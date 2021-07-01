@@ -1,0 +1,32 @@
+# Squire has a number of builtin methods to do anything you want.
+
+# `proclaim` takes a single argument, converts it to a string, and then prints
+# it out _without_ a trailing newline.
+proclaim("Hello, world!\n")
+
+# To convert a value to a numeral, `tally` it.
+proclaim(tally("III"));
+#        proclaim|dump|inquire|hex|
+#        substr|length|
+#        dismount|insert|delete\
+#        genus|random|
+#        arabic|roman|ascii
+#
+#veracity
+#
+#	BUILTIN_FN("proclaim", SQ_INT_PRINT, 1);
+#	BUILTIN_FN("tally",    SQ_INT_TONUMBER, 1);
+#	BUILTIN_FN("string",   SQ_INT_TOSTRING, 1); // `prose`
+#	BUILTIN_FN("boolean",  SQ_INT_TOBOOLEAN, 1); // `veracity`
+#	BUILTIN_FN("dump",     SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
+#	BUILTIN_FN("length",   SQ_INT_LENGTH, 1); // `fathoms` ? furlong
+#	BUILTIN_FN("substr",   SQ_INT_SUBSTR, 3);
+#	BUILTIN_FN("dismount", SQ_INT_EXIT, 1);
+#	BUILTIN_FN("genus",    SQ_INT_KINDOF, 1);
+#	BUILTIN_FN("hex",      SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
+#	BUILTIN_FN("inquire",  SQ_INT_PROMPT, 0);
+#	BUILTIN_FN("gamble",   SQ_INT_RANDOM, 0);
+#	BUILTIN_FN("insert",   SQ_INT_ARRAY_INSERT, 3);
+#	BUILTIN_FN("delete",   SQ_INT_ARRAY_DELETE, 2); // `slay`?
+#	BUILTIN_FN("roman",    SQ_INT_ROMAN, 1);
+#	BUILTIN_FN("arabic",   SQ_INT_ARABIC, 1);

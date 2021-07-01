@@ -103,15 +103,8 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 	unsigned ip = 0;
 
-	while (true) {
-		if (ip >= function->codelen) {
-			value = SQ_NULL;
-			goto done;
-		}
-
-		opcode = function->bytecode[ip++].opcode;
-
-		switch (opcode) {
+	while (ip < function->codelen) {
+		switch ((opcode = function->bytecode[ip++].opcode)) {
 
 	/*** Misc ***/
 

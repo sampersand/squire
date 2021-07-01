@@ -312,6 +312,8 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 static void compile_func_declaration(struct func_declaration *fdecl) {
 	assert(fdecl->name != NULL);
 
+	declare_global_variable(strdup(fdecl->name), SQ_NULL);
+
 	struct sq_function *func = compile_function(fdecl, false);
 	free(fdecl); // but none of the fields, as they're now owned by `func`.
 

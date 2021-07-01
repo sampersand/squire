@@ -1,0 +1,92 @@
+# Instead of functions, squire has `journey`s!
+journey salutations(whom) {
+	proclaim("Salutations, \(whom)!\n");
+}
+salutations("Terra"); #=> Salutations, Terra!
+
+# When instead of `return`ing from a journey, you get a reward for going on it!
+journey factorial(num) {
+	if num <= I {
+		reward num
+	}
+
+	reward num * factorial(num - I)
+}
+proclaim("V! = \(factorial(V))\n"); #=> V! = CXX
+
+# Squire also supports implicit returns:
+journey factorial2(num) {
+	if num <= I {
+		num
+	} alas {
+		num * factorial2(num - I)
+	}
+}
+proclaim("VI! = \(factorial(VI))\n"); #=> VI! = DCCXX
+
+
+# Squire also supports lambdas:
+journey map(book, func) {
+	result = []
+	i = I
+
+	whilst i <= length(book) {
+		result[i] = func(book[i])
+		i = i + I
+	}
+
+	result
+}
+book=[I, II, III]
+doubled=map(book, journey(x) { x * II });
+proclaim("\(book) becomes \(doubled)\n") #=>[I, II, III] becomes [II, IV, VI]
+
+
+# All undeclared variables are locally scoped to the journey they're within.
+# However, if a `renowned` (global) variable exists with that name, then that
+# global is used instead. You can force locality for variables via `nigh`.
+renowned a = I
+renowned b = I
+nigh c = II
+d = III
+journey foo() {
+	nigh a = IV
+	b = V
+	c = VI
+	d = VII
+	"a=\(a) b=\(b) c=\(c) d=\(d)"
+}
+
+proclaim("[Spot I]   a=\(a) b=\(b) c=\(c) d=\(d)\n")
+proclaim("[Spot II]  \(foo())\n");
+proclaim("[Spot III] a=\(a) b=\(b) c=\(c) d=\(d)\n")
+#=> [Spot I]   a=I b=I c=II d=III
+#=> [Spot II]  a=IV b=V c=VI d=VII
+#=> [Spot III] a=I b=V c=II d=III
+
+
+# Note that all journeys and `form`s (see section 7) are declared as renowned.
+# However, if you want to use a journey before it's declared, you must mark it
+# as a `renowned` variable.
+journey j1(x) {
+	proclaim("j1: \(x)\n");
+
+	if x < III {
+		renowned j2
+		j2(x + I)
+	}
+}
+
+journey j2(x) {
+	proclaim("j2: \(x)\n")
+	if x < III {
+		j1(x)
+	}
+}
+
+j2(I)
+#=> j2: I
+#=> j1: I
+#=> j2: II
+#=> j1: II
+#=> j2: III

@@ -1,3 +1,6 @@
+# Comments in Squire start with a `#` and go to the end of the line.
+/* You can also use these for block comments */
+
 # Naturally, Squire uses Roman Numerals for numbers.
 six = VI;
 fourteen = XIV;
@@ -8,7 +11,8 @@ proclaim("0=\(I-I), -1=\(II-I)") #=> 0=N, -1=-I
 
 # If you wish to use arabic numerals, use the `arabic` function:
 proclaim("eighty four is: \(arabic(six * fourteen))\n"); #=> eighty four is: 84
-proclaim("2+4=\(arabic(2+4))\n"); #=> 2+4=6
+# There's also a `roman` function, which makes the roman numeral output explicit
+proclaim("2+4=\(roman(2 + 4))\n"); #=> 2+4=VI
 
 
 # Mr Boole was not alive in the middle ages. As such, we do not have "Booleans,"
