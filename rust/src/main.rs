@@ -51,10 +51,10 @@ fn main() {
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
     let mut stream = parse::Stream::from_str(r##"
-journey foo(x = 34) {
-    reward x;
-}
-dump(foo());
+
+x=[1];
+x[0]=2;
+dump(x);
 __END__
 form Foo {
     matter a, b;

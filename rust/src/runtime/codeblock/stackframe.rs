@@ -1,8 +1,8 @@
 use super::CodeBlock;
 use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt, Error};
-use crate::value::{Value, GetAttr, SetAttr};
+use crate::value::{Value, ops::*};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct StackFrame<'a> {
 	codeblock: &'a CodeBlock,
 	vm: &'a mut Vm,
@@ -11,7 +11,7 @@ pub struct StackFrame<'a> {
 	handlers: Vec<Handler>
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 struct Handler {
 	exception: usize,
 	start: usize
@@ -219,7 +219,7 @@ impl StackFrame<'_> {
 	}
 
 	fn do_not(&mut self) -> Result<()> {
-		self.do_unary_op(|arg, vm| arg.try_not(vm).map(Value::Veracity))
+		self.do_unary_op(|arg, vm| Value::Veracity(!arg.to_veracity(vm)?))
 	}
 
 	fn do_equals(&mut self) -> Result<()> {

@@ -5,6 +5,7 @@ use std::fmt::{self, Display, Formatter};
 #[derive(Debug)]
 pub enum Error {
 	OperationNotSupported { kind: ValueKind, func: &'static str },
+	CannotConvert { from: ValueKind, to: ValueKind },
 	InvalidOperand { kind: ValueKind, func: &'static str },
 	ValueError(String),
 	DivisionByZero,
@@ -12,6 +13,7 @@ pub enum Error {
 	ArgumentError { given: usize, expected: usize },
 	Throw(Value),
 	UnknownAttribute(String),
+	InvalidReturnType { expected: ValueKind, given: ValueKind, func: &'static str },
 	Other(Box<dyn std::error::Error>),
 }
 
@@ -36,6 +38,8 @@ impl Display for Error {
 			Self::ArgumentError { given, expected } => write!(f, "argc mismatch: given {}, expected {}", given, expected),
 			Self::Throw(value) => write!(f, "uncaught throw: {:?}", value),
 			Self::UnknownAttribute(attr) => write!(f, "unknown attribute accessed: {:?}", attr),
+			Self::InvalidReturnType { given, expected, func }
+				=> write!(f, "bad return type for {}: given {:?}, expected {:?}", func, given, expected),
 			Self::Other(err) => Display::fmt(&err, f),
 		}
 

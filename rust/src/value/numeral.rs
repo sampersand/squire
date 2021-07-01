@@ -1,6 +1,9 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 use std::cmp::Ordering;
+use crate::runtime::{Vm, Error as RuntimeError};
+use crate::value::{Value, Veracity, Text};
+use crate::value::ops::{ConvertTo, Negate, Add, Subtract, Multiply, Divide, Modulo, Power, IsEqual, Compare};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Numeral(i64);
@@ -18,6 +21,10 @@ impl Numeral {
 		Self::new(self.get().abs())
 	}
 
+	pub const fn is_zero(self) -> bool {
+		self.get() == 0
+	}
+
 	pub fn pow(self, amount: u32) -> Self {
 		Self::new(self.get().pow(amount))
 	}
@@ -30,6 +37,13 @@ impl From<i64> for Numeral {
 	}
 }
 
+impl From<Numeral> for i64 {
+	#[inline]
+	fn from(numeral: Numeral) -> Self {
+		numeral.get()
+	}
+}
+
 impl From<Ordering> for Numeral {
 	#[inline]
 	fn from(ord: Ordering) -> Self {
@@ -38,13 +52,6 @@ impl From<Ordering> for Numeral {
 			Ordering::Equal => Self::new(0),
 			Ordering::Greater => Self::new(1),
 		}
-	}
-}
-
-impl From<Numeral> for i64 {
-	#[inline]
-	fn from(numeral: Numeral) -> Self {
-		numeral.get()
 	}
 }
 
@@ -63,65 +70,106 @@ impl PartialEq<i64> for Numeral {
 		self.get() == *rhs
 	}
 }
+
 impl PartialOrd<i64> for Numeral {
 	fn partial_cmp(&self, rhs: &i64) -> Option<Ordering> {
 		self.get().partial_cmp(rhs)
 	}
 }
 
-impl std::ops::Neg for Numeral {
-	type Output = Self;
-
-	#[inline]
-	fn neg(self) -> Self {
-		Self::new(-self.get())
+impl ConvertTo<Veracity> for Numeral {
+	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
+		Ok(!self.is_zero())
 	}
 }
 
-macro_rules! impl_op {
-	($trait:ident: $fn:ident, $trait_assign:ident: $fn_assign:ident) => {
-		impl std::ops::$trait for Numeral {
-			type Output = Self;
-
-			#[inline]
-			fn $fn(mut self, rhs: Self) -> Self::Output {
-				use std::ops::$trait_assign;
-
-				self.$fn_assign(rhs);
-				self
-			}
-		}
-
-		impl std::ops::$trait<i64> for Numeral {
-			type Output = Self;
-
-			#[inline]
-			fn $fn(self, rhs: i64) -> Self::Output {
-				self.$fn(Self::new(rhs))
-			}
-		}
-
-		impl std::ops::$trait_assign for Numeral {
-			#[inline]
-			fn $fn_assign(&mut self, rhs: Self) {
-				self.0.$fn_assign(rhs.get());
-			}
-		}
-
-		impl std::ops::$trait_assign<i64> for Numeral {
-			#[inline]
-			fn $fn_assign(&mut self, rhs: i64) {
-				self.$fn_assign(Self::new(rhs))
-			}
-		}
-	};
+impl ConvertTo<Numeral> for Numeral {
+	fn convert(&self, _: &mut Vm) -> Result<Numeral, RuntimeError> {
+		Ok(*self)
+	}
 }
 
-impl_op!(Add: add, AddAssign: add_assign);
-impl_op!(Sub: sub, SubAssign: sub_assign);
-impl_op!(Mul: mul, MulAssign: mul_assign);
-impl_op!(Div: div, DivAssign: div_assign);
-impl_op!(Rem: rem, RemAssign: rem_assign);
+impl ConvertTo<Text> for Numeral {
+	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
+		Ok(Text::new(self))
+	}
+}
+
+impl Negate for Numeral {
+	fn negate(&self, _: &mut Vm) -> Result<Value, RuntimeError> {
+		Ok(Self::new(-self.get()).into())
+	}
+}
+
+impl Add for Numeral {
+	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		Ok(Self::new(self.get() + rhs.convert_to::<Self>(vm)?.get()).into())
+	}
+}
+
+impl Subtract for Numeral {
+	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		Ok(Self::new(self.get() - rhs.convert_to::<Self>(vm)?.get()).into())
+	}
+}
+
+impl Multiply for Numeral {
+	fn multiply(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		Ok(Self::new(self.get() * rhs.convert_to::<Self>(vm)?.get()).into())
+	}
+}
+
+impl Divide for Numeral {
+	fn divide(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		self.get().checked_div(rhs.convert_to::<Self>(vm)?.get())
+			.map(Self::new)
+			.map(Into::into)
+			.ok_or(RuntimeError::DivisionByZero)
+	}
+}
+
+impl Modulo for Numeral {
+	fn modulo(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		self.get().checked_rem(rhs.convert_to::<Self>(vm)?.get())
+			.map(|num| Value::Numeral(Self::new(num)))
+			.ok_or(RuntimeError::DivisionByZero)
+	}
+}
+
+impl Power for Numeral {
+	fn power(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		const U32MAX_AS_I64: i64 = u32::MAX as i64;
+
+		match rhs.convert_to::<Self>(vm)?.get() {
+			exp @ (i64::MIN..=-1) =>
+				match self.get() {
+					0                        => Err(RuntimeError::DivisionByZero),
+					-1 if exp.abs() % 2 == 0 => Ok(Self::new(1).into()),
+					1 | -1                   => Ok((*self).into()),
+					_                        => Ok(Self::new(0).into())
+				},
+			exp @ (0..=U32MAX_AS_I64) => Ok(Self::new(self.get().pow(exp as u32)).into()),
+			_ => Err(RuntimeError::OutOfBounds) // or should it be infinity or somethin? idk.
+		}
+	}
+}
+
+impl IsEqual for Numeral {
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		if let Value::Numeral(rhs) = rhs {
+			Ok(*self == *rhs)
+		} else {
+			Ok(false)
+		}
+	}
+}
+
+impl Compare for Numeral {
+	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
+		Ok(self.partial_cmp(&rhs.convert_to::<Self>(vm)?))
+	}
+}
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RomanNumeralParseError {
@@ -154,7 +202,7 @@ impl FromStr for RomanNumeral {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum RomanNumeral {
-	N   =  0,
+	N    =  0,
 	I    = 1,
 	V    = 5,
 	X    = 10,
@@ -164,7 +212,7 @@ pub enum RomanNumeral {
 	M    = 1000,
 	DD   = 5000,
 	CCDD = 10_000,
-	SEP = 100001,
+	SEP  = 100001,
 }
 
 const ASCII_ROMAN: [char; 8] = [
@@ -206,8 +254,8 @@ impl Display for RomanNumeral {
 				Self::C    => write!(f, "C"),
 				Self::D    => write!(f, "D"),
 				Self::M    => write!(f, "M"),
-				Self::DD   => write!(f, "DD"),
-				Self::CCDD  => write!(f, "CCDD"),
+				Self::DD   => write!(f, "DD"), // `|))` ?
+				Self::CCDD => write!(f, "CCDD"), // `((|))` ?
 				Self::SEP  => write!(f, "D"),
 			}
 		}
@@ -239,7 +287,7 @@ impl Numeral {
 	pub fn from_str_arabic(input: &str) -> Result<Self, NumeralParseError> {
 		let mut chars = input.trim_start().chars();
 		let mut is_neg = false;
-		let mut numeral = Self::default();
+		let mut numeral = 0;
 
 		match chars.next() {
 			Some('-') => is_neg = true,
@@ -263,7 +311,7 @@ impl Numeral {
 			numeral = -numeral;
 		}
 
-		Ok(numeral)
+		Ok(Self::new(numeral))
 	}
 
 	pub fn from_str_roman(_input: &str) -> Result<Self, NumeralParseError> {

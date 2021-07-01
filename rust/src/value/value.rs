@@ -1,30 +1,14 @@
+use super::{*, ops::*};
 use std::sync::Arc;
 // use parking_lot::RwLock;
 use crate::runtime::{Vm, Result, Error as RuntimeError, Args};
 use std::fmt::{self, Debug, Display, Formatter};
 
-mod null;
-mod array;
-mod codex;
-pub mod builtin;
-pub mod numeral;
-pub mod text;
-pub mod journey;
-pub mod form;
-
-pub use null::Null;
-pub use text::Text;
-pub use array::Array;
-pub use codex::Codex;
-pub use numeral::Numeral;
-pub use builtin::BuiltinJourney;
-pub use journey::Journey;
-pub use form::{Form, Imitation};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Value {
 	Null,
-	Veracity(bool),
+	Veracity(Veracity),
 	Numeral(Numeral),
 	// idea: fractions instead of floats.
 	Text(Text),
@@ -50,14 +34,6 @@ pub enum ValueKind {
 	Imitation(Arc<Form>),
 	Journey,
 	BuiltinJourney
-}
-
-pub trait GetAttr {
-	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value>;
-}
-
-pub trait SetAttr {
-	fn set_attr(&self, attr: &str, value: Value, vm: &mut Vm) -> Result<()>;
 }
 
 impl Default for Value {
@@ -98,9 +74,9 @@ impl Display for Value {
 	}
 }
 
-impl From<bool> for Value {
+impl From<Veracity> for Value {
 	#[inline]
-	fn from(boolean: bool) -> Self {
+	fn from(boolean: Veracity) -> Self {
 		Self::Veracity(boolean)
 	}
 }
@@ -133,11 +109,18 @@ impl Value {
 			Self::Form(form) => form.imitate(args, vm),
 			Self::Imitation(_) => todo!(),
 			Self::BuiltinJourney(builtin) => builtin.run(args, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "()" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "()" })
 		}
 	}
 
-	pub fn classify(&self) -> ValueKind {
+	pub fn convert_to<T>(&self, vm: &mut Vm) -> Result<T>
+	where
+		Self: ConvertTo<T>
+	{
+		self.convert(vm)
+	}
+
+	pub fn kind(&self) -> ValueKind {
 		match self {
 			Self::Null => ValueKind::Null,
 			Self::Veracity(_) => ValueKind::Veracity,
@@ -153,97 +136,109 @@ impl Value {
 	}
 }
 
-impl Value {
-	pub fn to_veracity(&self, vm: &mut Vm) -> Result<bool> {
+impl ConvertTo<Veracity> for Value {
+	fn convert(&self, vm: &mut Vm) -> Result<Veracity> {
 		match self {
-			Self::Null => Ok(false),
-			Self::Veracity(veracity) => Ok(*veracity),
-			Self::Numeral(numeral) => Ok(*numeral != 0),
-			Self::Text(text) => Ok(!text.is_empty()),
-			Self::Imitation(imitation) => imitation.to_veracity(vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "to_veracity" })
+			Self::Null => Null.convert(vm),
+			Self::Veracity(veracity) => veracity.convert(vm),
+			Self::Numeral(numeral) => numeral.convert(vm),
+			Self::Text(text) => text.convert(vm),
+			Self::Imitation(imitation) => imitation.convert(vm),
+			_ => Err(RuntimeError::CannotConvert { from: self.kind(), to: ValueKind::Veracity })
 		}
 	}
+}
 
-	pub fn to_text(&self, vm: &mut Vm) -> Result<Text> {
+impl ConvertTo<Numeral> for Value {
+	fn convert(&self, vm: &mut Vm) -> Result<Numeral> {
 		match self {
-			Self::Null => Ok(Text::new("null")),
-			Self::Veracity(veracity) => Ok(Text::new(veracity)),
-			Self::Numeral(numeral) => Ok(Text::new(numeral)),
-			Self::Text(text) => Ok(text.clone()),
-			Self::Imitation(imitation) => imitation.to_text(vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "to_text" })
+			Self::Null => Null.convert(vm),
+			Self::Veracity(veracity) => veracity.convert(vm),
+			Self::Numeral(numeral) => numeral.convert(vm),
+			Self::Text(text) => text.convert(vm),
+			Self::Imitation(imitation) => imitation.convert(vm),
+			_ => Err(RuntimeError::CannotConvert { from: self.kind(), to: ValueKind::Numeral })
 		}
 	}
+}
 
-	pub fn to_numeral(&self, vm: &mut Vm) -> Result<Numeral> {
+impl ConvertTo<Text> for Value {
+	fn convert(&self, vm: &mut Vm) -> Result<Text> {
 		match self {
-			Self::Null => Ok(Numeral::new(0)),
-			Self::Veracity(veracity) => Ok(Numeral::new(*veracity as i64)),
-			Self::Numeral(numeral) => Ok(*numeral),
-			Self::Text(text) => Ok(text.as_str().parse()?),
-			Self::Imitation(imitation) => imitation.to_numeral(vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "to_numeral" })
+			Self::Null => Null.convert(vm),
+			Self::Veracity(veracity) => veracity.convert(vm),
+			Self::Numeral(numeral) => numeral.convert(vm),
+			Self::Text(text) => text.convert(vm),
+			Self::Imitation(imitation) => imitation.convert(vm),
+			_ => Err(RuntimeError::CannotConvert { from: self.kind(), to: ValueKind::Text })
 		}
 	}
+}
 
-	pub fn try_neg(&self, vm: &mut Vm) -> Result<Self> {
+impl Negate for Value {
+	fn negate(&self, vm: &mut Vm) -> Result<Self> {
 		match self {
-			Self::Numeral(numeral) => Ok(Self::Numeral(-*numeral)),
-			Self::Imitation(imitation) => imitation.try_neg(vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "-@" })
+			Self::Numeral(numeral) => numeral.negate(vm).map(Self::Numeral),
+			Self::Imitation(imitation) => imitation.negate(vm),
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "-@" })
 		}
 	}
+}
 
-	pub fn try_add(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+impl Add for Value {
+	fn add(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
 		// if the rhs is a string, convert both to a string.
 		if let Self::Text(rhs) = rhs {
 			return Ok(Self::Text(self.to_text(vm)? + rhs));
 		}
 
 		match self {
-			Self::Numeral(numeral) => Ok(Self::Numeral(*numeral + rhs.to_numeral(vm)?)),
+			Self::Numeral(numeral) => numeral.add(rhs.to_numeral(vm)?, vm).map(Self::Numeral),
 			Self::Text(text) => Ok(Self::Text(text.clone() + rhs.to_text(vm)?)),
 			Self::Array(array) =>
 				if let Self::Array(rhs) = rhs {
 					Ok(Self::Array(/*Arc::new*/(/* * */*array).clone() + (/* * */*rhs).clone()))
 				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "+" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "+" })
 				},
 			Self::Codex(codex) =>
 				if let Self::Codex(rhs) = rhs {
 					Ok(Self::Codex(/*Arc::new*/(/* * */*codex).clone() + (/* * */*rhs).clone()))
 				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "+" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "+" })
 				},
 
 			Self::Imitation(imitation) => imitation.try_add(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "+" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "+" })
 		}
 	}
+}
 
-	pub fn try_sub(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+impl Subtract for Value {
+	fn subtract(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Numeral(numeral) => Ok(Self::Numeral(*numeral - rhs.to_numeral(vm)?)),
 			Self::Array(array) =>
 				if let Self::Array(rhs) = rhs {
 					Ok(Self::Array(/*Arc::new*/(/* * */*array).clone() - rhs.iter()))
 				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "-" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "-" })
 				},
 			Self::Codex(codex) =>
 				if let Self::Codex(rhs) = rhs {
 					Ok(Self::Codex(/*Arc::new*/(/* * */*codex).clone() - rhs.iter().map(|(key, _)| key)))
 				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.classify(), func: "-" })
+					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "-" })
 				},
 
 			Self::Imitation(imitation) => imitation.try_sub(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "-" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "-" })
 		}
 	}
+}
 
-	pub fn try_mul(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+impl Multiply for Value {
+	fn multiply(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Numeral(numeral) => Ok(Self::Numeral(*numeral * rhs.to_numeral(vm)?)),
 			Self::Text(text) => 
@@ -254,11 +249,13 @@ impl Value {
 				},
 
 			Self::Imitation(imitation) => imitation.try_mul(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "*" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "*" })
 		}
 	}
+}
 
-	pub fn try_div(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+impl Divide for Value {
+	fn divide(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Numeral(numeral) => 
 				match rhs.to_numeral(vm)?.get() {
@@ -266,11 +263,13 @@ impl Value {
 					other => Ok(Self::Numeral(*numeral / other)),
 				},
 			Self::Imitation(imitation) => imitation.try_div(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "/" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "/" })
 		}
 	}
+}
 
-	pub fn try_rem(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+impl Modulo for Value {
+	fn modulo(self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Numeral(numeral) => 
 				match rhs.to_numeral(vm)?.get() {
@@ -278,11 +277,13 @@ impl Value {
 					other => Ok(Self::Numeral(*numeral % other)),
 				},
 			Self::Imitation(imitation) => imitation.try_rem(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "%" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "%" })
 		}
 	}
+}
 
-	pub fn try_pow(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+impl Power for Value {
+	fn power(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
 		const U32MAX_AS_I64: i64 = u32::MAX as i64;
 
 		match self {
@@ -299,15 +300,13 @@ impl Value {
 					_ => Err(RuntimeError::OutOfBounds) // or should it be infinity or somethin? idk.
 				},
 			Self::Imitation(imitation) => imitation.try_pow(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "**" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "**" })
 		}
 	}
+}
 
-	pub fn try_not(&self, vm: &mut Vm) -> Result<bool> {
-		Ok(!self.to_veracity(vm)?)
-	}
-
-	pub fn try_eql(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
+impl IsEqual for Value {
+	fn is_equal(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
 		match (self, rhs) {
 			(Self::Null, Self::Null) => Ok(true),
 			(Self::Veracity(lhs), Self::Veracity(rhs)) => Ok(lhs == rhs),
@@ -322,28 +321,30 @@ impl Value {
 			_ => Ok(false)
 		}
 	}
+}
 
-	pub fn try_neq(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
-		Ok(!self.try_eql(rhs, vm)?)
-	}
+impl Compare for Value {
+	// pub fn try_neq(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
+	// 	Ok(!self.try_eql(rhs, vm)?)
+	// }
 
-	pub fn try_lth(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
-		self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord < 0))
-	}
+	// pub fn try_lth(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
+	// 	self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord < 0))
+	// }
 
-	pub fn try_leq(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
-		self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord <= 0))
-	}
+	// pub fn try_leq(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
+	// 	self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord <= 0))
+	// }
 
-	pub fn try_gth(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
-		self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord > 0))
-	}
+	// pub fn try_gth(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
+	// 	self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord > 0))
+	// }
 
-	pub fn try_geq(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
-		self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord >= 0))
-	}
+	// pub fn try_geq(&self, rhs: &Self, vm: &mut Vm) -> Result<bool> {
+	// 	self.try_cmp(rhs, vm).map(|ord| matches!(ord, Self::Numeral(ord) if ord >= 0))
+	// }
 
-	pub fn try_cmp(&self, rhs: &Self, vm: &mut Vm) -> Result<Self> {
+	fn compare(&self, rhs: &Self, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>> {
 		let ord =
 			match (self, rhs) {
 				(Self::Null, Self::Null) => std::cmp::Ordering::Equal,
@@ -359,14 +360,16 @@ impl Value {
 					},
 				(Self::Imitation(imitation), _) => return imitation.try_cmp(rhs, vm),
 				(Self::Form(_) | Self::Journey(_) | Self::BuiltinJourney(_), _) => 
-					return Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "<=>" }),
+					return Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "<=>" }),
 				_ => return Ok(Self::Null)
 			};
 
 		Ok(Numeral::from(ord).into())
 	}
+}
 
-	pub fn try_index(&self, by: &Self, vm: &mut Vm) -> Result<Self> {
+impl GetIndex for Value {
+	fn get_index(&self, by: &Self, vm: &mut Vm) -> Result<Self> {
 		match self {
 			Self::Text(text) => 
 				Ok(text.char_at(by.to_numeral(vm)?.get() as isize)
@@ -380,11 +383,13 @@ impl Value {
 						.unwrap_or_default()),
 			Self::Codex(codex) => Ok(codex.get(by).cloned().unwrap_or_default()),
 			Self::Imitation(imitation) => imitation.try_index(by, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "[]" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "[]" })
 		}
 	}
+}
 
-	pub fn try_index_assign(&mut self, by: Self, with: Self, vm: &mut Vm) -> Result<()> {
+impl SetIndex for Value {
+	fn set_index(&self, by: Self, with: Self, vm: &mut Vm) -> Result<()> {
 		match self {
 			Self::Array(array) => {
 				array.set2_maybe_a_better_name(by.to_numeral(vm)?.get() as isize, with);
@@ -395,7 +400,7 @@ impl Value {
 				Ok(())
 			},
 			Self::Imitation(imitation) => imitation.try_index_assign(by, with, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.classify(), func: "[]=" })
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "[]=" })
 		}
 	}
 }

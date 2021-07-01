@@ -2,13 +2,25 @@ use super::Form;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use std::hash::{Hash, Hasher};
-use crate::runtime::{Result, Error as RuntimeError, Vm};
-use crate::value::{Value, ValueKind, Text, Numeral, Journey, GetAttr};
+use crate::runtime::{Result, Error as RuntimeError, Args, Vm};
 use std::fmt::{self, Debug, Formatter};
+use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey};
+use crate::value::ops::{
+	ConvertTo,
+	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
+	IsEqual, Compare, Call,
+	GetAttr, SetAttr, GetIndex, SetIndex
+};
 
 pub struct Imitation {
 	form: Arc<Form>,
 	fields: Box<[RwLock<Value>]>
+}
+
+#[derive(Debug, Clone)]
+pub struct Change {
+	imitation: Arc<Imitation>,
+	journey: Arc<Journey>
 }
 
 impl Debug for Imitation {
@@ -76,6 +88,8 @@ impl Imitation {
 
 	pub fn get_change(&self, key: &str) -> Option<&Arc<Journey>> {
 		self.form.changes().get(key)
+			// .get(key)
+			// .map(|journey| Change { imitation: self.clone(), journey: journey.clone() })
 	}
 }
 
@@ -97,52 +111,136 @@ impl Hash for Imitation {
 
 
 impl Imitation {
-	// pub fn call_method(&self, method: &str, args: Args, vm: &mut Vm) -> Result<Value> {
-	// 	self.get_change(method)
-	// }
-	pub fn to_veracity(&self, vm: &mut Vm) -> Result<bool> {
-		// if let Some(to_veracity) = self.get_change("to_Veracity") {
-			// to_veracity.call()
-	// _ => Err(RuntimeError::OperationNotSupported { kind: self.form().clone(), func: "-" })
-
-		let _ = vm; todo!()
+	pub fn call_method(&self, func: &'static str, args: Args, vm: &mut Vm) -> Result<Value> {
+		let _ = (func, args, vm);
+		todo!()
+		// match self.get_change(func) {
+		// 	Some(change) => change.call(args, vm),
+		// 	None => Err(RuntimeError::OperationNotSupported { kind: ValueKind::Imitation(self.form().clone()), func })
+		// }
 	}
 
-	pub fn to_text(&self, vm: &mut Vm) -> Result<Text> {
-		let _ = vm; todo!();
-	}
-
-	pub fn to_numeral(&self, vm: &mut Vm) -> Result<Numeral> {
-		let _ = vm; todo!();
-	}
-
-	fn valuekind(&self) -> ValueKind {
+	fn kind(&self) -> ValueKind {
 		ValueKind::Imitation(self.form().clone())
 	}
+}
 
-	pub fn try_neg(&self, vm: &mut Vm) -> Result<Value> {
-		let _ = vm;
-		Err(RuntimeError::OperationNotSupported { kind: self.valuekind(), func: "-@" })
+impl Call for Imitation {
+	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value> {
+		self.call_method("()", args, vm)
 	}
+}
 
-	pub fn try_add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
-	pub fn try_sub(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
-	pub fn try_mul(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
-	pub fn try_div(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
-	pub fn try_rem(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
-	pub fn try_pow(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+macro_rules! expect_a {
+	($method:expr, $kind:ident, $func:expr) => {
+		match $method {
+			Value::$kind(value) => Ok(value),
+			other =>
+				Err(RuntimeError::InvalidReturnType {
+					expected: ValueKind::$kind,
+					given: other.kind(),
+					func: $func
+				})
+		}
+	};
+}
 
-	pub fn try_not(&self, vm: &mut Vm) -> Result<bool> { let _ = vm; todo!(); }
-	pub fn try_eql(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
-	pub fn try_neq(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
-	pub fn try_lth(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
-	pub fn try_leq(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
-	pub fn try_gth(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
-	pub fn try_geq(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> { let _ = (rhs, vm); todo!(); }
-	pub fn try_cmp(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> { let _ = (rhs, vm); todo!(); }
+impl ConvertTo<Veracity> for Imitation {
+	fn convert(&self, vm: &mut Vm) -> Result<Veracity> {
+		const NAME: &str = "to_veracity";
 
-	pub fn try_index(&self, by: &Value, vm: &mut Vm) -> Result<Value> { let _ = (by, vm); todo!(); }
-	pub fn try_index_assign(&self, by: Value, with: Value, vm: &mut Vm) -> Result<()> { let _ = (by, with, vm); todo!(); }
+		expect_a!(self.call_method(NAME, Args::default(), vm)?, Veracity, NAME)
+	}
+}
+
+impl ConvertTo<Text> for Imitation {
+	fn convert(&self, vm: &mut Vm) -> Result<Text> {
+		const NAME: &str = "to_text";
+
+		expect_a!(self.call_method(NAME, Args::default(), vm)?, Text, NAME)
+	}
+}
+
+impl ConvertTo<Numeral> for Imitation {
+	fn convert(&self, vm: &mut Vm) -> Result<Numeral> {
+		const NAME: &str = "to_numeral";
+
+		expect_a!(self.call_method(NAME, Args::default(), vm)?, Numeral, NAME)
+	}
+}
+
+impl Negate for Imitation {
+	fn negate(&self, vm: &mut Vm) -> Result<Value> {
+		self.call_method("-@", Args::default(), vm)
+	}
+}
+
+impl Add for Imitation {
+	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("+", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl Subtract for Imitation {
+	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("-", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl Multiply for Imitation {
+	fn multiply(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("*", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl Divide for Imitation {
+	fn divide(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("/", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl Modulo for Imitation {
+	fn modulo(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("%", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl Power for Imitation {
+	fn power(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("**", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl IsEqual for Imitation {
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> {
+		const NAME: &str = "==";
+
+		expect_a!(self.call_method(NAME, Args::default(), vm)?, Veracity, NAME)
+	}
+}
+
+impl Compare for Imitation {
+	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>> {
+		let _ = (rhs, vm);
+		todo!();
+		// expect_a!(self.call_method(NAME, Args::default(), vm)?, Veracity, NAME)
+
+		// self.call_method("?", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+impl GetIndex for Imitation {
+	fn get_index(&self, index: &Value, vm: &mut Vm) -> Result<Value> {
+		self.call_method("[]", Args::new(&[index.clone()]), vm)
+	}
+}
+
+impl SetIndex for Imitation {
+	fn set_index(&self, index: Value, value: Value, vm: &mut Vm) -> Result<()> {
+		self.call_method("[]=", Args::new(&[index, value]), vm)?;
+
+		Ok(())
+	}
 }
 
 impl GetAttr for Imitation {
@@ -151,5 +249,16 @@ impl GetAttr for Imitation {
 		self.get_matter(attr)
 			.or_else(|| self.get_change(attr).map(|method| Value::from(Value::Journey(method.clone()))))
 			.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
+	}
+}
+
+impl SetAttr for Imitation {
+	fn set_attr(&self, attr: &str, value: Value, _: &mut Vm) -> Result<()> {
+		let _ = (attr, value);
+		todo!();
+		// // in the future, we might want to have getters/setters
+		// self.get_matter(attr)
+		// 	.or_else(|| self.get_change(attr).map(|method| Value::from(Value::Journey(method.clone()))))
+		// 	.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
 	}
 }

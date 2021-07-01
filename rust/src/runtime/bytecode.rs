@@ -45,8 +45,9 @@ pub enum Opcode {
 	JumpIfFalse,
 	JumpIfTrue,
 	
-	CallFast,
-	CallComplex,
+	// CallFast,
+	// CallComplex,
+	Call,
 	Return,
 
 	ComeFrom,

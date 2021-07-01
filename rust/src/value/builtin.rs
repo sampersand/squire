@@ -48,8 +48,14 @@ impl BuiltinJourney {
 }
 
 pub fn defaults() -> Vec<Arc<BuiltinJourney>> {
-	vec![Arc::new(BuiltinJourney::new("dump", |args, _| {
-		println!("{:?}", args.positional(0).unwrap());
-		Ok(args.positional(0).unwrap().clone())
-	}))]
+	vec![
+		Arc::new(BuiltinJourney::new("dump", |args, _| {
+			println!("{:?}", args.positional(0).unwrap());
+			Ok(args.positional(0).unwrap().clone())
+		})),
+		Arc::new(BuiltinJourney::new("proclaim", |args, vm| {
+			print!("{:?}", args.positional(0).unwrap().convert_to::<crate::value::Text>(vm)?);
+			Ok(Value::Null)
+		})),
+		]
 }

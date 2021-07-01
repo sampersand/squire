@@ -1,4 +1,6 @@
-use std::ops::{Add, Mul};
+use crate::runtime::{Vm, Error as RuntimeError};
+use crate::value::{Value, Veracity, Numeral, Array};
+use crate::value::ops::{ConvertTo, IsEqual, Compare, Add, Multiply, Modulo};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Text(String);
@@ -102,26 +104,80 @@ impl AsRef<str> for Text {
 	}
 }
 
-impl<T: AsRef<str>> Add<T> for Text {
-	type Output = Self;
-
-	fn add(mut self, rhs: T) -> Self::Output {
-		self.0 += rhs.as_ref();
-		self
+impl Add for Text {
+	fn add(&self, rhs: &Value,  _: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ =rhs;
+		todo!();
 	}
 }
 
-impl Mul<usize> for Text {
-	type Output = Self;
+impl Multiply for Text {
+	fn multiply(&self, rhs: &Value,  _: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ =rhs;
+		todo!();
+	}
+}
 
-	fn mul(mut self, amount: usize) -> Self::Output {
-		match amount {
-			0 => Self::default(),
-			1 => self,
-			_ => {
-				self.0 = self.0.repeat(amount);
-				self
-			}
+impl Modulo for Text {
+	fn modulo(&self, rhs: &Value,  _: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ =rhs;
+		todo!();
+	}
+}
+
+
+// impl Mul<usize> for Text {
+// 	type Output = Self;
+
+// 	fn mul(mut self, amount: usize) -> Self::Output {
+// 		match amount {
+// 			0 => Self::default(),
+// 			1 => self,
+// 			_ => {
+// 				self.0 = self.0.repeat(amount);
+// 				self
+// 			}
+// 		}
+// 	}
+// }
+
+impl ConvertTo<Veracity> for Text {
+	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
+		Ok(!self.is_empty())
+	}
+}
+
+impl ConvertTo<Numeral> for Text {
+	fn convert(&self, _: &mut Vm) -> Result<Numeral, RuntimeError> {
+		Ok(self.as_str().parse()?)
+	}
+}
+
+impl ConvertTo<Text> for Text {
+	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
+		Ok(self.clone())
+	}
+}
+
+impl ConvertTo<Array> for Text {
+	fn convert(&self, _: &mut Vm) -> Result<Array, RuntimeError> {
+		// Ok(Array::default())
+		todo!()
+	}
+}
+
+impl IsEqual for Text {
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		if let Value::Text(rhs) = rhs {
+			Ok(*self == *rhs)
+		} else {
+			Ok(false)
 		}
+	}
+}
+
+impl Compare for Text {
+	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
+		Ok(self.partial_cmp(&rhs.convert_to::<Self>(vm)?))
 	}
 }

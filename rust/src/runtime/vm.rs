@@ -1,8 +1,8 @@
 use crate::value::Value;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Vm {
-	globals: Vec<Value>
+	globals: Vec<Value>,
 }
 
 
