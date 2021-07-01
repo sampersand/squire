@@ -9,7 +9,7 @@ pub struct Args {
 
 impl Args {
 	pub fn new(positional: &[Value]) -> Self {
-		Self::with_kwargs(positional.iter().collect(), Default::default())
+		Self::with_kwargs(positional.iter().cloned().collect(), Default::default())
 	}
 
 	pub fn with_kwargs(positional: Vec<Value>, keyword: HashMap<String, Value>) -> Self {

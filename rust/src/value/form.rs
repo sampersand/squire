@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use crate::runtime::{Vm, Args, Error as RuntimeError};
 use crate::value::{Value, Journey};
+use crate::value::ops::{IsEqual, Call, GetAttr, SetAttr};
 use std::fmt::{self, Debug, Formatter};
 
 mod imitation;
@@ -139,10 +140,34 @@ impl Hash for Form {
 	}
 }
 
-impl crate::value::GetAttr for Form {
+impl IsEqual for Form {
+	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
+		if let Value::Form(_form) = rhs {
+			todo!();
+		} else {
+			Ok(false)
+		}
+	}
+}
+
+impl Call for Form {
+	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (args, vm);
+		todo!();
+	}
+}
+
+impl GetAttr for Form {
 	fn get_attr(&self, attr: &str, _vm: &mut Vm) -> Result<Value, RuntimeError> {
 		self.get_essence(attr)
 			.or_else(|| self.get_recall(attr).map(|recall| Value::Journey(recall.clone())))
 			.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
+	}
+}
+
+impl SetAttr for Form {
+	fn set_attr(&self, attr: &str, value: Value, _: &mut Vm) -> Result<(), RuntimeError> {
+		let _ = (attr, value);
+		todo!();
 	}
 }

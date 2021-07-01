@@ -83,12 +83,6 @@ impl ConvertTo<Veracity> for Numeral {
 	}
 }
 
-impl ConvertTo<Numeral> for Numeral {
-	fn convert(&self, _: &mut Vm) -> Result<Numeral, RuntimeError> {
-		Ok(*self)
-	}
-}
-
 impl ConvertTo<Text> for Numeral {
 	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
 		Ok(Text::new(self))
@@ -155,7 +149,7 @@ impl Power for Numeral {
 }
 
 impl IsEqual for Numeral {
-	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
 		if let Value::Numeral(rhs) = rhs {
 			Ok(*self == *rhs)
 		} else {

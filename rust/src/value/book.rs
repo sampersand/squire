@@ -1,6 +1,7 @@
+#![allow(unused)]
 // use parking_lot::RwLock;
 use crate::runtime::{Vm, Error as RuntimeError};
-use crate::value::Value;
+use crate::value::{Value, Veracity, Numeral, Text, Codex};
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
 	Add, AddAssign,
@@ -18,16 +19,16 @@ use crate::value::ops::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash, Default)]
-pub struct Array(Vec<Value>);
+pub struct Book(Vec<Value>);
 
-impl From<Vec<Value>> for Array {
+impl From<Vec<Value>> for Book {
 	#[inline]
 	fn from(vec: Vec<Value>) -> Self {
 		Self(vec)
 	}
 }
 
-impl Array {
+impl Book {
 	pub const fn new() -> Self {
 		Self(Vec::new())
 	}
@@ -139,13 +140,13 @@ impl Array {
 	}
 }
 
-impl std::iter::FromIterator<Value> for Array {
+impl std::iter::FromIterator<Value> for Book {
     fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
     	Self(iter.into_iter().collect())
     }
 }
 
-impl IntoIterator for Array {
+impl IntoIterator for Book {
 	type Item = Value;
 	type IntoIter = <Vec<Value> as IntoIterator>::IntoIter;
 
@@ -154,19 +155,19 @@ impl IntoIterator for Array {
 	}
 }
 
-impl AsRef<[Value]> for Array {
+impl AsRef<[Value]> for Book {
 	fn as_ref(&self) -> &[Value] {
 		self.as_slice()
 	}
 }
 
-impl AsMut<[Value]> for Array {
+impl AsMut<[Value]> for Book {
 	fn as_mut(&mut self) -> &mut [Value] {
 		self.as_slice_mut()
 	}
 }
 
-impl Display for Array {
+impl Display for Book {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		write!(f, "[")?;
 
@@ -178,13 +179,13 @@ impl Display for Array {
 	}
 }
 
-impl std::iter::Extend<Value> for Array {
+impl std::iter::Extend<Value> for Book {
 	fn extend<I: IntoIterator<Item=Value>>(&mut self, iter: I) {
 		self.0.extend(iter)
 	}
 }
 
-impl<I: std::slice::SliceIndex<[Value]>> Index<I> for Array {
+impl<I: std::slice::SliceIndex<[Value]>> Index<I> for Book {
 	type Output = I::Output;
 
 	#[inline]
@@ -193,14 +194,14 @@ impl<I: std::slice::SliceIndex<[Value]>> Index<I> for Array {
 	}
 }
 
-impl<I: std::slice::SliceIndex<[Value]>> IndexMut<I> for Array {
+impl<I: std::slice::SliceIndex<[Value]>> IndexMut<I> for Book {
 	#[inline]
 	fn index_mut(&mut self, index: I) -> &mut Self::Output {
 		&mut self.0[index]
 	}
 }
 
-impl<I: IntoIterator<Item=Value>> Add<I> for Array {
+impl<I: IntoIterator<Item=Value>> Add<I> for Book {
 	type Output = Self;
 
 	#[inline]
@@ -210,25 +211,25 @@ impl<I: IntoIterator<Item=Value>> Add<I> for Array {
 	}
 }
 
-impl<I: IntoIterator<Item=Value>> AddAssign<I> for Array {
+impl<I: IntoIterator<Item=Value>> AddAssign<I> for Book {
 	#[inline]
 	fn add_assign(&mut self, rhs: I) {
 		self.extend(rhs);
 	}
 }
 
-impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Array {
-	type Output = Array;
+impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Book {
+	type Output = Book;
 
 	#[inline]
-	fn sub(mut self, rhs: I) -> Array {
+	fn sub(mut self, rhs: I) -> Book {
 		self -= rhs;
 		self
 	}
 }
 
 
-impl<'a, I: IntoIterator<Item=&'a Value>> SubAssign<I> for Array {
+impl<'a, I: IntoIterator<Item=&'a Value>> SubAssign<I> for Book {
 	fn sub_assign(&mut self, rhs: I) {
 		// todo: optimize
 		let rhs = rhs.into_iter().collect::<Vec<_>>();
@@ -236,17 +237,17 @@ impl<'a, I: IntoIterator<Item=&'a Value>> SubAssign<I> for Array {
 	}
 }
 
-impl Mul<usize> for Array {
-	type Output = Array;
+impl Mul<usize> for Book {
+	type Output = Book;
 
 	#[inline]
-	fn mul(mut self, amount: usize) -> Array {
+	fn mul(mut self, amount: usize) -> Book {
 		self *= amount;
 		self
 	}
 }
 
-impl MulAssign<usize> for Array {
+impl MulAssign<usize> for Book {
 	fn mul_assign(&mut self, amount: usize) {
 		if amount <= 1 {
 			if amount == 0 {
@@ -262,11 +263,51 @@ impl MulAssign<usize> for Array {
 	}
 }
 
-impl IsEqual for Array {
+impl ConvertTo<Veracity> for Book {
+	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
+		Ok(!self.is_empty())
+	}
+}
+
+impl ConvertTo<Text> for Book {
+	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
+		todo!()
+	}
+}
+
+impl ConvertTo<Codex> for Book {
+	fn convert(&self, _: &mut Vm) -> Result<Codex, RuntimeError> {
+		todo!()
+	}
+}
+
+impl OpsAdd for Book {
+	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+impl Subtract for Book {
+	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+impl Multiply for Book {
+	fn multiply(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+
+impl IsEqual for Book {
 	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
 		let rhs = rhs.convert_to::<Self>(vm)?;
 
-		if (self as *const _) == (rhs as *const _) {
+		if (self as *const _) == (&rhs as *const _) {
 			return Ok(true);
 		} else if self.len() != rhs.len() {
 			return Ok(false);
@@ -280,16 +321,31 @@ impl IsEqual for Array {
 
 		Ok(true)
 	}
+}
 
-	pub fn try_cmp(&self, rhs: &Self, vm: &mut Vm) -> Result<std::cmp::Ordering, RuntimeError> {
+impl Compare for Book {
+	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
 		let _ = (rhs, vm); todo!()
 	}
 }
 
-// impl<I: IntoIterator<Item=Value>> BitAnd<I> for &Array {
-// 	type Output = Array;
-// 	fn bitand(self, rhs: I) -> Array {
-// 		let mut new = Array::with_capacity(self.len());
+impl GetIndex for Book {
+	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (key, vm); todo!()
+	}
+}
+
+
+impl SetIndex for Book {
+	fn set_index(&self, key: Value, value: Value, vm: &mut Vm) -> Result<(), RuntimeError> {
+		let _ = (key, value, vm); todo!()
+	}
+}
+
+// impl<I: IntoIterator<Item=Value>> BitAnd<I> for &Book {
+// 	type Output = Book;
+// 	fn bitand(self, rhs: I) -> Book {
+// 		let mut new = Book::with_capacity(self.len());
 
 // 		for ele in rhs {
 // 			if self.contains(ele.borrow()) {
@@ -301,7 +357,7 @@ impl IsEqual for Array {
 // 	}
 // }
 
-// // impl<I: AsRef<[Value]>> BitAndAssign<&I> for Array {
+// // impl<I: AsRef<[Value]>> BitAndAssign<&I> for Book {
 // // 	fn bitand_assign(&mut self, rhs: &I) {
 // // 		let rhs = rhs.as_ref();
 
@@ -309,12 +365,12 @@ impl IsEqual for Array {
 // // 	}
 // // }
 
-// // impl<I: AsRef<[Value]>> BitOr<&I> for &Array {
-// // 	type Output = Array;
-// // 	fn bitor(self, rhs: &T) -> Array {
+// // impl<I: AsRef<[Value]>> BitOr<&I> for &Book {
+// // 	type Output = Book;
+// // 	fn bitor(self, rhs: &T) -> Book {
 // // 		let rhs = rhs.as_ref();
 
-// // 		let mut new = Array::with_capacity(self.len());
+// // 		let mut new = Book::with_capacity(self.len());
 
 // // 		for ele in self.iter() {
 // // 			if rhs.contains(ele) {
@@ -327,7 +383,7 @@ impl IsEqual for Array {
 // // 	}
 // // }
 
-// // impl<T: AsRef<[Value]>> BitOrAssign<&T> for Array {
+// // impl<T: AsRef<[Value]>> BitOrAssign<&T> for Book {
 // // 	fn bitor_assign(&mut self, rhs: &T) {
 // // 		let rhs = rhs.as_ref().iter().filter(|value| !self.contains(value));
 // // 		self.extend(rhs.iter().filter(|value| !self.contains(value)).cloned());

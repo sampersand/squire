@@ -1,38 +1,14 @@
 use crate::runtime::{Vm, Args, Error as RuntimeError};
-use crate::value::{Value, Veracity, Numeral, Text, Array, Codex};
-
-/// A trait for converting to a [`Veracity`].
-pub trait ToVeracity {
-	/// Converts `self` to a [`Veracity`], returning a [`RuntimeError`] if the conversion failed.
-	fn to_veracity(&self, vm: &mut Vm) -> Result<Veracity, RuntimeError>;
-}
-
-/// A trait for converting to a [`Numeral`].
-pub trait ToNumeral {
-	/// Converts `self` to a [`Numeral`], returning a [`RuntimeError`] if the conversion failed.
-	fn to_numeral(&self, vm: &mut Vm) -> Result<Numeral, RuntimeError>;
-}
-
-/// A trait for converting to a [`Text`].
-pub trait ToText {
-	/// Converts `self` to a [`Text`], returning a [`RuntimeError`] if the conversion failed.
-	fn to_text(&self, vm: &mut Vm) -> Result<Text, RuntimeError>;
-}
-
-/// A trait for converting to an [`Array`].
-pub trait ToArray {
-	/// Converts `self` to an [`Array`], returning a [`RuntimeError`] if the conversion failed.
-	fn to_array(&self, vm: &mut Vm) -> Result<Array, RuntimeError>;
-}
-
-/// A trait for converting to a [`Codex`].
-pub trait ToCodex {
-	/// Converts `self` to an [`Codex`], returning a [`RuntimeError`] if the conversion failed.
-	fn to_codex(&self, vm: &mut Vm) -> Result<Codex, RuntimeError>;
-}
+use crate::value::Value;
 
 pub trait ConvertTo<T> {
 	fn convert(&self, vm: &mut Vm) -> Result<T, RuntimeError>;
+}
+
+impl<T: Clone> ConvertTo<T> for T {
+	fn convert(&self, _: &mut Vm) -> Result<Self, RuntimeError> {
+		Ok(self.clone())
+	}
 }
 
 pub trait Negate {

@@ -1,6 +1,6 @@
 use crate::runtime::{Vm, Error as RuntimeError};
-use crate::value::{Value, Veracity, Numeral, Array};
-use crate::value::ops::{ConvertTo, IsEqual, Compare, Add, Multiply, Modulo};
+use crate::value::{Value, Veracity, Numeral, Book};
+use crate::value::ops::{ConvertTo, IsEqual, Compare, Add, Multiply, Modulo, GetIndex};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Text(String);
@@ -153,21 +153,15 @@ impl ConvertTo<Numeral> for Text {
 	}
 }
 
-impl ConvertTo<Text> for Text {
-	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
-		Ok(self.clone())
-	}
-}
-
-impl ConvertTo<Array> for Text {
-	fn convert(&self, _: &mut Vm) -> Result<Array, RuntimeError> {
-		// Ok(Array::default())
+impl ConvertTo<Book> for Text {
+	fn convert(&self, _: &mut Vm) -> Result<Book, RuntimeError> {
+		// Ok(Book::default())
 		todo!()
 	}
 }
 
 impl IsEqual for Text {
-	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
 		if let Value::Text(rhs) = rhs {
 			Ok(*self == *rhs)
 		} else {
@@ -179,5 +173,12 @@ impl IsEqual for Text {
 impl Compare for Text {
 	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
 		Ok(self.partial_cmp(&rhs.convert_to::<Self>(vm)?))
+	}
+}
+
+impl GetIndex for Text {
+	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (key, vm);
+		todo!();
 	}
 }

@@ -4,12 +4,6 @@ use crate::value::ops::{ConvertTo, IsEqual, Compare};
 
 pub type Veracity = bool;
 
-impl ConvertTo<Veracity> for Veracity {
-	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
-		Ok(*self)
-	}
-}
-
 impl ConvertTo<Numeral> for Veracity {
 	fn convert(&self, _: &mut Vm) -> Result<Numeral, RuntimeError> {
 		Ok(Numeral::new(*self as i64))
@@ -23,7 +17,7 @@ impl ConvertTo<Text> for Veracity {
 }
 
 impl IsEqual for Veracity {
-	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
 		if let Value::Veracity(rhs) = rhs {
 			Ok(*self == *rhs)
 		} else {

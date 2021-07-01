@@ -40,6 +40,7 @@ impl Display for Error {
 			Self::UnknownAttribute(attr) => write!(f, "unknown attribute accessed: {:?}", attr),
 			Self::InvalidReturnType { given, expected, func }
 				=> write!(f, "bad return type for {}: given {:?}, expected {:?}", func, given, expected),
+			Self::CannotConvert { from, to } => write!(f, "cannot convert a {:?} to a {:?}", from, to),
 			Self::Other(err) => Display::fmt(&err, f),
 		}
 

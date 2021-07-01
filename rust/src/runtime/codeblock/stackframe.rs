@@ -1,6 +1,6 @@
 use super::CodeBlock;
 use crate::runtime::{Bytecode, Opcode, Vm, Result, Interrupt, Error};
-use crate::value::{Value, ops::*};
+use crate::value::{Value, Numeral, ops::*};
 
 #[derive(Debug)]
 pub struct StackFrame<'a> {
@@ -136,7 +136,7 @@ impl StackFrame<'_> {
 		let cond = self.next_local().clone();
 		let to = self.next_offset();
 
-		if !cond.to_veracity(self.vm)? {
+		if !cond.convert_to::<bool>(self.vm)? {
 			self.jump(to - 1);
 		}
 
@@ -147,7 +147,7 @@ impl StackFrame<'_> {
 		let cond = self.next_local().clone();
 		let to = self.next_offset();
 
-		if cond.to_veracity(self.vm)? {
+		if cond.convert_to::<bool>(self.vm)? {
 			self.jump(to - 1);
 		}
 
@@ -163,7 +163,7 @@ impl StackFrame<'_> {
 			args.push(self.next_local().clone());
 		}
 
-		let args = crate::runtime::Args::new(args, Default::default());
+		let args = crate::runtime::Args::new(&args);
 
 		let result = func.call(args, self.vm)?;
 
@@ -219,35 +219,35 @@ impl StackFrame<'_> {
 	}
 
 	fn do_not(&mut self) -> Result<()> {
-		self.do_unary_op(|arg, vm| Value::Veracity(!arg.to_veracity(vm)?))
+		self.do_unary_op(|arg, vm| arg.convert_to::<bool>(vm).map(|x| Value::Veracity(!x)))
 	}
 
 	fn do_equals(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.try_eql(rhs, vm).map(Value::Veracity))
+		self.do_binary_op(|lhs, rhs, vm| lhs.is_equal(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_not_equals(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.try_neq(rhs, vm).map(Value::Veracity))
+		self.do_binary_op(|lhs, rhs, vm| lhs.is_equal(rhs, vm).map(|x| Value::Veracity(!x)))
 	}
 
 	fn do_less_than(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.try_lth(rhs, vm).map(Value::Veracity))
+		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| (x == Some(std::cmp::Ordering::Less)).into()))
 	}
 
 	fn do_less_than_or_equal(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.try_gth(rhs, vm).map(Value::Veracity))
+		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| (x != Some(std::cmp::Ordering::Greater)).into()))
 	}
 
 	fn do_greater_than(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.try_gth(rhs, vm).map(Value::Veracity))
+		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| (x == Some(std::cmp::Ordering::Greater)).into()))
 	}
 
 	fn do_greater_than_or_equal(&mut self) -> Result<()> {
-		self.do_binary_op(|lhs, rhs, vm| lhs.try_geq(rhs, vm).map(Value::Veracity))
+		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| (x != Some(std::cmp::Ordering::Less)).into()))
 	}
 
 	fn do_compare(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_cmp)
+		self.do_binary_op(|lhs, rhs, vm| lhs.compare(rhs, vm).map(|x| x.map_or(Value::Null, |x| Numeral::from(x).into())))
 	}
 
 	fn do_pos(&mut self) -> Result<()> {
@@ -256,35 +256,35 @@ impl StackFrame<'_> {
 	}
 
 	fn do_negate(&mut self) -> Result<()> {
-		self.do_unary_op(Value::try_neg)
+		self.do_unary_op(Value::negate)
 	}
 
 	fn do_add(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_add)
+		self.do_binary_op(Value::add)
 	}
 
 	fn do_subtract(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_sub)
+		self.do_binary_op(Value::subtract)
 	}
 
 	fn do_multiply(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_mul)
+		self.do_binary_op(Value::multiply)
 	}
 
 	fn do_divide(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_div)
+		self.do_binary_op(Value::divide)
 	}
 
 	fn do_modulo(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_rem)
+		self.do_binary_op(Value::modulo)
 	}
 
 	fn do_power(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_pow)
+		self.do_binary_op(Value::power)
 	}
 
 	fn do_index(&mut self) -> Result<()> {
-		self.do_binary_op(Value::try_index)
+		self.do_binary_op(Value::get_index)
 	}
 
 	fn do_index_assign(&mut self) -> Result<()> {
@@ -292,7 +292,7 @@ impl StackFrame<'_> {
 		let key = self.next_local().clone();
 		let value = self.next_local().clone();
 
-		self.locals[index].try_index_assign(key, value, self.vm)
+		self.locals[index].set_index(key, value, self.vm)
 	}
 
 	fn do_load_constant(&mut self) -> Result<()> {
@@ -443,7 +443,7 @@ impl StackFrame<'_> {
 			eles.push(self.next_local().clone());
 		}
 
-		self.set_result(Value::Array(eles.into_iter().collect()))
+		self.set_result(Value::Book(eles.into_iter().collect()))
 	}
 
 	fn do_interrupt_new_codex(&mut self) {

@@ -7,7 +7,7 @@ mod lambda;
 mod identifier;
 mod index;
 mod getattr;
-mod array;
+mod book;
 mod codex;
 mod unary_op;
 mod function_call;
@@ -18,7 +18,7 @@ pub use lambda::Lambda;
 pub use identifier::Identifier;
 pub use index::Index;
 pub use getattr::GetAttr;
-pub use array::Array;
+pub use book::Book;
 pub use codex::Codex;
 pub use unary_op::UnaryOp;
 pub use function_call::FunctionCall;
@@ -29,7 +29,7 @@ pub enum Primary {
 	Literal(Literal),
 	Lambda(Lambda),
 	Identifier(Identifier),
-	Array(Array),
+	Book(Book),
 	Codex(Codex),
 	UnaryOp(UnaryOp),
 
@@ -53,7 +53,7 @@ impl Parsable for Primary {
 			);
 		}
 
-		let mut primary = try_parse!(Literal, Lambda, Identifier, Array, Codex, UnaryOp, Grouping);
+		let mut primary = try_parse!(Literal, Lambda, Identifier, Book, Codex, UnaryOp, Grouping);
 
 		loop {
 			match Index::parse_with(primary, parser)? {
@@ -77,7 +77,7 @@ impl Compilable for Primary {
 			Self::Literal(literal) => literal.compile(compiler, target),
 			Self::Lambda(lambda) => lambda.compile(compiler, target),
 			Self::Identifier(identifier) => identifier.compile(compiler, target),
-			Self::Array(array) => array.compile(compiler, target),
+			Self::Book(book) => book.compile(compiler, target),
 			Self::Codex(codex) => codex.compile(compiler, target),
 			Self::UnaryOp(unaryop) => unaryop.compile(compiler, target),
 

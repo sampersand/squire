@@ -1,6 +1,6 @@
 pub mod ops;
 mod null;
-mod array;
+mod book;
 mod codex;
 mod veracity;
 mod value;
@@ -14,7 +14,7 @@ pub use text::Text;
 pub use numeral::Numeral;
 pub use veracity::Veracity;
 pub use null::Null;
-pub use array::Array;
+pub use book::Book;
 pub use codex::Codex;
 pub use builtin::BuiltinJourney;
 pub use journey::Journey;

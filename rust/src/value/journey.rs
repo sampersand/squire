@@ -1,5 +1,6 @@
 use crate::runtime::{CodeBlock, Args, Vm, Error as RuntimeError};
 use crate::value::Value;
+use crate::value::ops::{IsEqual, Call};
 use std::hash::{Hash, Hasher};
 use std::fmt::{self, Debug, Formatter};
 
@@ -56,8 +57,17 @@ impl Journey {
 	pub fn name(&self) -> &str {
 		&self.name
 	}
+}
 
-	pub fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
+impl IsEqual for Journey {
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!();
+	}
+}
+
+impl Call for Journey {
+	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
 		if args._as_slice().len() != self.args.len() {
 			Err(RuntimeError::ArgumentError { given: args._as_slice().len(), expected: self.args.len() })
 		} else {
@@ -65,15 +75,3 @@ impl Journey {
 		}
 	}
 }
-
-// struct sq_function {
-// 	char *name;
-// 	int refcount; // negative indicates a global function.
-
-// 	unsigned argc, nlocals, nconsts, codelen;
-// 	sq_value *consts;
-// 	struct sq_program *program;
-// 	union sq_bytecode *bytecode;
-// 	bool is_method;
-// };
-

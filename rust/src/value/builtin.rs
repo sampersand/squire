@@ -1,5 +1,6 @@
 use crate::runtime::{Vm, Error as RuntimeError, Args};
 use crate::value::Value;
+use crate::value::ops::{IsEqual, Call};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::fmt::{self, Debug, Formatter};
@@ -47,6 +48,19 @@ impl BuiltinJourney {
 	}
 }
 
+impl IsEqual for BuiltinJourney {
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!();
+	}
+}
+
+impl Call for BuiltinJourney {
+	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		(self.func)(args, vm)
+	}
+}
+
 pub fn defaults() -> Vec<Arc<BuiltinJourney>> {
 	vec![
 		Arc::new(BuiltinJourney::new("dump", |args, _| {
@@ -59,3 +73,5 @@ pub fn defaults() -> Vec<Arc<BuiltinJourney>> {
 		})),
 		]
 }
+
+

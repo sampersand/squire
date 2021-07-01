@@ -1,8 +1,14 @@
 use std::collections::HashMap;
 use crate::runtime::{Vm, Error as RuntimeError};
-use crate::value::Value;
-// use std::cmp::Ordering;
-use std::ops::{Index, Add, Sub};
+use crate::value::{Value, Veracity, Text, Book};
+use crate::value::ops::{
+	ConvertTo,
+	Add, Subtract,
+	IsEqual, Compare,
+	GetIndex, SetIndex
+};
+
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
 
@@ -78,7 +84,7 @@ impl std::iter::Extend<(Value, Value)> for Codex {
 	}
 }
 
-impl<I> Index<&I> for Codex
+impl<I> std::ops::Index<&I> for Codex
 where
 	I: Eq + Hash,
 	Value: Borrow<I>
@@ -91,7 +97,7 @@ where
 	}
 }
 
-impl<I: IntoIterator<Item=(Value, Value)>> Add<I> for Codex {
+impl<I: IntoIterator<Item=(Value, Value)>> std::ops::Add<I> for Codex {
 	type Output = Self;
 
 	fn add(mut self, rhs: I) -> Self::Output {
@@ -100,7 +106,7 @@ impl<I: IntoIterator<Item=(Value, Value)>> Add<I> for Codex {
 	}
 }
 
-impl<'a, I: IntoIterator<Item=&'a Value>> Sub<I> for Codex {
+impl<'a, I: IntoIterator<Item=&'a Value>> std::ops::Sub<I> for Codex {
 	type Output = Self;
 
 	fn sub(mut self, rhs: I) -> Self::Output {
@@ -116,6 +122,69 @@ impl Hash for Codex {
 		0.hash(h); // todo: actually hash.
 	}
 }
+
+
+impl ConvertTo<Veracity> for Codex {
+	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
+		Ok(!self.is_empty())
+	}
+}
+
+impl ConvertTo<Text> for Codex {
+	fn convert(&self, _: &mut Vm) -> Result<Text, RuntimeError> {
+		todo!()
+	}
+}
+
+impl ConvertTo<Book> for Codex {
+	fn convert(&self, _: &mut Vm) -> Result<Book, RuntimeError> {
+		todo!()
+	}
+}
+
+impl Add for Codex {
+	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+impl Subtract for Codex {
+	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+impl IsEqual for Codex {
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+impl Compare for Codex {
+	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<Ordering>, RuntimeError> {
+		let _ = (rhs, vm);
+		todo!()
+	}
+}
+
+impl GetIndex for Codex {
+	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (key, vm);
+		todo!()
+	}
+}
+
+impl SetIndex for Codex {
+	fn set_index(&self, key: Value, value: Value, vm: &mut Vm) -> Result<(), RuntimeError> {
+		let _ = (key, value, vm);
+		todo!()
+	}
+}
+
+
 
 impl Codex {
 	pub fn try_eql(&self, rhs: &Self, vm: &mut Vm) -> Result<bool, RuntimeError> {

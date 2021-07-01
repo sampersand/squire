@@ -4,7 +4,7 @@ use parking_lot::RwLock;
 use std::hash::{Hash, Hasher};
 use crate::runtime::{Result, Error as RuntimeError, Args, Vm};
 use std::fmt::{self, Debug, Formatter};
-use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey};
+use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex};
 use crate::value::ops::{
 	ConvertTo,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
@@ -120,7 +120,7 @@ impl Imitation {
 		// }
 	}
 
-	fn kind(&self) -> ValueKind {
+	pub fn kind(&self) -> ValueKind {
 		ValueKind::Imitation(self.form().clone())
 	}
 }
@@ -166,6 +166,22 @@ impl ConvertTo<Numeral> for Imitation {
 		const NAME: &str = "to_numeral";
 
 		expect_a!(self.call_method(NAME, Args::default(), vm)?, Numeral, NAME)
+	}
+}
+
+impl ConvertTo<Book> for Imitation {
+	fn convert(&self, vm: &mut Vm) -> Result<Book> {
+		const NAME: &str = "to_text";
+
+		expect_a!(self.call_method(NAME, Args::default(), vm)?, Book, NAME)
+	}
+}
+
+impl ConvertTo<Codex> for Imitation {
+	fn convert(&self, vm: &mut Vm) -> Result<Codex> {
+		const NAME: &str = "to_codex";
+
+		expect_a!(self.call_method(NAME, Args::default(), vm)?, Codex, NAME)
 	}
 }
 
@@ -215,7 +231,8 @@ impl IsEqual for Imitation {
 	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> {
 		const NAME: &str = "==";
 
-		expect_a!(self.call_method(NAME, Args::default(), vm)?, Veracity, NAME)
+		// todo: if `==` method doesn't exist, use the default one.
+		expect_a!(self.call_method(NAME, Args::new(&[rhs.clone()]), vm)?, Veracity, NAME)
 	}
 }
 
