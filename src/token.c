@@ -203,6 +203,20 @@ static struct sq_token parse_string(void) {
 			continue;
 		}
 
+		if (quote == '\'') {
+			switch (c = *sq_stream++) {
+				case '\\':
+				case '\'':
+				case '\"':
+					break;
+				default:
+					dst[length++] = '\\';
+			}
+
+			dst[length++] = c;
+			continue;
+		}
+
 		switch (c = *sq_stream++) {
 		case '\\':
 		case '\'': 

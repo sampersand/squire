@@ -11,7 +11,7 @@ struct sq_string;
 struct sq_form;
 struct sq_imitation;
 struct sq_function;
-struct sq_array;
+struct sq_book;
 struct sq_codex;
 
 typedef uint64_t sq_value;
@@ -23,7 +23,7 @@ typedef enum {
 	SQ_TFORM,
 	SQ_TIMITATION,
 	SQ_TFUNCTION,
-	SQ_TARRAY,
+	SQ_TBOOK,
 	SQ_TCODEX,
 } sq_vtag;
 
@@ -68,9 +68,9 @@ static inline sq_value sq_value_new_function(struct sq_function *function) {
 	return SQ_VMASK((sq_value) function, SQ_TFUNCTION);
 }
 
-static inline sq_value sq_value_new_array(struct sq_array *array) {
-	assert(!SQ_VTAG((sq_value) array));
-	return SQ_VMASK((sq_value) array, SQ_TARRAY);
+static inline sq_value sq_value_new_book(struct sq_book *book) {
+	assert(!SQ_VTAG((sq_value) book));
+	return SQ_VMASK((sq_value) book, SQ_TBOOK);
 }
 
 static inline sq_value sq_value_new_codex(struct sq_codex *dict) {
@@ -106,8 +106,8 @@ static inline bool sq_value_is_function(sq_value value) {
 	return SQ_VTAG(value) == SQ_TFUNCTION;
 }
 
-static inline bool sq_value_is_array(sq_value value) {
-	return SQ_VTAG(value) == SQ_TARRAY;
+static inline bool sq_value_is_book(sq_value value) {
+	return SQ_VTAG(value) == SQ_TBOOK;
 }
 
 static inline bool sq_value_is_codex(sq_value value) {
@@ -144,9 +144,9 @@ static inline struct sq_function *sq_value_as_function(sq_value value) {
 	return (struct sq_function *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_array *sq_value_as_array(sq_value value) {
-	assert(sq_value_is_array(value));
-	return (struct sq_array *) SQ_VUNMASK(value);
+static inline struct sq_book *sq_value_as_book(sq_value value) {
+	assert(sq_value_is_book(value));
+	return (struct sq_book *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_codex *sq_value_as_codex(sq_value value) {
@@ -177,7 +177,7 @@ size_t sq_value_length(sq_value value);
 struct sq_string *sq_value_to_string(sq_value value);
 sq_number sq_value_to_number(sq_value value);
 bool sq_value_to_boolean(sq_value value);
-struct sq_array *sq_value_to_array(sq_value value);
+struct sq_book *sq_value_to_book(sq_value value);
 struct sq_codex *sq_value_to_codex(sq_value value);
 
 #endif /* !SQ_VALUE_H */

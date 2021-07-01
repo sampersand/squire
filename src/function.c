@@ -3,7 +3,7 @@
 #include "program.h"
 #include "shared.h"
 #include "form.h"
-#include "array.h"
+#include "book.h"
 #include "roman.h"
 #include "codex.h"
 #include <assert.h>
@@ -269,15 +269,14 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				NEXT_LOCAL() = sq_value_new_number(rand());
 				break;
 
-			case SQ_INT_ARRAY_NEW: {
+			case SQ_INT_BOOK_NEW: {
 				unsigned amnt = NEXT_INDEX();
-				sq_value *eles = xmalloc(sizeof(sq_value [amnt]));
+				sq_value *pages = xmalloc(sizeof(sq_value [amnt]));
 
-				for (unsigned i = 0; i < amnt; ++i) {
-					eles[i] = NEXT_LOCAL();
-				}
+				for (unsigned i = 0; i < amnt; ++i)
+					pages[i] = NEXT_LOCAL();
 
-				NEXT_LOCAL() = sq_value_new_array(sq_array_new2(amnt, eles));
+				NEXT_LOCAL() = sq_value_new_book(sq_book_new2(amnt, pages));
 				break;
 			}
 
@@ -297,21 +296,21 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 			case SQ_INT_ARRAY_INSERT: {
 				value = NEXT_LOCAL();
-				if (!sq_value_is_array(value)) die("can only insert into arrays");
-				struct sq_array *array = sq_value_as_array(value);
+				if (!sq_value_is_book(value)) die("can only insert into books");
+				struct sq_book *book = sq_value_as_book(value);
 
 				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				sq_array_insert(array, index, NEXT_LOCAL());
+				sq_book_insert(book, index, NEXT_LOCAL());
 				NEXT_LOCAL() = sq_value_clone(value);
 				break;
 			}
 
 			case SQ_INT_ARRAY_DELETE: {
 				value = NEXT_LOCAL();
-				if (!sq_value_is_array(value)) die("can only delete from arrays");
-				struct sq_array *array = sq_value_as_array(value);
+				if (!sq_value_is_book(value)) die("can only delete from books");
+				struct sq_book *book = sq_value_as_book(value);
 				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_array_delete(array, index);
+				NEXT_LOCAL() = sq_book_delete(book, index);
 				break;
 			}
 
@@ -577,11 +576,11 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 				if (value == SQ_UNDEFINED)
 					die("unknown field '%s' for type '%s'", field, imitation->form->name);
-			} else if (sq_value_is_array(value)) {
+			} else if (sq_value_is_book(value)) {
 				if (!strcmp(field, "length"))
 					value = sq_value_new_number((sq_number) sq_value_length(value));
 				else
-					die("unknown array method '%s'", field);
+					die("unknown book method '%s'", field);
 			} else {
 				die("can only access fields on imitations.");
 			}

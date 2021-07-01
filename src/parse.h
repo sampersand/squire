@@ -176,9 +176,9 @@ struct unary_expression {
 	struct primary *rhs;
 };
 
-struct array {
-	unsigned nargs;
-	struct expression **args;
+struct book {
+	unsigned npages;
+	struct expression **pages;
 };
 
 struct dict {
@@ -195,7 +195,7 @@ struct primary {
 		SQ_PS_PBOOLEAN,
 		SQ_PS_PNULL,
 		SQ_PS_PVARIABLE,
-		SQ_PS_PARRAY,
+		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
 		SQ_PS_PINDEX,
 	} kind;
@@ -206,7 +206,7 @@ struct primary {
 		struct sq_string *string;
 		bool boolean;
 		struct variable *variable;
-		struct array *array;
+		struct book *book;
 		struct dict *dict;
 		struct index *index;
 	};

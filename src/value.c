@@ -1,5 +1,5 @@
 #include "value.h"
-#include "array.h"
+#include "book.h"
 #include "form.h"
 #include "function.h"
 #include "shared.h"
@@ -16,7 +16,7 @@
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
 #define AS_FUNCTION sq_value_as_function
-#define AS_ARRAY sq_value_as_array
+#define AS_ARRAY sq_value_as_book
 #define AS_CODEX sq_value_as_codex
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_STRING(c)->ptr)
@@ -56,8 +56,8 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		sq_function_dump(out, AS_FUNCTION(value));
 		break;
 
-	case SQ_TARRAY:
-		sq_array_dump(out, AS_ARRAY(value));
+	case SQ_TBOOK:
+		sq_book_dump(out, AS_ARRAY(value));
 		break;
 
 	case SQ_TCODEX:
@@ -83,8 +83,8 @@ sq_value sq_value_clone(sq_value value) {
 	case SQ_TFUNCTION:
 		return sq_value_new_function(sq_function_clone(AS_FUNCTION(value)));
 
-	case SQ_TARRAY:
-		return sq_value_new_array(sq_array_clone(AS_ARRAY(value)));
+	case SQ_TBOOK:
+		return sq_value_new_book(sq_book_clone(AS_ARRAY(value)));
 
 	case SQ_TCODEX:
 		return sq_value_new_codex(sq_codex_clone(AS_CODEX(value)));
@@ -112,8 +112,8 @@ void sq_value_free(sq_value value) {
 		sq_function_free(AS_FUNCTION(value));
 		return;
 
-	case SQ_TARRAY:
-		sq_array_free(AS_ARRAY(value));
+	case SQ_TBOOK:
+		sq_book_free(AS_ARRAY(value));
 		return;
 
 	case SQ_TCODEX:
@@ -130,7 +130,7 @@ const char *sq_value_typename(sq_value value) {
 	case SQ_TIMITATION: return "object";
 	case SQ_TFUNCTION: return "function";
 	case SQ_TFORM: return "form";
-	case SQ_TARRAY: return "array";
+	case SQ_TBOOK: return "book";
 	case SQ_TCODEX: return "codex";
 	default: bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
@@ -143,7 +143,7 @@ sq_value sq_value_kindof(sq_value value) {
 	static struct sq_string KIND_STRING = SQ_STRING_STATIC("string");
 	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("function");
 	static struct sq_string KIND_form = SQ_STRING_STATIC("form");
-	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("array");
+	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("book");
 	static struct sq_string KIND_CODEX = SQ_STRING_STATIC("codex");
 
 	switch (SQ_VTAG(value)) {
@@ -165,7 +165,7 @@ sq_value sq_value_kindof(sq_value value) {
 	case SQ_TFORM:
 		return sq_value_new_string(&KIND_form);
 
-	case SQ_TARRAY:
+	case SQ_TBOOK:
 		return sq_value_new_string(&KIND_ARRAY);
 
 	case SQ_TCODEX:
@@ -185,15 +185,15 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 	case SQ_TSTRING:
 		return IS_STRING(rhs) && !strcmp(AS_STR(lhs), AS_STR(rhs));
 
-	case SQ_TARRAY:
-		if (!sq_value_is_array(rhs)) return false;
-		struct sq_array *lary = AS_ARRAY(lhs), *rary = AS_ARRAY(rhs);
+	case SQ_TBOOK:
+		if (!sq_value_is_book(rhs)) return false;
+		struct sq_book *lary = AS_ARRAY(lhs), *rary = AS_ARRAY(rhs);
 
 		if (lary->length != rary->length)
 			return false;
 
 		for (unsigned i = 0; i < lary->length; ++i)
-			if (!sq_value_eql(lary->elements[i], rary->elements[i]))
+			if (!sq_value_eql(lary->pages[i], rary->pages[i]))
 				return false;
 		return true;
 
@@ -284,8 +284,8 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		return sq_value_new_string(sq_string_new2(c, 2));
 	}
 
-	case SQ_TARRAY:
-		return sq_array_index2(AS_ARRAY(value), sq_value_to_number(key));
+	case SQ_TBOOK:
+		return sq_book_index2(AS_ARRAY(value), sq_value_to_number(key));
 
 	case SQ_TCODEX:
 		return sq_codex_index(AS_CODEX(value), key);
@@ -307,8 +307,8 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TARRAY:
-		sq_array_index_assign2(AS_ARRAY(value), sq_value_to_number(key), val);
+	case SQ_TBOOK:
+		sq_book_index_assign2(AS_ARRAY(value), sq_value_to_number(key), val);
 		return;
 
 	case SQ_TCODEX:
@@ -356,20 +356,20 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		return sq_value_new_string(result);
 	}
 
-	case SQ_TARRAY: {
-		struct sq_array *lary = AS_ARRAY(lhs), *rary = sq_value_to_array(rhs);
+	case SQ_TBOOK: {
+		struct sq_book *lary = AS_ARRAY(lhs), *rary = sq_value_to_book(rhs);
 
 		unsigned length = lary->length + rary->length;
-		sq_value *elements = xmalloc(sizeof(sq_value[length]));
+		sq_value *pages = xmalloc(sizeof(sq_value[length]));
 
 		for (unsigned i = 0; i < lary->length; ++i)
-			elements[i] = sq_value_clone(lary->elements[i]);
+			pages[i] = sq_value_clone(lary->pages[i]);
 
 		for (unsigned i = 0; i < rary->length; ++i)
-			elements[lary->length + i] = sq_value_clone(rary->elements[i]);
+			pages[lary->length + i] = sq_value_clone(rary->pages[i]);
 
-		// sq_array_free(rary);
-		return sq_value_new_array(sq_array_new2(length, elements));
+		// sq_book_free(rary);
+		return sq_value_new_book(sq_book_new2(length, pages));
 	}
 
 	case SQ_TCODEX: {
@@ -384,8 +384,8 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		// for (; i < lhs->length; ++i)
 		// 	elements[i] = sq_value_clone(rary->elements[i]);
 
-		// sq_array_free(rhs);
-		// return sq_value_new_array(lary);
+		// sq_book_free(rhs);
+		// return sq_value_new_book(lary);
 	}
 
 
@@ -409,7 +409,7 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	case SQ_TNUMBER:
 		return sq_value_new_number(AS_NUMBER(lhs) - sq_value_to_number(rhs));
 
-	case SQ_TARRAY:
+	case SQ_TBOOK:
 		todo("set difference");
 
 	case SQ_TCODEX:
@@ -455,8 +455,8 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		return sq_value_new_string(result);
 	}
 
-	case SQ_TARRAY:
-		todo("array multiply");
+	case SQ_TBOOK:
+		todo("book multiply");
 
 	case SQ_TIMITATION: {
 		struct sq_function *mul = sq_imitation_lookup_change(AS_IMITATION(lhs), "*");
@@ -560,8 +560,8 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		// else fallthrough
 	}
 
-	case SQ_TARRAY:
-		return sq_array_to_string(AS_ARRAY(value));
+	case SQ_TBOOK:
+		return sq_book_to_string(AS_ARRAY(value));
 
 	case SQ_TCODEX:
 		todo("codex to string");
@@ -597,8 +597,8 @@ sq_number sq_value_to_number(sq_value value) {
 		// else fallthrough
 	}
 
-	case SQ_TARRAY:
-		return sq_value_new_string(sq_array_to_string(AS_ARRAY(value)));
+	case SQ_TBOOK:
+		return sq_value_new_string(sq_book_to_string(AS_ARRAY(value)));
 
 	case SQ_TFORM:
 	case SQ_TFUNCTION:
@@ -621,7 +621,7 @@ bool sq_value_to_boolean(sq_value value) {
 	case SQ_TSTRING:
 		return *AS_STR(value) ? SQ_TRUE : SQ_FALSE;
 
-	case SQ_TARRAY:
+	case SQ_TBOOK:
 		return AS_ARRAY(value)->length;
 
 	case SQ_TCODEX:
@@ -650,8 +650,8 @@ bool sq_value_to_boolean(sq_value value) {
 
 size_t sq_value_length(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TARRAY:
-		return sq_value_as_array(value)->length;
+	case SQ_TBOOK:
+		return sq_value_as_book(value)->length;
 
 	case SQ_TCODEX:
 		return sq_value_as_codex(value)->length;
@@ -682,13 +682,13 @@ size_t sq_value_length(sq_value value) {
 	}
 }
 
-struct sq_array *sq_value_to_array(sq_value value) {
+struct sq_book *sq_value_to_book(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TARRAY:
+	case SQ_TBOOK:
 		++AS_ARRAY(value)->refcount;
 		return AS_ARRAY(value);
 	default:
-		todo("others to array");
+		todo("others to book");
 	}
 }
 

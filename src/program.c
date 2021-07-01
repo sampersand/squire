@@ -1,4 +1,4 @@
-#include "array.h"
+#include "book.h"
 #include "program.h"
 #include "value.h"
 #include "function.h"
@@ -15,7 +15,7 @@ sq_value create_argv(unsigned argc, const char **argv) {
 	for (unsigned i = 0; i < argc; ++i)
 		args[i] = sq_value_new_string(sq_string_new(strdup(argv[i])));
 
-	return sq_value_new_array(sq_array_new2(argc, args));
+	return sq_value_new_book(sq_book_new2(argc, args));
 }
 
 void sq_program_run(struct sq_program *program, unsigned argc, const char **argv) {

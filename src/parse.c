@@ -131,18 +131,18 @@ static struct index *parse_index(struct primary *primary) {
 	return index;
 }
 
-static struct array *parse_array() {
+static struct book *parse_book() {
 	unsigned len = 0, cap = 8;
-	struct expression **args = xmalloc(sizeof(struct expression[cap]));
+	struct expression **pages = xmalloc(sizeof(struct expression[cap]));
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
 		if (last.kind == SQ_TK_UNDEFINED)
-			die("missing rparen for array initialization");
+			die("missing rparen for book initialization");
 
 		if (len == cap)
-			args = xrealloc(args, sizeof(struct expression[cap *= 2]));
+			pages = xrealloc(pages, sizeof(struct expression[cap *= 2]));
 
-		args[len++] = parse_expression();
+		pages[len++] = parse_expression();
 
 		if (take().kind != SQ_TK_COMMA) {
 			untake();
@@ -150,12 +150,12 @@ static struct array *parse_array() {
 		}
 	}
 
-	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of array");
+	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of book");
 
-	struct array *array = xmalloc(sizeof(struct array));
-	array->nargs = len;
-	array->args = args;
-	return array;
+	struct book *book = xmalloc(sizeof(struct book));
+	book->npages = len;
+	book->pages = pages;
+	return book;
 }
 
 static struct dict *parse_codex() {
@@ -211,14 +211,14 @@ static struct primary *parse_primary() {
 		EXPECT(SQ_TK_RPAREN, "expected a ')' at end of paren expr");
 		break;
 	case SQ_TK_INDEX:
-		primary.kind = SQ_PS_PARRAY;
-		primary.array = xmalloc(sizeof(struct array));
-		primary.array->nargs = 0;
-		primary.array->args = NULL;
+		primary.kind = SQ_PS_PBOOK;
+		primary.book = xmalloc(sizeof(struct book));
+		primary.book->npages = 0;
+		primary.book->pages = NULL;
 		break;
 	case SQ_TK_LBRACKET:
-		primary.kind = SQ_PS_PARRAY;
-		primary.array = parse_array();
+		primary.kind = SQ_PS_PBOOK;
+		primary.book = parse_book();
 		break;
 	case SQ_TK_LBRACE:
 		primary.kind = SQ_PS_PCODEX;

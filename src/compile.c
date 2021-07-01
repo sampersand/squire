@@ -452,17 +452,17 @@ static void compile_switch_statement(struct sq_code *code, struct switch_stateme
 	free(sw);
 }
 
-static unsigned compile_array(struct sq_code *code, struct array *array) {
-	unsigned indices[array->nargs];
+static unsigned compile_book(struct sq_code *code, struct book *book) {
+	unsigned indices[book->npages];
 
-	for (unsigned i = 0; i < array->nargs; ++i)
-		indices[i] = compile_expression(code, array->args[i]);
+	for (unsigned i = 0; i < book->npages; ++i)
+		indices[i] = compile_expression(code, book->pages[i]);
 
 	set_opcode(code, SQ_OC_INT);
-	set_index(code, SQ_INT_ARRAY_NEW);
-	set_index(code, array->nargs);
+	set_index(code, SQ_INT_BOOK_NEW);
+	set_index(code, book->npages);
 
-	for (unsigned i = 0; i < array->nargs; ++i)
+	for (unsigned i = 0; i < book->npages; ++i)
 		set_index(code, indices[i]);
 
 	unsigned index = next_local(code);
@@ -516,8 +516,8 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		result = compile_expression(code, primary->expr);
 		break;
 
-	case SQ_PS_PARRAY:
-		result = compile_array(code, primary->array);
+	case SQ_PS_PBOOK:
+		result = compile_book(code, primary->book);
 		break;
 
 	case SQ_PS_PCODEX:
@@ -756,7 +756,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("genus",    SQ_INT_KINDOF, 1);
 	BUILTIN_FN("hex",      SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
 	BUILTIN_FN("inquire",  SQ_INT_PROMPT, 0);
-	BUILTIN_FN("random",   SQ_INT_RANDOM, 0);
+	BUILTIN_FN("gamble",   SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert",   SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete",   SQ_INT_ARRAY_DELETE, 2); // `slay`?
 	BUILTIN_FN("roman",    SQ_INT_ROMAN, 1);
