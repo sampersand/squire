@@ -66,9 +66,12 @@ impl Dump for BuiltinJourney {
 
 
 impl IsEqual for BuiltinJourney {
-	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
-		let _ = (rhs, vm);
-		todo!();
+	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
+		if let Value::BuiltinJourney(rhs) = rhs {
+			Ok(Arc::ptr_eq(&self.0, &rhs.0))
+		} else {
+			Ok(false)
+		}
 	}
 }
 
@@ -79,8 +82,11 @@ impl Call for BuiltinJourney {
 }
 
 impl GetAttr for BuiltinJourney {
-	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (attr, vm); todo!();
+	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
+		match attr {
+			"name" => Ok(Value::from(self.name().to_string())),
+			_ => Err(RuntimeError::UnknownAttribute(attr.to_string()))
+		}
 	}
 }
 

@@ -76,11 +76,11 @@ impl<I: Iterator<Item=char>> MacroTokenizer<'_, '_, I> {
 
 	// 	while let Some(arg) = self.
 
-	// 	todo!();
+	// 	unimplemented!();
 	// }
 
 	fn parse_henceforth(&mut self) -> Result<()> {
-		todo!()
+		unimplemented!()
 		// let variable =
 		// 	self.next_macro_variable()
 		// 		.ok_or_else(|| self.0.error("missing macro variable after 'henceforth'"))?;

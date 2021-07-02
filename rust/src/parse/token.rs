@@ -377,7 +377,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		if let Some(identifier) = self.next_identifier() {
 			// Some(self.parse_macro_invocation_for(&identifier))
 			let _ = identifier;
-			todo!();
+			unimplemented!();
 		} else {
 			Some(Err(self.error("no macro invocation supplied")))
 		}
@@ -393,7 +393,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 	}
 
 	fn parse_macro_variable(&mut self) -> Result<Token> {
-		todo!();
+		unimplemented!();
 	}
 
 	fn next_from_stream(&mut self) -> Option<Result<Token>> {

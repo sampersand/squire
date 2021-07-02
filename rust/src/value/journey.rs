@@ -96,8 +96,12 @@ impl Call for Journey {
 }
 
 impl GetAttr for Journey {
-	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (attr, vm); todo!();
+	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
+		match attr {
+			"name" => Ok(self.0.name.clone().into()),
+			"args" => Ok(self.0.args.iter().cloned().map(Value::from).collect::<Vec<_>>().into()),
+			// "is_method" (?)
+			_ => Err(RuntimeError::UnknownAttribute(attr.to_string()))
+		}
 	}
 }
-

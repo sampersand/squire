@@ -176,7 +176,7 @@ impl StackFrame<'_> {
 	}
 
 	fn do_comefrom(&mut self) -> Result<()> {
-		todo!();
+		unimplemented!();
 	}
 
 	fn do_throw(&mut self) -> Result<()> {

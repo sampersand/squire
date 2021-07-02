@@ -51,6 +51,14 @@ impl From<Vec<Value>> for Book {
 	}
 }
 
+impl From<Vec<Value>> for Value {
+	#[inline]
+	fn from(vec: Vec<Value>) -> Self {
+		Book::from(vec).into()
+	}
+}
+
+
 impl Book {
 	pub fn new() -> Self {
 		Self(Arc::new(RwLock::new(Vec::new())))

@@ -9,7 +9,7 @@ impl Parsable for Literal {
 	const TYPE_NAME: &'static str = "<literal>";
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		// todo: text interpolation...?
+		// unimplemented: text interpolation...?
 
 		match parser.guard(TokenKind::Literal)? {
 			Some(Token::Literal(literal)) => Ok(Some(Self(literal))),
@@ -34,7 +34,7 @@ impl Compilable for Literal {
 				TokenLiteral::Boolean(boolean) => compiler.get_constant(Value::Veracity(boolean)),
 				TokenLiteral::Numeral(numeral) => compiler.get_constant(Value::Numeral(numeral)),
 				TokenLiteral::Text(text) => compiler.get_constant(Value::Text(text)),
-				TokenLiteral::TextInterpolation(_, _) => todo!()
+				TokenLiteral::TextInterpolation(_, _) => unimplemented!()
 			};
 
 		if let Some(target) = target {

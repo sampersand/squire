@@ -145,7 +145,7 @@ impl Dump for Form {
 impl IsEqual for Form {
 	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
 		if let Value::Form(_form) = rhs {
-			todo!();
+			unimplemented!();
 		} else {
 			Ok(false)
 		}

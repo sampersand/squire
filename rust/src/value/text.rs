@@ -220,7 +220,7 @@ impl Compare for Text {
 impl GetIndex for Text {
 	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
 		let _ = (key, vm);
-		todo!();
+		unimplemented!();
 	}
 }
 

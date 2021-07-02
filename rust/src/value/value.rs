@@ -42,12 +42,6 @@ impl Default for Value {
 	}
 }
 
-impl PartialOrd for Value {
-	fn partial_cmp(&self, _rhs: &Self) -> Option<std::cmp::Ordering> {
-		todo!()
-	}
-}
-
 impl Debug for Value {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		match self {
@@ -405,8 +399,6 @@ impl GetAttr for Value {
 			"to_book" => Ok(BoundJourney::new(self.clone(), "to_book").into()),
 			"to_codex" => Ok(BoundJourney::new(self.clone(), "to_codex").into()),
 			_ => match self {
-				Self::Ni => Ni.get_attr(attr, vm),
-				Self::Veracity(veracity) => veracity.get_attr(attr, vm),
 				Self::Numeral(numeral) => numeral.get_attr(attr, vm),
 				Self::Text(text) => text.get_attr(attr, vm),
 
@@ -418,7 +410,7 @@ impl GetAttr for Value {
 				Self::Journey(journey) => journey.get_attr(attr, vm),
 				Self::BuiltinJourney(builtin) => builtin.get_attr(attr, vm),
 				Self::BoundJourney(bound) => bound.get_attr(attr, vm),
-				// _ => Err(RuntimeError::UnknownAttribute(attr.to_string()),
+				_ => Err(RuntimeError::UnknownAttribute(attr.to_string())),
 			},
 		}
 	}

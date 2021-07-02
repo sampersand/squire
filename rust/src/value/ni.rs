@@ -1,7 +1,7 @@
 use std::fmt::{self, Display, Formatter};
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Veracity, Numeral, Text, Book, Codex};
-use crate::value::ops::{ConvertTo, Dump, IsEqual, GetAttr};
+use crate::value::ops::{ConvertTo, Dump, IsEqual};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Ni;
@@ -53,11 +53,5 @@ impl ConvertTo<Codex> for Ni {
 impl IsEqual for Ni {
 	fn is_equal(&self, _: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
 		Ok(true)
-	}
-}
-
-impl GetAttr for Ni {
-	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (attr, vm); todo!();
 	}
 }

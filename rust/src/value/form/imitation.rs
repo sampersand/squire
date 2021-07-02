@@ -243,7 +243,7 @@ impl IsEqual for Imitation {
 	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> {
 		const NAME: &str = "==";
 
-		// todo: if `==` method doesn't exist, use the default one.
+		// unimplemented: if `==` method doesn't exist, use the default one.
 		expect_a!(self.call_method(NAME, Args::new(&[rhs.clone()]), vm)?, Veracity, NAME)
 	}
 }
@@ -251,7 +251,7 @@ impl IsEqual for Imitation {
 impl Compare for Imitation {
 	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>> {
 		let _ = (rhs, vm);
-		todo!();
+		unimplemented!();
 		// expect_a!(self.call_method(NAME, Args::default(), vm)?, Veracity, NAME)
 
 		// self.call_method("?", Args::new(&[rhs.clone()]), vm)
@@ -288,7 +288,7 @@ impl GetAttr for Imitation {
 impl SetAttr for Imitation {
 	fn set_attr(&self, attr: &str, value: Value, _: &mut Vm) -> Result<()> {
 		let _ = (attr, value);
-		todo!();
+		unimplemented!();
 		// // in the future, we might want to have getters/setters
 		// self.get_matter(attr)
 		// 	.or_else(|| self.get_change(attr).map(|method| Value::from(Value::Journey(method.clone()))))

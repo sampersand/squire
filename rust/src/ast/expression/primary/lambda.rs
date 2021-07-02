@@ -27,6 +27,6 @@ impl Parsable for Lambda {
 
 impl Compilable for Lambda {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		let _ = (target, compiler); todo!();
+		let _ = (target, compiler); unimplemented!();
 	}
 }

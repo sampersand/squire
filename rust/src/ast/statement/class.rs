@@ -37,7 +37,7 @@ impl Class {
 				}
 			)?;
 
-		// todo: error on duplicate field names
+		// unimplemented: error on duplicate field names
 
 		for (name, init) in essences {
 			if self.essences.contains_key(&name) {
