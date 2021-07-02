@@ -5,7 +5,7 @@ use crate::value::ops::{
 	ConvertTo, Dump,
 	Add, Subtract,
 	IsEqual, Compare,
-	GetIndex, SetIndex
+	GetIndex, SetIndex, GetAttr
 };
 
 use std::cmp::Ordering;
@@ -123,6 +123,13 @@ impl Hash for Codex {
 	}
 }
 
+impl From<Codex> for Value {
+	#[inline]
+	fn from(codex: Codex) -> Self {
+		Self::Codex(codex)
+	}
+}
+
 impl Dump for Codex {
 	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError> {
 		to.push('{');
@@ -206,69 +213,9 @@ impl SetIndex for Codex {
 	}
 }
 
-
-
-impl Codex {
-	pub fn try_eql(&self, rhs: &Self, vm: &mut Vm) -> Result<bool, RuntimeError> {
-		// todo: arc ptr eq
-		if (self as *const _) == (rhs as *const _) {
-			return Ok(true);
-		} else if self.len() != rhs.len() {
-			return Ok(false);
-		}
-
-		let _ = vm; todo!();
-		// for (key, value) in self.iter() {
-		// 	if !lhs.try_eql(rhs, vm)? {
-		// 		return Ok(false)
-		// 	}
-		// }
-
-		// Ok(true)
+impl GetAttr for Codex {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (attr, vm); todo!();
 	}
-
-	pub fn try_partial_cmp(&self, rhs: &Self, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
-		let _ = (rhs, vm); todo!()
-	}
-
 }
-// impl PartialOrd for Codex {
-// 	fn partial_cmp(&self, rhs: &Self) -> Option<Ordering> {
-// 		if (self as *const _) == (rhs as *const _) {
-// 			return Some(Ordering::Equal);
-// 		}
-
-// 		let mut self_contains_keys_rhs_doesnt = false;
-
-// 		// if at least one key in `self` doesn't exist in `rhs`, we're either
-// 		// greater than `rhs`, or we cannot compare (as they have different elements.)
-// 		for key in self.0.keys() {
-// 			if !rhs.contains_key(key) {
-// 				self_contains_keys_rhs_doesnt = true;
-// 			}
-// 		}
-
-// 		for key in rhs.0.keys {
-// 			if !self.contains_key(key) {
-// 				if self_contains_keys_rhs_doesnt {
-// 					return None; // Each has at least one key the other doesnt have.
-// 				} else {
-// 					return Some(Ordering::Less) // rhs has a key we do not
-// 				}
-// 			}
-// 		}
-
-// 		if self_contains_keys_rhs_doesnt {
-// 			Some(Ordering::Greater) // we have a key rhs doesnt
-// 		} else {
-// 			Some(Ordering::Equal) // we both have the same keys and values
-// 		}
-// 		if self.0.keys() == rhs.0.keys() {
-// 			return Ordering
-// 		}
-// 		Some(self.cmp(rhs))
-// 	}
-// }
-
-
 

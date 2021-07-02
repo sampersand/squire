@@ -20,14 +20,6 @@ impl Dump for Ni {
 	}
 }
 
-
-impl GetAttr for Ni {
-	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = attr;
-		todo!();
-	}
-}
-
 impl ConvertTo<Veracity> for Ni {
 	fn convert(&self, _: &mut Vm) -> Result<Veracity, RuntimeError> {
 		Ok(Veracity::default())
@@ -64,3 +56,8 @@ impl IsEqual for Ni {
 	}
 }
 
+impl GetAttr for Ni {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (attr, vm); todo!();
+	}
+}

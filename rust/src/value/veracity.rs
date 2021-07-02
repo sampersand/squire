@@ -1,6 +1,6 @@
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Numeral, Text};
-use crate::value::ops::{ConvertTo, IsEqual, Compare, Dump};
+use crate::value::ops::{ConvertTo, IsEqual, Compare, Dump, GetAttr};
 
 pub type Veracity = bool;
 
@@ -46,5 +46,11 @@ impl IsEqual for Veracity {
 impl Compare for Veracity {
 	fn compare(&self, rhs: &Value, vm: &mut Vm) -> Result<Option<std::cmp::Ordering>, RuntimeError> {
 		Ok(self.partial_cmp(&rhs.convert_to::<Self>(vm)?))
+	}
+}
+
+impl GetAttr for Veracity {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (attr, vm); todo!();
 	}
 }

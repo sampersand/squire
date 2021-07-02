@@ -1,25 +1,15 @@
-#![allow(unused)]
 use std::sync::Arc;
 use parking_lot::RwLock;
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Veracity, Numeral, Text, Codex};
 use std::hash::{Hash, Hasher};
 use std::fmt::{self, Debug, Display, Formatter};
-use std::ops::{
-	Deref, DerefMut,
-	Add, AddAssign,
-	Sub, SubAssign,
-	Mul, MulAssign,
-	// BitAnd, BitAndAssign,
-	// BitOr, BitOrAssign,
-	// BitXor, BitXorAssign,
-	Index, IndexMut
-};
+use std::ops::{Deref, DerefMut};
 use crate::value::ops::{
 	ConvertTo,
 	Add as OpsAdd, Subtract, Multiply, IsEqual, Compare,
 	GetIndex, SetIndex,
-	Dump
+	Dump, GetAttr
 };
 
 #[derive(Clone, Default)]
@@ -141,21 +131,20 @@ impl Book {
 		}
 	}
 
-	pub fn get(&self, mut index: isize) -> Result<Option<Value>, RuntimeError> {
+	pub fn get(&self, index: isize) -> Result<Option<Value>, RuntimeError> {
 		let slice = &*self.as_slice();
+		let len = slice.len() as isize;
 
-		if index < 0 {
-			index += slice.len() as isize;
-
-			if index < 0 {
-				return Ok(None);
-			}
+		match index {
+			0 => return Err(RuntimeError::ArgumentError("cannot index by zero".into())),
+			_ if (1..=len).contains(&index) => Ok(Some(slice[index as usize - 1].clone())),
+			_ if (-len..=-1).contains(&index) => Ok(Some(slice[(index + len) as usize].clone())),
+			_ if index.is_negative() => return Err(RuntimeError::ArgumentError("index out of bounds".into())),
+			_ => Ok(None)
 		}
-
-		Ok(slice.get(index as usize).cloned())
 	}
 
-	pub fn set(&self, mut index: isize, value: Value) -> Result<(), RuntimeError> {
+	pub fn set(&self, index: isize, value: Value) -> Result<(), RuntimeError> {
 		let mut vec = self.as_vec_mut();
 		let len = vec.len() as isize;
 
@@ -437,9 +426,9 @@ impl Compare for Book {
 }
 
 impl GetIndex for Book {
-	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+	fn get_index(&self, key: &Value, _: &mut Vm) -> Result<Value, RuntimeError> {
 		match key {
-			Value::Book(book) => todo!("index into a book with another one."),
+			Value::Book(_book) => todo!("index into a book with another one."),
 			Value::Numeral(numeral) => Ok(self.get(numeral.get() as isize)?.unwrap_or_default()),
 			key => Err(RuntimeError::InvalidOperand { kind: key.kind(), func: "Book.[]" })
 		}
@@ -448,11 +437,20 @@ impl GetIndex for Book {
 
 
 impl SetIndex for Book {
-	fn set_index(&self, key: Value, value: Value, vm: &mut Vm) -> Result<(), RuntimeError> {
+	fn set_index(&self, key: Value, value: Value, _: &mut Vm) -> Result<(), RuntimeError> {
 		match key {
-			Value::Book(book) => todo!("index into a book with another one."),
+			Value::Book(_book) => todo!("index into a book with another one."),
 			Value::Numeral(numeral) => self.set(numeral.get() as isize, value),
 			key => Err(RuntimeError::InvalidOperand { kind: key.kind(), func: "Book.[]=" })
+		}
+	}
+}
+
+impl GetAttr for Book {
+	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
+		match attr {
+			"pages" | "count" => Ok(Numeral::new(self.len() as i64).into()),
+			other => Err(RuntimeError::UnknownAttribute(other.to_string()))
 		}
 	}
 }

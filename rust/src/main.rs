@@ -50,11 +50,11 @@ fn main() {
 // # @henceforth $foo=34
 // #       "a\(yay + 4)[\]\(34)!", world
 //     "#*/);
-    let input = std::env::args().skip(1).next().unwrap_or(r##"
-x=gamble();
+    // skip 2, bc first one is `-e`....
+    let input = std::env::args().skip(2).next().unwrap_or(r##"
 x=[1];
 x[1]=50;
-proclaim(x);
+proclaim(x,x,x);
 __END__
 form Foo {
     matter a, b;

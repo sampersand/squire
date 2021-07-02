@@ -1,6 +1,7 @@
 use std::hash::{Hash, Hasher};
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use std::collections::HashMap;
 use crate::runtime::{Vm, Args, Error as RuntimeError};
 use crate::value::{Value, Journey};
@@ -96,10 +97,6 @@ impl Form {
 		&self.0.name
 	}
 
-	pub fn get_essence(&self, name: &str) -> Option<Value> {
-		self.0.essences.get(name).map(|x| x.lock().unwrap().clone())
-	}
-
 	pub fn get_recall(&self, name: &str) -> Option<&Journey> {
 		self.0.recalls.get(name)
 	}
@@ -117,7 +114,7 @@ impl Form {
 			let fields = vec![Default::default(); self.0.matter_names.len()];
 			let imitation = Value::Imitation(Imitation::new(self.clone(), fields).into());
 
-			args.add_me(imitation.clone());
+			args.add_soul(imitation.clone());
 			imitate.call(args, vm)?;
 
 			return Ok(imitation);
@@ -129,12 +126,6 @@ impl Form {
 			Ok(Value::Imitation(Imitation::new(self.clone(), args._as_slice().to_owned()).into()))
 		}
 	}
-
-	// pub fn get_essence(&self, name: &str) -> Option<&Value> {
-
-	// }
-
-	// pub fn get_
 }
 
 impl Hash for Form {
@@ -163,22 +154,29 @@ impl IsEqual for Form {
 
 impl Call for Form {
 	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (args, vm);
-		todo!();
+		self.imitate(args, vm)
 	}
 }
 
 impl GetAttr for Form {
-	fn get_attr(&self, attr: &str, _vm: &mut Vm) -> Result<Value, RuntimeError> {
-		self.get_essence(attr)
-			.or_else(|| self.get_recall(attr).map(|recall| Value::Journey(recall.clone())))
-			.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
+	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
+		if let Some(essence) = self.0.essences.get(attr) {
+			Ok(essence.lock().clone())
+		} else if let Some(recall) = self.0.recalls.get(attr) {
+			Ok(recall.clone().into())
+		} else {
+			Err(RuntimeError::UnknownAttribute(attr.to_string()))
+		}
 	}
 }
 
 impl SetAttr for Form {
 	fn set_attr(&self, attr: &str, value: Value, _: &mut Vm) -> Result<(), RuntimeError> {
-		let _ = (attr, value);
-		todo!();
+		if let Some(essence) = self.0.essences.get(attr) {
+			*essence.lock() = value;
+			Ok(())
+		} else {
+			Err(RuntimeError::UnknownAttribute(attr.to_string()))
+		}
 	}
 }

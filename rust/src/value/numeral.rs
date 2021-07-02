@@ -6,7 +6,8 @@ use crate::value::{Value, Veracity, Text};
 use crate::value::ops::{
 	ConvertTo, Dump,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
-	IsEqual, Compare
+	IsEqual, Compare,
+	GetAttr
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -177,6 +178,12 @@ impl Compare for Numeral {
 	}
 }
 
+impl GetAttr for Numeral {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (attr, vm); todo!();
+	}
+}
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RomanNumeralParseError {
@@ -321,83 +328,56 @@ impl Numeral {
 		Ok(Self::new(numeral))
 	}
 
-	pub fn from_str_roman(_input: &str) -> Result<Self, NumeralParseError> {
-		todo!();
+	pub fn from_str_roman(input: &str) -> Result<Self, NumeralParseError> {
+		let input = input.trim();
+
+		// todo: make this work with ascii and unicode
+		let mut number = 0_i64;
+		let mut stage = RomanNumeral::N;
+
+		let mut chars = input.chars();
+
+		let is_negative =
+			if chars.next() == Some('-') {
+				true
+			} else {
+				chars = input.chars();
+				false
+			};
+
+		if input.chars().next() == Some('N') && !input.chars().skip(1).next().map_or(false, char::is_alphanumeric) {
+			return Ok(Self::new(0));
+		}
+
+		while let Some(chr) = chars.next() {
+			let parsed = 
+				match chr {
+					'I' => RomanNumeral::I,
+					'V' => RomanNumeral::V,
+					'X' => RomanNumeral::X,
+					'L' => RomanNumeral::L,
+					'C' => RomanNumeral::C,
+					'D' => RomanNumeral::D,
+					'M' => RomanNumeral::M,
+					'_' => continue,
+					_ => return Err(NumeralParseError::BadTrailingChar(chr))
+				};
+
+			number += parsed as i64;
+
+			if stage == RomanNumeral::N || parsed <= stage {
+				stage = parsed;
+			} else {
+				number -= (stage as i64) * 2;
+			}
+		}
+
+		if is_negative {
+			number = -number;
+		}
+
+		Ok(Self::new(number))
 	}
-// // 	pub fn parse_from_arabic_str(input: &mut &str) -> Option<Self> {
-// 		let mut chars = input.trim_start().chars();
-// 		let mut numeral = 0;
-// 		let mut stage = RomanNumeral::N;
-// 		let mut is_neg = false;
-
-// 		match chars.next()? {
-// 			'-' => is_neg = true,
-// 			chr if chr == RomanNumeral::N.chr() => {
-// 				if chars.next()? == RomanNumeral::N.chr() {
-// 					// strip all trailing `_`s, then check to see if we end with an alphanumeric.
-// 					// if we do, it's not an arabic string.
-// 					while let Some(chr) = chars.next() {
-// 						match chr {
-// 							'_' => { /* find the next non-underscore character */ },
-// 							_ if chr.is_alphanumeric() => return None, // alphanumeric at the end = dont parse
-// 							_ => break // alphanumeric
-// 						}
-// 					}
-
-// 					*input = chars.as_str();
-// 					return Some(Self::new(0));
-// 				},
-// 			roman if
-
-
-// 		// 	sq_number number = 0;
-// // 	enum roman_numeral stage = 0, parsed;
-
-// 		while let Some(chr) = chars.next() {
-// 			if chr == '_' {
-// 				continue; // ignore `_` in roman numerals
-// 			}
-
-// 			let numeral = 
-// 				if let Some(numeral) = RomanNumeral::from_char(chr) {
-// 					numeral
-// 				} else if chr.is_alphanumeric() {
-// 					return None; // trailing alphanumerics means not a roman numeral literal.
-// 				};
-
-// 			number += numeral as u64;
-// // 	while (true) {
-// // 		switch(*input) {
-// // 		case 'I': parsed = SQ_TK_ROMAN_I; break;
-// // 		case 'V': parsed = SQ_TK_ROMAN_V; break;
-// // 		case 'X': parsed = SQ_TK_ROMAN_X; break;
-// // 		case 'L': parsed = SQ_TK_ROMAN_L; break;
-// // 		case 'C': parsed = SQ_TK_ROMAN_C; break;
-// // 		case 'D': parsed = SQ_TK_ROMAN_D; break;
-// // 		case 'M': parsed = SQ_TK_ROMAN_M; break;
-// // 		case '_': continue; // ignore `_` in roman numeral literals
-// // 		default:
-// // 			// followed by any other alphanumerics, we aren't a roman numeral.
-// // 			if (isalnum(*input)) return -1;
-// // 			goto done;
-// // 		}
-
-
-// // 		number += parsed;
-
-// // 		if (stage == 0 || parsed <= stage) stage = parsed;
-// // 		else number -= stage * 2;
-
-// // 		++input;
-// // 	}
-
-// // done:
-
-// // 	if (output)
-// // 		*output = input;
-
-// // 	return number;
-
 
 	// we'll output unicode regardless of the roman numeral
 	pub fn is_roman_numeral(chr: char) -> bool {
@@ -513,7 +493,6 @@ impl Display for RomanDisplay {
 		Ok(())
 	}
 }
-
 
 impl FromStr for Numeral {
 	type Err = NumeralParseError;

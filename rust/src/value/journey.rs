@@ -1,6 +1,6 @@
 use crate::runtime::{CodeBlock, Args, Vm, Error as RuntimeError};
 use crate::value::Value;
-use crate::value::ops::{Dump, IsEqual, Call};
+use crate::value::ops::{Dump, IsEqual, Call, GetAttr};
 use std::hash::{Hash, Hasher};
 use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
@@ -57,6 +57,13 @@ impl Journey {
 	}
 }
 
+impl From<Journey> for Value {
+	#[inline]
+	fn from(journey: Journey) -> Self {
+		Self::Journey(journey)
+	}
+}
+
 impl Dump for Journey {
 	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
 		to.push_str(&format!("Journey({}: {:p})", self.name(), Arc::as_ptr(&self.0)));
@@ -77,7 +84,7 @@ impl IsEqual for Journey {
 
 impl Call for Journey {
 	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		if args._as_slice().len() != self.0.args.len() {
+		if args._as_slice().len() == self.0.args.len() {
 			return self.0.codeblock.run(args, vm)
 		}
 
@@ -87,3 +94,10 @@ impl Call for Journey {
 		})
 	}
 }
+
+impl GetAttr for Journey {
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let _ = (attr, vm); todo!();
+	}
+}
+

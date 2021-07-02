@@ -3,7 +3,6 @@ use super::{*, ops::*};
 use crate::runtime::{Vm, Result, Error as RuntimeError, Args};
 use std::fmt::{self, Debug, Formatter};
 
-
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Value {
 	Ni,
@@ -19,6 +18,7 @@ pub enum Value {
 	Imitation(Imitation),
 	Journey(Journey),
 	BuiltinJourney(BuiltinJourney),
+	BoundJourney(BoundJourney)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -32,7 +32,8 @@ pub enum ValueKind {
 	Codex,
 	Imitation(Form),
 	Journey,
-	BuiltinJourney
+	BuiltinJourney,
+	BoundJourney
 }
 
 impl Default for Value {
@@ -61,7 +62,8 @@ impl Debug for Value {
 			Self::Form(form) => Debug::fmt(&form, f),
 			Self::Imitation(imitation) => Debug::fmt(&imitation, f),
 			Self::Journey(journey) => Debug::fmt(&journey, f),
-			Self::BuiltinJourney(builtinjourney) => Debug::fmt(&builtinjourney, f),
+			Self::BuiltinJourney(builtin) => Debug::fmt(&builtin, f),
+			Self::BoundJourney(bound) => Debug::fmt(&bound, f),
 		}
 	}
 }
@@ -114,6 +116,7 @@ impl Value {
 			Self::Imitation(imitation) => ValueKind::Imitation(imitation.form().clone()),
 			Self::Journey(_) => ValueKind::Journey,
 			Self::BuiltinJourney(_) => ValueKind::BuiltinJourney,
+			Self::BoundJourney(_) => ValueKind::BoundJourney,
 		}
 	}
 }
@@ -130,7 +133,8 @@ impl Dump for Value {
 			Self::Form(form) => form.dump(to, vm),
 			Self::Imitation(imitation) => imitation.dump(to, vm),
 			Self::Journey(journey) => journey.dump(to, vm),
-			Self::BuiltinJourney(builtinjourney) => builtinjourney.dump(to, vm),
+			Self::BuiltinJourney(builtin) => builtin.dump(to, vm),
+			Self::BoundJourney(bound) => bound.dump(to, vm),
 		}
 	}
 }
@@ -214,7 +218,8 @@ impl Negate for Value {
 
 impl Add for Value {
 	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
-		if matches!(rhs, Self::Text(_)) {
+		// if rhs is a string, convert us to a string and concat them.
+		if matches!(rhs, Self::Text(_)) && !matches!(self, Self::Text(_)) {
 			return Self::Text(self.convert_to::<Text>(vm)?).add(rhs, vm);
 		}
 
@@ -226,30 +231,6 @@ impl Add for Value {
 			Self::Imitation(imitation) => imitation.add(rhs, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "+" })
 		}
-/*		// if the rhs is a string, convert both to a string.
-		if let Self::Text(rhs) = rhs {
-			return Ok(Self::Text(self.to_text(vm)? + rhs));
-		}
-
-		match self {
-			Self::Numeral(numeral) => numeral.add(rhs.to_numeral(vm)?, vm).map(Self::Numeral),
-			Self::Text(text) => Ok(Self::Text(text.clone() + rhs.to_text(vm)?)),
-			Self::Book(array) =>
-				if let Self::Book(rhs) = rhs {
-					Ok(Self::Book(/*Arc::new*/(/* * */*array).clone() + (/* * */*rhs).clone()))
-				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "+" })
-				},
-			Self::Codex(codex) =>
-				if let Self::Codex(rhs) = rhs {
-					Ok(Self::Codex(/*Arc::new*/(/* * */*codex).clone() + (/* * */*rhs).clone()))
-				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "+" })
-				},
-
-			Self::Imitation(imitation) => imitation.try_add(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "+" })
-		}*/
 	}
 }
 
@@ -262,25 +243,6 @@ impl Subtract for Value {
 			Self::Imitation(imitation) => imitation.subtract(rhs, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "-" })
 		}
-
-/*		match self {
-			Self::Numeral(numeral) => Ok(Self::Numeral(*numeral - rhs.to_numeral(vm)?)),
-			Self::Book(array) =>
-				if let Self::Book(rhs) = rhs {
-					Ok(Self::Book(/*Arc::new*/(/* * */*array).clone() - rhs.iter()))
-				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "-" })
-				},
-			Self::Codex(codex) =>
-				if let Self::Codex(rhs) = rhs {
-					Ok(Self::Codex(/*Arc::new*/(/* * */*codex).clone() - rhs.iter().map(|(key, _)| key)))
-				} else {
-					Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "-" })
-				},
-
-			Self::Imitation(imitation) => imitation.try_sub(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "-" })
-		}*/
 	}
 }
 
@@ -293,19 +255,6 @@ impl Multiply for Value {
 			Self::Imitation(imitation) => imitation.multiply(rhs, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "*" })
 		}
-
-/*		match self {
-			Self::Numeral(numeral) => Ok(Self::Numeral(*numeral * rhs.to_numeral(vm)?)),
-			Self::Text(text) => 
-				if let Ok(amount) = <usize as std::convert::TryFrom<i64>>::try_from(rhs.to_numeral(vm)?.get()) {
-					Ok(Self::Text(text.clone() * amount))
-				} else {
-					Err(RuntimeError::ValueError("cannot repeat a text negative times.".to_string()))
-				},
-
-			Self::Imitation(imitation) => imitation.try_mul(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "*" })
-		}*/
 	}
 }
 
@@ -316,15 +265,6 @@ impl Divide for Value {
 			Self::Imitation(imitation) => imitation.divide(rhs, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "/" })
 		}
-/*		match self {
-			Self::Numeral(numeral) => 
-				match rhs.to_numeral(vm)?.get() {
-					0 => Err(RuntimeError::DivisionByZero),
-					other => Ok(Self::Numeral(*numeral / other)),
-				},
-			Self::Imitation(imitation) => imitation.try_div(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "/" })
-		}*/
 	}
 }
 
@@ -336,16 +276,6 @@ impl Modulo for Value {
 			Self::Imitation(imitation) => imitation.modulo(rhs, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "%" })
 		}
-
-/*		match self {
-			Self::Numeral(numeral) => 
-				match rhs.to_numeral(vm)?.get() {
-					0 => Err(RuntimeError::DivisionByZero),
-					other => Ok(Self::Numeral(*numeral % other)),
-				},
-			Self::Imitation(imitation) => imitation.try_rem(rhs, vm),
-			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "%" })
-		}*/
 	}
 }
 
@@ -392,7 +322,8 @@ impl IsEqual for Value {
 			Self::Form(form) => form.is_equal(rhs, vm),
 			Self::Imitation(imitation) => imitation.is_equal(rhs, vm),
 			Self::Journey(journey) => journey.is_equal(rhs, vm),
-			Self::BuiltinJourney(builtinjourney) => builtinjourney.is_equal(rhs, vm)
+			Self::BuiltinJourney(builtin) => builtin.is_equal(rhs, vm),
+			Self::BoundJourney(bound) => bound.is_equal(rhs, vm),
 		}
 	}
 }
@@ -418,6 +349,7 @@ impl Call for Value {
 			Self::Form(form) => form.call(args, vm),
 			Self::Imitation(imitation) => imitation.call(args, vm),
 			Self::BuiltinJourney(builtin) => builtin.call(args, vm),
+			Self::BoundJourney(bound) => bound.call(args, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "()" })
 		}
 	}
@@ -449,19 +381,55 @@ impl SetIndex for Value {
 
 impl GetAttr for Value {
 	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value> {
-		let _ = (attr, vm); todo!();
-/*		match self {
-			Self::Ni => Ni.get_attr(attr, vm),
-			Self::Form(form) => form.get_attr(attr, vm),
-			Self::Imitation(imitation) => imitation.get_attr(attr, vm),
-			_ => todo!()
-		}*/
+		match attr {
+			"-@" => Ok(BoundJourney::new(self.clone(), "-@").into()),
+			"+" => Ok(BoundJourney::new(self.clone(), "+").into()),
+			"-" => Ok(BoundJourney::new(self.clone(), "-").into()),
+			"*" => Ok(BoundJourney::new(self.clone(), "*").into()),
+			"/" => Ok(BoundJourney::new(self.clone(), "/").into()),
+			"%" => Ok(BoundJourney::new(self.clone(), "%").into()),
+			"**" => Ok(BoundJourney::new(self.clone(), "**").into()),
+			"!" => Ok(BoundJourney::new(self.clone(), "!").into()),
+			"==" => Ok(BoundJourney::new(self.clone(), "==").into()),
+			"!=" => Ok(BoundJourney::new(self.clone(), "!=").into()),
+			"<" => Ok(BoundJourney::new(self.clone(), "<").into()),
+			"<=" => Ok(BoundJourney::new(self.clone(), "<=").into()),
+			">" => Ok(BoundJourney::new(self.clone(), ">").into()),
+			">=" => Ok(BoundJourney::new(self.clone(), ">=").into()),
+			"<=>" => Ok(BoundJourney::new(self.clone(), "<=>").into()),
+			"[]" => Ok(BoundJourney::new(self.clone(), "[]").into()),
+			"[]=" => Ok(BoundJourney::new(self.clone(), "[]=").into()),
+			"to_veracity" => Ok(BoundJourney::new(self.clone(), "to_veracity").into()),
+			"to_numeral" => Ok(BoundJourney::new(self.clone(), "to_numeral").into()),
+			"to_text" => Ok(BoundJourney::new(self.clone(), "to_text").into()),
+			"to_book" => Ok(BoundJourney::new(self.clone(), "to_book").into()),
+			"to_codex" => Ok(BoundJourney::new(self.clone(), "to_codex").into()),
+			_ => match self {
+				Self::Ni => Ni.get_attr(attr, vm),
+				Self::Veracity(veracity) => veracity.get_attr(attr, vm),
+				Self::Numeral(numeral) => numeral.get_attr(attr, vm),
+				Self::Text(text) => text.get_attr(attr, vm),
+
+				Self::Book(book) => book.get_attr(attr, vm),
+				Self::Codex(codex) => codex.get_attr(attr, vm),
+
+				Self::Form(form) => form.get_attr(attr, vm),
+				Self::Imitation(imitation) => imitation.get_attr(attr, vm),
+				Self::Journey(journey) => journey.get_attr(attr, vm),
+				Self::BuiltinJourney(builtin) => builtin.get_attr(attr, vm),
+				Self::BoundJourney(bound) => bound.get_attr(attr, vm),
+				// _ => Err(RuntimeError::UnknownAttribute(attr.to_string()),
+			},
+		}
 	}
 }
 
 impl SetAttr for Value {
 	fn set_attr(&self, attr: &str, value: Value, vm: &mut Vm) -> Result<()> {
-		let _ = (attr, value, vm);
-		todo!();
+		match self {
+			Self::Form(form) => form.set_attr(attr, value, vm),
+			Self::Imitation(imitation) => imitation.set_attr(attr, value, vm),
+			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: ".=" })
+		}
 	}
 }

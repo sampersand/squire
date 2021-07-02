@@ -112,7 +112,7 @@ impl BinaryOperator {
 			};
 
 		if level.map_or(false, |level| level <= op) {
-			todo!("actually handle the rhs: {:?}, {:?}", level, op);
+			todo!("actually handle order of operations: {:?}, {:?}", level, op);
 			// parser.undo_next_token();
 			// return Ok(lhs);
 		}

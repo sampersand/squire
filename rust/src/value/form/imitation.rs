@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::hash::{Hash, Hasher};
 use crate::runtime::{Result, Error as RuntimeError, Args, Vm};
 use std::fmt::{self, Debug, Formatter};
-use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex};
+use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex, BoundJourney};
 use crate::value::ops::{
 	ConvertTo, Dump,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
@@ -18,12 +18,6 @@ pub struct Imitation(Arc<ImitationInner>);
 struct ImitationInner {
 	form: Form,
 	fields: Box<[Mutex<Value>]>
-}
-
-#[derive(Debug, Clone)]
-pub struct Change {
-	imitation: Imitation,
-	journey: Journey
 }
 
 impl Debug for Imitation {
@@ -112,6 +106,12 @@ impl Hash for Imitation {
 	}
 }
 
+impl From<Imitation> for Value {
+	#[inline]
+	fn from(imitation: Imitation) -> Self {
+		Self::Imitation(imitation)
+	}
+}
 
 impl Imitation {
 	pub fn call_method(&self, func: &'static str, args: Args, vm: &mut Vm) -> Result<Value> {
@@ -273,10 +273,14 @@ impl SetIndex for Imitation {
 
 impl GetAttr for Imitation {
 	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value> {
-		// in the future, we might want to have getters/setters
-		self.get_matter(attr)
-			.or_else(|| self.get_change(attr).map(|method| Value::from(Value::Journey(method.clone()))))
-			.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
+		// in the future, we might have getters/setters
+		if let Some(matter) = self.get_matter(attr) {
+			Ok(matter)
+		} else if let Some(change) = self.get_change(attr) {
+			Ok(BoundJourney::new(self.clone().into(), change.clone()).into())
+		} else {
+			Err(RuntimeError::UnknownAttribute(attr.to_string()))
+		}
 	}
 }
 

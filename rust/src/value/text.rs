@@ -1,7 +1,7 @@
 use crate::runtime::{Vm, Error as RuntimeError};
 use std::sync::Arc;
 use crate::value::{Value, Veracity, Numeral, Book};
-use crate::value::ops::{ConvertTo, Dump, IsEqual, Compare, Add, Multiply, Modulo, GetIndex};
+use crate::value::ops::{ConvertTo, Dump, IsEqual, Compare, Add, Multiply, Modulo, GetIndex, GetAttr};
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -75,12 +75,15 @@ impl Text {
 	}
 
 	pub fn new_fraktur(text: String) -> Self {
-		// todo: do we translate fraktur over to ascii?
-		Self::new(text)
+		Self::new(text.chars().map(|chr| from_fraktur(chr).unwrap_or(chr)).collect::<String>())
 	}
 
 	pub fn is_empty(&self) -> bool {
 		self.0.is_empty()
+	}
+
+	pub fn len(&self) -> usize {
+		self.0.len()
 	}
 
 	pub fn as_str(&self) -> &str {
@@ -115,6 +118,20 @@ impl From<String> for Text {
 	}
 }
 
+impl From<Arc<str>> for Text {
+	#[inline]
+	fn from(text: Arc<str>) -> Self {
+		Self(text)
+	}
+}
+
+impl From<char> for Text {
+	#[inline]
+	fn from(chr: char) -> Self {
+		Self::new(chr)
+	}
+}
+
 impl AsRef<str> for Text {
 	fn as_ref(&self) -> &str {
 		self.as_str()
@@ -122,41 +139,36 @@ impl AsRef<str> for Text {
 }
 
 impl Add for Text {
-	fn add(&self, rhs: &Value,  _: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ =rhs;
-		todo!();
+	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let rhs = rhs.convert_to::<Self>(vm)?;
+
+		let mut text = String::with_capacity(self.len() + rhs.len());
+		text += self.as_str();
+		text += rhs.as_str();
+
+		Ok(Self::new(text).into())
 	}
 }
 
 impl Multiply for Text {
-	fn multiply(&self, rhs: &Value,  _: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ =rhs;
-		todo!();
+	fn multiply(&self, rhs: &Value,  vm: &mut Vm) -> Result<Value, RuntimeError> {
+		match rhs.convert_to::<Numeral>(vm)?.get() {
+			0 => Ok(Self::default().into()),
+			1 => Ok(self.clone().into()),
+			amount @ 2..=i64::MAX => Ok(self.as_str().repeat(amount as usize).into()),
+			_ => Err(RuntimeError::ArgumentError("cannot repeat by a negative value".into())),
+		}
 	}
 }
 
 impl Modulo for Text {
 	fn modulo(&self, rhs: &Value,  _: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ =rhs;
-		todo!();
+		let _ = rhs;
+		todo!("printf formatting");
 	}
 }
 
 
-// impl Mul<usize> for Text {
-// 	type Output = Self;
-
-// 	fn mul(mut self, amount: usize) -> Self::Output {
-// 		match amount {
-// 			0 => Self::default(),
-// 			1 => self,
-// 			_ => {
-// 				self.0 = self.0.repeat(amount);
-// 				self
-// 			}
-// 		}
-// 	}
-// }
 impl Dump for Text {
 	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
 		to.push_str(&format!("{:?}", self.as_str()));
@@ -180,8 +192,12 @@ impl ConvertTo<Numeral> for Text {
 
 impl ConvertTo<Book> for Text {
 	fn convert(&self, _: &mut Vm) -> Result<Book, RuntimeError> {
-		// Ok(Book::default())
-		todo!()
+		Ok(self
+			.as_str()
+			.chars()
+			.map(Self::from)
+			.map(Value::Text)
+			.collect())
 	}
 }
 
@@ -205,5 +221,14 @@ impl GetIndex for Text {
 	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
 		let _ = (key, vm);
 		todo!();
+	}
+}
+
+impl GetAttr for Text {
+	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
+		match attr {
+			"count" => Ok(Numeral::new(self.len() as i64).into()),
+			other => Err(RuntimeError::UnknownAttribute(other.to_string()))
+		}
 	}
 }

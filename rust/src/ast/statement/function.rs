@@ -114,7 +114,7 @@ impl Function {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
-			self.args.normal.insert(0, Argument { name: "my".into(), kind: None, default: None });
+			self.args.normal.insert(0, Argument { name: "soul".into(), kind: None, default: None });
 		}
 
 		if self.args.vararg.is_some() || self.args.varkwarg.is_some() || self.args.return_type.is_some() {

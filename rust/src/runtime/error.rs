@@ -2,6 +2,7 @@ use crate::value::{Value, ValueKind};
 use crate::value::numeral::NumeralParseError;
 use std::fmt::{self, Display, Formatter};
 use std::borrow::Cow;
+use std::io;
 
 #[derive(Debug)]
 pub enum Error {
@@ -16,6 +17,7 @@ pub enum Error {
 	Throw(Value),
 	UnknownAttribute(String),
 	InvalidReturnType { expected: ValueKind, given: ValueKind, func: &'static str },
+	Io(io::Error),
 	Other(Box<dyn std::error::Error>),
 }
 
@@ -44,8 +46,16 @@ impl Display for Error {
 			Self::InvalidReturnType { given, expected, func }
 				=> write!(f, "bad return type for {}: given {:?}, expected {:?}", func, given, expected),
 			Self::CannotConvert { from, to } => write!(f, "cannot convert a {:?} to a {:?}", from, to),
+			Self::Io(err) => Display::fmt(&err, f),
 			Self::Other(err) => Display::fmt(&err, f),
 		}
 
+	}
+}
+
+impl From<io::Error> for Error {
+	#[inline]
+	fn from(error: io::Error) -> Self {
+		Self::Io(error)
 	}
 }

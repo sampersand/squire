@@ -4,12 +4,14 @@ mod book;
 mod codex;
 mod veracity;
 mod value;
+mod bound;
 pub mod builtin;
 pub mod numeral;
 pub mod text;
 pub mod journey;
 pub mod form;
 
+pub use bound::BoundJourney;
 pub use text::Text;
 pub use numeral::Numeral;
 pub use veracity::Veracity;
