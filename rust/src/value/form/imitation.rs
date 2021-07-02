@@ -114,13 +114,14 @@ impl From<Imitation> for Value {
 }
 
 impl Imitation {
-	pub fn call_method(&self, func: &'static str, args: Args, vm: &mut Vm) -> Result<Value> {
-		let _ = (func, args, vm);
-		todo!()
-		// match self.get_change(func) {
-		// 	Some(change) => change.call(args, vm),
-		// 	None => Err(RuntimeError::OperationNotSupported { kind: ValueKind::Imitation(self.form().clone()), func })
-		// }
+	pub fn call_method(&self, func: &'static str, mut args: Args, vm: &mut Vm) -> Result<Value> {
+		args.add_soul(self.clone().into());
+
+		self.form()
+			.changes()
+			.get(func)
+			.ok_or_else(|| RuntimeError::OperationNotSupported { kind: self.kind(), func })?
+			.call(args, vm)
 	}
 
 	pub fn kind(&self) -> ValueKind {

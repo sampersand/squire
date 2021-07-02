@@ -79,7 +79,7 @@ impl Class {
 	}
 
 	fn parse_method<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
-		let name = parser.expect_identifier()?;
+		let name = parser.expect_identifier_or_operator()?;
 		Ok(self.changes.push(Function::parse_without_keyword(parser, name)?))
 	}
 

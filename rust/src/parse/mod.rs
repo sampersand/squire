@@ -58,6 +58,64 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 		}
 	}
 
+	pub fn expect_identifier_or_operator(&mut self) -> Result<String> {
+		use token::{Symbol as Sym, ParenKind};
+		use TokenKind as Tk;
+		use Token as Tkn;
+
+		Ok(match self.expect([
+			Tk::Identifier,
+			Tk::Symbol(Sym::EqualEqual),
+			Tk::Symbol(Sym::NotEqual),
+			Tk::Symbol(Sym::LessThan),
+			Tk::Symbol(Sym::LessThanOrEqual),
+			Tk::Symbol(Sym::GreaterThan),
+			Tk::Symbol(Sym::GreaterThanOrEqual),
+			Tk::Symbol(Sym::Compare),
+
+			Tk::Symbol(Sym::Plus),
+			Tk::Symbol(Sym::Hyphen),
+			Tk::Symbol(Sym::Asterisk),
+			Tk::Symbol(Sym::AsteriskAsterisk),
+			Tk::Symbol(Sym::Solidus),
+			Tk::Symbol(Sym::PercentSign),
+			Tk::Symbol(Sym::Exclamation),
+			Tk::LeftParen(ParenKind::Square),
+			Tk::LeftParen(ParenKind::Round),
+		])? {
+			Tkn::Identifier(ident) => ident,
+			Tkn::Symbol(Sym::EqualEqual) => "==".to_string(),
+			Tkn::Symbol(Sym::NotEqual) => "!=".to_string(),
+			Tkn::Symbol(Sym::LessThan) => "<".to_string(),
+			Tkn::Symbol(Sym::LessThanOrEqual) => "<=".to_string(),
+			Tkn::Symbol(Sym::GreaterThan) => ">".to_string(),
+			Tkn::Symbol(Sym::GreaterThanOrEqual) => ">=".to_string(),
+			Tkn::Symbol(Sym::Compare) => "<=>".to_string(),
+
+			Tkn::Symbol(Sym::Plus) => "+".to_string(),
+			Tkn::Symbol(Sym::Hyphen) => "-".to_string(),
+			Tkn::Symbol(Sym::Asterisk) => "*".to_string(),
+			Tkn::Symbol(Sym::AsteriskAsterisk) => "**".to_string(),
+			Tkn::Symbol(Sym::Solidus) => "/".to_string(),
+			Tkn::Symbol(Sym::PercentSign) => "%".to_string(),
+			Tkn::Symbol(Sym::Exclamation) => "!".to_string(),
+			Tkn::LeftParen(ParenKind::Round) => {
+				self.expect(Tk::RightParen(ParenKind::Round))?;
+				"()".to_string()
+			},
+			Tkn::LeftParen(ParenKind::Square) => {
+				self.expect(Tk::RightParen(ParenKind::Square))?;
+				if self.guard(Tk::Symbol(Sym::Equal))?.is_some() {
+					"[]=".to_string()
+				} else {
+					"[]".to_string()
+				}
+			}
+
+			other => unreachable!("`parser.expect` returned a bad token: {:?}", other)
+		})
+	}
+
 	pub fn guard_identifier(&mut self) -> Result<Option<String>> {
 		match self.guard(TokenKind::Identifier)? {
 			Some(Token::Identifier(ident)) => Ok(Some(ident)),
