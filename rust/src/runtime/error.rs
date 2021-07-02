@@ -1,6 +1,7 @@
 use crate::value::{Value, ValueKind};
 use crate::value::numeral::NumeralParseError;
 use std::fmt::{self, Display, Formatter};
+use std::borrow::Cow;
 
 #[derive(Debug)]
 pub enum Error {
@@ -10,7 +11,8 @@ pub enum Error {
 	ValueError(String),
 	DivisionByZero,
 	OutOfBounds,
-	ArgumentError { given: usize, expected: usize },
+	ArgumentCountError { given: usize, expected: usize },
+	ArgumentError(Cow<'static, str>),
 	Throw(Value),
 	UnknownAttribute(String),
 	InvalidReturnType { expected: ValueKind, given: ValueKind, func: &'static str },
@@ -35,7 +37,8 @@ impl Display for Error {
 			Self::ValueError(string) => write!(f, "{}", string),
 			Self::DivisionByZero => write!(f, "divided by zero"),
 			Self::OutOfBounds => write!(f, "value was out of bounds"),
-			Self::ArgumentError { given, expected } => write!(f, "argc mismatch: given {}, expected {}", given, expected),
+			Self::ArgumentCountError { given, expected } => write!(f, "argc mismatch: given {}, expected {}", given, expected),
+			Self::ArgumentError(message) => write!(f, "argument error: {}", message),
 			Self::Throw(value) => write!(f, "uncaught throw: {:?}", value),
 			Self::UnknownAttribute(attr) => write!(f, "unknown attribute accessed: {:?}", attr),
 			Self::InvalidReturnType { given, expected, func }

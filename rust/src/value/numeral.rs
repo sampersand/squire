@@ -469,7 +469,7 @@ impl Display for RomanDisplay {
 			}
 
 			for (i, &suffix) in NONZERO_NUMERALS.iter().enumerate().rev() {
-				if (suffix as u64) < numeral {
+				if (suffix as u64) <= numeral {
 					break; // nothing else will match,  as suffixes shrink.
 				}
 

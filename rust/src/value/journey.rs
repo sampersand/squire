@@ -81,7 +81,7 @@ impl Call for Journey {
 			return self.0.codeblock.run(args, vm)
 		}
 
-		Err(RuntimeError::ArgumentError {
+		Err(RuntimeError::ArgumentCountError {
 			given: args._as_slice().len(),
 			expected: self.0.args.len()
 		})

@@ -124,7 +124,7 @@ impl Form {
 		}
 
 		if args._as_slice().len() != self.0.matter_names.len() {
-			Err(RuntimeError::ArgumentError { given: args._as_slice().len(), expected: self.0.matter_names.len() })
+			Err(RuntimeError::ArgumentCountError { given: args._as_slice().len(), expected: self.0.matter_names.len() })
 		} else {
 			Ok(Value::Imitation(Imitation::new(self.clone(), args._as_slice().to_owned()).into()))
 		}

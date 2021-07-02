@@ -141,23 +141,36 @@ impl Book {
 		}
 	}
 
-	pub fn get(&self, index: usize) -> Option<Value> {
-		self.as_slice().get(index).cloned()
-	}
+	pub fn get(&self, mut index: isize) -> Result<Option<Value>, RuntimeError> {
+		let slice = &*self.as_slice();
 
-	pub fn get2_maybe_a_better_name(&self, index: isize) -> Option<Value> {
-		if 0 <= index {
-			self.get(index as usize)
-		} else if let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
-			self.get(index)
-		} else {
-			None
+		if index < 0 {
+			index += slice.len() as isize;
+
+			if index < 0 {
+				return Ok(None);
+			}
 		}
+
+		Ok(slice.get(index as usize).cloned())
 	}
 
-	pub fn set(&self, index: usize, value: Value) {
-		self.expand_to(index + 1);
-		self.as_vec_mut()[index] = value;
+	pub fn set(&self, mut index: isize, value: Value) -> Result<(), RuntimeError> {
+		let mut vec = self.as_vec_mut();
+		let len = vec.len() as isize;
+
+		match index {
+			0 => return Err(RuntimeError::ArgumentError("cannot index by zero".into())),
+			_ if (1..=len).contains(&index) => vec[index as usize - 1] = value,
+			_ if (-len..=-1).contains(&index) => vec[(index + len) as usize] = value,
+			_ if index.is_negative() => return Err(RuntimeError::ArgumentError("index out of bounds".into())),
+			_ => {
+				vec.resize_with(index as usize, Value::default);
+				vec.push(value);
+			},
+		}
+
+		Ok(())
 	}
 
 	pub fn len(&self) -> usize {
@@ -425,34 +438,22 @@ impl Compare for Book {
 
 impl GetIndex for Book {
 	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (key, vm); todo!()
+		match key {
+			Value::Book(book) => todo!("index into a book with another one."),
+			Value::Numeral(numeral) => Ok(self.get(numeral.get() as isize)?.unwrap_or_default()),
+			key => Err(RuntimeError::InvalidOperand { kind: key.kind(), func: "Book.[]" })
+		}
 	}
 }
 
 
 impl SetIndex for Book {
 	fn set_index(&self, key: Value, value: Value, vm: &mut Vm) -> Result<(), RuntimeError> {
-		// todo: set ranges
-		if matches!(key, Value::Book(_)) {
-			todo!("set ranges");
+		match key {
+			Value::Book(book) => todo!("index into a book with another one."),
+			Value::Numeral(numeral) => self.set(numeral.get() as isize, value),
+			key => Err(RuntimeError::InvalidOperand { kind: key.kind(), func: "Book.[]=" })
 		}
-
-		// let mut index = value.convert_to::<Numeral>(vm)?.get() as isize;
-
-	// 	if 0 <= index {
-	// 		self.set(index as usize, value);
-	// 	} else {
-	// 		index += self.len() as isize;
-
-	// 		if 0 <= index
-	// 		let Ok(index) = <usize as std::convert::TryFrom<isize>>::try_from(index) {
-	// 		self.set(index, value)
-	// 	} else {
-	// 		todo!()
-	// 	}
-	// }
-	// 	self.set2_maybe_a_better_name
-		let _ = (key, value, vm); todo!()
 	}
 }
 
