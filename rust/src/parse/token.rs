@@ -105,7 +105,7 @@ pub enum Literal {
 	Ni,
 	Boolean(bool),
 	Numeral(Numeral),
-	Text(Text), // possibly with interpolation
+	Text(Text),
 	TextInterpolation(Vec<(Text, Vec<Token>)>, Text),
 }
 

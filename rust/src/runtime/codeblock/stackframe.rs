@@ -127,6 +127,12 @@ impl StackFrame<'_> {
 		}
 	}
 
+	fn do_interpolate(&mut self) {
+		let amount = self.next_count();
+		let _ = amount;
+		todo!();
+	}
+
 	fn do_jump(&mut self) {
 		let to = self.next_offset();
 		self.jump(to - 1);
@@ -375,6 +381,7 @@ impl StackFrame<'_> {
 			Opcode::NoOp => self.do_noop(),
 			Opcode::Move => self.do_move(),
 			Opcode::Interrupt => self.do_interrupt(),
+			Opcode::Interpolate => self.do_interpolate(),
 
 			// Control flow
 			Opcode::Jump => self.do_jump(),

@@ -24,7 +24,33 @@ impl Compilable for Literal {
 		use crate::runtime::Opcode;
 		use crate::value::Value;
 
-		if target.is_none() && !matches!(self.0, TokenLiteral::TextInterpolation(_, _)) {
+		if let TokenLiteral::TextInterpolation(groups, end) = self.0 {
+			let /*mut*/ targets = Vec::with_capacity(groups.len());
+
+			for (prefix, expr) in groups {
+				let dst = compiler.next_target();
+				let _ = (prefix, expr, dst);
+				// expr.compile(compiler, target);
+				// targets.push((compiler.get_constant(prefix), dst));
+				todo!();
+			}
+
+			compiler.opcode(Opcode::Interpolate);
+			compiler.count(targets.len());
+
+			for (prefix, target) in targets {
+				compiler.constant(prefix);
+				compiler.target(target);
+			}
+
+			let constant = compiler.get_constant(end.into());
+			compiler.constant(constant);
+			let target = target.unwrap_or_else(|| compiler.next_target()); // not strictly necessary
+			compiler.target(target);
+			return Ok(());
+		}
+
+		if target.is_none() {
 			return Ok(());
 		}
 
@@ -34,7 +60,7 @@ impl Compilable for Literal {
 				TokenLiteral::Boolean(boolean) => compiler.get_constant(Value::Veracity(boolean)),
 				TokenLiteral::Numeral(numeral) => compiler.get_constant(Value::Numeral(numeral)),
 				TokenLiteral::Text(text) => compiler.get_constant(Value::Text(text)),
-				TokenLiteral::TextInterpolation(_, _) => unimplemented!()
+				TokenLiteral::TextInterpolation(_, _) => unreachable!()
 			};
 
 		if let Some(target) = target {

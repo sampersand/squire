@@ -14,6 +14,7 @@ pub enum Opcode {
 	NoOp,
 	Move,
 	Interrupt,
+	Interpolate,
 
 	// Control flow
 	Jump,
@@ -24,7 +25,6 @@ pub enum Opcode {
 	// CallComplex,
 	Call,
 	Return,
-
 	ComeFrom,
 
 	Throw,
