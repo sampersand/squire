@@ -1,6 +1,7 @@
 #include "book.h"
 #include "shared.h"
 #include "exception.h"
+#include "string.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -114,7 +115,32 @@ void sq_book_index_assign(struct sq_book *book, size_t index, sq_value value) {
 }
 
 struct sq_string *sq_book_to_string(const struct sq_book *book) {
-	(void) book;
+	unsigned len = 0, cap = 64;
+	char *string = xmalloc(cap);
+	string[len++] = '[';
 
-	die("todo!");
+
+	for (unsigned i = 0; i < book->length; ++i) {
+		if (i) {
+			if (cap <= len + 2)
+				string = xrealloc(string, cap *= 2);
+			string[len++] = ',';
+			string[len++] = ' ';
+		}
+
+		struct sq_string *inner = sq_value_to_string(book->pages[i]);
+	
+		if (cap <= inner->length + len)
+			string = xrealloc(string, cap = inner->length + len * 2);
+	
+		memcpy(string + len, inner->ptr, inner->length);
+		len += inner->length;
+		sq_string_free(inner);
+	}
+
+	string = xrealloc(string, len + 2);
+	string[len++] = ']';
+	string[len] = '\0';
+
+	return sq_string_new2(string, len);
 }
