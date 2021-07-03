@@ -1,0 +1,47 @@
+# What runtime language would be complete with macros? Squire has a few simple
+# macros available. All macro invocations start with `@` (eg `@henceforth`), and
+# must end with a `;`.
+
+
+# `@compile` is used to import other files into this one and compile them.
+# (sort of a watered-down version of C's `#include`)
+@compile "I-hello-world.sq"; # "Hello world!"
+
+
+
+# `@henceforth` is used for text replacement at compile time. There's two versi-
+# ons--normal and functional. Both versions are terminated by a trailing `;`,
+# unlike C's `#define`. Note that you can escape `;`s in the macro text via the
+# `<< ... >>` constructs. Note that all variables relating to macros must be
+# prefixed with a `$` to denote that they're macro variables.
+@henceforth $language = 𝔖𝔮𝔲𝔦𝔯𝔢;
+@henceforth $count_to_three =
+	<< # anything between `<< ... >>` is taken literally, including `;`s.
+		proclaim("I");
+		proclaim("II");
+		proclaim("III");
+	>>;
+
+@henceforth $increment_and_print($variable, $amount) =
+	proclaim("\($variable) + \($amount) = \($variable = $variable + $amount)");
+
+proclaim("A cool language is \($language)."); # => A cool language is Squire.
+x=III
+$increment_and_print(x, IV); #=> III + IV = VII
+$count_to_three
+# I
+# II
+# III
+
+# You can also use `<< ... >>`  within macro invocations to escape `,`s:
+@henceforth $call_journey_and_proclaim($journey, $arg) =
+	proclaim("the result is \($journey($arg))");
+
+journey multiply(x, y) { x * y }
+$call_journey_and_proclaim(multiply, <<3, 4>>) #=> the result is XII
+
+# The `@henceforth` macros are currently quite limited, as there's no way to do
+# variable length arguments or delayed expansion. In the future, this may be
+# changed.
+
+@henceforth $a($b)=$+3
