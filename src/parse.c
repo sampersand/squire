@@ -37,7 +37,7 @@ static void parse_field_names(bool is_method) {
 	field_name_count = 0;
 
 	if (is_method)
-		field_names[field_name_count++] = strdup("my");
+		field_names[field_name_count++] = strdup("soul");
 
 	while (take().kind == SQ_TK_IDENT) {
 		if (field_name_count > 255) die("too many fields!");

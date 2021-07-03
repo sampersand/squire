@@ -97,6 +97,7 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 				}
 
 				if (!*sq_stream) die("unterminated block comment");
+			}
 		}
 
 
@@ -354,7 +355,8 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("form",         SQ_TK_CLASS);
 	CHECK_FOR_START_KW("matter",       SQ_TK_FIELD);
 	CHECK_FOR_START_KW("change",       SQ_TK_METHOD);
-	CHECK_FOR_START_KW("recollect",    SQ_TK_CLASSFN);
+	CHECK_FOR_START_KW("recollect",    SQ_TK_CLASSFN); // deprecated
+	CHECK_FOR_START_KW("recall",       SQ_TK_CLASSFN);
 	CHECK_FOR_START_KW("imitate",      SQ_TK_CONSTRUCTOR);
 	CHECK_FOR_START_KW("essence",      SQ_TK_ESSENCE);
 	// substance?

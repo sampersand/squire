@@ -1,8 +1,6 @@
 /*
 # Macros in Squire. the `$` sigil is used to denote macro parameters, and
 # the `@` sigil is used to denote the start of a preprocessor directive.
-# Note that because im lazy, they'll be parsed at the same time as normal code, and
-# so you can actually reference variables in the surrounding scope.
 
 # Simple declarations and functional macros. They simply take the next line, like c.
 @henceforth $ab = "ab" # note `$` is required
@@ -37,7 +35,6 @@ struct _ignored__;
 #else
 #include <string.h>
 #include <errno.h>
-
 
 static struct {
 	struct macro_variable {

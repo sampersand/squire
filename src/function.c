@@ -188,6 +188,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 			case SQ_INT_KINDOF: {
 				value = NEXT_LOCAL();
+			genus_kindof:
 				if (sq_value_is_imitation(value))
 					NEXT_LOCAL() = sq_value_new_form(sq_value_as_imitation(value)->form);
 				else
@@ -556,6 +557,9 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_ILOAD: {
 			value = NEXT_LOCAL();
 			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
+
+			 if (!strcmp(field, "genus"))
+			 	goto genus_kindof;
 
 			if (sq_value_is_form(value)) {
 				struct sq_form *form = sq_value_as_form(value);

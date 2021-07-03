@@ -1,0 +1,118 @@
+# Squire also has a concept of "classes," modeled after Plato's forms, with a
+# dash of Aristotle. Quick crash course: Plato believes that the reason why, say,
+# the grass is green is because it participates in the Green Form. So there's
+# some perfect version of "Green" out there, and everything in our world that we
+# call green is simply a pale imitation of that. As such, classes within Squire
+# are called `form`s, whereas instances of the classes are called `imitation`s.
+form Person {
+	# Aristotle tweaked Plato's idea by suggesting that everything in our world
+	# is made up of two parts: Matter and Form. As such, Squire uses `matter` to
+	# describe what fields imitations can have.
+	matter name, hungry;
+
+	# You construct an `imitation` by simply `imitate`ing a form. (Note that the
+	# `imitate` can be left off if it's simply assigning `matter`s---Squire will
+	# generate one for you.)
+	imitate(name) {
+		# Instead of `this`/`self`, we talk about the `soul` of the imitation.
+		soul.name = name;
+		soul.hungry = nay; # we don't start off hungry
+	}
+
+	# Because the hallmark of the Forms was that they are unchanging, the key
+	# characteristic of things in our world is that they _do_ change. Thus, in
+	# Squire, we call instance methods `change`s. (Even if they don't actually
+	# change anything...)
+	change walk(miles) {
+		if soul.hungry {
+			# if we're hungry, "catapult" an exception.
+			catapult "I'm too hungry to walk";
+		}
+
+		proclaim("I walked \(miles) miles!\n");
+		soul.hungry = yay;
+	}
+}
+
+sam = Person(𝔖𝔞𝔪);
+sam.walk(XII); #=> I walked XII miles!
+attempt {
+	sam.walk(I)
+} alas err {
+	proclaim("I can't walk: \(err)\n"); #=> I can't walk: I'm too hungry to walk
+}
+
+
+# Here we look at `essence`s and `recall`s, which are how you interact with
+# forms directly.
+# Note: `regnal_number` is like the `III` in `King Foo the IIIrd`
+form Monarch {
+	# According to Plato, forms were distinguished from each other based on their
+	# "essence"s---as such, Squire uses `essence`s for class fields. (Ok, yes
+	# technically you can assign to `essences` within Squire, which contradicts
+	# the idea that forms are unchanging. But we can't have our cake and eat it
+	# too, so let's just ignore that...)
+	essence regnal_numbers = {};
+
+	# todo: ok im getting tired lol
+	recall regnal_number_for(name) {
+		reward (Monarch.regnal_numbers[name]) || I
+	}
+
+	# more todos for the rational behind names.
+	# sleep calls.
+	matter name, regnal_number;
+	imitate(name) {
+		soul.name = name;
+		soul.regnal_number = Monarch.regnal_number_for(name);
+		Monarch.regnal_numbers[name] = soul.regnal_number + I;
+	}
+
+	change to_text() {
+		regnal = soul.regnal_number;
+		title = "\(soul.name) the \(regnal)";
+
+		if XI <= (regnal % C) && (regnal % C) <= XIII {
+		english_sucks:
+			# special case because english sucks.
+		}
+
+		fork regnal % X {
+			path I:
+				title + 𝔰𝔱
+
+			path II:
+				title + 𝔫𝔡
+
+			path III:
+				title + 𝔯𝔡
+
+			alas:
+				whence english_sucks;
+				title + 𝔱𝔥
+		}
+	}
+}
+
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
+#
+#	recall classFunction(foo, bar){
+#
+#	}
+#
+#	imitate (lol) {
+#
+#	}
+#
+#	matter a, b;
+#	change lol() {
+#
+#	}
+#}
+#
+#x=1;
+#proclaim(Person.foo);
+#proclaim(Person.bar);

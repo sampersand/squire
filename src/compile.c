@@ -183,8 +183,6 @@ static unsigned declare_local_variable(struct sq_code *code, const char *name) {
 }
 
 static int lookup_local_variable(struct sq_code *code, const char *name) {
-	if (!strcmp(name, "me")) return lookup_local_variable(code, "my");
-
 	// check to see if we've declared the local before
 	for (unsigned i = 0; i < code->vars.len; ++i) {
 		if (!strcmp(name, code->vars.ary[i].name)) {

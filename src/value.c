@@ -124,11 +124,11 @@ void sq_value_free(sq_value value) {
 
 const char *sq_value_typename(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TCONST: return sq_value_is_null(value) ? "null" : "boolean";
-	case SQ_TNUMBER: return "number";
+	case SQ_TCONST: return sq_value_is_null(value) ? "ni" : "veracity";
+	case SQ_TNUMBER: return "numeral";
 	case SQ_TSTRING: return "string";
-	case SQ_TIMITATION: return "object";
-	case SQ_TFUNCTION: return "function";
+	case SQ_TIMITATION: return "imitation";
+	case SQ_TFUNCTION: return "journey";
 	case SQ_TFORM: return "form";
 	case SQ_TBOOK: return "book";
 	case SQ_TCODEX: return "codex";
@@ -137,11 +137,11 @@ const char *sq_value_typename(sq_value value) {
 }
 
 sq_value sq_value_kindof(sq_value value) {
-	static struct sq_string KIND_BOOLEAN = SQ_STRING_STATIC("boolean");
-	static struct sq_string KIND_NULL = SQ_STRING_STATIC("null");
-	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("number");
+	static struct sq_string KIND_BOOLEAN = SQ_STRING_STATIC("veracity");
+	static struct sq_string KIND_NULL = SQ_STRING_STATIC("ni");
+	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("numeral");
 	static struct sq_string KIND_STRING = SQ_STRING_STATIC("string");
-	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("function");
+	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("journey");
 	static struct sq_string KIND_form = SQ_STRING_STATIC("form");
 	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("book");
 	static struct sq_string KIND_CODEX = SQ_STRING_STATIC("codex");
@@ -520,9 +520,9 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 }
 
 struct sq_string *sq_value_to_string(sq_value value) {
-	static struct sq_string truestring = SQ_STRING_STATIC("true");
-	static struct sq_string falsestring = SQ_STRING_STATIC("false");
-	static struct sq_string nullstring = SQ_STRING_STATIC("null");
+	static struct sq_string truestring = SQ_STRING_STATIC("yay");
+	static struct sq_string falsestring = SQ_STRING_STATIC("nay");
+	static struct sq_string nullstring = SQ_STRING_STATIC("ni");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
@@ -549,12 +549,12 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		return sq_string_new(strdup(AS_FORM(value)->name));
 
 	case SQ_TIMITATION: {
-		struct sq_function *to_string = sq_imitation_lookup_change(AS_IMITATION(value), "to_string");
+		struct sq_function *to_Text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
 
-		if (to_string != NULL) {
-			sq_value string = sq_function_run(to_string, 1, &value);
+		if (to_Text != NULL) {
+			sq_value string = sq_function_run(to_Text, 1, &value);
 			if (!sq_value_is_string(string))
-				die("to_string for an imitation of '%s' didn't return a string", AS_IMITATION(value)->form->name);
+				die("to_Text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
 			return AS_STRING(string);
 		}
 		// else fallthrough
@@ -586,12 +586,12 @@ sq_number sq_value_to_number(sq_value value) {
 		return strtoll(AS_STR(value), NULL, 10);
 
 	case SQ_TIMITATION: {
-		struct sq_function *tally = sq_imitation_lookup_change(AS_IMITATION(value), "tally");
+		struct sq_function *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
 
-		if (tally != NULL) {
-			sq_value number = sq_function_run(tally, 1, &value);
+		if (to_numeral != NULL) {
+			sq_value number = sq_function_run(to_numeral, 1, &value);
 			if (!sq_value_is_number(number))
-				die("tally for an imitation of '%s' didn't return a number", AS_IMITATION(value)->form->name);
+				die("to_numeral for an imitation of '%s' didn't return a number", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(number);
 		}
 		// else fallthrough
@@ -628,12 +628,12 @@ bool sq_value_to_boolean(sq_value value) {
 		return AS_CODEX(value)->length;
 
 	case SQ_TIMITATION: {
-		struct sq_function *veracity = sq_imitation_lookup_change(AS_IMITATION(value), "veracity");
+		struct sq_function *to_veracity = sq_imitation_lookup_change(AS_IMITATION(value), "to_veracity");
 
-		if (veracity != NULL) {
-			sq_value boolean = sq_function_run(veracity, 1, &value);
+		if (to_veracity != NULL) {
+			sq_value boolean = sq_function_run(to_veracity, 1, &value);
 			if (!sq_value_is_boolean(boolean))
-				die("veracity for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
+				die("to_veracity for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
 			return sq_value_as_boolean(boolean);
 		}
 		// else fallthrough
