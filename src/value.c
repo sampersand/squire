@@ -126,7 +126,7 @@ const char *sq_value_typename(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST: return sq_value_is_null(value) ? "ni" : "veracity";
 	case SQ_TNUMBER: return "numeral";
-	case SQ_TSTRING: return "string";
+	case SQ_TSTRING: return "text";
 	case SQ_TIMITATION: return "imitation";
 	case SQ_TFUNCTION: return "journey";
 	case SQ_TFORM: return "form";
@@ -140,7 +140,7 @@ sq_value sq_value_kindof(sq_value value) {
 	static struct sq_string KIND_BOOLEAN = SQ_STRING_STATIC("veracity");
 	static struct sq_string KIND_NULL = SQ_STRING_STATIC("ni");
 	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("numeral");
-	static struct sq_string KIND_STRING = SQ_STRING_STATIC("string");
+	static struct sq_string KIND_STRING = SQ_STRING_STATIC("text");
 	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("journey");
 	static struct sq_string KIND_form = SQ_STRING_STATIC("form");
 	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("book");
@@ -549,12 +549,12 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		return sq_string_new(strdup(AS_FORM(value)->name));
 
 	case SQ_TIMITATION: {
-		struct sq_function *to_Text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
+		struct sq_function *to_text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
 
-		if (to_Text != NULL) {
-			sq_value string = sq_function_run(to_Text, 1, &value);
+		if (to_text != NULL) {
+			sq_value string = sq_function_run(to_text, 1, &value);
 			if (!sq_value_is_string(string))
-				die("to_Text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
+				die("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
 			return AS_STRING(string);
 		}
 		// else fallthrough

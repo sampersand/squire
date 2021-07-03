@@ -174,7 +174,7 @@ static struct sq_token next_interpolation_token(void) {
 
 	case 1:
 		token.kind = SQ_TK_IDENT;
-		token.identifier = strdup("string");
+		token.identifier = strdup("text");
 		return token;
 
 	case 2:

@@ -29,7 +29,7 @@ form Person {
 			catapult "I'm too hungry to walk";
 		}
 
-		proclaim("I walked \(miles) miles!\n");
+		proclaim("I walked \(miles) miles!");
 		soul.hungry = yay;
 	}
 }
@@ -39,7 +39,7 @@ sam.walk(XII); #=> I walked XII miles!
 attempt {
 	sam.walk(I)
 } alas err {
-	proclaim("I can't walk: \(err)\n"); #=> I can't walk: I'm too hungry to walk
+	proclaim("I can't walk: \(err)"); #=> I can't walk: I'm too hungry to walk
 }
 
 
@@ -54,13 +54,15 @@ form Monarch {
 	# too, so let's just ignore that...)
 	essence regnal_numbers = {};
 
-	# todo: ok im getting tired lol
+	# Plato's theory for why we know all the forms instinctively is because we
+	# interacted with them in some previous life---that is, we "recall details
+	# about them. Thus, class functions are called `recall`s (or `recollection`s)
 	recall regnal_number_for(name) {
+		# NB: The syntax _should_ be just `Monarch.regnal_numbers[name] || I`,
+		# but the C implementation's parser and compiler aren't terrific...
 		reward (Monarch.regnal_numbers[name]) || I
 	}
 
-	# more todos for the rational behind names.
-	# sleep calls.
 	matter name, regnal_number;
 	imitate(name) {
 		soul.name = name;
@@ -70,6 +72,10 @@ form Monarch {
 
 	change to_text() {
 		regnal = soul.regnal_number;
+		if regnal == I {
+			reward soul.name;
+		}
+
 		title = "\(soul.name) the \(regnal)";
 
 		if XI <= (regnal % C) && (regnal % C) <= XIII {
@@ -94,25 +100,58 @@ form Monarch {
 	}
 }
 
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))\n");
-#
-#	recall classFunction(foo, bar){
-#
-#	}
-#
-#	imitate (lol) {
-#
-#	}
-#
-#	matter a, b;
-#	change lol() {
-#
-#	}
-#}
-#
-#x=1;
-#proclaim(Person.foo);
-#proclaim(Person.bar);
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
+proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
+# Hear ye, hear ye, behold: Sam
+# Hear ye, hear ye, behold: Sam the IInd
+# Hear ye, hear ye, behold: Sam the IIIrd
+# Hear ye, hear ye, behold: Sam the IVth
+
+
+# Squire also supports operator overloading and overloading conversions:
+form Fraction {
+	matter numer, denom;
+
+	imitate (numer, denom) {
+		if !denom {
+			catapult "cannot create fractions with no denominator!"
+		} alas if denom < N {
+			soul.numer = -numer;
+			soul.denom = -denom;
+		} alas {
+			soul.numer = numer;
+			soul.denom = denom;
+		}
+	}
+
+	# Conversion operators.
+	change to_text() { "\(soul.numer)/\(soul.denom)" }
+	change to_numeral() { soul.numer / soul.denom }
+	change to_veracity() { !soul.numer }
+
+	# Operator overloading
+	change +(rhs) {
+		if rhs.genus == Fraction {
+			numer = soul.numer * rhs.denom + rhs.numer * soul.denom;
+			denom = soul.denom * rhs.denom;
+			Fraction(numer, denom)
+		} alas {
+			Fraction(soul.numer + soul.denom*rhs, soul.denom)
+		}
+	}
+	change -(rhs) { soul + -rhs }
+	# unary minus
+	change -@() { Fraction(-soul.numer, soul.denom) }
+
+	# There's overloads for almost everything:
+	# `+`, `-`, `*`, `/`, `%`, `**` -- what you expect.
+	# `to_{text,numeral,veracity,book,codex}` -- conversion to builtin types.
+	# `()` - define what it means to call an imitation.
+	# `[]` - indexing
+	# `[]=` - indexing with assignment
+}
+
+half = Fraction(I, II);
+proclaim(half + 5); # => XI/II

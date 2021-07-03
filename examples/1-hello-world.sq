@@ -1,5 +1,4 @@
-proclaim("Hello, world!\n");
+proclaim("Hello, world!");
 
-# or, using bare words (but without punctuation or a trailing newline):
+# or, using bare words (but without punctuation):
 proclaim(ℌ𝔢𝔩𝔩𝔬 𝔴𝔬𝔯𝔩𝔡);
-

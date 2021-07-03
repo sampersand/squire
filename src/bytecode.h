@@ -8,11 +8,12 @@ enum sq_interrupts {
 	SQ_INT_KINDOF             = 0x04,
 
 	SQ_INT_PRINT              = 0x10,
-	SQ_INT_DUMP               = 0x11,
-	SQ_INT_PROMPT             = 0x12,
-	SQ_INT_SYSTEM             = 0x13,
-	SQ_INT_EXIT               = 0x14,
-	SQ_INT_RANDOM             = 0x15,
+	SQ_INT_PRINTLN            = 0x11,
+	SQ_INT_DUMP               = 0x12,
+	SQ_INT_PROMPT             = 0x13,
+	SQ_INT_SYSTEM             = 0x14,
+	SQ_INT_EXIT               = 0x15,
+	SQ_INT_RANDOM             = 0x16,
 
 	SQ_INT_SUBSTR             = 0x20,
 	SQ_INT_LENGTH             = 0x21,

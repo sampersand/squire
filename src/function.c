@@ -89,6 +89,7 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 // 	unsigned ip;
 
 // };
+#define SET_NEXT_LOCAL() NEXT_LOCAL() = value
 
 sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
@@ -129,38 +130,39 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			struct sq_string *string;
 
 			switch ((idx = NEXT_INDEX())) {
-			case SQ_INT_PRINT: {
+			case SQ_INT_PRINT:
+			case SQ_INT_PRINTLN:
 				string = sq_value_to_string(NEXT_LOCAL());
-				printf("%s", string->ptr);
+				if (idx == SQ_INT_PRINTLN) puts(string->ptr);
+				else printf("%s", string->ptr);
 				fflush(stdout);
 				sq_string_free(string);
-				NEXT_LOCAL() = SQ_NULL;
+				SET_NEXT_LOCAL() = SQ_NULL;
 				break;
-			}
 
 			case SQ_INT_DUMP: {
 				value = NEXT_LOCAL();
 				sq_value_dump(value);
 				putchar('\n');
-				NEXT_LOCAL() = value;
+				SET_NEXT_LOCAL() = value;
 				break;
 			}
 
 			case SQ_INT_TOSTRING: {
 				string = sq_value_to_string(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_new_string(string);
+				SET_NEXT_LOCAL() = sq_value_new_string(string);
 				break;
 			}
 
 			case SQ_INT_TONUMBER: {
 				sq_number number = sq_value_to_number(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_new_number(number);
+				SET_NEXT_LOCAL() = sq_value_new_number(number);
 				break;
 			}
 			
 			case SQ_INT_TOBOOLEAN: {
 				bool boolean = sq_value_to_boolean(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_new_boolean(boolean);
+				SET_NEXT_LOCAL() = sq_value_new_boolean(boolean);
 				break;
 			}
 
@@ -176,23 +178,23 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				else
 					result = sq_string_new(strndup(string->ptr + start, count));
 
-				NEXT_LOCAL() = sq_value_new_string(result);
+				SET_NEXT_LOCAL() = sq_value_new_string(result);
 				break;
 			}
 
 			case SQ_INT_LENGTH:
 				value = NEXT_LOCAL();
 
-				NEXT_LOCAL() = sq_value_new_number((sq_number) sq_value_length(value));
+				SET_NEXT_LOCAL() = sq_value_new_number((sq_number) sq_value_length(value));
 				break;
 
 			case SQ_INT_KINDOF: {
 				value = NEXT_LOCAL();
 			genus_kindof:
 				if (sq_value_is_imitation(value))
-					NEXT_LOCAL() = sq_value_new_form(sq_value_as_imitation(value)->form);
+					SET_NEXT_LOCAL() = sq_value_new_form(sq_value_as_imitation(value)->form);
 				else
-					NEXT_LOCAL() = sq_value_kindof(value);
+					SET_NEXT_LOCAL() = sq_value_kindof(value);
 				break;
 			}
 
@@ -233,7 +235,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				if (pclose(stream) == -1)
 					die("unable to close command stream");
 
-				NEXT_LOCAL() = sq_value_new_string(sq_string_new(result));
+				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(result));
 				break;
 			}
 
@@ -255,12 +257,12 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 					line[length] = '\0';
 				}
 
-				NEXT_LOCAL() = sq_value_new_string(sq_string_new(line));
+				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(line));
 				break;
 			}
 
 			case SQ_INT_RANDOM:
-				NEXT_LOCAL() = sq_value_new_number(rand());
+				SET_NEXT_LOCAL() = sq_value_new_number(rand());
 				break;
 
 			case SQ_INT_BOOK_NEW: {
@@ -270,7 +272,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				for (unsigned i = 0; i < amnt; ++i)
 					pages[i] = NEXT_LOCAL();
 
-				NEXT_LOCAL() = sq_value_new_book(sq_book_new2(amnt, pages));
+				SET_NEXT_LOCAL() = sq_value_new_book(sq_book_new2(amnt, pages));
 				break;
 			}
 
@@ -283,7 +285,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 					pages[i].value = NEXT_LOCAL();
 				}
 
-				NEXT_LOCAL() = sq_value_new_codex(sq_codex_new2(amnt, pages));
+				SET_NEXT_LOCAL() = sq_value_new_codex(sq_codex_new2(amnt, pages));
 				break;
 			}
 
@@ -295,7 +297,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 				unsigned index = sq_value_to_number(NEXT_LOCAL());
 				sq_book_insert(book, index, NEXT_LOCAL());
-				NEXT_LOCAL() = sq_value_clone(value);
+				SET_NEXT_LOCAL() = sq_value_clone(value);
 				break;
 			}
 
@@ -304,19 +306,19 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				if (!sq_value_is_book(value)) die("can only delete from books");
 				struct sq_book *book = sq_value_as_book(value);
 				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				NEXT_LOCAL() = sq_book_delete(book, index);
+				SET_NEXT_LOCAL() = sq_book_delete(book, index);
 				break;
 			}
 
 			/** ARABIC **/
 			case SQ_INT_ARABIC:
 				value = NEXT_LOCAL();
-				NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_arabic(sq_value_to_number(value))));
+				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_arabic(sq_value_to_number(value))));
 				break;
 
 			case SQ_INT_ROMAN:
 				value = NEXT_LOCAL();
-				NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_roman(sq_value_to_number(value))));
+				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_roman(sq_value_to_number(value))));
 				break;
 
 			default:
@@ -381,10 +383,10 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				if (argc != fn->argc)
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
 
-				NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
+				SET_NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
 			} else if (sq_value_is_form(imitation_value)) {
 				struct sq_form *form = sq_value_as_form(imitation_value);
-				NEXT_LOCAL() = create_form_imitation(
+				SET_NEXT_LOCAL() = create_form_imitation(
 					form,
 					argc,
 					memdup(newargs, sizeof(sq_value[argc]))
@@ -426,21 +428,21 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_EQL:
 			value = sq_value_new_boolean(sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_NEQ:
 			value = sq_value_new_boolean(!sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_LTH:
 			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) < 0);
 			ip += 2;
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
@@ -448,72 +450,72 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) > 0);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 		case SQ_OC_LEQ:
 			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) <= 0);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 		case SQ_OC_GEQ:
 			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) >= 0);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_ADD:
 			value = sq_value_add(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_SUB:
 			value = sq_value_sub(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_MUL:
 			value = sq_value_mul(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_DIV:
 			value = sq_value_div(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_MOD:
 			value = sq_value_mod(locals[REL_INDEX(0)], locals[REL_INDEX(1)]);
 			ip += 2;
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_NEG:
 			value = sq_value_neg(NEXT_LOCAL());
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_NOT:
 			value = sq_value_new_boolean(sq_value_not(NEXT_LOCAL()));
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_INDEX:
 			value = NEXT_LOCAL();
 			value = sq_value_index(value, NEXT_LOCAL());
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			break;
 
 		case SQ_OC_INDEX_ASSIGN: {
@@ -521,7 +523,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			sq_value key = NEXT_LOCAL();
 			sq_value val = NEXT_LOCAL();
 			sq_value_index_assign(value, key, val);
-			NEXT_LOCAL() = val;
+			SET_NEXT_LOCAL() = val;
 			break;
 		}
 	/*** Constants ***/
@@ -530,7 +532,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 	
 			value = function->consts[NEXT_INDEX()];
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			// LOG("loaded local '%llu'", value);
 			continue;
 
@@ -539,14 +541,14 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 		case SQ_OC_GLOAD:
 			value = function->program->globals[NEXT_INDEX()];
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		case SQ_OC_GSTORE: {
 			unsigned index = NEXT_INDEX();
 			// todo: free old value.
 			value = function->program->globals[index] = NEXT_LOCAL();
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			sq_value_clone(value);
 			continue;
@@ -583,7 +585,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			}
 
 			sq_value_clone(value);
-			NEXT_LOCAL() = value;
+			SET_NEXT_LOCAL() = value;
 			continue;
 
 		}
@@ -611,7 +613,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 			value = NEXT_LOCAL();
 			sq_value_clone(value);
-			NEXT_LOCAL() = *valueptr = value;
+			SET_NEXT_LOCAL() = *valueptr = value;
 			continue;
 		}
 

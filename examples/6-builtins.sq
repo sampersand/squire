@@ -1,8 +1,8 @@
 # Squire has a number of builtin methods to do anything you want.
 
 # `proclaim` takes a single argument, converts it to a string, and then prints
-# it out _without_ a trailing newline.
-proclaim("Hello, world!\n")
+# it out with a trailing newline.
+proclaim("Hello, world!")
 
 # To convert a value to a numeral, `tally` it.
 proclaim(tally("III"));

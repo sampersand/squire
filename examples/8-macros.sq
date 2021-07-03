@@ -1,0 +1,16 @@
+# What runtime language would be complete with macros? Squire has a few simple
+# macros available. All macro invocations start with `@` (eg `@henceforth`), and
+# must end with a `;`.
+
+
+# `@compile` is used to import other files into this one and compile them.
+# (sort of a watered-down version of C's `#include`)
+@compile "1-hello-world.sq"; # "Hello world!"
+
+# `@henceforth` is used for text replacement at compile time. There's two versi-
+# ons--normal and functional. Both versions are terminated by a trailing `;`,
+# unlike C's `#define`. Note that you can escape `;`s in the macro text via the
+# `<< ... >>` constructs. Note that all variables relating to macros must be
+# prefixed with a `$` to denote that they're macro variables.
+@henceforth $language = 𝔖𝔮𝔲𝔦𝔯𝔢;
+proclaim("A cool language is \($language)."); # => A cool language is Squire.
