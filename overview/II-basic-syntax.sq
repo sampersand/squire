@@ -1,5 +1,5 @@
 # Comments in Squire start with a `#` and go to the end of the line.
-#/* You can also use these for block comments */
+/* You can also use these for block comments */
 
 # Naturally, Squire uses Roman Numerals for numbers.
 six = VI;

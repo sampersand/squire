@@ -1,1 +1,16 @@
- 
+# Squire has two more types: Books (arrays) and Codices (dictionaries). Nothing
+# _terribly_ exciting, they work generally how you'd expect.
+
+
+# Books in Squire are created with the familiar `[..]` syntax. Unlike most other
+# languages, Squire us `1`-index based (*cough*, sorry, `I`-index based.)
+languages = [𝔖𝔮𝔲𝔦𝔯𝔢, ℜ𝔲𝔰𝔱, ℭ];
+proclaim("Squire has been written in \(languages[II]) and \(languages[III]).");
+#=> Squire has been written in Rust and C.
+
+# Fetching a page which doesn't exist in the book will yield `ni`.
+proclaim(languages[IV]); #=>ni
+# However, assigning to a page that's too large will fill the rest of the book
+# with `ni`.
+
+# You can also
