@@ -177,7 +177,7 @@ static void parse_henceforth(void) {
 			free(name);
 			free(var->tokens);
 			goto found_token;
-		}
+		} // todo: make use of `<impossible>`s
 
 	if (variables.len == variables.cap) {
 		variables.vars = variables.len
@@ -246,7 +246,7 @@ static void parse_whereupon(void) {
 			continue;
 		}
 
-		if ((token = sq_next_token()).kind == SQ_TK_UNDEFINED)
+		if ((token = next_non_macro_token()).kind == SQ_TK_UNDEFINED)
 			die("`@nowhere` found nowhere.");
 
 		if (!is_defined) continue;
@@ -413,7 +413,7 @@ static bool parse_macro_identifier(char *name) {
 	if (is_in_macro_declaration)
 		return true;
 
-	if (!strcmp(name, "__ID__")) {
+	if (!strcmp(name, "__COUNTER__")) {
 	 	expansions[++expansion_pos].tokens = xmalloc(sizeof(struct sq_token));
 	 	expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMBER;
 	 	expansions[expansion_pos].tokens[0].number = unique_value++;

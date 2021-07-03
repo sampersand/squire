@@ -14,6 +14,10 @@
 # unlike C's `#define`. Note that you can escape `;`s in the macro text via the
 # `<< ... >>` constructs. Note that all variables relating to macros must be
 # prefixed with a `$` to denote that they're macro variables.
+#
+# The `@henceforth` macros are currently quite limited, as there's no way to do
+# variable length arguments or delayed expansion. In the future, this may be
+# changed.
 @henceforth $language = 𝔖𝔮𝔲𝔦𝔯𝔢;
 @henceforth $count_to_three =
 	<< # anything between `<< ... >>` is taken literally, including `;`s.
@@ -33,15 +37,55 @@ $count_to_three
 # II
 # III
 
+# Note that there's a special macro variable `$__COUNTER__`, which will be
+# incremented each time it's used.
+proclaim("$__COUNTER__ = \($__COUNTER__)"); # => $__COUNTER__ = N
+proclaim("$__COUNTER__ = \($__COUNTER__)"); # => $__COUNTER__ = I
+proclaim("$__COUNTER__ = \($__COUNTER__)"); # => $__COUNTER__ = II
+
 # You can also use `<< ... >>`  within macro invocations to escape `,`s:
 @henceforth $call_journey_and_proclaim($journey, $arg) =
 	proclaim("the result is \($journey($arg))");
 
 journey multiply(x, y) { x * y }
-$call_journey_and_proclaim(multiply, <<3, 4>>) #=> the result is XII
+$call_journey_and_proclaim(multiply, <<III, IV>>) #=> the result is XII
 
-# The `@henceforth` macros are currently quite limited, as there's no way to do
-# variable length arguments or delayed expansion. In the future, this may be
-# changed.
 
-@henceforth $a($b)=$+3
+
+# `@nevermore` simply undeclares a variable defined with `@henceforth`. 
+# attempts to use the macro will be an error (until you re-`@henceforth` it.)
+@nevermore $call_journey_and_proclaim;
+
+# Squire provides a _very_ basic form of conditional compilation---whether or
+# not a variable has been declared. (This will be fixed up in the future too.)
+@whereupon $foo
+	this code will never be executed, as `$foo` is not declared.
+@alas
+	proclaim("This will run, however."); #=> This will run, however.
+@nowhere;
+
+# You can use this in conjunction with macros to make things like assertions:
+@henceforth $assert1($cond, $msg) =
+	@whereupon $DEBUG
+		if !($cond) { catapult "assertion failed: \($msg)"}
+	@nowhere;
+
+@henceforth $DEBUG = 1;
+@henceforth $assert2($cond, $msg) =
+	# Note: the c version doesn't like this code, even though it's (supposed) to
+	# be valid Squire. todo: fix that lol
+	/* @whereupon $DEBUG */
+		if !($cond) { catapult "assertion failed: \($msg)" };
+	/* @nowhere */ ;
+
+$assert1(nay, "!"); # nothing happens
+attempt {
+	$assert2(nay, "somethin bad happened");
+} alas err {
+	proclaim("oops: \(err)"); #=> oops: somethin bad happened
+}
+
+
+# `@__END__` takes no arguments and simply stops parsing the rest of the file.
+@__END__
+this stuff here will never be parsed.

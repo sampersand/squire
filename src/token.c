@@ -96,8 +96,10 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 					break;
 				}
 
-				if (!*sq_stream) die("unterminated block comment");
+				if (!*sq_stream++) die("unterminated block comment");
 			}
+			
+			continue;
 		}
 
 
@@ -301,14 +303,17 @@ static struct sq_token parse_identifier(void) {
 	return token;
 }
 
-// TODO: an entire program `a + 4` doesn't work.
+
+struct sq_token next_non_macro_token() {
+	return interpolation_length ? next_interpolation_token() : next_normal_token();
+}
+
 struct sq_token sq_next_token() {
 	struct sq_token token = next_macro_token();
 
 	if (token.kind != SQ_TK_UNDEFINED)
 		return token;
-
-	return interpolation_length ? next_interpolation_token() : next_normal_token();
+	return next_non_macro_token();
 }
 
 static struct sq_token next_normal_token(void) {
@@ -319,7 +324,7 @@ static struct sq_token next_normal_token(void) {
 	strip_whitespace(false);
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
-	if (!*sq_stream || !strncmp(sq_stream, "__END__", 7))
+	if (!*sq_stream || !strncmp(sq_stream, "@__END__", 8))
 		return token.kind = SQ_TK_UNDEFINED, token;
 
 	if (isdigit(*sq_stream))

@@ -41,3 +41,8 @@ proclaim('What is cool? \(squire)!\t'); #=> What is cool? \(squire)!\t
 # whitespace will be stripped. 
 squire = 𝔰𝔮𝔲𝔦𝔯𝔢 𝔦𝔰 𝔠𝔬𝔬𝔩;
 proclaim("What is cool? \(squire)!"); #=> What is cool? squire is cool!
+
+
+# You can also use `@__END__` to stop all parsing for the rest of the file.
+@__END__
+this stuff here will never be parsed.
