@@ -278,13 +278,13 @@ static bool should_compile(char *filename) {
 	static char **paths;
 	static unsigned npaths, pathcap;
 
-    char *path = realpath(filename, NULL);
+	char *path = realpath(filename, NULL);
 
-    for (unsigned i = 0; i < npaths; ++i)
-    	if (!strcmp(paths[i], path))
-    		return free(path), false;
+	for (unsigned i = 0; i < npaths; ++i)
+		if (!strcmp(paths[i], path))
+			return free(path), false;
 
-    if (npaths == pathcap) {
+	if (npaths == pathcap) {
 		if (!paths) paths = xmalloc(sizeof(char *[pathcap = 16]));
 		else paths = xrealloc(paths, sizeof(char *[pathcap *= 2]));
 	}
@@ -294,7 +294,7 @@ static bool should_compile(char *filename) {
 }
 #endif
 
-static void parse_compile(void) {
+static void parse_collate(void) {
 	strip_whitespace(true);
 	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
 	char *filename = parse_string().string->ptr; // lol memfree?
@@ -328,7 +328,7 @@ static void parse_compile(void) {
 static void parse_macro_statement(char *name) {
 	if (!strcmp(name, "henceforth")) parse_henceforth();
 	else if (!strcmp(name, "nevermore")) parse_nevermore();
-	else if (!strcmp(name, "compile")) parse_compile();
+	else if (!strcmp(name, "collate")) parse_collate();
 	else if (!strcmp(name, "whereupon")) parse_whereupon();
 	else if (!strcmp(name, "nowhere")) die("unexpected '@nowhere'");
 	else if (!strcmp(name, "alas")) die("unexpected '@alas'");

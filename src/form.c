@@ -46,9 +46,15 @@ void sq_form_deallocate(struct sq_form *form) {
 }
 
 struct sq_function *sq_form_lookup_recollection(struct sq_form *form, const char *name) {
+	struct sq_function *recall;
+
 	for (unsigned i = 0; i < form->nrecollections; ++i)
-		if (!strcmp(name, form->recollections[i]->name))
-			return form->recollections[i];
+		if (!strcmp(name, (recall = form->recollections[i])->name))
+			return recall;
+
+	for (unsigned i = 0; i < form->nparents; ++i)
+		if ((recall = sq_form_lookup_recollection(form, name)))
+			return recall;
 
 	return NULL;
 }

@@ -46,6 +46,6 @@ proclaim("Mutton costs \(prices[𝔪𝔲𝔱𝔱𝔬𝔫]).") #=> Mutton costs n
 proclaim("There are \(prices.length) items.") #=> There are III items.
 
 # Alas, we've run out of mead. Let's take it off the menu.
-delete(prices, 𝔪𝔢𝔞𝔡);
+delete(prices, 𝔪𝔢𝔞𝔡)
 proclaim("The prices at my tavern are now: \(prices).")
 #=> The prices at my tavern are now: {dinner: X, ale: IV}.
