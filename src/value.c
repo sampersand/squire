@@ -564,7 +564,7 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		return sq_book_to_string(AS_ARRAY(value));
 
 	case SQ_TCODEX:
-		todo("codex to string");
+		return sq_codex_to_string(AS_CODEX(value));
 
 	case SQ_TFUNCTION:
 		die("cannot convert %s to a string", TYPENAME(value));

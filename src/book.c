@@ -119,7 +119,6 @@ struct sq_string *sq_book_to_string(const struct sq_book *book) {
 	char *string = xmalloc(cap);
 	string[len++] = '[';
 
-
 	for (unsigned i = 0; i < book->length; ++i) {
 		if (i) {
 			if (cap <= len + 2)
