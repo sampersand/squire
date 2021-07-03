@@ -12,7 +12,7 @@ static struct sq_token next_macro_token(void);
 static void parse_macro_statement(char *);
 static bool parse_macro_identifier(char *);
 
-static void strip_whitespace(bool strip_newline) {
+static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_slash) {
 	char c;
 
 	// strip whitespace
@@ -25,7 +25,7 @@ static void strip_whitespace(bool strip_newline) {
 			continue;
 		}
 
-		if (*sq_stream == '\\') {
+		if (*sq_stream == '\\' && !ignore_slash) {
 			++sq_stream;
 
 			if (*sq_stream && *sq_stream++ != '\n') 
@@ -39,6 +39,10 @@ static void strip_whitespace(bool strip_newline) {
 		while (isspace(c) && c != '\n')
 			c = *++sq_stream;
 	}
+}
+
+static void strip_whitespace(bool strip_newline) {
+	strip_whitespace_maybe_ignore_slash(strip_newline, false);
 }
 
 #define CHECK_FOR_START(str, tkn) \
@@ -191,22 +195,36 @@ static struct sq_token parse_identifier(void) {
 
 	token.identifier = xmalloc(sizeof(char [cap]));
 
-	do {
+	while (true) {
 		if (cap <= len + 1)
 			token.identifier = xrealloc(token.identifier, sizeof(char [cap*=2]));
 
-		if (isupper(*sq_stream)) {
-			token.identifier[len++] = '-';
-			token.identifier[len++] = *sq_stream - ('A' + 'a');
-		} else if (*sq_stream == '_') token.identifier[len++] = '-';
-		else token.identifier[len++] = *sq_stream;
+		if (isupper(*sq_stream) && len && !isupper(token.identifier[0])) {
+			token.identifier[len++] = '_';
+			token.identifier[len++] = *sq_stream++ - 'A' + 'a';
+		} else if (isalnum(*sq_stream) || *sq_stream == '_') {
+			token.identifier[len++] = *sq_stream++;
+		} else if (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_')) {
+			++sq_stream;
+			token.identifier[len++] = '_';
+		} else if (isspace(*sq_stream)) {
+			while (isspace(*sq_stream)) ++sq_stream;
 
-		++sq_stream;
-	} while (
-		isalnum(*sq_stream)
-		|| *sq_stream == '_'
-		|| (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_'))
-	);
+			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
+			else break;
+		} else break;
+
+	// 	|| *sq_stream == '_'
+	// 	|| (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_'))
+	// ) {
+
+	// 	if (isupper(*sq_stream)) {
+	// 		token.identifier[len++] = '_';
+	// 		token.identifier[len++] = *sq_stream - 'A' + 'a';
+	// 	} else if (*sq_stream == '-') token.identifier[len++] = '_';
+	// 	else token.identifier[len++] = *sq_stream;
+
+	}
 
 	token.identifier = xrealloc(token.identifier, sizeof(char [len + 1]));
 	token.identifier[len] = '\0';

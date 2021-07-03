@@ -6,7 +6,6 @@ six = VI;
 fourteen = XIV;
 proclaim("eighty four is: \(six * fourteen)"); #=> eighty four: is LXXXIV
 
-
 # Just for sanity's sake, squire also supports zero and negative Roman Numerals.
 proclaim("0=\(I-I), -1=\(I-II)") #=> 0=N, -1=-I
 
@@ -42,6 +41,10 @@ proclaim('What is cool? \(squire)!\t'); #=> What is cool? \(squire)!\t
 squire = 𝔰𝔮𝔲𝔦𝔯𝔢 𝔦𝔰 𝔠𝔬𝔬𝔩;
 proclaim("What is cool? \(squire)!"); #=> What is cool? squire is cool!
 
+
+# Variables in Squire can be in whatever style you want---they're all the same!
+foo_bar = X;
+proclaim(foo-bar + fooBar + foo bar);#=> XXX
 
 # You can also use `@__END__` to stop all parsing for the rest of the file.
 @__END__
