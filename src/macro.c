@@ -36,6 +36,12 @@ struct _ignored__;
 #include <string.h>
 #include <errno.h>
 
+#ifndef NPOSIX
+# include <limits.h>
+# include <stdio.h>
+# include <stdlib.h>
+#endif
+
 static struct {
 	struct macro_variable {
 		char *name, **args;
@@ -263,10 +269,37 @@ static void parse_whereupon(void) {
 }
 
 
+#ifdef NPOSIX
+static bool should_compile(char *filename) {
+	return true; // lol, always compile on windows or somethin. idk.
+}
+#else
+static bool should_compile(char *filename) {
+	static char **paths;
+	static unsigned npaths, pathcap;
+
+    char *path = realpath(filename, NULL);
+
+    for (unsigned i = 0; i < npaths; ++i)
+    	if (!strcmp(paths[i], path))
+    		return free(path), false;
+
+    if (npaths == pathcap) {
+		if (!paths) paths = xmalloc(sizeof(char *[pathcap = 16]));
+		else paths = xrealloc(paths, sizeof(char *[pathcap *= 2]));
+	}
+
+	paths[npaths++] = path;
+	return true;
+}
+#endif
+
 static void parse_compile(void) {
 	strip_whitespace(true);
 	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
 	char *filename = parse_string().string->ptr; // lol memfree?
+
+	if (!should_compile(filename)) return;
 
 	errno = 0;
 	FILE *file = fopen(filename, "rb");
