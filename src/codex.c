@@ -91,10 +91,16 @@ struct sq_codex_page *sq_codex_fetch_page(struct sq_codex *codex, sq_value key) 
 
 sq_value sq_codex_delete(struct sq_codex *codex, sq_value key) {
 	struct sq_codex_page *page = sq_codex_fetch_page(codex, key);
+	sq_value result = SQ_NULL;
 
 	if (page) {
 		sq_value_free(page->key);
-		page->key = SQ_UNDEFINED;
+		result = page->value;
+
+		if (codex->length != 1) {
+			page->key = codex->pages[--codex->length].key;
+			page->value = codex->pages[codex->length].value;
+		}
 		return page->value;
 	}
 

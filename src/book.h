@@ -116,8 +116,8 @@ static inline void sq_book_insert2(struct sq_book *book, ssize_t index, sq_value
 }
 
 // Same as `sq_book_delete`, but it accepts negative indices.
-static inline void sq_book_delete2(struct sq_book *book, ssize_t index) {
-	sq_book_delete(book, sq_book_fix_index(book, index));
+static inline sq_value sq_book_delete2(struct sq_book *book, ssize_t index) {
+	return sq_book_delete(book, sq_book_fix_index(book, index));
 }
 
 // Same as `sq_book_index`, but it accepts negative indices.

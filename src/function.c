@@ -296,17 +296,21 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 				struct sq_book *book = sq_value_as_book(value);
 
 				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				sq_book_insert(book, index, NEXT_LOCAL());
+				sq_book_insert2(book, index, NEXT_LOCAL());
 				SET_NEXT_LOCAL() = sq_value_clone(value);
 				break;
 			}
 
 			case SQ_INT_ARRAY_DELETE: {
 				value = NEXT_LOCAL();
-				if (!sq_value_is_book(value)) die("can only delete from books");
-				struct sq_book *book = sq_value_as_book(value);
-				unsigned index = sq_value_to_number(NEXT_LOCAL());
-				SET_NEXT_LOCAL() = sq_book_delete(book, index);
+				sq_value index = NEXT_LOCAL();
+				if (sq_value_is_book(value))
+					SET_NEXT_LOCAL() = sq_book_delete2(sq_value_as_book(value), sq_value_to_number(index));
+				else if (sq_value_is_codex(value))
+					SET_NEXT_LOCAL() = sq_codex_delete(sq_value_as_codex(value), index);
+				else 
+					die("can only delete from books and codices");
+
 				break;
 			}
 
@@ -563,7 +567,9 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 			 if (!strcmp(field, "genus"))
 			 	goto genus_kindof;
 
-			if (sq_value_is_form(value)) {
+			if (!strcmp(field, "length"))
+				value = sq_value_new_number((sq_number) sq_value_length(value));
+			else if (sq_value_is_form(value)) {
 				struct sq_form *form = sq_value_as_form(value);
 				value = sq_form_lookup(form, field);
 
@@ -575,11 +581,7 @@ sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *
 
 				if (value == SQ_UNDEFINED)
 					die("unknown field '%s' for type '%s'", field, imitation->form->name);
-			} else if (sq_value_is_book(value)) {
-				if (!strcmp(field, "length"))
-					value = sq_value_new_number((sq_number) sq_value_length(value));
-				else
-					die("unknown book method '%s'", field);
+			// } else if (sq_value_is_book(value)) {
 			} else {
 				die("can only access fields on imitations.");
 			}
