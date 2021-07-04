@@ -157,6 +157,7 @@ static inline sq_number sq_value_as_number(sq_value value) {
 }
 
 static inline bool sq_value_as_boolean(sq_value value) {
+	if (!sq_value_is_boolean(value)) *(volatile int *)(0);
 	assert(sq_value_is_boolean(value));
 	return value == SQ_TRUE;
 }

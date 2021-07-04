@@ -252,7 +252,7 @@ static void parse_whereupon(void) {
 			continue;
 		}
 
-		if ((token = next_non_macro_token()).kind == SQ_TK_UNDEFINED)
+		if ((token = sq_next_token()).kind == SQ_TK_UNDEFINED)
 			die("`@nowhere` found nowhere.");
 
 		if (!is_defined) continue;
@@ -294,7 +294,7 @@ static bool should_compile(char *filename) {
 }
 #endif
 
-static void parse_collate(void) {
+static void parse_transcribe(void) {
 	strip_whitespace(true);
 	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
 	char *filename = parse_string().string->ptr; // lol memfree?
@@ -320,8 +320,6 @@ static void parse_collate(void) {
 
 	// this _will_ leak memory, but eh we're compiling who cares
 	memcpy(new_stream + file_size, sq_stream, stream_len + 1);
-	printf("stream_len=%zu\n", stream_len);
-	printf("new_stream[2]={{{{%s}}}}\n", new_stream);
 	sq_stream = new_stream;
 }
 
@@ -329,7 +327,7 @@ static void parse_collate(void) {
 static void parse_macro_statement(char *name) {
 	if (!strcmp(name, "henceforth")) parse_henceforth();
 	else if (!strcmp(name, "nevermore")) parse_nevermore();
-	else if (!strcmp(name, "collate")) parse_collate();
+	else if (!strcmp(name, "transcribe")) parse_transcribe();
 	else if (!strcmp(name, "whereupon")) parse_whereupon();
 	else if (!strcmp(name, "nowhere")) die("unexpected '@nowhere'");
 	else if (!strcmp(name, "alas")) die("unexpected '@alas'");

@@ -1,0 +1,16 @@
+form Not Idempotent {
+	change to numeral() {
+		ran = soul.run()
+		numeral(ran)
+	}
+
+	change to text() {
+		ran = soul.run()
+		text(ran)
+	}
+
+	change to veracity() {
+		ran = soul.run()
+		veracity(ran)
+	}
+}

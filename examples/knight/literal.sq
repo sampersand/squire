@@ -1,5 +1,24 @@
-@collate "assert.sq"
-@collate "not idempotent.sq"
+@henceforth $DEBUG = 1;
+@transcribe "assert.sq"
+
+form Literal {
+	matter value;
+
+@whereupon $DEBUG
+	imitate(value) {
+		soul.value = value;
+		g = value.genus;
+		$assert(g == 'numeral' || g == 'veracity' || g == 'ni');
+	}
+@nowhere;
+
+	change run () { soul }
+}
+
+l = Literal(I123);
+dump(l.run());
+
+@__END__
 
 form Variable : Not Idempotent {
 	matter name, value, assigned;

@@ -765,8 +765,9 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("proclaim",  SQ_INT_PRINTLN, 1);
 	BUILTIN_FN("proclaimn", SQ_INT_PRINT, 1);
 	BUILTIN_FN("tally",     SQ_INT_TONUMBER, 1);
+	BUILTIN_FN("numeral",   SQ_INT_TONUMBER, 1);
 	BUILTIN_FN("text",      SQ_INT_TOSTRING, 1); // `prose` ?
-	BUILTIN_FN("boolean",   SQ_INT_TOBOOLEAN, 1); // `veracity`
+	BUILTIN_FN("veracity",  SQ_INT_TOBOOLEAN, 1); // `veracity`
 	BUILTIN_FN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
 	BUILTIN_FN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",    SQ_INT_SUBSTR, 3);

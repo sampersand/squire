@@ -87,10 +87,26 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 			continue;
 		}
 
-		if (*sq_stream == '\\' && !ignore_slash) {
+		if (c == '/' && sq_stream[1] == '*') {
+			sq_stream += 2;
+
+			while (true) {
+				if (sq_stream[0] == '*' && sq_stream[1] == '/') {
+					sq_stream += 2;
+					break;
+				}
+
+				if (!*sq_stream++) die("unterminated block comment");
+			}
+
+			continue;
+		}
+
+
+		if (*sq_stream == '\\') {
 			++sq_stream;
 
-			if (*sq_stream && *sq_stream++ != '\n') 
+			if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash)
 				die("unexpected '\\' on its own.");
 			continue;
 		}
@@ -98,7 +114,7 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 		if (!isspace(c) || (!strip_newline && c == '\n'))
 			break;
 
-		while (isspace(c) && c != '\n')
+		while (isspace(c) && (strip_newline ? true : c != '\n'))
 			c = *++sq_stream;
 	}
 }
@@ -160,7 +176,7 @@ static struct sq_token next_interpolation_token(void) {
 
 	case 1:
 		token.kind = SQ_TK_IDENT;
-		token.identifier = strdup("string");
+		token.identifier = strdup("text");
 		return token;
 
 	case 2:
@@ -198,6 +214,20 @@ static struct sq_token parse_string(void) {
 			die("unterminated quote encountered");
 
 		if (c != '\\') {
+			dst[length++] = c;
+			continue;
+		}
+
+		if (quote == '\'') {
+			switch (c = *sq_stream++) {
+				case '\\':
+				case '\'':
+				case '\"':
+					break;
+				default:
+					dst[length++] = '\\';
+			}
+
 			dst[length++] = c;
 			continue;
 		}
@@ -257,10 +287,9 @@ static struct sq_token parse_identifier(void) {
 
 	token.identifier = xmalloc(sizeof(char [cap]));
 
+        token.identifier = xmalloc(sizeof(char [cap]));
+ 
 	while (true) {
-		if (cap <= len + 1)
-			token.identifier = xrealloc(token.identifier, sizeof(char [cap*=2]));
-
 		if (isupper(*sq_stream) && len && !isupper(token.identifier[0])) {
 			token.identifier[len++] = '_';
 			token.identifier[len++] = *sq_stream++ - 'A' + 'a';
@@ -269,9 +298,8 @@ static struct sq_token parse_identifier(void) {
 		} else if (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_')) {
 			++sq_stream;
 			token.identifier[len++] = '_';
-		} else if (isspace(*sq_stream)) {
-			while (isspace(*sq_stream)) ++sq_stream;
-
+		} else if (*sq_stream == ' ' || *sq_stream == '\t') {
+			while (*sq_stream == ' ' || *sq_stream == '\t') ++sq_stream;
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
 		} else break;
@@ -293,17 +321,16 @@ static struct sq_token parse_identifier(void) {
 	return token;
 }
 
+
 struct sq_token next_non_macro_token() {
 	return interpolation_length ? next_interpolation_token() : next_normal_token();
 }
 
-// TODO: an entire program `a + 4` doesn't work.
 struct sq_token sq_next_token() {
 	struct sq_token token = next_macro_token();
 
 	if (token.kind != SQ_TK_UNDEFINED)
 		return token;
-
 	return next_non_macro_token();
 }
 
@@ -327,6 +354,13 @@ static struct sq_token next_normal_token(void) {
 			return (token.kind = SQ_TK_NUMBER), token;
 	}
 
+	struct sq_string *fraktur;
+	if ((fraktur = parse_fraktur_bareword()) != NULL) {
+		token.kind = SQ_TK_STRING;
+		token.string = fraktur;
+		return token;
+	}
+
 	if (*sq_stream == '\'' || *sq_stream == '\"')
 		return parse_string();
 
@@ -344,7 +378,8 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("form",         SQ_TK_CLASS);
 	CHECK_FOR_START_KW("matter",       SQ_TK_FIELD);
 	CHECK_FOR_START_KW("change",       SQ_TK_METHOD);
-	CHECK_FOR_START_KW("recollect",    SQ_TK_CLASSFN);
+	CHECK_FOR_START_KW("recollect",    SQ_TK_CLASSFN); // deprecated
+	CHECK_FOR_START_KW("recall",       SQ_TK_CLASSFN);
 	CHECK_FOR_START_KW("imitate",      SQ_TK_CONSTRUCTOR);
 	CHECK_FOR_START_KW("essence",      SQ_TK_ESSENCE);
 	// substance?
