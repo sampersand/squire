@@ -213,17 +213,6 @@ static struct sq_token parse_identifier(void) {
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
 		} else break;
-
-	// 	|| *sq_stream == '_'
-	// 	|| (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_'))
-	// ) {
-
-	// 	if (isupper(*sq_stream)) {
-	// 		token.identifier[len++] = '_';
-	// 		token.identifier[len++] = *sq_stream - 'A' + 'a';
-	// 	} else if (*sq_stream == '-') token.identifier[len++] = '_';
-	// 	else token.identifier[len++] = *sq_stream;
-
 	}
 
 	token.identifier = xrealloc(token.identifier, sizeof(char [len + 1]));

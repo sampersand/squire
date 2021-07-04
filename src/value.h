@@ -39,6 +39,43 @@ typedef enum {
 
 #define SQ_VALUE_ALIGN _Alignas(1<<SQ_VSHIFT)
 
+
+// #define SQ_TAG(kind) _Generic((kind){0}, \
+// 	sq_number: SQ_TNUMBER, \
+// 	bool: SQ_TCONST, \
+// 	struct sq_string: SQ_TSTRING, \
+// 	struct sq_form: SQ_TFORM, \
+// 	struct sq_imitation: SQ_TIMITATION, \
+// 	struct sq_function: SQ_TFUNCTION, \
+// 	struct sq_array: SQ_TBOOK, \
+// 	struct sq_codex: SQ_TCODEX \
+// )
+
+// #define sq_value_is(x, kind) (SQ_VTAG(x) == SQ_TAG(kind))
+// #define sq_value_as(x, kind) (assert(sq_value_is(x, kind), _Generic(kind, \
+// 	sq_number: (x) >> SQ_VSHIFT, \
+// 	bool: (x) == SQ_TRUE, \
+// 	struct sq_string *: (kind) SQ_VUNMASK(x), \
+// 	struct sq_form *: (kind) SQ_VUNMASK(x), \
+// 	struct sq_imitation *: (kind) SQ_VUNMASK(x), \
+// 	struct sq_function *: (kind) SQ_VUNMASK(x), \
+// 	struct sq_array *: (kind) SQ_VUNMASK(x), \
+// 	struct sq_codex *: (kind) SQ_VUNMASK(x)\
+
+// (SQ_VTAG(x) == SQ_TAG(kind))
+
+// #define sq_value_new(x) (_Generic(x, \
+// 	sq_number: sq_value_new_number, \
+// 	bool: sq_value_new_boolean, \
+// 	struct sq_string *: sq_value_new_string, \
+// 	struct sq_form *: sq_value_new_form, \
+// 	struct sq_imitation *: sq_value_new_imitation, \
+// 	struct sq_function *: sq_value_new_function, \
+// 	struct sq_array *: sq_value_new_book, \
+// 	struct sq_codex *: sq_value_new_codex \
+// )(x))
+
+
 static inline sq_value sq_value_new_number(sq_number number) {
 	assert(number == (((sq_number) (((sq_value) number << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) number) << SQ_VSHIFT, SQ_TNUMBER);

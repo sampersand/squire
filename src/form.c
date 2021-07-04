@@ -21,14 +21,17 @@ void sq_form_deallocate(struct sq_form *form) {
 		free(form->essences[i].name);
 		sq_value_free(form->essences[i].value);
 	}
+
 	free(form->essences);
 
 	for (unsigned i = 0; i < form->nrecollections; ++i)
 		sq_function_free(form->recollections[i]);
+
 	free(form->recollections);
 
 	for (unsigned i = 0; i < form->nmatter; ++i)
 		free(form->matter_names[i]);
+
 	free(form->matter_names);
 
 	for (unsigned i = 0; i < form->nchanges; ++i)
@@ -53,7 +56,7 @@ struct sq_function *sq_form_lookup_recollection(struct sq_form *form, const char
 			return recall;
 
 	for (unsigned i = 0; i < form->nparents; ++i)
-		if ((recall = sq_form_lookup_recollection(form, name)))
+		if ((recall = sq_form_lookup_recollection(form->parents[i], name)))
 			return recall;
 
 	return NULL;
@@ -63,6 +66,11 @@ sq_value *sq_form_lookup_essence(struct sq_form *form, const char *name) {
 	for (unsigned i = 0; i < form->nessences; ++i)
 		if (!strcmp(name, form->essences[i].name))
 			return &form->essences[i].value;
+
+	sq_value *essence;
+	for (unsigned i = 0; i < form->nparents; ++i)
+		if ((essence = sq_form_lookup_essence(form->parents[i], name)))
+			return essence;
 
 	return NULL;
 }
@@ -98,6 +106,7 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 
 struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	assert(form != NULL);
+	assert(form->refcount != 0);
 	assert(form->nmatter == 0 || matter != NULL);
 
 	struct sq_imitation *imitation = xmalloc(sizeof(struct sq_imitation));
@@ -109,12 +118,22 @@ struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	return imitation;
 }
 
-struct sq_function *sq_imitation_lookup_change(struct sq_imitation *imitation, const char *name) {
-	for (unsigned i = 0; i < imitation->form->nchanges; ++i)
-		if (!strcmp(name, imitation->form->changes[i]->name))
-			return imitation->form->changes[i];
+static struct sq_function *sq_form_lookup_change(struct sq_form *form, const char *name) {
+	struct sq_function *change;
+
+	for (unsigned i = 0; i < form->nchanges; ++i)
+		if (!strcmp(name, (change = form->changes[i])->name))
+			return change;
+
+	for (unsigned i = 0; i < form->nparents; ++i)
+		if ((change = sq_form_lookup_change(form->parents[i], name)))
+			return change;
 
 	return NULL;
+}
+
+struct sq_function *sq_imitation_lookup_change(struct sq_imitation *imitation, const char *name) {
+	return sq_form_lookup_change(imitation->form, name);
 }
 
 sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char *name) {
