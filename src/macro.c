@@ -319,8 +319,9 @@ static void parse_collate(void) {
 	if (errno) perror("cannot get close file"), exit(1);
 
 	// this _will_ leak memory, but eh we're compiling who cares
-	new_stream[file_size] = '\0';
-	strcat(new_stream, sq_stream);
+	memcpy(new_stream + file_size, sq_stream, stream_len + 1);
+	printf("stream_len=%zu\n", stream_len);
+	printf("new_stream[2]={{{{%s}}}}\n", new_stream);
 	sq_stream = new_stream;
 }
 

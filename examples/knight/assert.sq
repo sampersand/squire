@@ -1,12 +1,12 @@
 @henceforth $DEBUG = 1;
 @henceforth $assert($cond) = $assert_msg($cond, "assertion failed");
 
-@whereupon $DEBUG
+#@whereupon $DEBUG
 	@henceforth $assert_msg($cond, $errmsg) =
 		if !($cond) {
 			catapult "assertion failed: \($errmsg)"
 		};
-@alas
+#@alas
 
-	@henceforth $assert_msg($cond, $errmsg) = ;
-@nowhere;
+#	@henceforth $assert_msg($cond, $errmsg) = ;
+#@nowhere;

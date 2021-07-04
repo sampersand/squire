@@ -12,6 +12,68 @@ static struct sq_token next_macro_token(void);
 static void parse_macro_statement(char *);
 static bool parse_macro_identifier(char *);
 
+static size_t fraktur_length(const char *stream, size_t *index) {
+	static const char *const FRAKTUR[26 * 2] = {
+		// A    B    C    D    E    F    G    H    I
+		  "𝔄", "𝔅", "ℭ", "𝔇", "𝔈", "𝔉", "𝔊", "ℌ", "ℑ",
+		// J    K    L    M    N    O    P    Q    R
+		  "𝔍", "𝔎", "𝔏", "𝔐", "𝔑", "𝔒", "𝔓", "𝔔", "ℜ",
+		// S    T    U    V    W    X    Y    Z
+		  "𝔖", "𝔗", "𝔘", "𝔙", "𝔚", "𝔛", "𝔜", "ℨ",
+
+		// a    b    c    d    e    f    g    h    i
+		  "𝔞", "𝔟", "𝔠", "𝔡", "𝔢", "𝔣", "𝔤", "𝔥", "𝔦",
+		// j    k    l    m    n    o    p    q    r
+		  "𝔧", "𝔨", "𝔩", "𝔪", "𝔫", "𝔬", "𝔭", "𝔮", "𝔯",
+		// s    t    u    v    w    x    y    z
+		  "𝔰", "𝔱", "𝔲", "𝔳", "𝔴", "𝔵", "𝔶", "𝔷"
+	};
+
+	for (size_t i = 0; i < 26 * 2; ++i) {
+		size_t len = strlen(FRAKTUR[i]);
+		if (!strncmp(stream, FRAKTUR[i], len)) {
+			*index = i;
+			return len;
+		}
+	}
+	return 0;
+}
+
+static struct sq_string *parse_fraktur_bareword(void) {
+	size_t fraktur_len, fraktur_pos;
+
+	if (!(fraktur_len = fraktur_length(sq_stream, &fraktur_pos)))
+		return NULL;
+
+	char *fraktur = xmalloc(16);
+	unsigned cap = 16, len = 0;
+
+	do {
+		if (cap == len)
+			fraktur = xrealloc(fraktur, cap *= 2);
+
+		if ((fraktur_len = fraktur_length(sq_stream, &fraktur_pos))) {
+			sq_stream += fraktur_len;
+			fraktur[len++] = (fraktur_pos < 26) ? ('A' + fraktur_pos) : ('a' + (fraktur_pos - 26));
+			continue;
+		}
+
+		if (isspace(*sq_stream)) {
+			fraktur[len++] = *(sq_stream++);
+			continue;
+		}
+
+		break;
+	} while (*sq_stream != '\0');
+
+	while (isspace(fraktur[len - 1]))
+		--len;
+
+	fraktur[len] = '\0';
+	return sq_string_new2(fraktur, len);
+}
+
+
 static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_slash) {
 	char c;
 

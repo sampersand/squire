@@ -545,6 +545,7 @@ static char *parse_import_declaration() {
 static struct class_declaration *parse_form_declaration() {
 	GUARD(SQ_TK_CLASS);
 	struct class_declaration *fdecl = xmalloc(sizeof(struct class_declaration));
+	fdecl->nparents = 0;
 
 	// optional name
 	if (take().kind == SQ_TK_IDENT) {

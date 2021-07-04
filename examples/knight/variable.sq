@@ -1,11 +1,12 @@
 @collate "assert.sq"
+@collate "nonidempotent.sq"
 
-form Variable {
-	matter name, value, assigned
+form Variable : Non Idempotent {
+	matter name, value, assigned;
 	essence declared = {};
 
 	imitate(name) {
-		$assert(name.genus == 'text');
+		$assert(name.genus == 𝔱𝔢𝔵𝔱);
 
 		soul.name = name
 		soul.assigned = nay
@@ -35,4 +36,8 @@ form Variable {
 		soul.value = value
 	}
 }
+
+x = Variable.fetch("abc");
+dump(x);
+dump(x.run());
 

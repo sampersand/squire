@@ -1,0 +1,16 @@
+form Not Idempotent {
+	change to_numeral() {
+		ran = run()
+		ran.to_numeral()
+	}
+
+	change to_text() {
+		ran = run()
+		ran.to_text()
+	}
+
+	change to_veracity() {
+		ran = run()
+		ran.to_numeral()
+	}
+}
