@@ -17,10 +17,10 @@ pub struct Nigh {
 }
 
 impl Parsable for Renowned {
-	const TYPE_NAME: &'static str = Keyword::Global.repr();
+	const TYPE_NAME: &'static str = Keyword::Renowned.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Global))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Renowned))?.is_none() {
 			return Ok(None);
 		}
 
@@ -37,10 +37,10 @@ impl Parsable for Renowned {
 }
 
 impl Parsable for Nigh {
-	const TYPE_NAME: &'static str = Keyword::Local.repr();
+	const TYPE_NAME: &'static str = Keyword::Nigh.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Local))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Nigh))?.is_none() {
 			return Ok(None);
 		}
 

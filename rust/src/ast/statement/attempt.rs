@@ -16,10 +16,10 @@ pub struct Attempt {
 }
 
 impl Parsable for Attempt {
-	const TYPE_NAME: &'static str = Keyword::Try.repr();
+	const TYPE_NAME: &'static str = Keyword::Attempt.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Try))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Attempt))?.is_none() {
 			return Ok(None);
 		}
 
@@ -30,7 +30,7 @@ impl Parsable for Attempt {
 		let catch = Statements::expect_parse(parser)?;
 
 		let finally =
-			if parser.guard(TokenKind::Keyword(Keyword::Finally))?.is_some() {
+			if parser.guard(TokenKind::Keyword(Keyword::Notwithstanding))?.is_some() {
 				Some(Statements::expect_parse(parser)?)
 			} else {
 				None

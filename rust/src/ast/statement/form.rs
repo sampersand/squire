@@ -4,24 +4,24 @@ use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 use crate::runtime::Opcode;
 
 use std::collections::HashMap;
-use crate::ast::statement::function::Function;
+use crate::ast::statement::journey::Journey;
 use crate::ast::expression::Expression;
-use crate::value::{Value, Form};
+use crate::value::Value;
 
 #[derive(Debug)]
-pub struct Class {
+pub struct Form {
 	name: String,
 
 	essences: HashMap<String, Option<Expression>>,
-	functions: Vec<Function>,
+	functions: Vec<Journey>,
 
-	fields: Vec<String>,
-	changes: Vec<Function>,
-	constructor: Option<Function>
+	matter_names: Vec<String>,
+	changes: Vec<Journey>,
+	imitate: Option<Journey>
 }
 
-impl Class {
-	fn parse_class_field<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
+impl Form {
+	fn parse_essence<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let essences =
 			parser.take_separated(
 				TokenKind::Symbol(Symbol::Comma), 
@@ -51,15 +51,15 @@ impl Class {
 
 	}
 
-	fn parse_class_function<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
+	fn parse_recall<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let name = parser.expect_identifier()?;
-		self.functions.push(Function::parse_without_keyword(parser, name)?);
+		self.functions.push(Journey::parse_without_keyword(parser, name)?);
 
 		Ok(())
 	}
 
-	fn parse_field<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
-		let fields =
+	fn parse_matter<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
+		let matter_names =
 			parser.take_separated(
 				TokenKind::Symbol(Symbol::Comma), 
 				TokenKind::Symbol(Symbol::Endline),
@@ -67,37 +67,37 @@ impl Class {
 			)?;
 
 
-		for name in fields {
-			if self.fields.contains(&name) {
+		for name in matter_names {
+			if self.matter_names.contains(&name) {
 				return Err(parser.error("field already declared"));
 			} else {
-				self.fields.push(name);
+				self.matter_names.push(name);
 			}
 		}
 
 		Ok(())
 	}
 
-	fn parse_method<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
+	fn parse_change<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let name = parser.expect_identifier_or_operator()?;
-		Ok(self.changes.push(Function::parse_without_keyword(parser, name)?))
+		Ok(self.changes.push(Journey::parse_without_keyword(parser, name)?))
 	}
 
-	fn parse_constructor<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
-		if self.constructor.is_some() {
+	fn parse_imitate<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
+		if self.imitate.is_some() {
 			Err(parser.error("cannot define two 'imitate's"))
 		} else {
-			self.constructor = Some(Function::parse_without_keyword(parser, "imitate".to_string())?);
+			self.imitate = Some(Journey::parse_without_keyword(parser, "imitate".to_string())?);
 			Ok(())
 		}
 	}
 }
 
-impl Parsable for Class {
-	const TYPE_NAME: &'static str = Keyword::Class.repr();
+impl Parsable for Form {
+	const TYPE_NAME: &'static str = Keyword::Form.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Class))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Form))?.is_none() {
 			return Ok(None)
 		}
 
@@ -105,27 +105,27 @@ impl Parsable for Class {
 			name: parser.expect_identifier()?,
 			essences: HashMap::default(),
 			functions: Vec::default(),
-			fields: Vec::default(),
+			matter_names: Vec::default(),
 			changes: Vec::default(),
-			constructor: None
+			imitate: None
 		};
 
 		parser.take_paren_group(ParenKind::Curly, |parser| {
 			const VALID_TOKENS: [TokenKind; 6] = [
-				TokenKind::Keyword(Keyword::ClassField),
-				TokenKind::Keyword(Keyword::ClassFn),
-				TokenKind::Keyword(Keyword::Field),
-				TokenKind::Keyword(Keyword::Method),
-				TokenKind::Keyword(Keyword::Constructor),
+				TokenKind::Keyword(Keyword::Essence),
+				TokenKind::Keyword(Keyword::Recall),
+				TokenKind::Keyword(Keyword::Matter),
+				TokenKind::Keyword(Keyword::Change),
+				TokenKind::Keyword(Keyword::Imitate),
 				TokenKind::Symbol(Symbol::Endline),
 			];
 
 			match parser.expect(VALID_TOKENS)? {
-				Token::Keyword(Keyword::ClassField) => class.parse_class_field(parser),
-				Token::Keyword(Keyword::ClassFn) => class.parse_class_function(parser),
-				Token::Keyword(Keyword::Field) => class.parse_field(parser),
-				Token::Keyword(Keyword::Method) => class.parse_method(parser),
-				Token::Keyword(Keyword::Constructor) => class.parse_constructor(parser),
+				Token::Keyword(Keyword::Essence) => class.parse_essence(parser),
+				Token::Keyword(Keyword::Recall) => class.parse_recall(parser),
+				Token::Keyword(Keyword::Matter) => class.parse_matter(parser),
+				Token::Keyword(Keyword::Change) => class.parse_change(parser),
+				Token::Keyword(Keyword::Imitate) => class.parse_imitate(parser),
 				Token::Symbol(Symbol::Endline) => Ok(()),
 				_ => unreachable!()
 			}
@@ -135,9 +135,9 @@ impl Parsable for Class {
 	}
 }
 
-impl Compilable for Class {
+impl Compilable for Form {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		let mut builder = Form::builder(self.name);
+		let mut builder = crate::value::Form::builder(self.name);
 
 		let globals = compiler.globals();
 
@@ -154,8 +154,8 @@ impl Compilable for Class {
 			}
 		}
 
-		for field in self.fields {
-			builder.add_matter(field)?;
+		for matter_name in self.matter_names {
+			builder.add_matter(matter_name)?;
 		}
 
 		for change in self.changes {
@@ -163,14 +163,14 @@ impl Compilable for Class {
 		}
 
 
-		if let Some(imitate) = self.constructor {
+		if let Some(imitate) = self.imitate {
 			builder.add_imitate(imitate.build_journey(globals.clone(), true)?)?;
 		}
 
 		let form = builder.build();
 		let global = compiler.define_global(form.name().to_string(), Some(Value::Form(form.into())))?;
 
-		// if we have neither fields to initialize nor a destination, we're done.
+		// if we have neither matter_names to initialize nor a destination, we're done.
 		if essence_initializers.is_empty() && target.is_none() {
 			return Ok(());
 		}

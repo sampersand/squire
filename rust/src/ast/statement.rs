@@ -3,8 +3,8 @@ use crate::parse::token::{TokenKind, Symbol, ParenKind};
 use crate::ast::Expression;
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
-mod class;
-pub mod function;
+mod form;
+pub mod journey;
 mod attempt;
 mod catapult;
 mod reward;
@@ -14,8 +14,8 @@ mod whilst;
 mod fork;
 mod labels;
 
-pub use class::Class;
-pub use function::Function;
+pub use form::Form;
+pub use journey::Journey;
 pub use attempt::Attempt;
 pub use catapult::Catapult;
 pub use reward::Reward;
@@ -30,8 +30,8 @@ pub type Statements = Vec<Statement>;
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum Statement {
-	Class(Class),
-	Function(Function),
+	Form(Form),
+	Journey(Journey),
 	Attempt(Attempt),
 	Catapult(Catapult),
 	Reward(Reward),
@@ -96,7 +96,7 @@ impl Parsable for Statement {
 		}
 
 		let stmt = try_parse!(
-			Class, Function,  Attempt, Catapult, Reward,
+			Form, Journey,  Attempt, Catapult, Reward,
 			Renowned, Nigh,
 			If, Whilst, Fork, /* Label, ComeFrom,*/
 			Expression
@@ -123,8 +123,8 @@ impl Compilable for Statements {
 impl Compilable for Statement {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
 		match self {
-			Self::Class(class) => class.compile(compiler, target),
-			Self::Function(function) => function.compile(compiler, target),
+			Self::Form(form) => form.compile(compiler, target),
+			Self::Journey(journey) => journey.compile(compiler, target),
 			Self::Attempt(attempt) => attempt.compile(compiler, target),
 			Self::Catapult(catapult) => catapult.compile(compiler, target),
 			Self::Reward(reward) => reward.compile(compiler, target),

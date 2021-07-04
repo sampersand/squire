@@ -1,5 +1,5 @@
 use crate::ast::{Expression, expression::Primary, Statements};
-use crate::value::{Value, Journey};
+use crate::value::Value;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Globals, Error as CompileError};
@@ -23,7 +23,7 @@ pub struct Arguments {
 }
 
 #[derive(Debug)]
-pub struct Function {
+pub struct Journey {
 	name: String,
 	args: Arguments,
 	body: Statements
@@ -89,11 +89,11 @@ impl Parsable for Arguments {
 	}
 }
 
-impl Parsable for Function {
-	const TYPE_NAME: &'static str = Keyword::Function.repr();
+impl Parsable for Journey {
+	const TYPE_NAME: &'static str = Keyword::Journey.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Function))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Journey))?.is_none() {
 			return Ok(None);
 		}
 
@@ -102,7 +102,7 @@ impl Parsable for Function {
 	}
 }
 
-impl Function {
+impl Journey {
 	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String) -> Result<Self, ParseError> {
 		let args = Arguments::expect_parse(parser)?;
 		let body  = Statements::expect_parse(parser)?;
@@ -110,7 +110,7 @@ impl Function {
 		Ok(Self { name, args, body })
 	}
 
-	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<Journey, CompileError> {
+	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<crate::value::Journey, CompileError> {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
@@ -137,11 +137,11 @@ impl Function {
 		body_compiler.opcode(Opcode::Return);
 		body_compiler.target(return_target);
 
-		Ok(Journey::new(self.name.clone(), is_method, arg_names, body_compiler.finish()))
+		Ok(crate::value::Journey::new(self.name.clone(), is_method, arg_names, body_compiler.finish()))
 	}
 }
 
-impl Compilable for Function {
+impl Compilable for Journey {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
 		let name = self.name.clone();
 		let journey = Value::Journey(self.build_journey(compiler.globals().clone(), false)?.into());

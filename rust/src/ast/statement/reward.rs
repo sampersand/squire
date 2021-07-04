@@ -11,10 +11,10 @@ pub struct Reward {
 }
 
 impl Parsable for Reward {
-	const TYPE_NAME: &'static str = Keyword::Return.repr();
+	const TYPE_NAME: &'static str = Keyword::Reward.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Return))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Reward))?.is_none() {
 			return Ok(None);
 		}
 

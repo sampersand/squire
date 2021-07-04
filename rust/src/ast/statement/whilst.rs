@@ -11,10 +11,10 @@ pub struct Whilst {
 }
 
 impl Parsable for Whilst {
-	const TYPE_NAME: &'static str = Keyword::While.repr();
+	const TYPE_NAME: &'static str = Keyword::Whilst.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::While))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Whilst))?.is_none() {
 			return Ok(None);
 		}
 

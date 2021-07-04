@@ -23,7 +23,7 @@ impl Fork {
 		let mut exprs = vec![Expression::expect_parse(parser)?];
 		parser.expect(TokenKind::Symbol(Symbol::Colon))?;
 
-		while parser.guard(TokenKind::Keyword(Keyword::Case))?.is_some() {
+		while parser.guard(TokenKind::Keyword(Keyword::Path))?.is_some() {
 			exprs.push(Expression::expect_parse(parser)?);
 			parser.expect(TokenKind::Symbol(Symbol::Colon))?;
 		}
@@ -34,10 +34,10 @@ impl Fork {
 }
 
 impl Parsable for Fork {
-	const TYPE_NAME: &'static str = Keyword::Switch.repr();
+	const TYPE_NAME: &'static str = Keyword::Fork.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Switch))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Fork))?.is_none() {
 			return Ok(None);
 		}
 
@@ -48,13 +48,13 @@ impl Parsable for Fork {
 		let mut alas = None;
 
 		while parser.guard(TokenKind::RightParen(ParenKind::Curly))?.is_none() {
-			match parser.expect([TokenKind::Keyword(Keyword::Case), TokenKind::Keyword(Keyword::Alas)])? {
+			match parser.expect([TokenKind::Keyword(Keyword::Path), TokenKind::Keyword(Keyword::Alas)])? {
 				Token::Keyword(Keyword::Alas) if alas.is_some() => return Err(parser.error("an `alas` was already given")),
 				Token::Keyword(Keyword::Alas) => {
 					parser.expect(TokenKind::Symbol(Symbol::Colon))?;
 					alas = Some(parser.collect(Statement::parse)?)
 				},
-				Token::Keyword(Keyword::Case) => paths.push(Self::parse_paths(parser)?),
+				Token::Keyword(Keyword::Path) => paths.push(Self::parse_paths(parser)?),
 				_ => unreachable!()
 			}
 		}

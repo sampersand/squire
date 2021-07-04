@@ -6,55 +6,55 @@ use macros::Macros;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Keyword {
-	Class,
-	Method,
-	Field,
-	ClassField,
-	ClassFn,
-	Constructor,
-	Function,
+	Form,
+	Change,
+	Matter,
+	Essence,
+	Recall,
+	Imitate,
+	Journey,
 
-	Global,
-	Local,
+	Renowned,
+	Nigh,
 
 	If,
 	Alas,
-	ComeFrom,
-	While,
-	Return,
-	Try,
-	Finally,
-	Throw,
-	Switch,
-	Case,
-	Assert,
+	Whence,
+	Whilst,
+	Reward,
+	Attempt,
+	Notwithstanding,
+	Catapult,
+	Fork,
+	Path,
+	Challenge,
 }
 
 impl Keyword {
 	pub const fn repr(self) -> &'static str {
 		match self {
-			Self::Class => "form",
-			Self::Method => "change",
-			Self::Field => "matter",
-			Self::ClassField => "essence",
-			Self::ClassFn => "recall",
-			Self::Constructor => "imitate",
-			Self::Function => "journey",
+			Self::Form => "form",
+			Self::Change => "change",
+			Self::Matter => "matter",
+			Self::Essence => "essence",
+			Self::Recall => "recall",
+			Self::Imitate => "imitate",
+			Self::Journey => "journey",
 
-			Self::Global => "renowned",
-			Self::Local => "nigh",
+			Self::Renowned => "renowned",
+			Self::Nigh => "nigh",
 
 			Self::If => "if",
 			Self::Alas => "alas",
-			Self::ComeFrom => "whence",
-			Self::While => "whilst",
-			Self::Return => "reward",
-			Self::Try => "attempt",
-			Self::Finally => "notwithstanding",
-			Self::Throw => "catapult",
-			Self::Switch => "fork",
-			Self::Case => "path",
-			Self::Assert => "challenge",
+			Self::Whence => "whence",
+			Self::Whilst => "whilst",
+			Self::Reward => "reward",
+			Self::Attempt => "attempt",
+			Self::Notwithstanding => "notwithstanding",
+			Self::Catapult => "catapult",
+			Self::Fork => "fork",
+			Self::Path => "path",
+			Self::Challenge => "challenge",
 		}
 	}
 }
@@ -167,28 +167,28 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			};
 		}
 
-		keyword!(Class);
-		keyword!(Method);
-		keyword!(Field);
-		keyword!(ClassField);
-		keyword!(ClassFn);
-		keyword!(Constructor);
-		keyword!(Function);
+		keyword!(Form);
+		keyword!(Change);
+		keyword!(Matter);
+		keyword!(Essence);
+		keyword!(Recall);
+		keyword!(Imitate);
+		keyword!(Journey);
 
-		keyword!(Global);
-		keyword!(Local);
+		keyword!(Renowned);
+		keyword!(Nigh);
 
 		keyword!(If);
 		keyword!(Alas);
-		keyword!(ComeFrom);
-		keyword!(While);
-		keyword!(Return);
-		keyword!(Try);
-		keyword!(Finally);
-		keyword!(Throw);
-		keyword!(Switch);
-		keyword!(Case);
-		keyword!(Assert);
+		keyword!(Whence);
+		keyword!(Whilst);
+		keyword!(Reward);
+		keyword!(Attempt);
+		keyword!(Notwithstanding);
+		keyword!(Catapult);
+		keyword!(Fork);
+		keyword!(Path);
+		keyword!(Challenge);
 
 		None
 	}

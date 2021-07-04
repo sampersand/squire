@@ -10,10 +10,10 @@ pub struct Catapult {
 }
 
 impl Parsable for Catapult {
-	const TYPE_NAME: &'static str = Keyword::Throw.repr();
+	const TYPE_NAME: &'static str = Keyword::Catapult.repr();
 
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
-		if parser.guard(TokenKind::Keyword(Keyword::Throw))?.is_none() {
+		if parser.guard(TokenKind::Keyword(Keyword::Catapult))?.is_none() {
 			return Ok(None);
 		}
 
