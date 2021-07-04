@@ -360,11 +360,59 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 	}
 
 	pub fn next_identifier(&mut self) -> Option<String> {
-		if self.stream.peek().map_or(false, |chr| chr.is_alphabetic() || chr == '_') {
-			Some(self.stream.take_while(|chr| chr.is_alphanumeric() || chr == '_').unwrap())
-		} else {
-			None
+		fn is_alpha(c: char) -> bool {
+			c.is_alphabetic() || c == '_'
 		}
+
+		if !self.stream.peek().map_or(false, is_alpha) {
+			return None;
+		}
+
+		let mut identifier = String::new();
+		let mut replace_camel = false;
+		let mut has_non_underscore_been_reached = false;
+
+		while let Some(chr) = self.stream.next() {
+			// we only replace camelcase if the first non-underscore character is lowercase
+			if !has_non_underscore_been_reached {
+				has_non_underscore_been_reached |= chr != '_';
+
+				if chr.is_lowercase() {
+					replace_camel = true;
+				}
+			}
+
+			match chr {
+				_ if chr.is_uppercase() && replace_camel => {
+					identifier.push('_');
+					identifier.extend(chr.to_lowercase());
+				},
+				_ if chr.is_alphanumeric() || chr == '_' => identifier.push(chr),
+				'-' => {
+					if self.stream.peek().map_or(false, is_alpha) {
+						identifier.push('_');
+					} else {
+						self.stream.put_back(['-']);
+						break;
+					}
+				},
+				' ' | '\t' => {
+					let coll = self.stream.take_while(|c| c == ' ' || c == '\t').unwrap_or_default();
+					if self.stream.peek().map_or(false, is_alpha) {
+						identifier.push('_');
+					} else {
+						self.stream.put_back(coll.chars());
+						break
+					}
+				},
+				_ => {
+					self.stream.put_back([chr]);
+					break;
+				}
+			}
+		}
+
+		Some(identifier)
 	}
 
 	fn next_macro_invocation(&mut self) -> Option<Result<()>> {
