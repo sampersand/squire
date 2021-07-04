@@ -91,7 +91,7 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 // };
 #define SET_NEXT_LOCAL() NEXT_LOCAL() = value
 
-sq_value sq_function_run(struct sq_function *function, unsigned argc, sq_value *args) {
+sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
 	sq_value value;
 	enum sq_opcode opcode;

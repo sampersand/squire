@@ -2,6 +2,7 @@
 #include "shared.h"
 #include "exception.h"
 #include "string.h"
+#include "function.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -188,15 +189,26 @@ struct sq_string *sq_book_join(const struct sq_book *book, const struct sq_strin
 }
 
 struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book *rhs) {
-	(void) book;
-	(void) rhs;
-	return NULL;
+	struct sq_book *result = sq_book_allocate(book->length + rhs->length);
+
+	for (unsigned i = 0; i < book->length; ++i)
+		for (unsigned j = 0; j < rhs->length; ++j) {
+			struct sq_book *new = sq_book_allocate(2);
+			new->pages[new->length++] = sq_value_clone(book->pages[i]);
+			new->pages[new->length++] = sq_value_clone(rhs->pages[i]);
+			result->pages[result->length++] = sq_value_new(new);
+		}
+
+	return result;
 }
 
 struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_function *func) {
-	(void) book;
-	(void) func;
-	return NULL;
+	struct sq_book *result = sq_book_allocate(book->length);
+
+	for (unsigned i = 0; i < book->length; ++i)
+		result->pages[result->length++] = sq_function_run(func, 1, &book->pages[i]);
+
+	return result;
 }
 
 struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_function *func) {

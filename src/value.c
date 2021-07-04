@@ -15,7 +15,7 @@
 #define AS_NUMBER sq_value_as_number
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
-#define AS_FUNCTION sq_value_as_function
+#define AS_JOURNEY sq_value_as_function
 #define AS_BOOK sq_value_as_book
 #define AS_CODEX sq_value_as_codex
 #define TYPENAME sq_value_typename
@@ -53,7 +53,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		break;
 
 	case SQ_TFUNCTION:
-		sq_function_dump(out, AS_FUNCTION(value));
+		sq_function_dump(out, AS_JOURNEY(value));
 		break;
 
 	case SQ_TBOOK:
@@ -81,7 +81,7 @@ sq_value sq_value_clone(sq_value value) {
 		return sq_value_new_imitation(sq_imitation_clone(AS_IMITATION(value)));
 
 	case SQ_TFUNCTION:
-		return sq_value_new_function(sq_function_clone(AS_FUNCTION(value)));
+		return sq_value_new_function(sq_function_clone(AS_JOURNEY(value)));
 
 	case SQ_TBOOK:
 		return sq_value_new_book(sq_book_clone(AS_BOOK(value)));
@@ -109,7 +109,7 @@ void sq_value_free(sq_value value) {
 		return;
 
 	case SQ_TFUNCTION:
-		sq_function_free(AS_FUNCTION(value));
+		sq_function_free(AS_JOURNEY(value));
 		return;
 
 	case SQ_TBOOK:
@@ -469,6 +469,8 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 		if (sq_value_is_book(rhs))
 			return sq_value_new(sq_book_product(book, AS_BOOK(rhs)));
+		if (sq_value_is_function(rhs))
+			return sq_value_new(sq_book_map(book, AS_JOURNEY(rhs)));
 
 		goto error;
 
