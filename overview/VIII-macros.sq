@@ -3,11 +3,10 @@
 # must end with a `;`.
 
 
-# `@collate` is used to import other files into this one and compile them. This
-# will only collate each file once per program---if a file with the same absol-
-# ute path has already been collated before, nothing is done. (Rational behind
-# the name: Squire programs are scrolls, so to import something you collate it.)
-@collate "I-hello-world.sq"; # "Hello world!"
+# `@transcribe` is used to import other files into this one and compile them.
+# This will only transcribe each file once per program---if a file with the same
+# absolute path has already been collated before, nothing is done.
+@transcribe "I-hello-world.sq"; # "Hello world!"
 
 
 
