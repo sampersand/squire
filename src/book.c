@@ -212,13 +212,25 @@ struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_function
 }
 
 struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_function *func) {
-	(void) book;
-	(void) func;
-	return NULL;
+	struct sq_book *result = sq_book_allocate(book->length);
+
+	for (unsigned i = 0; i < book->length; ++i)
+		if (sq_value_to_boolean(sq_function_run(func, 1, &book->pages[i])))
+			result->pages[result->length++] = sq_value_clone(book->pages[i]);
+
+	return result;
 }
 
 sq_value sq_book_reduce(const struct sq_book *book, const struct sq_function *func) {
-	(void) book;
-	(void) func;
-	return SQ_NULL;
+	if (!book->length) return SQ_NULL;
+	sq_value acc[2] = { sq_value_clone(book->pages[0]) };
+
+	for (unsigned i = 0; i < book->length; ++i) {
+		acc[1] = book->pages[i];
+		acc[0] = sq_function_run(func, 2, acc);
+	}
+
+	sq_value_free(acc[1]);
+
+	return acc[0];
 }

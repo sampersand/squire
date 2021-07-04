@@ -357,6 +357,9 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	}
 
 	case SQ_TBOOK: {
+		if (sq_value_is_function(rhs))
+			return sq_value_new(sq_book_select(AS_BOOK(lhs), AS_JOURNEY(rhs)));
+
 		struct sq_book *lary = AS_BOOK(lhs), *rary = sq_value_to_book(rhs);
 
 		unsigned length = lary->length + rary->length;
@@ -521,6 +524,14 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		return sq_value_new_number(AS_NUMBER(lhs) % rnum);
 	}
 
+	case SQ_TBOOK:;
+		struct sq_book *book = AS_BOOK(lhs);
+
+		if (sq_value_is_function(rhs))
+			return sq_book_reduce(book, AS_JOURNEY(rhs));
+
+		goto error;
+
 	case SQ_TIMITATION: {
 		struct sq_function *mod = sq_imitation_lookup_change(AS_IMITATION(lhs), "%");
 		sq_value args[2] = { lhs, rhs };
@@ -532,6 +543,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
+	error:
 		die("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 }
