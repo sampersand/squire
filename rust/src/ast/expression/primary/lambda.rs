@@ -1,14 +1,10 @@
 use crate::parse::{Parser, Parsable, Error as ParseError};
-use crate::ast::Statements;
-use crate::ast::statement::function::Arguments;
+use crate::ast::statement::function::Function;
 use crate::parse::token::{TokenKind, Keyword};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
-pub struct Lambda {
-	args: Box<Arguments>,
-	body: Statements
-}
+pub struct Lambda(Box<Function>);
 
 impl Parsable for Lambda {
 	const TYPE_NAME: &'static str = "<lambda>";
@@ -18,15 +14,14 @@ impl Parsable for Lambda {
 			return Ok(None);
 		}
 
-		let args = Arguments::expect_parse(parser)?;
-		let body = Statements::expect_parse(parser)?;
-
-		Ok(Some(Self { args: Box::new(args), body }))
+		Ok(Some(Self(Function::parse_without_keyword(parser, "<lambda>".to_string())?.into())))
 	}
 }
 
 impl Compilable for Lambda {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		// self.0.compile(compiler, target);
 		let _ = (target, compiler); unimplemented!();
+		// 	builder.add_recall(func.build_journey(globals.clone(), false)?)?;
 	}
 }

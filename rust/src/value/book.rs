@@ -6,8 +6,8 @@ use std::hash::{Hash, Hasher};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::{Deref, DerefMut};
 use crate::value::ops::{
-	ConvertTo,
-	Add as OpsAdd, Subtract, Multiply, IsEqual, Compare,
+	ConvertTo, Duplicate,
+	Add, Subtract, Multiply, IsEqual, Compare,
 	GetIndex, SetIndex,
 	Dump, GetAttr
 };
@@ -198,8 +198,14 @@ impl Book {
 		Iter(self.0.read(), 0)
 	}
 
-	pub fn shrink_to_fit(& self) {
+	pub fn shrink_to_fit(&self) {
 		self.as_vec_mut().shrink_to_fit();
+	}
+}
+
+impl Duplicate for Book {
+	fn duplicate(&self) -> Self {
+		self.iter().collect()
 	}
 }
 
@@ -371,22 +377,37 @@ impl ConvertTo<Text> for Book {
 }
 
 impl ConvertTo<Codex> for Book {
-	fn convert(&self, _: &mut Vm) -> Result<Codex, RuntimeError> {
-		todo!()
+	fn convert(&self, vm: &mut Vm) -> Result<Codex, RuntimeError> {
+		use std::collections::HashMap;
+		let mut codex = HashMap::with_capacity(self.len());
+
+		for ele in &*self.as_slice() {
+			let ele = ele.convert_to::<Book>(vm)?;
+			let slice = ele.as_slice();
+
+			if slice.len() != 2 {
+				return Err(RuntimeError::ValueError(format!("expected 2 elements, got {}", slice.len())));
+			}
+
+			if codex.insert(slice[0].clone(), slice[1].clone()).is_some() {
+				warn!(key=?slice[0], "duplicate key encountered");
+			}
+		}
+
+		Ok(Codex::from(codex))
 	}
 }
 
-impl OpsAdd for Book {
+impl Add for Book {
 	fn add(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		let slice = self.as_slice();
 		let rhs = rhs.convert_to::<Self>(vm)?;
+		let rhs = rhs.as_slice();
 
-		let us = self.as_slice();
-		let them = rhs.as_slice();
+		let mut sum = Vec::with_capacity(slice.len() + rhs.len());
 
-		let mut sum = Vec::with_capacity(us.len() + them.len());
-
-		sum.extend(us.iter().cloned());
-		sum.extend(them.iter().cloned());
+		sum.extend(slice.iter().cloned());
+		sum.extend(rhs.iter().cloned());
 
 		Ok(Self::from(sum).into())
 	}
@@ -394,15 +415,69 @@ impl OpsAdd for Book {
 
 impl Subtract for Book {
 	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (rhs, vm);
-		todo!()
+		let slice = self.as_slice();
+		let rhs = rhs.convert_to::<Self>(vm)?;
+		let rhs = rhs.as_slice();
+
+		let mut result = Vec::with_capacity(self.len() - rhs.len());
+
+		for ele in &*slice {
+			if !rhs.contains(ele) {
+				result.push(ele.clone());
+			}
+		}
+
+		Ok(result.into())
 	}
 }
 
 impl Multiply for Book {
 	fn multiply(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (rhs, vm);
-		todo!()
+		match rhs {
+			Value::Numeral(amount) => 
+				if *amount < 0 {
+					Err(RuntimeError::ArgumentError("cannot replicate by a negative amount".into()))
+				} else {
+					let slice = self.as_slice();
+					Ok(slice
+						.iter()
+						.cloned()
+						.cycle()
+						.take((amount.get() as usize) * slice.len())
+						.collect::<Self>()
+						.into())
+				},
+			Value::Text(text) => {
+				let mut join = String::new();
+				let mut is_first = false;
+
+				for page in &*self.as_slice() {
+					if is_first {
+						is_first = false;
+					} else {
+						join.push_str(text.as_str());
+					}
+
+					join.push_str(page.convert_to::<Text>(vm)?.as_str());
+				}
+
+				Ok(join.into())
+			},
+			Value::Book(other) => {
+				let slice = self.as_slice();
+				let other = other.as_slice();
+				let mut prod = Vec::with_capacity(slice.len() * other.len());
+
+				for lhs in &*slice {
+					for rhs in &*other {
+						prod.push(vec![lhs.clone(), rhs.clone()].into());
+					} 
+				}
+
+				Ok(prod.into())
+			},
+			_ => Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "Book.*" })
+		}
 	}
 }
 

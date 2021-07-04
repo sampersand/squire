@@ -5,6 +5,10 @@ pub trait ConvertTo<T> {
 	fn convert(&self, vm: &mut Vm) -> Result<T, RuntimeError>;
 }
 
+pub trait Duplicate : Sized {
+	fn duplicate(&self) -> Self;
+}
+
 pub trait Dump {
 	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError>;
 }

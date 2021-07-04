@@ -16,7 +16,7 @@ fn setup_tracing() {
             Ok("T") | Ok("TRACE") => LevelFilter::TRACE,
             Ok("D") | Ok("DEBUG") => LevelFilter::DEBUG,
             Ok("I") | Ok("INFO") => LevelFilter::INFO,
-            Ok("W") | Ok("WARN") => LevelFilter::WARN,
+            Ok("W") | Ok("WARN") | Err(_) => LevelFilter::WARN,
             Ok("E") | Ok("ERROR") => LevelFilter::ERROR,
             Ok("O") | Ok("OFF") => LevelFilter::OFF,
             Ok("TREE") => {
