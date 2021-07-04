@@ -16,7 +16,7 @@
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
 #define AS_FUNCTION sq_value_as_function
-#define AS_ARRAY sq_value_as_book
+#define AS_BOOK sq_value_as_book
 #define AS_CODEX sq_value_as_codex
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_STRING(c)->ptr)
@@ -57,7 +57,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		break;
 
 	case SQ_TBOOK:
-		sq_book_dump(out, AS_ARRAY(value));
+		sq_book_dump(out, AS_BOOK(value));
 		break;
 
 	case SQ_TCODEX:
@@ -84,7 +84,7 @@ sq_value sq_value_clone(sq_value value) {
 		return sq_value_new_function(sq_function_clone(AS_FUNCTION(value)));
 
 	case SQ_TBOOK:
-		return sq_value_new_book(sq_book_clone(AS_ARRAY(value)));
+		return sq_value_new_book(sq_book_clone(AS_BOOK(value)));
 
 	case SQ_TCODEX:
 		return sq_value_new_codex(sq_codex_clone(AS_CODEX(value)));
@@ -113,7 +113,7 @@ void sq_value_free(sq_value value) {
 		return;
 
 	case SQ_TBOOK:
-		sq_book_free(AS_ARRAY(value));
+		sq_book_free(AS_BOOK(value));
 		return;
 
 	case SQ_TCODEX:
@@ -187,7 +187,7 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 
 	case SQ_TBOOK:
 		if (!sq_value_is_book(rhs)) return false;
-		struct sq_book *lary = AS_ARRAY(lhs), *rary = AS_ARRAY(rhs);
+		struct sq_book *lary = AS_BOOK(lhs), *rary = AS_BOOK(rhs);
 
 		if (lary->length != rary->length)
 			return false;
@@ -285,7 +285,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 	}
 
 	case SQ_TBOOK:
-		return sq_book_index2(AS_ARRAY(value), sq_value_to_number(key));
+		return sq_book_index2(AS_BOOK(value), sq_value_to_number(key));
 
 	case SQ_TCODEX:
 		return sq_codex_index(AS_CODEX(value), key);
@@ -308,7 +308,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TBOOK:
-		sq_book_index_assign2(AS_ARRAY(value), sq_value_to_number(key), val);
+		sq_book_index_assign2(AS_BOOK(value), sq_value_to_number(key), val);
 		return;
 
 	case SQ_TCODEX:
@@ -357,7 +357,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	}
 
 	case SQ_TBOOK: {
-		struct sq_book *lary = AS_ARRAY(lhs), *rary = sq_value_to_book(rhs);
+		struct sq_book *lary = AS_BOOK(lhs), *rary = sq_value_to_book(rhs);
 
 		unsigned length = lary->length + rary->length;
 		sq_value *pages = xmalloc(sizeof(sq_value[length]));
@@ -455,8 +455,22 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		return sq_value_new_string(result);
 	}
 
-	case SQ_TBOOK:
-		todo("book multiply");
+	case SQ_TBOOK:;
+		struct sq_book *book = AS_BOOK(lhs);
+
+		if (sq_value_is_number(rhs)) {
+			sq_number num = AS_NUMBER(rhs);
+			if (num < 0) sq_throw("cannot repeat by %"PRId64" is out of range", num);
+			return sq_value_new(sq_book_repeat(book, num));
+		}
+
+		if (sq_value_is_string(rhs))
+			return sq_value_new(sq_book_join(book, AS_STRING(rhs)));
+
+		if (sq_value_is_book(rhs))
+			return sq_value_new(sq_book_product(book, AS_BOOK(rhs)));
+
+		goto error;
 
 	case SQ_TIMITATION: {
 		struct sq_function *mul = sq_imitation_lookup_change(AS_IMITATION(lhs), "*");
@@ -468,6 +482,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
+	error:
 		die("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 }
@@ -561,7 +576,7 @@ struct sq_string *sq_value_to_string(sq_value value) {
 	}
 
 	case SQ_TBOOK:
-		return sq_book_to_string(AS_ARRAY(value));
+		return sq_book_to_string(AS_BOOK(value));
 
 	case SQ_TCODEX:
 		return sq_codex_to_string(AS_CODEX(value));
@@ -598,7 +613,7 @@ sq_number sq_value_to_number(sq_value value) {
 	}
 
 	case SQ_TBOOK:
-		return sq_value_new_string(sq_book_to_string(AS_ARRAY(value)));
+		return sq_value_new_string(sq_book_to_string(AS_BOOK(value)));
 
 	case SQ_TFORM:
 	case SQ_TFUNCTION:
@@ -622,7 +637,7 @@ bool sq_value_to_boolean(sq_value value) {
 		return *AS_STR(value) ? SQ_TRUE : SQ_FALSE;
 
 	case SQ_TBOOK:
-		return AS_ARRAY(value)->length;
+		return AS_BOOK(value)->length;
 
 	case SQ_TCODEX:
 		return AS_CODEX(value)->length;
@@ -685,8 +700,8 @@ size_t sq_value_length(sq_value value) {
 struct sq_book *sq_value_to_book(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TBOOK:
-		++AS_ARRAY(value)->refcount;
-		return AS_ARRAY(value);
+		++AS_BOOK(value)->refcount;
+		return AS_BOOK(value);
 	default:
 		todo("others to book");
 	}

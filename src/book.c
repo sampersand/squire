@@ -143,3 +143,70 @@ struct sq_string *sq_book_to_string(const struct sq_book *book) {
 
 	return sq_string_new2(string, len);
 }
+
+struct sq_codex *sq_book_to_codex(const struct sq_book *book) {
+	(void) book;
+	todo(__FUNCTION__);
+}
+
+struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt) {
+	struct sq_book *new = sq_book_allocate(book->length * amnt);
+
+	for (unsigned i = 0; i < amnt; ++i)
+		for (unsigned j = 0; j < book->length; ++j)
+			new->pages[new->length++] = sq_value_clone(book->pages[j]);
+
+	return new;
+}
+
+struct sq_string *sq_book_join(const struct sq_book *book, const struct sq_string *sep) {
+	unsigned len = 0, cap = 64, seplen = strlen(sep->ptr);
+	char *string = xmalloc(cap);
+
+	for (unsigned i = 0; i < book->length; ++i) {
+		if (i) {
+			if (cap <= len + seplen)
+				string = xrealloc(string, cap = cap * 2 + seplen);
+
+			memcpy(string + len, sep->ptr, seplen);
+			len += seplen;
+		}
+
+		struct sq_string *str = sq_value_to_string(book->pages[i]);
+		if (cap <= str->length + len)
+			string = xrealloc(string, cap = cap * 2 + str->length);
+
+		memcpy(string + len, str->ptr, str->length);
+		len += str->length;
+		sq_string_free(str);
+	}
+
+	string = xrealloc(string, len + 1);
+	string[len] = '\0';
+
+	return sq_string_new2(string, len);
+}
+
+struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book *rhs) {
+	(void) book;
+	(void) rhs;
+	return NULL;
+}
+
+struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_function *func) {
+	(void) book;
+	(void) func;
+	return NULL;
+}
+
+struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_function *func) {
+	(void) book;
+	(void) func;
+	return NULL;
+}
+
+sq_value sq_book_reduce(const struct sq_book *book, const struct sq_function *func) {
+	(void) book;
+	(void) func;
+	return SQ_NULL;
+}

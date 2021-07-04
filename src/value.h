@@ -64,16 +64,16 @@ typedef enum {
 
 // (SQ_VTAG(x) == SQ_TAG(kind))
 
-// #define sq_value_new(x) (_Generic(x, \
-// 	sq_number: sq_value_new_number, \
-// 	bool: sq_value_new_boolean, \
-// 	struct sq_string *: sq_value_new_string, \
-// 	struct sq_form *: sq_value_new_form, \
-// 	struct sq_imitation *: sq_value_new_imitation, \
-// 	struct sq_function *: sq_value_new_function, \
-// 	struct sq_array *: sq_value_new_book, \
-// 	struct sq_codex *: sq_value_new_codex \
-// )(x))
+#define sq_value_new(x) (_Generic(x, \
+	sq_number: sq_value_new_number, \
+	bool: sq_value_new_boolean, \
+	struct sq_string *: sq_value_new_string, \
+	struct sq_form *: sq_value_new_form, \
+	struct sq_imitation *: sq_value_new_imitation, \
+	struct sq_function *: sq_value_new_function, \
+	struct sq_book *: sq_value_new_book, \
+	struct sq_codex *: sq_value_new_codex \
+)(x))
 
 
 static inline sq_value sq_value_new_number(sq_number number) {

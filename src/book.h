@@ -64,9 +64,6 @@ static inline void sq_book_free(struct sq_book *book) {
 		sq_book_deallocate(book);
 }
 
-/** Converts an book to its string representation */
-struct sq_string *sq_book_to_string(const struct sq_book *book);
-
 /** Inserts `value` at the given index.
  * 
  * If `index` is out of bounds, the book is expanded and the missing pages
@@ -129,5 +126,17 @@ static inline sq_value sq_book_index2(const struct sq_book *book, ssize_t index)
 static inline void sq_book_index_assign2(struct sq_book *book, ssize_t index, sq_value value) {
 	sq_book_index_assign(book, sq_book_fix_index(book, index), value);
 }
+
+
+/** Converts an book to its string representation */
+struct sq_string *sq_book_to_string(const struct sq_book *book);
+
+struct sq_codex *sq_book_to_codex(const struct sq_book *book);
+struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt);
+struct sq_string *sq_book_join(const struct sq_book *book, const struct sq_string *sep);
+struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book *rhs);
+struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_function *func);
+struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_function *func);
+sq_value sq_book_reduce(const struct sq_book *book, const struct sq_function *func);
 
 #endif /* !SQ_BOOK_H */
