@@ -1,5 +1,5 @@
 use crate::ast::{Expression, expression::Primary, Statements};
-use crate::value::Value;
+use crate::value::{Value, journey::UserDefined};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Globals, Error as CompileError};
@@ -110,7 +110,7 @@ impl Journey {
 		Ok(Self { name, args, body })
 	}
 
-	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<crate::value::Journey, CompileError> {
+	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<UserDefined, CompileError> {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
@@ -137,7 +137,7 @@ impl Journey {
 		body_compiler.opcode(Opcode::Return);
 		body_compiler.target(return_target);
 
-		Ok(crate::value::Journey::new(self.name.clone(), is_method, arg_names, body_compiler.finish()))
+		Ok(crate::value::journey::UserDefined::new(self.name.clone(), is_method, arg_names, body_compiler.finish()))
 	}
 }
 

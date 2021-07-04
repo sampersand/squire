@@ -41,8 +41,8 @@ impl Default for Compiler {
 	fn default() -> Self {
 		let mut globals = HashMap::new();
 
-		for default in crate::value::builtin::defaults() {
-			globals.insert(default.name().to_string(), (Global(globals.len()), Some(Value::BuiltinJourney(default))));
+		for default in crate::value::journey::builtin::defaults() {
+			globals.insert(default.name().to_string(), (Global(globals.len()), Some(default.into())));
 		}
 
 		Self {

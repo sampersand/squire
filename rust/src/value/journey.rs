@@ -1,59 +1,88 @@
-use crate::runtime::{CodeBlock, Args, Vm, Error as RuntimeError};
+use crate::runtime::{Args, Vm, Error as RuntimeError};
 use crate::value::Value;
 use crate::value::ops::{Dump, IsEqual, Call, GetAttr};
 use std::hash::{Hash, Hasher};
-use std::fmt::{self, Debug, Formatter};
-use std::sync::Arc;
 
 mod arguments;
+pub mod builtin;
+mod bound;
+mod user_defined;
 pub use arguments::Arguments;
+pub use builtin::Builtin;
+pub use bound::Bound;
+pub use user_defined::UserDefined;
 
-#[derive(Clone)]
-pub struct Journey(Arc<JourneyInner>);
-
-struct JourneyInner {
-	name: String,
-	is_method: bool,
-	args: Vec<String>,
-	codeblock: CodeBlock
-	// ...?
-}
-
-impl Debug for Journey {
-	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		if !f.alternate() {
-			return f.debug_tuple("Journey").field(&self.name()).finish()
-		}
-
-		f.debug_struct("Journey")
-			.field("name", &self.name())
-			.field("is_method", &self.0.is_method)
-			.field("args", &self.0.args)
-			.field("codeblock", &self.0.codeblock)
-			.finish()
-	}
+#[derive(Debug, Clone)]
+pub enum Journey {
+	Builtin(Builtin),
+	Bound(Bound),
+	UserDefined(UserDefined)
 }
 
 impl Eq for Journey {}
 impl PartialEq for Journey {
 	fn eq(&self, rhs: &Self) -> bool {
-		Arc::ptr_eq(&self.0, &rhs.0)
+		match (self, rhs) {
+			(Self::Builtin(lhs), Self::Builtin(rhs)) => lhs == rhs,
+			(Self::Bound(lhs), Self::Bound(rhs)) => lhs == rhs,
+			(Self::UserDefined(lhs), Self::UserDefined(rhs)) => lhs == rhs,
+			_ => false
+		}
 	}
 }
 
 impl Hash for Journey {
-	fn hash<H: Hasher>(&self, hasher: &mut H) {
-		self.name().hash(hasher)
+	fn hash<H: Hasher>(&self, h: &mut H) {
+		const BUILTIN_TAG: u8 = 0;
+		const BOUND_TAG: u8 = 1;
+		const USER_DEFINED_TAG: u8 = 2;
+
+		match self {
+			Self::Builtin(builtin) => {
+				h.write_u8(BUILTIN_TAG);
+				builtin.hash(h);
+			},
+
+			Self::Bound(bound) => {
+				h.write_u8(BOUND_TAG);
+				bound.hash(h);
+			},
+
+			Self::UserDefined(user_defined) => {
+				h.write_u8(USER_DEFINED_TAG);
+				user_defined.hash(h);
+			},
+		}
+	}
+}
+// impl Journey {
+// 	pub fn name(&self) -> &str {
+// 		match self {
+// 			Self::Builtin(builtin) => builtin.name(),
+// 			Self::Bound(bound) => bound.name(),
+// 			Self::UserDefined(user_defined) => user_defined.name(),
+// 		}
+// 	}
+// }
+
+impl From<Builtin> for Journey {
+	#[inline]
+	fn from(builtin: Builtin) -> Self {
+		Self::Builtin(builtin)
 	}
 }
 
-impl Journey {
-	pub fn new(name: String, is_method: bool, args: Vec<String>, codeblock: CodeBlock) -> Self {
-		Self(Arc::new(JourneyInner { name, is_method, args, codeblock }))
+impl From<Bound> for Journey {
+	#[inline]
+	fn from(bound: Bound) -> Self {
+		Self::Bound(bound)
 	}
+}
 
-	pub fn name(&self) -> &str {
-		&self.0.name
+impl From<UserDefined> for Journey {
+	#[inline]
+	fn from(user_defined: UserDefined) -> Self {
+		Self::UserDefined(user_defined)
 	}
 }
 
@@ -65,43 +94,41 @@ impl From<Journey> for Value {
 }
 
 impl Dump for Journey {
-	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
-		to.push_str(&format!("Journey({}: {:p})", self.name(), Arc::as_ptr(&self.0)));
-
-		Ok(())
+	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError> {
+		match self{  
+			Self::Builtin(builtin) => builtin.dump(to, vm),
+			Self::Bound(bound) => bound.dump(to, vm),
+			Self::UserDefined(user_defined) => user_defined.dump(to, vm),
+		}
 	}
 }
 
 impl IsEqual for Journey {
-	fn is_equal(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
-		if let Value::Journey(rhs) = rhs {
-			Ok(self == rhs)
-		} else {
-			Ok(false)
+	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		match self {
+			Self::Builtin(builtin) => builtin.is_equal(rhs, vm),
+			Self::Bound(bound) => bound.is_equal(rhs, vm),
+			Self::UserDefined(user_defined) => user_defined.is_equal(rhs, vm),
 		}
 	}
 }
 
 impl Call for Journey {
 	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		if args._as_slice().len() == self.0.args.len() {
-			return self.0.codeblock.run(args, vm)
+		match self {
+			Self::Builtin(builtin) => builtin.call(args, vm),
+			Self::Bound(bound) => bound.call(args, vm),
+			Self::UserDefined(user_defined) => user_defined.call(args, vm)
 		}
-
-		Err(RuntimeError::ArgumentCountError {
-			given: args._as_slice().len(),
-			expected: self.0.args.len()
-		})
 	}
 }
 
 impl GetAttr for Journey {
-	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
-		match attr {
-			"name" => Ok(self.0.name.clone().into()),
-			"args" => Ok(self.0.args.iter().cloned().map(Value::from).collect::<Vec<_>>().into()),
-			// "is_method" (?)
-			_ => Err(RuntimeError::UnknownAttribute(attr.to_string()))
+	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value, RuntimeError> {
+		match self {
+			Self::Builtin(builtin) => builtin.get_attr(attr, vm),
+			Self::Bound(bound) => bound.get_attr(attr, vm),
+			Self::UserDefined(user_defined) => user_defined.get_attr(attr, vm)
 		}
 	}
 }

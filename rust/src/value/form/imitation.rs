@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::hash::{Hash, Hasher};
 use crate::runtime::{Result, Error as RuntimeError, Args, Vm};
 use std::fmt::{self, Debug, Formatter};
-use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex, BoundJourney};
+use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex, journey::Bound};
 use crate::value::ops::{
 	ConvertTo, Dump,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
@@ -278,7 +278,7 @@ impl GetAttr for Imitation {
 		if let Some(matter) = self.get_matter(attr) {
 			Ok(matter)
 		} else if let Some(change) = self.get_change(attr) {
-			Ok(BoundJourney::new(self.clone().into(), change.clone()).into())
+			Ok(Bound::new(self.clone().into(), change.clone()).into())
 		} else {
 			Err(RuntimeError::UnknownAttribute(attr.to_string()))
 		}

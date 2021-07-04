@@ -17,8 +17,6 @@ pub enum Value {
 	Form(Form),
 	Imitation(Imitation),
 	Journey(Journey),
-	BuiltinJourney(BuiltinJourney),
-	BoundJourney(BoundJourney)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -32,8 +30,6 @@ pub enum ValueKind {
 	Codex,
 	Imitation(Form),
 	Journey,
-	BuiltinJourney,
-	BoundJourney
 }
 
 impl Default for Value {
@@ -56,8 +52,6 @@ impl Debug for Value {
 			Self::Form(form) => Debug::fmt(&form, f),
 			Self::Imitation(imitation) => Debug::fmt(&imitation, f),
 			Self::Journey(journey) => Debug::fmt(&journey, f),
-			Self::BuiltinJourney(builtin) => Debug::fmt(&builtin, f),
-			Self::BoundJourney(bound) => Debug::fmt(&bound, f),
 		}
 	}
 }
@@ -109,8 +103,6 @@ impl Value {
 			Self::Form(_) => ValueKind::Form,
 			Self::Imitation(imitation) => ValueKind::Imitation(imitation.form().clone()),
 			Self::Journey(_) => ValueKind::Journey,
-			Self::BuiltinJourney(_) => ValueKind::BuiltinJourney,
-			Self::BoundJourney(_) => ValueKind::BoundJourney,
 		}
 	}
 }
@@ -127,8 +119,6 @@ impl Dump for Value {
 			Self::Form(form) => form.dump(to, vm),
 			Self::Imitation(imitation) => imitation.dump(to, vm),
 			Self::Journey(journey) => journey.dump(to, vm),
-			Self::BuiltinJourney(builtin) => builtin.dump(to, vm),
-			Self::BoundJourney(bound) => bound.dump(to, vm),
 		}
 	}
 }
@@ -316,8 +306,6 @@ impl IsEqual for Value {
 			Self::Form(form) => form.is_equal(rhs, vm),
 			Self::Imitation(imitation) => imitation.is_equal(rhs, vm),
 			Self::Journey(journey) => journey.is_equal(rhs, vm),
-			Self::BuiltinJourney(builtin) => builtin.is_equal(rhs, vm),
-			Self::BoundJourney(bound) => bound.is_equal(rhs, vm),
 		}
 	}
 }
@@ -342,8 +330,6 @@ impl Call for Value {
 			Self::Journey(journey) => journey.call(args, vm),
 			Self::Form(form) => form.call(args, vm),
 			Self::Imitation(imitation) => imitation.call(args, vm),
-			Self::BuiltinJourney(builtin) => builtin.call(args, vm),
-			Self::BoundJourney(bound) => bound.call(args, vm),
 			_ => Err(RuntimeError::OperationNotSupported { kind: self.kind(), func: "()" })
 		}
 	}
@@ -376,28 +362,28 @@ impl SetIndex for Value {
 impl GetAttr for Value {
 	fn get_attr(&self, attr: &str, vm: &mut Vm) -> Result<Value> {
 		match attr {
-			"-@" => Ok(BoundJourney::new(self.clone(), "-@").into()),
-			"+" => Ok(BoundJourney::new(self.clone(), "+").into()),
-			"-" => Ok(BoundJourney::new(self.clone(), "-").into()),
-			"*" => Ok(BoundJourney::new(self.clone(), "*").into()),
-			"/" => Ok(BoundJourney::new(self.clone(), "/").into()),
-			"%" => Ok(BoundJourney::new(self.clone(), "%").into()),
-			"**" => Ok(BoundJourney::new(self.clone(), "**").into()),
-			"!" => Ok(BoundJourney::new(self.clone(), "!").into()),
-			"==" => Ok(BoundJourney::new(self.clone(), "==").into()),
-			"!=" => Ok(BoundJourney::new(self.clone(), "!=").into()),
-			"<" => Ok(BoundJourney::new(self.clone(), "<").into()),
-			"<=" => Ok(BoundJourney::new(self.clone(), "<=").into()),
-			">" => Ok(BoundJourney::new(self.clone(), ">").into()),
-			">=" => Ok(BoundJourney::new(self.clone(), ">=").into()),
-			"<=>" => Ok(BoundJourney::new(self.clone(), "<=>").into()),
-			"[]" => Ok(BoundJourney::new(self.clone(), "[]").into()),
-			"[]=" => Ok(BoundJourney::new(self.clone(), "[]=").into()),
-			"to_veracity" => Ok(BoundJourney::new(self.clone(), "to_veracity").into()),
-			"to_numeral" => Ok(BoundJourney::new(self.clone(), "to_numeral").into()),
-			"to_text" => Ok(BoundJourney::new(self.clone(), "to_text").into()),
-			"to_book" => Ok(BoundJourney::new(self.clone(), "to_book").into()),
-			"to_codex" => Ok(BoundJourney::new(self.clone(), "to_codex").into()),
+			"-@" => Ok(journey::Bound::new(self.clone(), "-@").into()),
+			"+" => Ok(journey::Bound::new(self.clone(), "+").into()),
+			"-" => Ok(journey::Bound::new(self.clone(), "-").into()),
+			"*" => Ok(journey::Bound::new(self.clone(), "*").into()),
+			"/" => Ok(journey::Bound::new(self.clone(), "/").into()),
+			"%" => Ok(journey::Bound::new(self.clone(), "%").into()),
+			"**" => Ok(journey::Bound::new(self.clone(), "**").into()),
+			"!" => Ok(journey::Bound::new(self.clone(), "!").into()),
+			"==" => Ok(journey::Bound::new(self.clone(), "==").into()),
+			"!=" => Ok(journey::Bound::new(self.clone(), "!=").into()),
+			"<" => Ok(journey::Bound::new(self.clone(), "<").into()),
+			"<=" => Ok(journey::Bound::new(self.clone(), "<=").into()),
+			">" => Ok(journey::Bound::new(self.clone(), ">").into()),
+			">=" => Ok(journey::Bound::new(self.clone(), ">=").into()),
+			"<=>" => Ok(journey::Bound::new(self.clone(), "<=>").into()),
+			"[]" => Ok(journey::Bound::new(self.clone(), "[]").into()),
+			"[]=" => Ok(journey::Bound::new(self.clone(), "[]=").into()),
+			"to_veracity" => Ok(journey::Bound::new(self.clone(), "to_veracity").into()),
+			"to_numeral" => Ok(journey::Bound::new(self.clone(), "to_numeral").into()),
+			"to_text" => Ok(journey::Bound::new(self.clone(), "to_text").into()),
+			"to_book" => Ok(journey::Bound::new(self.clone(), "to_book").into()),
+			"to_codex" => Ok(journey::Bound::new(self.clone(), "to_codex").into()),
 			_ => match self {
 				Self::Numeral(numeral) => numeral.get_attr(attr, vm),
 				Self::Text(text) => text.get_attr(attr, vm),
@@ -408,8 +394,6 @@ impl GetAttr for Value {
 				Self::Form(form) => form.get_attr(attr, vm),
 				Self::Imitation(imitation) => imitation.get_attr(attr, vm),
 				Self::Journey(journey) => journey.get_attr(attr, vm),
-				Self::BuiltinJourney(builtin) => builtin.get_attr(attr, vm),
-				Self::BoundJourney(bound) => bound.get_attr(attr, vm),
 				_ => Err(RuntimeError::UnknownAttribute(attr.to_string())),
 			},
 		}
