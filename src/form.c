@@ -137,6 +137,8 @@ struct sq_function *sq_imitation_lookup_change(struct sq_imitation *imitation, c
 }
 
 sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char *name) {
+	// note that we don't ask parents for matter. this is intentional, as only the base form can
+	// have matter.
 	for (unsigned i = 0; i < imitation->form->nmatter; ++i)
 		if (!strcmp(name, imitation->form->matter_names[i]))
 			return &imitation->matter[i];

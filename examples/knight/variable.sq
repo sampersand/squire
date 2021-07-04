@@ -1,4 +1,4 @@
-@compile "assert.sq"
+@collate "assert.sq"
 
 form Variable {
 	matter name, value, assigned

@@ -129,7 +129,7 @@ static unsigned load_constant(struct sq_code *code, sq_value value) {
 	return index;
 }
 
-static unsigned lookup_global_variable(const char *name) {
+static int lookup_global_variable(const char *name) {
 	// check to see if we've declared the global before
 	for (unsigned i = 0; i < globals.len; ++i) {
 		if (!strcmp(globals.ary[i].name, name)) {
@@ -255,56 +255,73 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 static void compile_statements(struct sq_code *code, struct statements *stmts);
 static struct sq_function *compile_function(struct func_declaration *fndecl, bool is_method);
 
-static void compile_form_declaration(struct sq_code *code, struct class_declaration *sdecl) {
-	struct sq_form *form = sq_form_new(sdecl->name);
+static void compile_form_declaration(struct sq_code *code, struct class_declaration *fdecl) {
+	struct sq_form *form = sq_form_new(fdecl->name);
 
-	form->nmatter = sdecl->nfields;
-	form->matter_names = sdecl->fields;
+	form->nmatter = fdecl->nfields;
+	form->matter_names = fdecl->fields;
 
 	declare_global_variable(form->name, SQ_NULL);
 
-	form->imitate = sdecl->constructor ? compile_function(sdecl->constructor, true) : NULL;
+	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
 
-	form->nrecollections = sdecl->nfuncs;
+	form->nrecollections = fdecl->nfuncs;
 	form->recollections = xmalloc(sizeof(struct sq_function *[form->nrecollections]));
 	for (unsigned i = 0; i < form->nrecollections; ++i)
-		form->recollections[i] = compile_function(sdecl->funcs[i], false);
+		form->recollections[i] = compile_function(fdecl->funcs[i], false);
 
-	form->nchanges = sdecl->nmeths;
+	form->nchanges = fdecl->nmeths;
 	form->changes = xmalloc(sizeof(struct sq_function *[form->nchanges]));
 	for (unsigned i = 0; i < form->nchanges; ++i)
-		form->changes[i] = compile_function(sdecl->meths[i], true);
+		form->changes[i] = compile_function(fdecl->meths[i], true);
 
-	form->nessences = sdecl->nessences;
+	form->nessences = fdecl->nessences;
 	form->essences = xmalloc(sizeof(struct sq_form_essence[form->nessences]));
-	for (unsigned i = 0; i < sdecl->nessences; ++i) {
-		form->essences[i].name = sdecl->essences[i].name;
+	for (unsigned i = 0; i < fdecl->nessences; ++i) {
+		form->essences[i].name = fdecl->essences[i].name;
 		form->essences[i].value = SQ_NULL;
 	}
 
 	declare_global_variable(form->name, sq_value_new_form(form));
-	if (sdecl->nessences) {
+
+	if (fdecl->nessences) {
 		unsigned global = lookup_global_variable(form->name);
 		set_opcode(code, SQ_OC_GLOAD);
 		set_index(code, global);
 		set_index(code, global = next_local(code));
 
-		for (unsigned i = 0; i < sdecl->nessences; ++i) {
-			if (!sdecl->essences[i].value) {
+		for (unsigned i = 0; i < fdecl->nessences; ++i) {
+			if (!fdecl->essences[i].value) {
 				form->essences[i].value = SQ_NULL;
 				continue;
 			}
-			unsigned index = compile_expression(code, sdecl->essences[i].value);
+			unsigned index = compile_expression(code, fdecl->essences[i].value);
 
 			set_opcode(code, SQ_OC_ISTORE);
 			set_opcode(code, global);
-			set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(sdecl->essences[i].name)))));
+			set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(fdecl->essences[i].name)))));
 			set_index(code, index);
 			set_index(code, index);
 		}
 	}
 
-	free(sdecl); // but none of the fields, as they're now owned by `form`.
+	form->parents = xmalloc(sizeof(struct sq_form *[fdecl->nparents]));
+	form->nparents = fdecl->nparents;
+
+	for (unsigned i = 0; i < fdecl->nparents; ++i) {
+		int index = lookup_global_variable(fdecl->parents[i]);
+
+		if (index < 0)
+			die("undeclared form '%s' set as parent", fdecl->parents[i]);
+		else
+			free(fdecl->parents[i]);
+
+		if (!sq_value_is_form(globals.ary[index].value))
+			die("can only set forms as parents, not %s", sq_value_typename(globals.ary[index].value));
+		form->parents[i] = sq_value_as_form(sq_value_clone(globals.ary[index].value));
+	}
+
+	free(fdecl); // but none of the fields, as they're now owned by `form`.
 }
 
 static void compile_func_declaration(struct func_declaration *fdecl) {

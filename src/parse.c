@@ -549,6 +549,26 @@ static struct class_declaration *parse_form_declaration() {
 	// optional name
 	if (take().kind == SQ_TK_IDENT) {
 		fdecl->name = last.identifier;
+	} else if (last.kind == SQ_TK_LABEL) {
+		fdecl->name = last.identifier;
+		unsigned cap = 4;
+		fdecl->parents = xmalloc(sizeof(char *[cap]));
+		while (true) {
+			if (cap == fdecl->nparents)
+				fdecl->parents = xrealloc(fdecl->parents, sizeof(char *[cap *= 2]));
+
+			if (take().kind == SQ_TK_IDENT) {
+				fdecl->parents[fdecl->nparents++] = last.identifier;
+			} else {
+				untake();
+				break;
+			}
+
+			if (take().kind != SQ_TK_COMMA) {
+				untake();
+				break;
+			}
+		}
 	} else {
 		untake();
 		fdecl->name = strdup("<anonymous>");

@@ -7,5 +7,6 @@
 			catapult "assertion failed: \($errmsg)"
 		};
 @alas
+
 	@henceforth $assert_msg($cond, $errmsg) = ;
 @nowhere;
