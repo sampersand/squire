@@ -52,6 +52,10 @@ fn main() {
 //     "#*/);
     // skip 2, bc first one is `-e`....
     let input = std::env::args().skip(2).next().unwrap_or(r##"
+form a {
+        
+}
+@__END__
 form f { 
     essence x=3;
     recall y() { 34 }
@@ -62,15 +66,15 @@ form f {
 form g : f {
     matter a;
     change w(){ 56 }
-    change q(){ 56 }
+    change q(){ 78 }
 }
 
 l = g(1)
-dump(g.x);
-dump(g.y());
-dump(l.z(1));
-dump(l.w());
-dump(l.q());
+dump(g.x); # 3
+dump(g.y()); # 34
+dump(l.z(1)); # 2
+dump(l.w()); # 56
+dump(l.q()); # 78
 
 
 
