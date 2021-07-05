@@ -1,5 +1,5 @@
-@collate "assert.sq"
-@collate "not idempotent.sq"
+@transcribe "assert.sq"
+@transcribe "not idempotent.sq"
 
 form Variable : Not Idempotent {
 	matter name, value, assigned;

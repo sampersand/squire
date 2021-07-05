@@ -1,5 +1,10 @@
 form Parser {
 	matter stream;
 
-	change peek() { reward soul.stream[I]; }
+	change peek() {
+		reward soul.stream[I];
+	}
 }
+
+dump(Parser);
+p = Parser("Abc");

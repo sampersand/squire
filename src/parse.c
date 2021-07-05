@@ -636,13 +636,38 @@ static struct class_declaration *parse_form_declaration() {
 
 			break;
 
-		case SQ_TK_FIELD:
-			while (take().kind == SQ_TK_IDENT) {
+		case SQ_TK_FIELD: {
+			while (true) {
+				if (take().kind != SQ_TK_IDENT && last.kind != SQ_TK_LABEL) {
+					untake();
+					break;
+				}
+
 				if (fdecl->nmatter > MAX_LEN)
 					die("too many fields!");
 
-				fdecl->matter[fdecl->nmatter++].name = last.identifier;
-				fdecl->matter[fdecl->nmatter++].type = NULL;
+				fdecl->matter[fdecl->nmatter].name = last.identifier;
+				if (last.kind == SQ_TK_IDENT) {
+					fdecl->matter[fdecl->nmatter].type = NULL;
+					goto comma_or_done;
+				}
+
+				struct type_annotation *type = xmalloc(sizeof(struct type_annotation));
+				unsigned cap = 4;
+
+				type->count = 0;
+				type->names = xmalloc(sizeof(char *[cap]));
+				// while
+				// fdecl->m
+
+struct type_annotation {
+	unsigned count;
+	char **names;
+};
+
+			comma_or_done:
+				++fdecl->nmatter;
+
 				if (take().kind != SQ_TK_COMMA) {
 					untake();
 					break;
@@ -650,6 +675,7 @@ static struct class_declaration *parse_form_declaration() {
 			}
 
 			break;
+		}
 
 		case SQ_TK_ENDL:
 		case SQ_TK_SOFT_ENDL:
@@ -669,6 +695,7 @@ static struct class_declaration *parse_form_declaration() {
 	fdecl->funcs = xrealloc(fdecl->funcs, sizeof(struct sq_function *[fdecl->nfuncs]));
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
+
 	return fdecl;
 }
 

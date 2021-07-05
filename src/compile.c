@@ -261,6 +261,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 
 	form->nmatter = fdecl->nmatter;
 	form->matter = xmalloc(sizeof(struct sq_form_matter));
+	printf("nmatter=%d\n", fdecl->nmatter);
 	for (unsigned i = 0; i < fdecl->nmatter; ++i) {
 		form->matter[i].name = fdecl->matter[i].name;
 		form->matter[i].type = SQ_UNDEFINED;
