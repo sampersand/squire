@@ -29,10 +29,13 @@ void sq_form_deallocate(struct sq_form *form) {
 
 	free(form->recollections);
 
-	for (unsigned i = 0; i < form->nmatter; ++i)
-		free(form->matter_names[i]);
+	for (unsigned i = 0; i < form->nmatter; ++i) {
+		if (form->matter[i].type != SQ_UNDEFINED)
+			sq_value_free(form->matter[i].type);
+		free(form->matter[i].name);
+	}
 
-	free(form->matter_names);
+	free(form->matter);
 
 	for (unsigned i = 0; i < form->nchanges; ++i)
 		sq_function_free(form->changes[i]);
@@ -95,7 +98,12 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 		if (i != 0)
 			putc(',', out);
 
-		fprintf(out, " %s", form->matter_names[i]);
+		fprintf(out, " %s", form->matter[i].name);
+		if (form->matter[i].type != SQ_UNDEFINED) {
+			fprintf(out, " (");
+			sq_value_dump_to(out, form->matter[i].type);
+			putc(')', out);
+		}
 	}
 
 	if (!form->nmatter)
@@ -140,7 +148,7 @@ sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char 
 	// note that we don't ask parents for matter. this is intentional, as only the base form can
 	// have matter.
 	for (unsigned i = 0; i < imitation->form->nmatter; ++i)
-		if (!strcmp(name, imitation->form->matter_names[i]))
+		if (!strcmp(name, imitation->form->matter[i].name))
 			return &imitation->matter[i];
 
 	return NULL;
@@ -178,7 +186,7 @@ void sq_imitation_dump(FILE *out, const struct sq_imitation *imitation) {
 		if (i != 0)
 			fprintf(out, ", ");
 
-		fprintf(out, "%s=", imitation->form->matter_names[i]);
+		fprintf(out, "%s=", imitation->form->matter[i].name);
 		sq_value_dump(imitation->matter[i]);
 	}
 

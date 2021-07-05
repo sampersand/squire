@@ -257,9 +257,15 @@ static struct sq_function *compile_function(struct func_declaration *fndecl, boo
 
 static void compile_form_declaration(struct sq_code *code, struct class_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
+	declare_global_variable(form->name, sq_value_new_form(form));
 
-	form->nmatter = fdecl->nfields;
-	form->matter_names = fdecl->fields;
+	form->nmatter = fdecl->nmatter;
+	form->matter = xmalloc(sizeof(struct sq_form_matter));
+	for (unsigned i = 0; i < fdecl->nmatter; ++i) {
+		form->matter[i].name = fdecl->matter[i].name;
+		form->matter[i].type = SQ_UNDEFINED;
+		assert(fdecl->matter[i].type == NULL); // todo
+	}
 
 	declare_global_variable(form->name, SQ_NULL);
 
@@ -281,8 +287,6 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		form->essences[i].name = fdecl->essences[i].name;
 		form->essences[i].value = SQ_NULL;
 	}
-
-	declare_global_variable(form->name, sq_value_new_form(form));
 
 	if (fdecl->nessences) {
 		unsigned global = lookup_global_variable(form->name);

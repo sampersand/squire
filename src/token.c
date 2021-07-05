@@ -287,8 +287,6 @@ static struct sq_token parse_identifier(void) {
 
 	token.identifier = xmalloc(sizeof(char [cap]));
 
-        token.identifier = xmalloc(sizeof(char [cap]));
- 
 	while (true) {
 		if (isupper(*sq_stream) && len && !isupper(token.identifier[0])) {
 			token.identifier[len++] = '_';

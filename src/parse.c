@@ -579,12 +579,12 @@ static struct class_declaration *parse_form_declaration() {
 	EXPECT(SQ_TK_LBRACE, "expected '{' before 'form' contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
-	fdecl->fields = xmalloc(sizeof(char *[MAX_LEN]));
+	fdecl->matter = xmalloc(sizeof(struct matter_declaration[MAX_LEN]));
 	fdecl->meths = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
 	fdecl->funcs = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
 	fdecl->essences = xmalloc(sizeof(struct essence_declaration[MAX_LEN]));
 	fdecl->constructor = NULL;
-	fdecl->nfields = 0;
+	fdecl->nmatter = 0;
 	fdecl->nfuncs = 0;
 	fdecl->nmeths = 0;
 	fdecl->nessences = 0;
@@ -638,8 +638,11 @@ static struct class_declaration *parse_form_declaration() {
 
 		case SQ_TK_FIELD:
 			while (take().kind == SQ_TK_IDENT) {
-				if (fdecl->nfields > MAX_LEN) die("too many fields!");
-				fdecl->fields[fdecl->nfields++] = last.identifier;
+				if (fdecl->nmatter > MAX_LEN)
+					die("too many fields!");
+
+				fdecl->matter[fdecl->nmatter++].name = last.identifier;
+				fdecl->matter[fdecl->nmatter++].type = NULL;
 				if (take().kind != SQ_TK_COMMA) {
 					untake();
 					break;
@@ -661,11 +664,11 @@ static struct class_declaration *parse_form_declaration() {
 
 #undef MAX_LEN
 
-	fdecl->fields = xrealloc(fdecl->fields, sizeof(char *[fdecl->nfields]));
+	fdecl->matter = xrealloc(fdecl->matter, sizeof(char *[fdecl->nmatter]));
 	fdecl->meths = xrealloc(fdecl->meths, sizeof(struct sq_function *[fdecl->nmeths]));
 	fdecl->funcs = xrealloc(fdecl->funcs, sizeof(struct sq_function *[fdecl->nfuncs]));
 
-	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' fields");
+	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
 	return fdecl;
 }
 

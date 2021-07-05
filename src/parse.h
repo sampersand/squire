@@ -45,6 +45,11 @@ struct statement {
 	};
 };
 
+struct type_annotation {
+	unsigned count;
+	char **names;
+};
+
 struct scope_declaration {
 	char *name;
 	struct expression *value; // can be null
@@ -52,8 +57,12 @@ struct scope_declaration {
 
 struct class_declaration {
 	char *name;
-	unsigned nfields, nfuncs, nmeths, nparents, nessences;
-	char **fields, **parents;
+	unsigned nmatter, nfuncs, nmeths, nparents, nessences;
+	char **parents;
+	struct matter_declaration {
+		char *name;
+		struct type_annotation *type; // may be null
+	} *matter;
 	struct essence_declaration { char *name; struct expression *value; } *essences;
 	struct func_declaration **funcs, **meths, *constructor;
 };

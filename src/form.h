@@ -47,9 +47,16 @@ struct sq_form {
 	unsigned refcount;
 
 	struct sq_function **recollections;
-	struct sq_form_essence { sq_value value; char *name; } *essences;
+	struct sq_form_essence {
+        char *name;
+        sq_value value;
+        sq_value type; // may be SQ_UNDEFINED.
+    } *essences;
 
-	char **matter_names;
+    struct sq_form_matter {
+        char *name;
+        sq_value type; // may be SQ_UNDEFINED.
+    } *matter;
 	struct sq_function **changes, *imitate;
 	struct sq_form **parents;
 };

@@ -574,16 +574,22 @@ sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_v
 				value = sq_form_lookup(form, field);
 
 				if (value == SQ_UNDEFINED)
-					die("unknown static field '%s' for type '%s'", field, form->name);
+					sq_throw("unknown static field '%s' for type '%s'", field, form->name);
 			} else if (sq_value_is_imitation(value)) {
 				struct sq_imitation *imitation = sq_value_as_imitation(value);
 				value = sq_imitation_lookup(imitation, field);
 
 				if (value == SQ_UNDEFINED)
-					die("unknown field '%s' for type '%s'", field, imitation->form->name);
-			// } else if (sq_value_is_book(value)) {
+					sq_throw("unknown field '%s' for type '%s'", field, imitation->form->name);
+			} else if (sq_value_is_book(value)) {
+				if (!strcmp(field, "verso"))
+					value = sq_book_index(sq_value_as_book(value), 1);
+				else if (!strcmp(field, "recto"))
+					value = sq_book_index2(sq_value_as_book(value), -1);
+				else
+					sq_throw("unknown field '%s' on a book", field);
 			} else {
-				die("can only access fields on imitations.");
+				sq_throw("can only access fields on imitations.");
 			}
 
 			sq_value_clone(value);
@@ -602,15 +608,27 @@ sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_v
 				valueptr = sq_imitation_lookup_matter(imitation, field);
 
 				if (!valueptr)
-					die("unknown matter '%s' for type '%s'", field, imitation->form->name);
+					sq_throw("unknown matter '%s' for type '%s'", field, imitation->form->name);
 			} else if (sq_value_is_form(target)) {
 				struct sq_form *form = sq_value_as_form(target);
 				valueptr = sq_form_lookup_essence(form, field);
 
 				if (!valueptr)
-					die("unknown essence '%s' for form '%s'", field, form->name);
+					sq_throw("unknown essence '%s' for form '%s'", field, form->name);
+			} else if (sq_value_is_book(target)) {
+				value = NEXT_LOCAL();
+				sq_value_clone(value);
+				SET_NEXT_LOCAL() = value;
+
+				if (!strcmp(field, "verso"))
+					sq_book_index_assign(sq_value_as_book(target), 1, value);
+				else if (!strcmp(field, "recto"))
+					sq_book_index_assign2(sq_value_as_book(target), -1, value);
+				else
+					sq_throw("unknown field '%s' on a book", field);
+				continue;
 			} else {
-				die("can only access fields on imitations.");
+				sq_throw("can only access fields on imitations.");
 			}
 
 			value = NEXT_LOCAL();
@@ -620,7 +638,7 @@ sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_v
 		}
 
 		default:
-			die("unknown opcode '%d'", opcode);
+			bug("unknown opcode '%d'", opcode);
 		}
 	}
 
