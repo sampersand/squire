@@ -22,7 +22,7 @@ struct FormInner {
 	name: String,
 
 	// Superclasses
-	parents: Vec<Arc<Form>>,
+	parents: Vec<Form>,
 
 	// Class functions
 	recalls: HashMap<String, Journey>,
@@ -97,16 +97,28 @@ impl Form {
 		&self.0.name
 	}
 
+	pub fn get_matter_index(&self, name: &str) -> Option<usize> {
+		self.0.matter_names.iter().position(|n| n == name)
+			.or_else(|| self.0.parents.iter().find_map(|parent| parent.get_matter_index(name)))
+	}
+
+	pub fn get_change(&self, name: &str) -> Option<&Journey> {
+		self.0.changes.get(name)
+			.or_else(|| self.0.parents.iter().find_map(|parent| parent.get_change(name)))
+	}
+
+	pub fn get_essence(&self, name: &str) -> Option<&Mutex<Value>> {
+		self.0.essences.get(name)
+			.or_else(|| self.0.parents.iter().find_map(|parent| parent.get_essence(name)))
+	}
+
 	pub fn get_recall(&self, name: &str) -> Option<&Journey> {
 		self.0.recalls.get(name)
+			.or_else(|| self.0.parents.iter().find_map(|parent| parent.get_recall(name)))
 	}
 
 	pub fn matter_names(&self) -> &[String] {
 		&self.0.matter_names
-	}
-
-	pub fn changes(&self) -> &HashMap<String, Journey> {
-		&self.0.changes
 	}
 
 	pub fn imitate(&self, mut args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
@@ -160,9 +172,9 @@ impl Call for Form {
 
 impl GetAttr for Form {
 	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
-		if let Some(essence) = self.0.essences.get(attr) {
+		if let Some(essence) = self.get_essence(attr) {
 			Ok(essence.lock().clone())
-		} else if let Some(recall) = self.0.recalls.get(attr) {
+		} else if let Some(recall) = self.get_recall(attr) {
 			Ok(recall.clone().into())
 		} else {
 			Err(RuntimeError::UnknownAttribute(attr.to_string()))
@@ -172,7 +184,7 @@ impl GetAttr for Form {
 
 impl SetAttr for Form {
 	fn set_attr(&self, attr: &str, value: Value, _: &mut Vm) -> Result<(), RuntimeError> {
-		if let Some(essence) = self.0.essences.get(attr) {
+		if let Some(essence) = self.get_essence(attr) {
 			*essence.lock() = value;
 			Ok(())
 		} else {

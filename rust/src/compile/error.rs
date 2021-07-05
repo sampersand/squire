@@ -1,12 +1,16 @@
 use crate::parse::Error as ParseError;
+use crate::value::Value;
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
 	Parse(ParseError),
 	UnknownIdentifier(String),
 	InvalidLhsForAssignment,
 	GlobalAlreadyDefined(String),
-	FormValueAlreadyDefined { name: String, kind: &'static str }
+	FormValueAlreadyDefined { name: String, kind: &'static str },
+	ParentNotAForm(Value),
+	ParentNotDeclared(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

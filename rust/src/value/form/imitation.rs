@@ -57,36 +57,14 @@ impl Imitation {
 		&self.0.form
 	}
 
-	// what should the return value be?
-	// `&Value` doens't work. Should it be `impl Deref<Target=Value>`?
-	// Or should i take a lambda? Or should I expose the `RwLock` directly? Something else?
-	pub fn get_matter(&self, key: &str) -> Option<Value> {
-		self.with_field(key, Clone::clone)
-	}
+	pub fn get_matter(&self, key: &str) -> Option<&Mutex<Value>> {
+		let index = self.form().get_matter_index(key)?;
 
-	pub fn set_field(&self, key: &str, value: Value) -> Option<Value> {
-		self.with_field_mut(key, move |old| std::mem::replace(old, value))
-	}
-
-	pub fn with_field<F: FnOnce(&Value) -> T, T>(&self, key: &str, func: F) -> Option<T> {
-		self.form()
-			.matter_names()
-			.iter()
-			.position(|name| name == key)
-			.map(|index| func(&self.0.fields[index].lock()))
-	}
-
-	pub fn with_field_mut<F: FnOnce(&mut Value) -> T, T>(&self, key: &str, func: F) -> Option<T> {
-		self.form().matter_names()
-			.iter()
-			.position(|name| name == key)
-			.map(|index| func(&mut self.0.fields[index].lock()))
+		Some(&self.0.fields[index])
 	}
 
 	pub fn get_change(&self, key: &str) -> Option<&Journey> {
-		self.form().changes().get(key)
-			// .get(key)
-			// .map(|journey| Change { imitation: self.clone(), journey: journey.clone() })
+		self.form().get_change(key)
 	}
 }
 
@@ -117,9 +95,7 @@ impl Imitation {
 	pub fn call_method(&self, func: &'static str, mut args: Args, vm: &mut Vm) -> Result<Value> {
 		args.add_soul(self.clone().into());
 
-		self.form()
-			.changes()
-			.get(func)
+		self.get_change(func)
 			.ok_or_else(|| RuntimeError::OperationNotSupported { kind: self.kind(), func })?
 			.call(args, vm)
 	}
@@ -276,7 +252,7 @@ impl GetAttr for Imitation {
 	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value> {
 		// in the future, we might have getters/setters
 		if let Some(matter) = self.get_matter(attr) {
-			Ok(matter)
+			Ok(matter.lock().clone())
 		} else if let Some(change) = self.get_change(attr) {
 			Ok(Bound::new(self.clone().into(), change.clone()).into())
 		} else {
@@ -287,11 +263,12 @@ impl GetAttr for Imitation {
 
 impl SetAttr for Imitation {
 	fn set_attr(&self, attr: &str, value: Value, _: &mut Vm) -> Result<()> {
-		let _ = (attr, value);
-		unimplemented!();
-		// // in the future, we might want to have getters/setters
-		// self.get_matter(attr)
-		// 	.or_else(|| self.get_change(attr).map(|method| Value::from(Value::Journey(method.clone()))))
-		// 	.ok_or_else(|| RuntimeError::UnknownAttribute(attr.to_string()))
+		// in the future, we might want to have getters/setters
+		if let Some(matter) = self.get_matter(attr) {
+			*matter.lock() = value;
+			Ok(())
+		} else {
+			Err(RuntimeError::UnknownAttribute(attr.to_string()))
+		}
 	}
 }

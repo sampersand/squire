@@ -457,8 +457,8 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 
 		self.stream.strip_whitespace_and_comments();
 
-		if self.stream.take_identifier("__END__") {
-			self.stream.put_back("__END__".chars());
+		if self.stream.take_identifier("@__END__") {
+			self.stream.put_back("@__END__".chars());
 			return None;
 		}
 

@@ -11,6 +11,7 @@ use crate::value::Value;
 #[derive(Debug)]
 pub struct Form {
 	name: String,
+	parents: Vec<String>,
 
 	essences: HashMap<String, Option<Expression>>,
 	functions: Vec<Journey>,
@@ -103,6 +104,7 @@ impl Parsable for Form {
 
 		let mut class = Self {
 			name: parser.expect_identifier()?,
+			parents :Vec::default(),
 			essences: HashMap::default(),
 			functions: Vec::default(),
 			matter_names: Vec::default(),
@@ -110,7 +112,33 @@ impl Parsable for Form {
 			imitate: None
 		};
 
-		parser.take_paren_group(ParenKind::Curly, |parser| {
+		// if a parents list is given, parse them.
+		if parser.guard(TokenKind::Symbol(Symbol::Colon))?.is_some() {
+			loop {
+				match parser.guard([TokenKind::Identifier, TokenKind::LeftParen(ParenKind::Curly)])? {
+					Some(Token::Identifier(parent)) => {
+						class.parents.push(parent);
+
+						match parser.expect([TokenKind::Symbol(Symbol::Comma), TokenKind::LeftParen(ParenKind::Curly)])? {
+							Token::Symbol(Symbol::Comma) => continue,
+							Token::LeftParen(ParenKind::Curly) => {
+								parser.undo_next_token();
+								break;
+							},
+							_ => unreachable!()
+						}
+					},
+					Some(Token::LeftParen(ParenKind::Curly)) => {
+						parser.undo_next_token();
+						break;
+					},
+					Some(_) => unreachable!(),
+					None => break
+				}
+			}
+		}
+
+		if parser.take_paren_group(ParenKind::Curly, |parser| {
 			const VALID_TOKENS: [TokenKind; 6] = [
 				TokenKind::Keyword(Keyword::Essence),
 				TokenKind::Keyword(Keyword::Recall),
@@ -129,7 +157,9 @@ impl Parsable for Form {
 				Token::Symbol(Symbol::Endline) => Ok(()),
 				_ => unreachable!()
 			}
-		})?;
+		})?.is_none() {
+			return Err(parser.error("expected a `{` after from declaration"));
+		}
 
 		Ok(Some(class))
 	}
@@ -140,6 +170,14 @@ impl Compilable for Form {
 		let mut builder = crate::value::Form::builder(self.name);
 
 		let globals = compiler.globals();
+
+		for parent in self.parents {
+			match globals.borrow().get(&parent) {
+				Some((_, Some(Value::Form(parent)))) => builder.add_parent(parent.clone()),
+				Some((_, Some(other))) => return Err(CompileError::ParentNotAForm(other.clone())),
+				_ => return Err(CompileError::ParentNotDeclared(parent)),
+			}
+		}
 
 		for func in self.functions {
 			builder.add_recall(func.build_journey(globals.clone(), false)?)?;

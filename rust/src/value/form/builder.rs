@@ -14,6 +14,11 @@ impl FormBuilder {
 		self.0.changes.contains_key(key) || self.0.matter_names.iter().any(|x| x == key)
 	}
 
+	pub fn add_parent(&mut self, parent: Form) {
+		// todo: do we want to check for the parent already existing?
+		self.0.parents.push(parent);
+	}
+
 	pub fn add_recall(&mut self, recall: UserDefined) -> Result<(), CompilerError> {
 		let name = recall.name().to_string();
 		if self.form_key_exists(&name) {
