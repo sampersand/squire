@@ -1,16 +1,15 @@
-use crate::ast::{Expression, expression::Primary, Statements};
+use super::GenusDeclaration;
+use crate::ast::{Expression, Statements};
 use crate::value::{Value, journey::UserDefined};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Globals, Error as CompileError};
 use crate::runtime::Opcode;
 
-pub type Type = Primary;
-
 #[derive(Debug)]
 pub struct Argument {
 	name: String,
-	kind: Option<Type>,
+	genus: Option<GenusDeclaration>,
 	default: Option<Expression>
 }
 
@@ -19,7 +18,7 @@ pub struct Arguments {
 	normal: Vec<Argument>,
 	vararg: Option<String>,
 	varkwarg: Option<String>,
-	return_type: Option<Type>
+	return_genus: Option<GenusDeclaration>
 }
 
 #[derive(Debug)]
@@ -41,21 +40,20 @@ impl Parsable for Arguments {
 			normal: Vec::new(),
 			vararg: None,
 			varkwarg: None,
-			return_type: None
+			return_genus: None
 		};
 
 		while let Some(name) = parser.guard_identifier()? {
-			let mut argument = Argument { name, kind: None, default: None };
-
-			if parser.guard(TokenKind::Symbol(Symbol::Colon))?.is_some() {
-				argument.kind = Some(Type::expect_parse(parser)?);
-			}
-
-			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
-				argument.default = Some(Expression::expect_parse(parser)?);
-			}
-
-			arguments.normal.push(argument);
+			arguments.normal.push(Argument {
+				name,
+				genus: GenusDeclaration::parse(parser)?,
+				default: 
+					if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
+						Some(Expression::expect_parse(parser)?)
+					} else {
+						None
+					}
+			});
 
 			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
 				break;
@@ -81,9 +79,7 @@ impl Parsable for Arguments {
 
 		parser.expect(TokenKind::RightParen(ParenKind::Round))?;
 
-		if parser.guard(TokenKind::Symbol(Symbol::Colon))?.is_some() {
-			arguments.return_type = Some(Type::expect_parse(parser)?);
-		}
+		arguments.return_genus = GenusDeclaration::parse(parser)?;
 
 		Ok(Some(arguments))
 	}
@@ -114,25 +110,34 @@ impl Journey {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
-			self.args.normal.insert(0, Argument { name: "soul".into(), kind: None, default: None });
+			self.args.normal.insert(0, Argument { name: "soul".into(), genus: None, default: None });
 		}
 
-		if self.args.vararg.is_some() || self.args.varkwarg.is_some() || self.args.return_type.is_some() {
+		if self.args.vararg.is_some() || self.args.varkwarg.is_some() {
 			todo!();
 		}
 
 		let mut arg_names = Vec::new();
 		for arg in self.args.normal {
-			if arg.kind.is_some() || arg.default.is_some() {
-				todo!();
+			arg_names.push(arg.name.clone());
+			let local = body_compiler.define_local(arg.name);
+
+			if let Some(genus) = arg.genus {
+				genus.check(local, &mut body_compiler)?;
 			}
 
-			arg_names.push(arg.name.clone());
-			body_compiler.define_local(arg.name);
+			if arg.default.is_some() {
+				todo!();
+			}
 		}
 
 		let return_target = body_compiler.next_target();
 		self.body.compile(&mut body_compiler, Some(return_target))?;
+
+		if let Some(return_genus) = self.args.return_genus {
+			return_genus.check(return_target, &mut body_compiler)?;
+		}
+
 		// todo: what if `return_target` is just used for scratch?.
 		body_compiler.opcode(Opcode::Return);
 		body_compiler.target(return_target);

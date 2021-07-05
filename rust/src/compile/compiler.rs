@@ -45,6 +45,11 @@ impl Default for Compiler {
 			globals.insert(default.name().to_string(), (Global(globals.len()), Some(default.into())));
 		}
 
+		// todo, until we have actual forms:
+		for name in ["Ni", "Veracity", "Numeral", "Text", "Book", "Codex", "Journey", "Form", "Imitation"] {
+			globals.insert(name.to_string(), (Global(globals.len()), Some(name.to_string().into())));
+		}
+
 		Self {
 			globals: Rc::new(RefCell::new(globals)),
 			code: Default::default(),
