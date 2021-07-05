@@ -115,7 +115,7 @@ impl Matches for Value {
 			Self::Veracity(veracity) => veracity.matches(rhs, vm),
 			Self::Numeral(numeral) => numeral.matches(rhs, vm),
 			Self::Text(text) => text.matches(rhs, vm),
-			Self::Book(book) => book.matches(rhs, vm),
+			Self::Book(book) => dbg!(book).matches(rhs, vm),
 			Self::Codex(codex) => codex.matches(rhs, vm),
 			Self::Form(form) => form.matches(rhs, vm),
 			Self::Imitation(imitation) => imitation.matches(rhs, vm),

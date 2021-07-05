@@ -206,15 +206,15 @@ impl Matches for Text {
 		// temporary stopgap until we get forms for primitives
 		use crate::value::Genus;
 		Ok(match self.as_str() {
-			"ni" => target.genus() == Genus::Ni,
-			"veracity" => target.genus() == Genus::Veracity,
-			"numeral" => target.genus() == Genus::Numeral,
-			"text" => target.genus() == Genus::Text,
-			"book" => target.genus() == Genus::Book,
-			"form" => target.genus() == Genus::Form,
-			"codex" => target.genus() == Genus::Codex,
-			"imitation" => matches!(target, Value::Imitation(_)),
-			"journey" => target.genus() == Genus::Journey,
+			"Ni" => target.genus() == Genus::Ni,
+			"Veracity" => target.genus() == Genus::Veracity,
+			"Numeral" => target.genus() == Genus::Numeral,
+			"Text" => target.genus() == Genus::Text,
+			"Book" => target.genus() == Genus::Book,
+			"Form" => target.genus() == Genus::Form,
+			"Codex" => target.genus() == Genus::Codex,
+			"Imitation" => matches!(target, Value::Imitation(_)),
+			"Journey" => target.genus() == Genus::Journey,
 			_ => self.is_equal(target, vm)?
 		})
 	}

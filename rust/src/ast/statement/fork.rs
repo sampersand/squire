@@ -78,9 +78,9 @@ impl Compilable for Fork {
 			for expr in path.exprs {
 				expr.compile(compiler, Some(Compiler::SCRATCH_TARGET))?;
 
-				compiler.opcode(Opcode::Equals);
-				compiler.target(condition_target);
+				compiler.opcode(Opcode::Matches);
 				compiler.target(Compiler::SCRATCH_TARGET);
+				compiler.target(condition_target);
 				compiler.target(Compiler::SCRATCH_TARGET);
 
 				compiler.opcode(Opcode::JumpIfTrue);

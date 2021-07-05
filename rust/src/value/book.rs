@@ -485,7 +485,8 @@ impl Multiply for Book {
 impl Matches for Book {
 	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
 		for genus in &*self.as_slice() {
-			if genus.matches(target, vm)? {
+			// TODO: do we want to bubble up errors from matches that fail?
+			if genus.matches(target, vm)?/*.unwrap_or(false)*/ {
 				return Ok(true);
 			}
 		}
