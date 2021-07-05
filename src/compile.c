@@ -1003,7 +1003,6 @@ static void compile_comefrom_statement(struct sq_code *code, char *label) {
 
 			for (j = 0; j < MAX_COMEFROMS; ++j)
 				if (lbl->indices[j] == -1) {
-					printf("j=%d\n", j);
 					goto set_existing;
 				}
 

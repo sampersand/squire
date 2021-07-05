@@ -93,7 +93,7 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 
 sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
-	sq_value value;
+	sq_value value = SQ_NULL;
 	enum sq_opcode opcode;
 
 	for (unsigned i = 0; i < argc; ++i)

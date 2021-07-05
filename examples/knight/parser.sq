@@ -1,0 +1,5 @@
+form Parser {
+	matter stream;
+
+	change peek() { reward soul.stream[I]; }
+}

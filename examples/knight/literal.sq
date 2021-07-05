@@ -1,4 +1,3 @@
-@henceforth $DEBUG = 1;
 @transcribe "assert.sq"
 
 form Literal {
@@ -6,52 +5,14 @@ form Literal {
 
 @whereupon $DEBUG
 	imitate(value) {
-		soul.value = value;
-		g = value.genus;
+		soul.value = value
+		g = value.genus
 		$assert(g == 'numeral' || g == 'veracity' || g == 'ni');
 	}
 @nowhere;
 
-	change run () { soul }
-}
-
-l = Literal(I123);
-dump(l.run());
-
-@__END__
-
-form Variable : Not Idempotent {
-	matter name, value, assigned;
-	essence declared = {};
-
-	imitate(name) {
-		$assert(name.genus == 𝔱𝔢𝔵𝔱)
-
-		soul.name = name
-		soul.assigned = nay
-	}
-
-	recall fetch(name) {
-		declared = soul.declared;
-		var = declared[name];
-
-		if ni == var {
-			reward declared[name] = soul(name)
-		} alas {
-			reward var
-		}
-	}
-
-	change run() {
-		if !soul.assigned {
-			catapult "undefined variable '\(soul.name)'"
-		}
-
-		soul.value
-	}
-
-	change assign(value) {
-		soul.assigned = yay
-		soul.value = value
-	}
+	change run () { reward soul }
+	change to text() { reward text(soul.value) }
+	change to numeral() { reward numeral(soul.value) }
+	change to veracity() { reward veracity(soul.value) }
 }

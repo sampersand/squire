@@ -28,12 +28,10 @@ void sq_value_dump(sq_value value) {
 void sq_value_dump_to(FILE *out, sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
-		printf("%lld\n", value);
-		if (sq_value_is_null(value)) {
+		if (sq_value_is_null(value))
 			fprintf(out, "Null()");
-		} else {
+		else
 			fprintf(out, "Boolean(%s)", sq_value_as_boolean(value) ? "true" : "false");
-		}
 
 		break;
 
