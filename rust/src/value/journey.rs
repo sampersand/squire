@@ -1,6 +1,6 @@
 use crate::runtime::{Args, Vm, Error as RuntimeError};
 use crate::value::Value;
-use crate::value::ops::{Dump, IsEqual, Call, GetAttr};
+use crate::value::ops::{Dump, Matches, IsEqual, Call, GetAttr};
 use std::hash::{Hash, Hasher};
 
 mod arguments;
@@ -99,6 +99,16 @@ impl Dump for Journey {
 			Self::Builtin(builtin) => builtin.dump(to, vm),
 			Self::Bound(bound) => bound.dump(to, vm),
 			Self::UserDefined(user_defined) => user_defined.dump(to, vm),
+		}
+	}
+}
+
+impl Matches for Journey {
+	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		if self.is_equal(target, vm)? {
+			Ok(true)
+		} else {
+			self.call(Args::new(&[target.clone()]), vm)?.convert_to::<bool>(vm)
 		}
 	}
 }

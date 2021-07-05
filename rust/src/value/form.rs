@@ -5,7 +5,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use crate::runtime::{Vm, Args, Error as RuntimeError};
 use crate::value::{Value, Journey};
-use crate::value::ops::{Dump, IsEqual, Call, GetAttr, SetAttr};
+use crate::value::ops::{Dump, Matches, IsEqual, Call, GetAttr, SetAttr};
 use std::fmt::{self, Debug, Formatter};
 
 mod imitation;
@@ -138,6 +138,10 @@ impl Form {
 			Ok(Value::Imitation(Imitation::new(self.clone(), args._as_slice().to_owned()).into()))
 		}
 	}
+
+	pub fn is_subform_of(&self, form: &Form) -> bool {
+		self == form || self.0.parents.iter().any(|parent| parent.is_subform_of(form))
+	}
 }
 
 impl Hash for Form {
@@ -151,6 +155,17 @@ impl Dump for Form {
 		to.push_str(&format!("Form({}:{:p})", self.name(), Arc::as_ptr(&self.0)));
 
 		Ok(())
+	}
+}
+
+
+impl Matches for Form {
+	fn matches(&self, rhs: &Value, _: &mut Vm) -> Result<bool, RuntimeError> {
+		if let Value::Imitation(imitation) = rhs {
+			Ok(imitation.form().is_subform_of(self))
+		} else {
+			Ok(false)
+		}
 	}
 }
 

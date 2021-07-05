@@ -1,7 +1,7 @@
 use crate::runtime::{Vm, Error as RuntimeError};
 use std::sync::Arc;
 use crate::value::{Value, Veracity, Numeral, Book};
-use crate::value::ops::{ConvertTo, Dump, IsEqual, Compare, Add, Multiply, Modulo, GetIndex, GetAttr};
+use crate::value::ops::{ConvertTo, Dump, Matches, IsEqual, Compare, Add, Multiply, Modulo, GetIndex, GetAttr};
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -198,6 +198,25 @@ impl ConvertTo<Book> for Text {
 			.map(Self::from)
 			.map(Value::Text)
 			.collect())
+	}
+}
+
+impl Matches for Text {
+	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		// temporary stopgap until we get forms for primitives
+		use crate::value::Genus;
+		Ok(match self.as_str() {
+			"ni" => target.genus() == Genus::Ni,
+			"veracity" => target.genus() == Genus::Veracity,
+			"numeral" => target.genus() == Genus::Numeral,
+			"text" => target.genus() == Genus::Text,
+			"book" => target.genus() == Genus::Book,
+			"form" => target.genus() == Genus::Form,
+			"codex" => target.genus() == Genus::Codex,
+			"imitation" => matches!(target, Value::Imitation(_)),
+			"journey" => target.genus() == Genus::Journey,
+			_ => self.is_equal(target, vm)?
+		})
 	}
 }
 

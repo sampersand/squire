@@ -1,5 +1,5 @@
 use crate::parse::{Parser, Parsable, Error as ParseError};
-use crate::parse::token::{Token, TokenKind, Literal as TokenLiteral};
+use crate::parse::token::{Token, TokenKind, LiteralKind, Literal as TokenLiteral};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
 #[derive(Debug)]
@@ -11,7 +11,7 @@ impl Parsable for Literal {
 	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
 		// unimplemented: text interpolation...?
 
-		match parser.guard(TokenKind::Literal)? {
+		match parser.guard(TokenKind::Literal(LiteralKind::Any))? {
 			Some(Token::Literal(literal)) => Ok(Some(Self(literal))),
 			Some(_) => unreachable!(),
 			None => Ok(None)

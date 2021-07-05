@@ -13,7 +13,9 @@ mod r#if;
 mod whilst;
 mod fork;
 mod labels;
+mod genus_declaration;
 
+use genus_declaration::GenusDeclaration;
 pub use form::Form;
 pub use journey::Journey;
 pub use attempt::Attempt;

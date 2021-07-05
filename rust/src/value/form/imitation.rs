@@ -4,11 +4,11 @@ use parking_lot::Mutex;
 use std::hash::{Hash, Hasher};
 use crate::runtime::{Result, Error as RuntimeError, Args, Vm};
 use std::fmt::{self, Debug, Formatter};
-use crate::value::{Value, ValueKind, Text, Numeral, Veracity, Journey, Book, Codex, journey::Bound};
+use crate::value::{Value, Genus, Text, Numeral, Veracity, Journey, Book, Codex, journey::Bound};
 use crate::value::ops::{
 	ConvertTo, Dump,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
-	IsEqual, Compare, Call,
+	Matches, IsEqual, Compare, Call,
 	GetAttr, SetAttr, GetIndex, SetIndex
 };
 
@@ -96,12 +96,12 @@ impl Imitation {
 		args.add_soul(self.clone().into());
 
 		self.get_change(func)
-			.ok_or_else(|| RuntimeError::OperationNotSupported { kind: self.kind(), func })?
+			.ok_or_else(|| RuntimeError::OperationNotSupported { kind: Genus::Imitation(self.form().clone()), func })?
 			.call(args, vm)
 	}
 
-	pub fn kind(&self) -> ValueKind {
-		ValueKind::Imitation(self.form().clone())
+	pub fn is_a(&self, form: &Form) -> bool {
+		self.0.form.is_subform_of(form)
 	}
 }
 
@@ -117,8 +117,8 @@ macro_rules! expect_a {
 			Value::$kind(value) => Ok(value),
 			other =>
 				Err(RuntimeError::InvalidReturnType {
-					expected: ValueKind::$kind,
-					given: other.kind(),
+					expected: Genus::$kind,
+					given: other.genus(),
 					func: $func
 				})
 		}
@@ -212,6 +212,19 @@ impl Modulo for Imitation {
 impl Power for Imitation {
 	fn power(&self, rhs: &Value, vm: &mut Vm) -> Result<Value> {
 		self.call_method("**", Args::new(&[rhs.clone()]), vm)
+	}
+}
+
+
+impl Matches for Imitation {
+	fn matches(&self, rhs: &Value, vm: &mut Vm) -> Result<bool> {
+		// const NAME: &str = "==?????"; // todo: what's the name for matches
+
+
+		// unimplemented: if `==` method doesn't exist, use `==`
+		// expect_a!(self.call_method(NAME, Args::new(&[rhs.clone()]), vm)?, Veracity, NAME)
+		let _ = (rhs, vm);
+		unimplemented!("what's the naem for matches?")
 	}
 }
 

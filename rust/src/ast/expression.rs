@@ -1,7 +1,7 @@
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 
-mod primary;
+pub mod primary;
 mod binary_operator;
 
 pub use primary::Primary;

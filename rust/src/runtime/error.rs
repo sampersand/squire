@@ -1,4 +1,4 @@
-use crate::value::{Value, ValueKind};
+use crate::value::{Value, Genus};
 use crate::value::numeral::NumeralParseError;
 use std::fmt::{self, Display, Formatter};
 use std::borrow::Cow;
@@ -6,17 +6,18 @@ use std::io;
 
 #[derive(Debug)]
 pub enum Error {
-	OperationNotSupported { kind: ValueKind, func: &'static str },
-	CannotConvert { from: ValueKind, to: ValueKind },
-	InvalidOperand { kind: ValueKind, func: &'static str },
+	OperationNotSupported { kind: Genus, func: &'static str },
+	CannotConvert { from: Genus, to: Genus },
+	InvalidOperand { kind: Genus, func: &'static str },
 	ValueError(String),
 	DivisionByZero,
 	OutOfBounds,
 	ArgumentCountError { given: usize, expected: usize },
 	ArgumentError(Cow<'static, str>),
+	TypeError(String),
 	Throw(Value),
 	UnknownAttribute(String),
-	InvalidReturnType { expected: ValueKind, given: ValueKind, func: &'static str },
+	InvalidReturnType { expected: Genus, given: Genus, func: &'static str },
 	Io(io::Error),
 	Other(Box<dyn std::error::Error>),
 }
@@ -41,6 +42,7 @@ impl Display for Error {
 			Self::OutOfBounds => write!(f, "value was out of bounds"),
 			Self::ArgumentCountError { given, expected } => write!(f, "argc mismatch: given {}, expected {}", given, expected),
 			Self::ArgumentError(message) => write!(f, "argument error: {}", message),
+			Self::TypeError(message) => write!(f, "type error: {}", message),
 			Self::Throw(value) => write!(f, "uncaught throw: {:?}", value),
 			Self::UnknownAttribute(attr) => write!(f, "unknown attribute accessed: {:?}", attr),
 			Self::InvalidReturnType { given, expected, func }

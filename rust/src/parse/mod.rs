@@ -4,7 +4,7 @@ pub mod token;
 
 pub use error::{Error, ErrorKind, Result};
 pub use stream::Stream;
-pub use token::{Token, TokenKind, Tokenizer};
+pub use token::{Token, TokenKind, Literal, LiteralKind, Tokenizer};
 
 pub trait Parsable : Sized {
 	const TYPE_NAME: &'static str;
@@ -255,7 +255,11 @@ impl TokenPattern for TokenKind {
 			(TokenKind::Symbol(lhs), Token::Symbol(rhs)) => lhs == rhs,
 			(TokenKind::LeftParen(lhs), Token::LeftParen(rhs)) => lhs == rhs,
 			(TokenKind::RightParen(lhs), Token::RightParen(rhs)) => lhs == rhs,
-			(TokenKind::Literal, Token::Literal(_)) => true,
+			(TokenKind::Literal(LiteralKind::Any), Token::Literal(_)) => true,
+			(TokenKind::Literal(LiteralKind::Ni), Token::Literal(Literal::Ni)) => true,
+			(TokenKind::Literal(LiteralKind::Veracity), Token::Literal(Literal::Boolean(_))) => true,
+			(TokenKind::Literal(LiteralKind::Numeral), Token::Literal(Literal::Numeral(_))) => true,
+			(TokenKind::Literal(LiteralKind::Text), Token::Literal(Literal::Text(_))) => true,
 			(TokenKind::Identifier, Token::Identifier(_)) => true,
 			_ => false
 		}

@@ -7,7 +7,7 @@ use crate::value::{Value, Veracity, Text, Book};
 use crate::value::ops::{
 	ConvertTo, Dump,
 	Add, Subtract,
-	IsEqual, Compare,
+	Matches, IsEqual, Compare,
 	GetIndex, SetIndex, GetAttr
 };
 
@@ -182,6 +182,12 @@ impl Subtract for Codex {
 	fn subtract(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
 		let _ = (rhs, vm);
 		todo!()
+	}
+}
+
+impl Matches for Codex {
+	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		self.is_equal(target, vm)
 	}
 }
 

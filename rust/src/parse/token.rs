@@ -97,7 +97,8 @@ pub enum Symbol {
 
 	Exclamation,
 	AndAnd,
-	OrOr
+	OrOr,
+	Pipe
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -120,12 +121,21 @@ pub enum Token {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LiteralKind {
+	Any,
+	Ni,
+	Veracity,
+	Numeral,
+	Text
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenKind {
 	Keyword(Keyword),
 	Symbol(Symbol),
 	LeftParen(ParenKind),
 	RightParen(ParenKind),
-	Literal,
+	Literal(LiteralKind),
 	Identifier,
 }
 
@@ -515,8 +525,12 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			'/' => if_equals!(SolidusEqual, Solidus),
 			'%' => if_equals!(PercentSignEqual, PercentSign),
 			'&' if self.stream.take_prefix("&") => Token::Symbol(Symbol::AndAnd),
-			'|' if self.stream.take_prefix("|") => Token::Symbol(Symbol::OrOr),
-			// '0'..='9' => self.parse_
+			'|' =>
+				if self.stream.take_prefix("|") {
+					Token::Symbol(Symbol::OrOr)
+				} else {
+					Token::Symbol(Symbol::Pipe)
+				},
 			other => return Some(Err(self.error(ErrorKind::UnknownTokenStart(other))))
 		}))
 	}

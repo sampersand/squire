@@ -7,7 +7,8 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::{Deref, DerefMut};
 use crate::value::ops::{
 	ConvertTo, Duplicate,
-	Add, Subtract, Multiply, IsEqual, Compare,
+	Add, Subtract, Multiply,
+	Matches, IsEqual, Compare,
 	GetIndex, SetIndex,
 	Dump, GetAttr
 };
@@ -476,11 +477,22 @@ impl Multiply for Book {
 
 				Ok(prod.into())
 			},
-			_ => Err(RuntimeError::InvalidOperand { kind: rhs.kind(), func: "Book.*" })
+			_ => Err(RuntimeError::InvalidOperand { kind: rhs.genus(), func: "Book.*" })
 		}
 	}
 }
 
+impl Matches for Book {
+	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		for genus in &*self.as_slice() {
+			if genus.matches(target, vm)? {
+				return Ok(true);
+			}
+		}
+
+		Ok(false)
+	}
+}
 
 impl IsEqual for Book {
 	fn is_equal(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
@@ -513,7 +525,7 @@ impl GetIndex for Book {
 		match key {
 			Value::Book(_book) => todo!("index into a book with another one."),
 			Value::Numeral(numeral) => Ok(self.get(numeral.get() as isize)?.unwrap_or_default()),
-			key => Err(RuntimeError::InvalidOperand { kind: key.kind(), func: "Book.[]" })
+			key => Err(RuntimeError::InvalidOperand { kind: key.genus(), func: "Book.[]" })
 		}
 	}
 }
@@ -524,7 +536,7 @@ impl SetIndex for Book {
 		match key {
 			Value::Book(_book) => todo!("index into a book with another one."),
 			Value::Numeral(numeral) => self.set(numeral.get() as isize, value),
-			key => Err(RuntimeError::InvalidOperand { kind: key.kind(), func: "Book.[]=" })
+			key => Err(RuntimeError::InvalidOperand { kind: key.genus(), func: "Book.[]=" })
 		}
 	}
 }

@@ -5,18 +5,18 @@ pub trait ConvertTo<T> {
 	fn convert(&self, vm: &mut Vm) -> Result<T, RuntimeError>;
 }
 
+impl<T: Clone> ConvertTo<T> for T {
+	fn convert(&self, _: &mut Vm) -> Result<Self, RuntimeError> {
+		Ok(self.clone())
+	}
+}
+
 pub trait Duplicate : Sized {
 	fn duplicate(&self) -> Self;
 }
 
 pub trait Dump {
 	fn dump(&self, to: &mut String, vm: &mut Vm) -> Result<(), RuntimeError>;
-}
-
-impl<T: Clone> ConvertTo<T> for T {
-	fn convert(&self, _: &mut Vm) -> Result<Self, RuntimeError> {
-		Ok(self.clone())
-	}
 }
 
 pub trait Negate {
@@ -45,6 +45,10 @@ pub trait Modulo {
 
 pub trait Power {
 	fn power(&self, rhs: &Value, vm: &mut Vm) -> Result<Value, RuntimeError>;
+}
+
+pub trait Matches {
+	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError>;
 }
 
 pub trait IsEqual {

@@ -3,17 +3,20 @@ use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, Keyword, Symbol};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 use crate::runtime::Opcode;
+use super::GenusDeclaration;
 
 #[derive(Debug)]
 pub struct Renowned {
 	name: String,
-	init: Option<Expression>
+	genus: Option<GenusDeclaration>,
+	init: Option<Expression>,
 }
 
 #[derive(Debug)]
 pub struct Nigh {
 	name: String,
-	init: Option<Expression>
+	genus: Option<GenusDeclaration>,
+	init: Option<Expression>,
 }
 
 impl Parsable for Renowned {
@@ -25,6 +28,7 @@ impl Parsable for Renowned {
 		}
 
 		let name = parser.expect_identifier()?;
+		let genus = GenusDeclaration::parse(parser)?;
 		let init =
 			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
 				Some(Expression::expect_parse(parser)?)
@@ -32,7 +36,7 @@ impl Parsable for Renowned {
 				None
 			};
 
-		Ok(Some(Self { name, init }))
+		Ok(Some(Self { name, genus, init }))
 	}
 }
 
@@ -45,6 +49,7 @@ impl Parsable for Nigh {
 		}
 
 		let name = parser.expect_identifier()?;
+		let genus = GenusDeclaration::parse(parser)?;
 		let init =
 			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
 				Some(Expression::expect_parse(parser)?)
@@ -52,7 +57,7 @@ impl Parsable for Nigh {
 				None
 			};
 
-		Ok(Some(Self { name, init }))
+		Ok(Some(Self { name, genus, init }))
 	}
 }
 
@@ -79,6 +84,10 @@ impl Compilable for Nigh {
 
 		if let Some(init) = self.init {
 			init.compile(compiler, Some(local_target))?;
+		}
+
+		if let Some(genus) = self.genus {
+			genus.check(local_target, compiler)?;
 		}
 
 		if let Some(target) = target {

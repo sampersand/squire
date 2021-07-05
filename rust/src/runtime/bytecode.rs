@@ -15,6 +15,7 @@ pub enum Opcode {
 	Move,
 	Interrupt,
 	Interpolate,
+	CheckMatches,
 
 	// Control flow
 	Jump,
@@ -33,6 +34,7 @@ pub enum Opcode {
 
 	// Logical Operations
 	Not,
+	Matches,
 	Equals,
 	NotEquals,
 	LessThan,

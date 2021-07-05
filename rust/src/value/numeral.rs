@@ -6,7 +6,7 @@ use crate::value::{Value, Veracity, Text};
 use crate::value::ops::{
 	ConvertTo, Dump,
 	Negate, Add, Subtract, Multiply, Divide, Modulo, Power,
-	IsEqual, Compare,
+	Matches, IsEqual, Compare,
 	GetAttr
 };
 
@@ -169,6 +169,12 @@ impl IsEqual for Numeral {
 		} else {
 			Ok(false)
 		}
+	}
+}
+
+impl Matches for Numeral {
+	fn matches(&self, target: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		self.is_equal(target, vm)
 	}
 }
 

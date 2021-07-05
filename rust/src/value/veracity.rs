@@ -1,6 +1,6 @@
 use crate::runtime::{Vm, Error as RuntimeError};
 use crate::value::{Value, Numeral, Text};
-use crate::value::ops::{ConvertTo, IsEqual, Compare, Dump};
+use crate::value::ops::{ConvertTo, Matches, IsEqual, Compare, Dump};
 
 pub type Veracity = bool;
 
@@ -30,6 +30,12 @@ impl ConvertTo<Text> for Veracity {
 		self.dump(&mut text, vm)?;
 
 		Ok(Text::new(text))
+	}
+}
+
+impl Matches for Veracity {
+	fn matches(&self, rhs: &Value, vm: &mut Vm) -> Result<bool, RuntimeError> {
+		self.is_equal(rhs, vm)
 	}
 }
 

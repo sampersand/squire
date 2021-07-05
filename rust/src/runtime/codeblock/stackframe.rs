@@ -133,6 +133,16 @@ impl StackFrame<'_> {
 		todo!();
 	}
 
+	fn do_check_matches(&mut self) -> Result<()> {
+		let ([target, genus], vm) = self.next_locals_and_vm();
+
+		if genus.matches(target, vm)? {
+			Ok(())
+		} else {
+			Err(Error::TypeError(format!("genus mismatch, given {:?}", target.genus())))
+		}
+	}
+
 	fn do_jump(&mut self) {
 		let to = self.next_offset();
 		self.jump(to - 1);
@@ -226,6 +236,10 @@ impl StackFrame<'_> {
 
 	fn do_not(&mut self) -> Result<()> {
 		self.do_unary_op(|arg, vm| arg.convert_to::<bool>(vm).map(|x| Value::Veracity(!x)))
+	}
+
+	fn do_matches(&mut self) -> Result<()> {
+		self.do_binary_op(|lhs, rhs, vm| lhs.matches(rhs, vm).map(Value::Veracity))
 	}
 
 	fn do_equals(&mut self) -> Result<()> {
@@ -382,6 +396,7 @@ impl StackFrame<'_> {
 			Opcode::Move => self.do_move(),
 			Opcode::Interrupt => self.do_interrupt(),
 			Opcode::Interpolate => self.do_interpolate(),
+			Opcode::CheckMatches => self.do_check_matches()?,
 
 			// Control flow
 			Opcode::Jump => self.do_jump(),
@@ -396,6 +411,7 @@ impl StackFrame<'_> {
 
 			// Logical Operations
 			Opcode::Not => self.do_not()?,
+			Opcode::Matches => self.do_matches()?,
 			Opcode::Equals => self.do_equals()?,
 			Opcode::NotEquals => self.do_not_equals()?,
 			Opcode::LessThan => self.do_less_than()?,
