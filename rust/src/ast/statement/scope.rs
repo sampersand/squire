@@ -72,6 +72,11 @@ impl Compilable for Renowned {
 			compiler.opcode(Opcode::StoreGlobal);
 			compiler.global(global_target);
 			compiler.target(target);
+
+			// todo: somehow declare globality? idk.
+			if let Some(genus) = self.genus {
+				genus.check(target, compiler)?;
+			}
 		}
 
 		Ok(())
