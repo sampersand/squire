@@ -8,7 +8,7 @@
 
 #define MAX_ARGC 255
 
-struct sq_function {
+struct sq_journey {
 	SQ_VALUE_ALIGN char *name;
 	unsigned refcount; // negative indicates a global function.
 
@@ -19,19 +19,19 @@ struct sq_function {
 	bool is_method;
 };
 
-struct sq_function *sq_function_clone(struct sq_function *function);
-void sq_function_deallocate(struct sq_function *function);
+struct sq_journey *sq_journey_clone(struct sq_journey *function);
+void sq_journey_deallocate(struct sq_journey *function);
 
-static inline void sq_function_free(struct sq_function *function) {
+static inline void sq_journey_free(struct sq_journey *function) {
 	assert(function->refcount);
 
 	if(1)return;//todo
 
 	if (!--function->refcount)
-		sq_function_deallocate(function);
+		sq_journey_deallocate(function);
 }
 
-sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_value *args);
-void sq_function_dump(FILE *, const struct sq_function *function);
+sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_value *args);
+void sq_journey_dump(FILE *, const struct sq_journey *function);
 
 #endif /* !SQ_FUNCTION_H */

@@ -1,5 +1,5 @@
 #include "program.h"
-#include "function.h"
+#include "journey.h"
 #include "shared.h"
 #include "parse.h"
 #include "form.h"
@@ -253,7 +253,7 @@ static unsigned load_variable_class(struct sq_code *code, struct variable *var, 
 
 static unsigned compile_expression(struct sq_code *code, struct expression *expr);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
-static struct sq_function *compile_function(struct func_declaration *fndecl, bool is_method);
+static struct sq_journey *compile_function(struct func_declaration *fndecl, bool is_method);
 
 static void compile_form_declaration(struct sq_code *code, struct class_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
@@ -273,12 +273,12 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
 
 	form->nrecollections = fdecl->nfuncs;
-	form->recollections = xmalloc(sizeof(struct sq_function *[form->nrecollections]));
+	form->recollections = xmalloc(sizeof(struct sq_journey *[form->nrecollections]));
 	for (unsigned i = 0; i < form->nrecollections; ++i)
 		form->recollections[i] = compile_function(fdecl->funcs[i], false);
 
 	form->nchanges = fdecl->nmeths;
-	form->changes = xmalloc(sizeof(struct sq_function *[form->nchanges]));
+	form->changes = xmalloc(sizeof(struct sq_journey *[form->nchanges]));
 	for (unsigned i = 0; i < form->nchanges; ++i)
 		form->changes[i] = compile_function(fdecl->meths[i], true);
 
@@ -334,7 +334,7 @@ static void compile_func_declaration(struct func_declaration *fdecl) {
 
 	declare_global_variable(strdup(fdecl->name), SQ_NULL);
 
-	struct sq_function *func = compile_function(fdecl, false);
+	struct sq_journey *func = compile_function(fdecl, false);
 	free(fdecl); // but none of the fields, as they're now owned by `func`.
 
 	declare_global_variable(func->name, sq_value_new_function(func));
@@ -551,7 +551,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	case SQ_PS_PLAMBDA: {
-		struct sq_function *func = compile_function(primary->lambda, false);
+		struct sq_journey *func = compile_function(primary->lambda, false);
 		free(primary->lambda);
 
 		result = load_constant(code, sq_value_new_function(func));
@@ -1085,7 +1085,7 @@ static void compile_statements(struct sq_code *code, struct statements *stmts) {
 		compile_statement(code, stmts->stmts[i]);
 }
 
-static struct sq_function *compile_function(struct func_declaration *fndecl, bool is_method) {
+static struct sq_journey *compile_function(struct func_declaration *fndecl, bool is_method) {
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
@@ -1114,7 +1114,7 @@ static struct sq_function *compile_function(struct func_declaration *fndecl, boo
 	if (fndecl->body != NULL)
 		compile_statements(&code, fndecl->body);
 
-	struct sq_function *fn = xmalloc(sizeof(struct sq_function));
+	struct sq_journey *fn = xmalloc(sizeof(struct sq_journey));
 
 	fn->refcount = -1; // todo: refcount
 	fn->name = fndecl->name;

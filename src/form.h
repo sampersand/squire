@@ -2,7 +2,7 @@
 #define SQ_FORM_H
 
 #include "value.h"
-#include "function.h"
+#include "journey.h"
 #include "shared.h"
 
 #include <assert.h>
@@ -46,7 +46,7 @@ struct sq_form {
 	unsigned nessences, nrecollections, nmatter, nchanges, nparents;
 	unsigned refcount;
 
-	struct sq_function **recollections;
+	struct sq_journey **recollections;
 	struct sq_form_essence {
         char *name;
         sq_value value;
@@ -57,7 +57,7 @@ struct sq_form {
         char *name;
         sq_value type; // may be SQ_UNDEFINED.
     } *matter;
-	struct sq_function **changes, *imitate;
+	struct sq_journey **changes, *imitate;
 	struct sq_form **parents;
 };
 
@@ -110,7 +110,7 @@ sq_value *sq_form_lookup_essence(struct sq_form *form, const char *name);
  * 
  * If no such recollection exists, `NULL` is returned.
  */
-struct sq_function *sq_form_lookup_recollection(struct sq_form *form, const char *name);
+struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char *name);
 
 /** Looks up either an `essence` or `recollection` with the given `name`.
  * 
@@ -138,7 +138,7 @@ sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char 
  * 
  * If no change with the given name exists, `NULL` is returned.
  */
-struct sq_function *sq_imitation_lookup_change(struct sq_imitation *imitation, const char *name);
+struct sq_journey *sq_imitation_lookup_change(struct sq_imitation *imitation, const char *name);
 
 /** Looks up either an `essence` or `recollection` with the given `name`.
  * 

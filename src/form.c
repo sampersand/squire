@@ -25,7 +25,7 @@ void sq_form_deallocate(struct sq_form *form) {
 	free(form->essences);
 
 	for (unsigned i = 0; i < form->nrecollections; ++i)
-		sq_function_free(form->recollections[i]);
+		sq_journey_free(form->recollections[i]);
 
 	free(form->recollections);
 
@@ -38,12 +38,12 @@ void sq_form_deallocate(struct sq_form *form) {
 	free(form->matter);
 
 	for (unsigned i = 0; i < form->nchanges; ++i)
-		sq_function_free(form->changes[i]);
+		sq_journey_free(form->changes[i]);
 
 	for (unsigned i = 0; i < form->nparents; ++i)
 		sq_form_free(form->parents[i]);
 
-	sq_function_free(form->imitate);
+	sq_journey_free(form->imitate);
 
 	free(form->changes);
 	free(form->parents);
@@ -51,8 +51,8 @@ void sq_form_deallocate(struct sq_form *form) {
 	free(form);
 }
 
-struct sq_function *sq_form_lookup_recollection(struct sq_form *form, const char *name) {
-	struct sq_function *recall;
+struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char *name) {
+	struct sq_journey *recall;
 
 	for (unsigned i = 0; i < form->nrecollections; ++i)
 		if (!strcmp(name, (recall = form->recollections[i])->name))
@@ -79,10 +79,10 @@ sq_value *sq_form_lookup_essence(struct sq_form *form, const char *name) {
 }
 
 sq_value sq_form_lookup(struct sq_form *form, const char *name) {
-	struct sq_function *recollection = sq_form_lookup_recollection(form, name);
+	struct sq_journey *recollection = sq_form_lookup_recollection(form, name);
 
 	if (recollection != NULL)
-		return sq_value_new_function(sq_function_clone(recollection));
+		return sq_value_new_function(sq_journey_clone(recollection));
 
 	sq_value *essence = sq_form_lookup_essence(form, name);
 	if (essence != NULL)
@@ -126,8 +126,8 @@ struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	return imitation;
 }
 
-static struct sq_function *sq_form_lookup_change(struct sq_form *form, const char *name) {
-	struct sq_function *change;
+static struct sq_journey *sq_form_lookup_change(struct sq_form *form, const char *name) {
+	struct sq_journey *change;
 
 	for (unsigned i = 0; i < form->nchanges; ++i)
 		if (!strcmp(name, (change = form->changes[i])->name))
@@ -140,7 +140,7 @@ static struct sq_function *sq_form_lookup_change(struct sq_form *form, const cha
 	return NULL;
 }
 
-struct sq_function *sq_imitation_lookup_change(struct sq_imitation *imitation, const char *name) {
+struct sq_journey *sq_imitation_lookup_change(struct sq_imitation *imitation, const char *name) {
 	return sq_form_lookup_change(imitation->form, name);
 }
 
@@ -155,10 +155,10 @@ sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char 
 }
 
 sq_value sq_imitation_lookup(struct sq_imitation *imitation, const char *name) {
-	struct sq_function *change = sq_imitation_lookup_change(imitation, name);
+	struct sq_journey *change = sq_imitation_lookup_change(imitation, name);
 
 	if (change != NULL)
-		return sq_value_new_function(sq_function_clone(change));
+		return sq_value_new_function(sq_journey_clone(change));
 
 	sq_value *matter = sq_imitation_lookup_matter(imitation, name);
 

@@ -1,7 +1,7 @@
 #include "value.h"
 #include "book.h"
 #include "form.h"
-#include "function.h"
+#include "journey.h"
 #include "shared.h"
 #include "string.h"
 #include "roman.h"
@@ -52,7 +52,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		break;
 
 	case SQ_TFUNCTION:
-		sq_function_dump(out, AS_JOURNEY(value));
+		sq_journey_dump(out, AS_JOURNEY(value));
 		break;
 
 	case SQ_TBOOK:
@@ -80,7 +80,7 @@ sq_value sq_value_clone(sq_value value) {
 		return sq_value_new_imitation(sq_imitation_clone(AS_IMITATION(value)));
 
 	case SQ_TFUNCTION:
-		return sq_value_new_function(sq_function_clone(AS_JOURNEY(value)));
+		return sq_value_new_function(sq_journey_clone(AS_JOURNEY(value)));
 
 	case SQ_TBOOK:
 		return sq_value_new_book(sq_book_clone(AS_BOOK(value)));
@@ -108,7 +108,7 @@ void sq_value_free(sq_value value) {
 		return;
 
 	case SQ_TFUNCTION:
-		sq_function_free(AS_JOURNEY(value));
+		sq_journey_free(AS_JOURNEY(value));
 		return;
 
 	case SQ_TBOOK:
@@ -213,11 +213,11 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 
 
 	case SQ_TIMITATION: {
-		struct sq_function *eql = sq_imitation_lookup_change(AS_IMITATION(lhs), "==");
+		struct sq_journey *eql = sq_imitation_lookup_change(AS_IMITATION(lhs), "==");
 		sq_value args[2] = { lhs, rhs };
 
 		if (eql != NULL)
-			return sq_function_run(eql, 2, args);
+			return sq_journey_run(eql, 2, args);
 		// fallthrough
 	}
 
@@ -240,9 +240,9 @@ sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 
 	default:
 		die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
-	// 	struct sq_function *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "<=>");
+	// 	struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "<=>");
 
-	// 	if (neg != NULL) return sq_function_run(neg, 1, &arg);
+	// 	if (neg != NULL) return sq_journey_run(neg, 1, &arg);
 	// }
 	}
 }
@@ -253,10 +253,10 @@ sq_value sq_value_neg(sq_value arg) {
 		return sq_value_new_number(-AS_NUMBER(arg));
 
 	case SQ_TIMITATION: {
-		struct sq_function *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "-@");
+		struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "-@");
 
 		if (neg != NULL)
-			return sq_function_run(neg, 1, &arg);
+			return sq_journey_run(neg, 1, &arg);
 		// fallthrough
 	}
 
@@ -290,11 +290,11 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		return sq_codex_index(AS_CODEX(value), key);
 
 	case SQ_TIMITATION: {
-		struct sq_function *index = sq_imitation_lookup_change(AS_IMITATION(value), "[]");
+		struct sq_journey *index = sq_imitation_lookup_change(AS_IMITATION(value), "[]");
 		sq_value args[2] = { value, key };
 
 		if (index != NULL)
-			return sq_function_run(index, 2, args);
+			return sq_journey_run(index, 2, args);
 		// fallthrough
 	}
 
@@ -315,11 +315,11 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 		return;
 
 	case SQ_TIMITATION: {
-		struct sq_function *index_assign = sq_imitation_lookup_change(AS_IMITATION(value), "[]=");
+		struct sq_journey *index_assign = sq_imitation_lookup_change(AS_IMITATION(value), "[]=");
 		sq_value args[3] = { value, key, val };
 
 		if (index_assign != NULL) {
-			sq_function_run(index_assign, 2, args);
+			sq_journey_run(index_assign, 2, args);
 			return;
 		}
 
@@ -392,11 +392,11 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 
 	case SQ_TIMITATION: {
-		struct sq_function *add = sq_imitation_lookup_change(AS_IMITATION(lhs), "+");
+		struct sq_journey *add = sq_imitation_lookup_change(AS_IMITATION(lhs), "+");
 		sq_value args[2] = { lhs, rhs };
 
 		if (add != NULL)
-			return sq_function_run(add, 2, args);
+			return sq_journey_run(add, 2, args);
 		// fallthrough
 	}
 
@@ -418,11 +418,11 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 		todo("set difference for dict");
 
 	case SQ_TIMITATION: {
-		struct sq_function *sub = sq_imitation_lookup_change(AS_IMITATION(lhs), "-");
+		struct sq_journey *sub = sq_imitation_lookup_change(AS_IMITATION(lhs), "-");
 		sq_value args[2] = { lhs, rhs };
 
 		if (sub != NULL)
-			return sq_function_run(sub, 2, args);
+			return sq_journey_run(sub, 2, args);
 		// fallthrough
 	}
 
@@ -477,11 +477,11 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		goto error;
 
 	case SQ_TIMITATION: {
-		struct sq_function *mul = sq_imitation_lookup_change(AS_IMITATION(lhs), "*");
+		struct sq_journey *mul = sq_imitation_lookup_change(AS_IMITATION(lhs), "*");
 		sq_value args[2] = { lhs, rhs };
 
 		if (mul != NULL)
-			return sq_function_run(mul, 2, args);
+			return sq_journey_run(mul, 2, args);
 		// fallthrough
 	}
 
@@ -500,11 +500,11 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	}
 
 	case SQ_TIMITATION: {
-		struct sq_function *div = sq_imitation_lookup_change(AS_IMITATION(lhs), "/");
+		struct sq_journey *div = sq_imitation_lookup_change(AS_IMITATION(lhs), "/");
 		sq_value args[2] = { lhs, rhs };
 
 		if (div != NULL)
-			return sq_function_run(div, 2, args);
+			return sq_journey_run(div, 2, args);
 
 		// fallthrough
 	}
@@ -532,11 +532,11 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		goto error;
 
 	case SQ_TIMITATION: {
-		struct sq_function *mod = sq_imitation_lookup_change(AS_IMITATION(lhs), "%");
+		struct sq_journey *mod = sq_imitation_lookup_change(AS_IMITATION(lhs), "%");
 		sq_value args[2] = { lhs, rhs };
 
 		if (mod != NULL)
-			return sq_function_run(mod, 2, args);
+			return sq_journey_run(mod, 2, args);
 
 		// fallthrough
 	}
@@ -577,10 +577,10 @@ struct sq_string *sq_value_to_string(sq_value value) {
 		return sq_string_new(strdup(AS_FORM(value)->name));
 
 	case SQ_TIMITATION: {
-		struct sq_function *to_text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
+		struct sq_journey *to_text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
 
 		if (to_text != NULL) {
-			sq_value string = sq_function_run(to_text, 1, &value);
+			sq_value string = sq_journey_run(to_text, 1, &value);
 			if (!sq_value_is_string(string))
 				die("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
 			return AS_STRING(string);
@@ -614,10 +614,10 @@ sq_number sq_value_to_number(sq_value value) {
 		return strtoll(AS_STR(value), NULL, 10);
 
 	case SQ_TIMITATION: {
-		struct sq_function *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
+		struct sq_journey *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
 
 		if (to_numeral != NULL) {
-			sq_value number = sq_function_run(to_numeral, 1, &value);
+			sq_value number = sq_journey_run(to_numeral, 1, &value);
 			if (!sq_value_is_number(number))
 				die("to_numeral for an imitation of '%s' didn't return a number", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(number);
@@ -656,10 +656,10 @@ bool sq_value_to_boolean(sq_value value) {
 		return AS_CODEX(value)->length;
 
 	case SQ_TIMITATION: {
-		struct sq_function *to_veracity = sq_imitation_lookup_change(AS_IMITATION(value), "to_veracity");
+		struct sq_journey *to_veracity = sq_imitation_lookup_change(AS_IMITATION(value), "to_veracity");
 
 		if (to_veracity != NULL) {
-			sq_value boolean = sq_function_run(to_veracity, 1, &value);
+			sq_value boolean = sq_journey_run(to_veracity, 1, &value);
 			if (!sq_value_is_boolean(boolean))
 				die("to_veracity for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
 			return sq_value_as_boolean(boolean);
@@ -688,10 +688,10 @@ size_t sq_value_length(sq_value value) {
 		return AS_STRING(value)->length;
 
 	case SQ_TIMITATION: {
-		struct sq_function *length = sq_imitation_lookup_change(AS_IMITATION(value), "length");
+		struct sq_journey *length = sq_imitation_lookup_change(AS_IMITATION(value), "length");
 
 		if (length != NULL) {
-			sq_value boolean = sq_function_run(length, 1, &value);
+			sq_value boolean = sq_journey_run(length, 1, &value);
 			if (!sq_value_is_number(boolean))
 				die("length for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(boolean);

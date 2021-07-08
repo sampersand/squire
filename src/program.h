@@ -6,7 +6,7 @@
 struct sq_program {
 	unsigned nglobals;
 	sq_value *globals;
-	struct sq_function *main;
+	struct sq_journey *main;
 };
 
 struct sq_program *sq_program_compile(const char *stream);

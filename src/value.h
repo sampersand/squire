@@ -10,7 +10,7 @@
 struct sq_string;
 struct sq_form;
 struct sq_imitation;
-struct sq_function;
+struct sq_journey;
 struct sq_book;
 struct sq_codex;
 
@@ -46,7 +46,7 @@ typedef enum {
 // 	struct sq_string: SQ_TSTRING, \
 // 	struct sq_form: SQ_TFORM, \
 // 	struct sq_imitation: SQ_TIMITATION, \
-// 	struct sq_function: SQ_TFUNCTION, \
+// 	struct sq_journey: SQ_TFUNCTION, \
 // 	struct sq_array: SQ_TBOOK, \
 // 	struct sq_codex: SQ_TCODEX \
 // )
@@ -58,7 +58,7 @@ typedef enum {
 // 	struct sq_string *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_form *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_imitation *: (kind) SQ_VUNMASK(x), \
-// 	struct sq_function *: (kind) SQ_VUNMASK(x), \
+// 	struct sq_journey *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_array *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_codex *: (kind) SQ_VUNMASK(x)\
 
@@ -70,7 +70,7 @@ typedef enum {
 	struct sq_string *: sq_value_new_string, \
 	struct sq_form *: sq_value_new_form, \
 	struct sq_imitation *: sq_value_new_imitation, \
-	struct sq_function *: sq_value_new_function, \
+	struct sq_journey *: sq_value_new_function, \
 	struct sq_book *: sq_value_new_book, \
 	struct sq_codex *: sq_value_new_codex \
 )(x))
@@ -100,7 +100,7 @@ static inline sq_value sq_value_new_imitation(struct sq_imitation *imitation) {
 	return SQ_VMASK((sq_value) imitation, SQ_TIMITATION);
 }
 
-static inline sq_value sq_value_new_function(struct sq_function *function) {
+static inline sq_value sq_value_new_function(struct sq_journey *function) {
 	assert(!SQ_VTAG((sq_value) function));
 	return SQ_VMASK((sq_value) function, SQ_TFUNCTION);
 }
@@ -177,9 +177,9 @@ static inline struct sq_imitation *sq_value_as_imitation(sq_value value) {
 	return (struct sq_imitation *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_function *sq_value_as_function(sq_value value) {
+static inline struct sq_journey *sq_value_as_function(sq_value value) {
 	assert(sq_value_is_function(value));
-	return (struct sq_function *) SQ_VUNMASK(value);
+	return (struct sq_journey *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_book *sq_value_as_book(sq_value value) {

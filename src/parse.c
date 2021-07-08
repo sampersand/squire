@@ -1,6 +1,6 @@
 #include "token.h"
 #include "program.h"
-#include "function.h"
+#include "journey.h"
 #include "parse.h"
 #include "shared.h"
 #include "form.h"
@@ -580,8 +580,8 @@ static struct class_declaration *parse_form_declaration() {
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
 	fdecl->matter = xmalloc(sizeof(struct matter_declaration[MAX_LEN]));
-	fdecl->meths = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
-	fdecl->funcs = xmalloc(sizeof(struct sq_function *[MAX_LEN]));
+	fdecl->meths = xmalloc(sizeof(struct sq_journey *[MAX_LEN]));
+	fdecl->funcs = xmalloc(sizeof(struct sq_journey *[MAX_LEN]));
 	fdecl->essences = xmalloc(sizeof(struct essence_declaration[MAX_LEN]));
 	fdecl->constructor = NULL;
 	fdecl->nmatter = 0;
@@ -691,8 +691,8 @@ struct type_annotation {
 #undef MAX_LEN
 
 	fdecl->matter = xrealloc(fdecl->matter, sizeof(char *[fdecl->nmatter]));
-	fdecl->meths = xrealloc(fdecl->meths, sizeof(struct sq_function *[fdecl->nmeths]));
-	fdecl->funcs = xrealloc(fdecl->funcs, sizeof(struct sq_function *[fdecl->nfuncs]));
+	fdecl->meths = xrealloc(fdecl->meths, sizeof(struct sq_journey *[fdecl->nmeths]));
+	fdecl->funcs = xrealloc(fdecl->funcs, sizeof(struct sq_journey *[fdecl->nfuncs]));
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
 

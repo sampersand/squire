@@ -1,4 +1,4 @@
-#include "function.h"
+#include "journey.h"
 #include "string.h"
 #include "program.h"
 #include "shared.h"
@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <setjmp.h>
 
-struct sq_function *sq_function_clone(struct sq_function *function) {
+struct sq_journey *sq_journey_clone(struct sq_journey *function) {
 	assert(function->refcount);
 
 	if (0 < function->refcount)
@@ -21,7 +21,7 @@ struct sq_function *sq_function_clone(struct sq_function *function) {
 	return function;
 }
 
-void sq_function_deallocate(struct sq_function *function) {
+void sq_journey_deallocate(struct sq_journey *function) {
 	assert(function->refcount);
 
 	for (unsigned i = 0; i < function->nconsts; ++i)
@@ -33,7 +33,7 @@ void sq_function_deallocate(struct sq_function *function) {
 	free(function);
 }
 
-void sq_function_dump(FILE *out, const struct sq_function *function) {
+void sq_journey_dump(FILE *out, const struct sq_journey *function) {
 	fprintf(out, "Journey(%s, %d arg", function->name, function->argc);
 
 	if (function->argc != 1)
@@ -71,7 +71,7 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 	for (unsigned i = 0; i < argc; ++i)
 		fn_args[i + 1] = sq_value_clone(args[i]);
 
-	sq_value_free(sq_function_run(form->imitate, argc + 1, fn_args));
+	sq_value_free(sq_journey_run(form->imitate, argc + 1, fn_args));
 
 	return imitation;
 }
@@ -87,7 +87,7 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 // };
 #define SET_NEXT_LOCAL() NEXT_LOCAL() = value
 
-sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_value *args) {
+sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
 	sq_value value = SQ_NULL;
 	enum sq_opcode opcode;
@@ -369,12 +369,12 @@ sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_v
 				newargs[i] = NEXT_LOCAL();
 
 			if (sq_value_is_function(imitation_value)) {
-				struct sq_function *fn = sq_value_as_function(imitation_value);
+				struct sq_journey *fn = sq_value_as_function(imitation_value);
 
 				if (argc != fn->argc)
 					die("argc mismatch (given %d, expected %d) for func '%s'", argc, fn->argc, fn->name);
 
-				SET_NEXT_LOCAL() = sq_function_run(fn, argc, newargs);
+				SET_NEXT_LOCAL() = sq_journey_run(fn, argc, newargs);
 			} else if (sq_value_is_form(imitation_value)) {
 				struct sq_form *form = sq_value_as_form(imitation_value);
 				SET_NEXT_LOCAL() = create_form_imitation(

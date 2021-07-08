@@ -135,8 +135,8 @@ struct sq_codex *sq_book_to_codex(const struct sq_book *book);
 struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt);
 struct sq_string *sq_book_join(const struct sq_book *book, const struct sq_string *sep);
 struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book *rhs);
-struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_function *func);
-struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_function *func);
-sq_value sq_book_reduce(const struct sq_book *book, const struct sq_function *func);
+struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_journey *func);
+struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_journey *func);
+sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *func);
 
 #endif /* !SQ_BOOK_H */

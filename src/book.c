@@ -2,7 +2,7 @@
 #include "shared.h"
 #include "exception.h"
 #include "string.h"
-#include "function.h"
+#include "journey.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -202,32 +202,32 @@ struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book
 	return result;
 }
 
-struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_function *func) {
+struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_journey *func) {
 	struct sq_book *result = sq_book_allocate(book->length);
 
 	for (unsigned i = 0; i < book->length; ++i)
-		result->pages[result->length++] = sq_function_run(func, 1, &book->pages[i]);
+		result->pages[result->length++] = sq_journey_run(func, 1, &book->pages[i]);
 
 	return result;
 }
 
-struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_function *func) {
+struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_journey *func) {
 	struct sq_book *result = sq_book_allocate(book->length);
 
 	for (unsigned i = 0; i < book->length; ++i)
-		if (sq_value_to_boolean(sq_function_run(func, 1, &book->pages[i])))
+		if (sq_value_to_boolean(sq_journey_run(func, 1, &book->pages[i])))
 			result->pages[result->length++] = sq_value_clone(book->pages[i]);
 
 	return result;
 }
 
-sq_value sq_book_reduce(const struct sq_book *book, const struct sq_function *func) {
+sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *func) {
 	if (!book->length) return SQ_NULL;
 	sq_value acc[2] = { sq_value_clone(book->pages[0]) };
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		acc[1] = book->pages[i];
-		acc[0] = sq_function_run(func, 2, acc);
+		acc[0] = sq_journey_run(func, 2, acc);
 	}
 
 	sq_value_free(acc[1]);
