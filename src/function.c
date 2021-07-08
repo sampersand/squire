@@ -21,12 +21,8 @@ struct sq_function *sq_function_clone(struct sq_function *function) {
 	return function;
 }
 
-void sq_function_free(struct sq_function *function) {
-	return; // todo: fixme?
+void sq_function_deallocate(struct sq_function *function) {
 	assert(function->refcount);
-
-	if (function->refcount < 0 || !--function->refcount)
-		return;
 
 	for (unsigned i = 0; i < function->nconsts; ++i)
 		sq_value_free(function->consts[i]);
@@ -38,7 +34,7 @@ void sq_function_free(struct sq_function *function) {
 }
 
 void sq_function_dump(FILE *out, const struct sq_function *function) {
-	fprintf(out, "Function(%s, %d arg", function->name, function->argc);
+	fprintf(out, "Journey(%s, %d arg", function->name, function->argc);
 
 	if (function->argc != 1)
 		putc('s', out);
@@ -108,15 +104,6 @@ sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_v
 		switch ((opcode = function->bytecode[ip++].opcode)) {
 
 	/*** Misc ***/
-
-		case SQ_OC_SWAP: {
-			unsigned idx1 = NEXT_INDEX();
-			unsigned idx2 = NEXT_INDEX();
-			value = locals[idx1];
-			locals[idx1] = locals[idx2];
-			locals[idx2] = value;
-			continue;
-		}
 
 		case SQ_OC_MOV: {
 			unsigned idx1 = NEXT_INDEX();
@@ -525,9 +512,8 @@ sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_v
 		case SQ_OC_INDEX_ASSIGN: {
 			value = NEXT_LOCAL();
 			sq_value key = NEXT_LOCAL();
-			sq_value val = NEXT_LOCAL();
-			sq_value_index_assign(value, key, val);
-			SET_NEXT_LOCAL() = val;
+			value = NEXT_LOCAL();
+			sq_value_index_assign(value, key, value);
 			break;
 		}
 	/*** Constants ***/

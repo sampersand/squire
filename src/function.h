@@ -4,11 +4,13 @@
 #include "value.h"
 #include "bytecode.h"
 #include "program.h"
+#include <assert.h>
+
 #define MAX_ARGC 255
 
 struct sq_function {
 	SQ_VALUE_ALIGN char *name;
-	int refcount; // negative indicates a global function.
+	unsigned refcount; // negative indicates a global function.
 
 	unsigned argc, nlocals, nconsts, codelen;
 	sq_value *consts;
@@ -18,7 +20,17 @@ struct sq_function {
 };
 
 struct sq_function *sq_function_clone(struct sq_function *function);
-void sq_function_free(struct sq_function *function);
+void sq_function_deallocate(struct sq_function *function);
+
+static inline void sq_function_free(struct sq_function *function) {
+	assert(function->refcount);
+
+	if(1)return;//todo
+
+	if (!--function->refcount)
+		sq_function_deallocate(function);
+}
+
 sq_value sq_function_run(const struct sq_function *function, unsigned argc, sq_value *args);
 void sq_function_dump(FILE *, const struct sq_function *function);
 

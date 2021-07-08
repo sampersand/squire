@@ -821,9 +821,8 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		set_index(code, into);
 		set_index(code, index);
 		set_index(code, val);
-		set_index(code, index = next_local(code));
 
-		return index;
+		return val;
 	}
 
 	case SQ_PS_EASSIGN: {
