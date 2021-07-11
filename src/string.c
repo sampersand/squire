@@ -12,7 +12,6 @@ static struct sq_string *allocate_string(unsigned length) {
 
 	string->refcount = 1;
 	string->length = length;
-	string->borrowed = false;
 
 	return string;
 }
@@ -43,43 +42,9 @@ struct sq_string *sq_string_alloc(unsigned length) {
 	return string;
 }
 
-struct sq_string *sq_string_new(char *ptr) {
-	return sq_string_new2(ptr, strlen(ptr));
-}
+void sq_string_dealloc(struct sq_string *string) {
+	assert(!string->refcount);
 
-struct sq_string *sq_string_borrowed(char *ptr) {
-	if (ptr[0] == '\0')
-		return &sq_string_empty;
-
-	struct sq_string *string = sq_string_new(ptr);
-	string->borrowed = true;
-
-	return string;
-}
-
-
-
-struct sq_string *sq_string_clone(struct sq_string *string) {
-	assert(string->refcount);
-
-	if (0 < string->refcount)
-		++string->refcount;
-
-	return string;
-}
-
-void sq_string_free(struct sq_string *string) {
-	assert(string->refcount);
-
-	if (string->refcount < 0 || --string->refcount)
-		return;
-
-	if (!string->borrowed)
-		free(string->ptr);
-
+	free(string->ptr);
 	free(string);
 }
-
-// void sq_string_sprintf_repr(const struct sq_string *string, char **out, unsigned *len, unsigned *cap, unsigned *pos) {
-	// todo
-// }

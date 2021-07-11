@@ -27,7 +27,7 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	sq_value args[argc];
 
 	for (unsigned i = 0; i < argc; ++i)
-		args[i] = sq_value_new_string(sq_string_borrowed((char *) argv[i]));
+		args[i] = sq_value_new_string(sq_string_new(strdup(argv[i])));
 
 	sq_value_free(sq_journey_run(program->main, 0, NULL));
 
