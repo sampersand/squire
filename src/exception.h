@@ -15,10 +15,25 @@ extern sq_value exception;
 extern unsigned current_exception_handler;
 extern struct sq_form sq_exception_form;
 
+struct sq_program;
+void sq_exception_init(struct sq_program *program);
+
 void sq_throw_value(sq_value) SQ_ATTR(cold,noreturn);
 void sq_throw2(struct sq_form *form, const char *fmt, ...) SQ_ATTR(cold,noreturn);
 
-#define sq_throw(...) sq_throw2(&sq_exception_form, #__VA_ARGS__)
+#define sq_throw(...) sq_throw2(&sq_exception_form, __VA_ARGS__)
+
+/*
+  catapult "lol" # you catapult a "projectile"
+} victory { # nothing was thrown
+  proclaim("haha!");
+} alas err { # catch
+  proclaim("looks like we got roasted: \(err)");
+} verily { # finally
+  proclaim("...");
+}
+
+*/
 
 static inline void sq_exception_pop(void) {
 	--current_exception_handler;

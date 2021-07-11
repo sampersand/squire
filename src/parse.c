@@ -700,6 +700,7 @@ static struct statements *parse_brace_statements(char *what) {
 	EXPECT(SQ_TK_LBRACE, "missing '{' for '%s' body", what);
 	if (!(stmts = parse_statements()))
 		die("missing body for '%s'", what);
+
 	EXPECT(SQ_TK_RBRACE, "missing '}' for '%s' body", what);
 	return stmts;
 }

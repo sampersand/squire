@@ -1,6 +1,7 @@
 #include "exception.h"
 #include "text.h"
 #include "value.h"
+#include "form.h"
 #include <stdarg.h>
 #include <stdlib.h>
 
@@ -9,11 +10,54 @@ jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
 sq_value exception;
 unsigned current_exception_handler;
 
-struct sq_form sq_exception_form = {
+// very basics of an exception with a form. todo: that
+struct sq_form sq_exception_form;
 
+void sq_exception_init(struct sq_program *program) {
+	sq_exception_form.name = "Rock";
+	sq_exception_form.refcount = 1;
+
+	sq_exception_form.nmatter = 1;
+	sq_exception_form.matter = xmalloc(sizeof(struct sq_form_matter));
+	sq_exception_form.matter[0].name = "msg";
+	sq_exception_form.matter[0].type = SQ_UNDEFINED; // todo: make it text.
+
+	sq_exception_form.nchanges = 1;
+	sq_exception_form.changes = xmalloc(sizeof(struct sq_journey *));
+	struct sq_journey *to_text = sq_exception_form.changes[0] = xmalloc(sizeof(struct sq_journey));
+
+	to_text->name = "to_text";
+	to_text->refcount = 1;
+	to_text->argc = 1;
+	to_text->nlocals = 1;
+	to_text->nconsts = 1;
+	to_text->codelen = 94;
+	to_text->consts = NULL;
+	to_text->program = program;
+	to_text->is_method = true;
+	to_text->bytecode = xmalloc(sizeof(union sq_bytecode[4]));
+	to_text->bytecode[0].opcode = SQ_OC_ILOAD;
+	to_text->bytecode[1].index = 0;
+	to_text->bytecode[2].index = 0;
+	to_text->bytecode[3].index = 0;
+
+
+struct sq_journey {
+	SQ_VALUE_ALIGN char *name;
+	unsigned refcount; // negative indicates a global function.
+
+	unsigned argc, nlocals, nconsts, codelen;
+	sq_value *consts;
+	struct sq_program *program;
+	union sq_bytecode *bytecode;
+	bool is_method;
 };
 
+}
+
 void sq_throw2(struct sq_form *form, const char *fmt, ...) {
+	(void) form;
+
 	char *message;
 	va_list args;
 	va_start(args, fmt);

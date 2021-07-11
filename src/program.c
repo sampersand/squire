@@ -3,6 +3,7 @@
 #include "value.h"
 #include "journey.h"
 #include "shared.h"
+#include "exception.h"
 #include "text.h"
 #include <stdlib.h>
 #include <time.h>
@@ -23,6 +24,7 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	srand(time(NULL));
 
 	program->globals[0] = create_argv(argc, argv);
+	sq_exception_init(program);
 
 	sq_value args[argc];
 

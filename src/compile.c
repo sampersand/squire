@@ -769,21 +769,21 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 
 	BUILTIN_FN("proclaim",  SQ_INT_PRINTLN, 1);
 	BUILTIN_FN("proclaimn", SQ_INT_PRINT, 1);
-	BUILTIN_FN("tally",	 SQ_INT_TONUMERAL, 1);
+	BUILTIN_FN("tally",     SQ_INT_TONUMERAL, 1);
 	BUILTIN_FN("numeral",   SQ_INT_TONUMERAL, 1);
-	BUILTIN_FN("text",	  SQ_INT_TOTEXT, 1); // `prose` ?
+	BUILTIN_FN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
 	BUILTIN_FN("veracity",  SQ_INT_TOVERACITY, 1); // `veracity`
-	BUILTIN_FN("dump",	  SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
+	BUILTIN_FN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
 	BUILTIN_FN("length",	SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",	SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("dismount",  SQ_INT_EXIT, 1);
-	BUILTIN_FN("genus",	 SQ_INT_KINDOF, 1);
-	BUILTIN_FN("hex",	   SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
+	BUILTIN_FN("genus",     SQ_INT_KINDOF, 1);
+	BUILTIN_FN("hex",       SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
 	BUILTIN_FN("inquire",   SQ_INT_PROMPT, 0);
 	BUILTIN_FN("gamble",	SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert",	SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete",	SQ_INT_ARRAY_DELETE, 2); // `slay`?
-	BUILTIN_FN("roman",	 SQ_INT_ROMAN, 1);
+	BUILTIN_FN("roman",     SQ_INT_ROMAN, 1);
 	BUILTIN_FN("arabic",	SQ_INT_ARABIC, 1);
 
 	set_opcode(code, SQ_OC_NOOP);
