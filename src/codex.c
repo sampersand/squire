@@ -122,7 +122,7 @@ void sq_codex_index_assign(struct sq_codex *codex, sq_value key, sq_value value)
 	if (!page) {
 		// `+1` in case it starts out with 0 length
 		if (codex->capacity == codex->length)
-			codex->pages = xrealloc(codex->pages, sizeof(struct sq_codex_page[codex->capacity = codex->capacity * 2 + 1]));
+			codex->pages = xrealloc(codex->pages, sizeof_array(struct sq_codex_page, codex->capacity = codex->capacity * 2 + 1));
 		page = &codex->pages[codex->length++];
 		page->key = key;
 	} else {

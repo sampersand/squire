@@ -11,7 +11,7 @@
 
 
 sq_value create_argv(unsigned argc, const char **argv) {
-	sq_value *args = xmalloc(sizeof(sq_value[argc]));
+	sq_value *args = xmalloc(sizeof_array(sq_value, argc));
 
 	for (unsigned i = 0; i < argc; ++i)
 		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));

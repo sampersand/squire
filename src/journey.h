@@ -8,6 +8,11 @@
 
 #define MAX_ARGC 255
 
+struct sq_args {
+	unsigned pargc;
+	sq_value *pargv;
+};
+
 struct sq_journey {
 	SQ_VALUE_ALIGN char *name;
 	unsigned refcount; // negative indicates a global function.

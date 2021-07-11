@@ -11,6 +11,7 @@
 #endif /* __GNUC__ || SQ_USE_ATTRIBUTES */
 
 #define SQ_NONNULL SQ_ATTR(nonnull)
+#define sizeof_array(kind, length) (sizeof(kind) * (length))
 
 #include "exception.h"
 

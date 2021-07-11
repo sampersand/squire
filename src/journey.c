@@ -52,29 +52,6 @@ void sq_journey_dump(FILE *out, const struct sq_journey *function) {
 // #define LOG(fmt, ...) printf(fmt "\n", __VA_ARGS__);
 #endif
 
-static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_value *args) {
-	// todo: this will fail with functions with an arity not the same as their field count.
-	if (form->imitate == NULL) {
-		if (argc != form->nmatter)
-			die("matter count mismatch (given %d, expected %d) for struct '%s'", argc, form->nmatter, form->name);
-
-		return sq_value_new_imitation(sq_imitation_new(form, args));
-	}
-
-	sq_value imitation = sq_value_new_imitation(sq_imitation_new(form, xmalloc(sizeof(sq_value[form->nmatter]))));
-	for (unsigned i = 0; i < form->nmatter; ++i)
-		sq_value_as_imitation(imitation)->matter[i] = SQ_NI;
-
-	sq_value fn_args[argc + 1];
-	fn_args[0] = sq_value_clone(imitation);
-	for (unsigned i = 0; i < argc; ++i)
-		fn_args[i + 1] = sq_value_clone(args[i]);
-
-	sq_value_free(sq_journey_run(form->imitate, argc + 1, fn_args));
-
-	return imitation;
-}
-
 // jmp_buf redo_location;
 // jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
 // sq_value exception;
@@ -253,7 +230,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 
 			case SQ_INT_BOOK_NEW: {
 				unsigned amnt = NEXT_INDEX();
-				sq_value *pages = xmalloc(sizeof(sq_value [amnt]));
+				sq_value *pages = xmalloc(sizeof_array(sq_value , amnt));
 
 				for (unsigned i = 0; i < amnt; ++i)
 					pages[i] = NEXT_LOCAL();
@@ -264,7 +241,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 
 			case SQ_INT_CODEX_NEW: {
 				unsigned amnt = NEXT_INDEX();
-				struct sq_codex_page *pages = xmalloc(sizeof(struct sq_codex_page [amnt]));
+				struct sq_codex_page *pages = xmalloc(sizeof_array(struct sq_codex_page , amnt));
 
 				for (unsigned i = 0; i < amnt; ++i) {
 					pages[i].key = NEXT_LOCAL();
@@ -376,11 +353,8 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 				SET_NEXT_LOCAL() = sq_journey_run(fn, argc, newargs);
 			} else if (sq_value_is_form(imitation_value)) {
 				struct sq_form *form = sq_value_as_form(imitation_value);
-				SET_NEXT_LOCAL() = create_form_imitation(
-					form,
-					argc,
-					memdup(newargs, sizeof(sq_value[argc]))
-				);
+				struct sq_args args = { .pargc = argc, .pargv = newargs };
+				SET_NEXT_LOCAL() = sq_value_new(sq_form_imitate(form, args));
 			} else {
 				die("can only call funcs, not '%s'", sq_value_typename(imitation_value));
 			}

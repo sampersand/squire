@@ -120,6 +120,14 @@ struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char 
  */
 sq_value sq_form_lookup(struct sq_form *form, const char *name);
 
+
+/** Creates a new imitation of `form`, given the arguments.
+ * 
+ * An exception will be thrown if the arguments aren't valid.
+ */
+struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args);
+
+
 /**
  * Creates a new imitation (instance) for the given `form`, with the given
  * fields.

@@ -93,7 +93,7 @@ static void parse_henceforth_literal(struct macro_variable *var) {
 	struct sq_token *tokens;
 
 	len = 0;
-	tokens = xmalloc(sizeof(struct sq_token[cap = 8]));
+	tokens = xmalloc(sizeof_array(struct sq_token, cap = 8));
 
 	is_in_macro_declaration = true;
 	bool is_verbatim = false;
@@ -127,13 +127,13 @@ static void parse_henceforth_literal(struct macro_variable *var) {
 		}
 
 		if (len == cap)
-			tokens = xrealloc(tokens, sizeof(struct sq_token[cap *= 2]));
+			tokens = xrealloc(tokens, sizeof_array(struct sq_token, cap *= 2));
 	}
 
 done:
 	is_in_macro_declaration = false;
 
-	var->tokens = xrealloc(tokens, sizeof(struct sq_token[len]));
+	var->tokens = xrealloc(tokens, sizeof_array(struct sq_token, len));
 	var->tokenlen = len;
 	var->args = NULL;
 	var->arglen = 0;
@@ -141,7 +141,7 @@ done:
 }
 
 static void parse_henceforth_function(struct macro_variable *var) {
-	char **args = xmalloc(sizeof(char *[MAX_ARGLEN]));
+	char **args = xmalloc(sizeof_array(char *, MAX_ARGLEN));
 	unsigned arglen = 0;
 
 	char c;
@@ -160,7 +160,7 @@ static void parse_henceforth_function(struct macro_variable *var) {
 		die("expected '=' after macro function declaration");
 
 	parse_henceforth_literal(var);
-	var->args = xrealloc(args, sizeof(char *[arglen]));
+	var->args = xrealloc(args, sizeof_array(char *, arglen));
 	var->arglen = arglen;
 	var->is_function = true;
 }
@@ -187,8 +187,8 @@ static void parse_henceforth(void) {
 
 	if (variables.len == variables.cap) {
 		variables.vars = variables.len
-			? xrealloc(variables.vars, sizeof(struct macro_variable[variables.cap *= 2]))
-			: xmalloc(sizeof(struct macro_variable[variables.cap = 8]));
+			? xrealloc(variables.vars, sizeof_array(struct macro_variable, variables.cap *= 2))
+			: xmalloc(sizeof_array(struct macro_variable, variables.cap = 8));
 	}
 
 	(var = &variables.vars[variables.len++])->name = name;
@@ -228,7 +228,7 @@ static void parse_whereupon(void) {
 		if (!strcmp(variables.vars[i].name, name)) { is_defined = true; break; }
 
 	unsigned len = 0, cap = 128;
-	struct sq_token token, *tokens = xmalloc(sizeof(struct sq_token[cap]));
+	struct sq_token token, *tokens = xmalloc(sizeof_array(struct sq_token, cap));
 
 	while (true) {
 		strip_whitespace_maybe_ignore_slash(true, true);
@@ -258,7 +258,7 @@ static void parse_whereupon(void) {
 		if (!is_defined) continue;
 
 		if (cap == len)
-			tokens = xrealloc(tokens, sizeof(struct sq_token[cap *= 2]));
+			tokens = xrealloc(tokens, sizeof_array(struct sq_token, cap *= 2));
 
 		tokens[len++] = token;
 	}
@@ -285,8 +285,8 @@ static bool should_compile(char *filename) {
 			return free(path), false;
 
 	if (npaths == pathcap) {
-		if (!paths) paths = xmalloc(sizeof(char *[pathcap = 16]));
-		else paths = xrealloc(paths, sizeof(char *[pathcap *= 2]));
+		if (!paths) paths = xmalloc(sizeof_array(char *, pathcap = 16));
+		else paths = xrealloc(paths, sizeof_array(char *, pathcap *= 2));
 	}
 
 	paths[npaths++] = path;
@@ -353,7 +353,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		len = 0;
 		cap = 8;
 		paren_depth = 0;
-		arg = xmalloc(sizeof(struct sq_token [cap]));
+		arg = xmalloc(sizeof_array(struct sq_token , cap));
 		bool is_verbatim = false;
 
 		while (true) {
@@ -392,12 +392,12 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 
 			arg[len++] = token;
 			if (len == cap)
-				arg = xrealloc(arg, sizeof(struct sq_token [cap *= 2]));
+				arg = xrealloc(arg, sizeof_array(struct sq_token , cap *= 2));
 		}
 
 	next_arg:
 
-		args[i].args = xrealloc(arg, sizeof(struct sq_token [cap]));
+		args[i].args = xrealloc(arg, sizeof_array(struct sq_token , cap));
 		args[i].len = len;
 	}
 
@@ -407,11 +407,11 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 	// expand them out and make the resulting array
 	len = 0;
 	cap = var->tokenlen;
-	struct sq_token *tokens = xmalloc(sizeof(struct sq_token [cap]));
+	struct sq_token *tokens = xmalloc(sizeof_array(struct sq_token , cap));
 
 	for (unsigned i = 0; i < var->tokenlen; ++i) {
 		if (cap == len)
-			tokens = xrealloc(tokens, sizeof(struct sq_token [cap *= 2]));
+			tokens = xrealloc(tokens, sizeof_array(struct sq_token , cap *= 2));
 
 		if (var->tokens[i].kind != SQ_TK_MACRO_VAR) {
 			tokens[len++] = var->tokens[i]; // todo: dup it?
@@ -423,7 +423,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 				continue;
 
 			for (unsigned k = 0; k < args[j].len; ++k) {
-				if (cap == len) tokens = xrealloc(tokens, sizeof(struct sq_token [cap *= 2]));
+				if (cap == len) tokens = xrealloc(tokens, sizeof_array(struct sq_token , cap *= 2));
 				tokens[len++] = args[j].args[k];
 			}
 
@@ -435,7 +435,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		;
 	}
 
-	exp->tokens = xrealloc(tokens, sizeof(struct sq_token [len]));
+	exp->tokens = xrealloc(tokens, sizeof_array(struct sq_token , len));
 	exp->len = len;
 }
 

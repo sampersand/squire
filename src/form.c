@@ -112,6 +112,33 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 	putc(')', out);
 }
 
+struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) {
+	struct sq_imitation *imitation = xmalloc(sizeof(struct sq_imitation));
+
+	imitation->form = sq_form_clone(form);
+	imitation->refcount = 1;
+
+	if (!form->imitate) {
+		if (args.pargc != form->nmatter)
+			sq_throw("Argument error: expected %u args, was given %u", form->nmatter, args.pargc);
+
+		imitation->matter = args.pargv;
+	} else {
+		imitation->matter = xmalloc(sizeof_array(sq_value, form->nmatter));
+
+		for (unsigned i = 0; i < form->nmatter; ++i)
+			imitation->matter[i]=  SQ_NI;
+
+		sq_value fn_args[args.pargc + 1];
+		fn_args[0] = sq_value_new(sq_imitation_clone(imitation));
+		memcpy(fn_args + 1, args.pargv, sizeof_array(sq_value, args.pargc));
+
+		sq_value_free(sq_journey_run(form->imitate, args.pargc + 1, fn_args));
+	}
+
+	return imitation;
+}
+
 struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	assert(form != NULL);
 	assert(form->refcount != 0);

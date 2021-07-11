@@ -64,7 +64,7 @@ static void expand_book(struct sq_book *book, size_t length) {
 	if (book->capacity <= length) {
 		// todo: increase capacity by two.
 		book->capacity = length * 2 + 1;
-		book->pages = xrealloc(book->pages, sizeof(sq_value[book->capacity]));
+		book->pages = xrealloc(book->pages, sizeof_array(sq_value, book->capacity));
 	}
 
 	while (book->length < length)
@@ -77,7 +77,7 @@ void sq_book_insert(struct sq_book *book, size_t index, sq_value value) {
 	memmove(
 		&book->pages[index + 1],
 		&book->pages[index],
-		sizeof(sq_value[book->length - index])
+		sizeof_array(sq_value, book->length - index)
 	);
 
 	sq_value_free(book->pages[index]);
@@ -94,7 +94,7 @@ sq_value sq_book_delete(struct sq_book *book, size_t index) {
 	memmove(
 		&book->pages[index],
 		&book->pages[index + 1],
-		sizeof(sq_value[book->length - index])
+		sizeof_array(sq_value, book->length - index)
 	);
 
 	--book->length;

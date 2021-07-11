@@ -114,7 +114,7 @@ static struct function_call *parse_func_call(struct variable *func) {
 
 	struct function_call *fncall = xmalloc(sizeof(struct function_call));
 	fncall->func = func;
-	fncall->args = memdup(args, sizeof(struct expression *[arg_count]));
+	fncall->args = memdup(args, sizeof_array(struct expression *, arg_count));
 
 	fncall->arglen = arg_count;
 
@@ -133,14 +133,14 @@ static struct index *parse_index(struct primary *primary) {
 
 static struct book *parse_book() {
 	unsigned len = 0, cap = 8;
-	struct expression **pages = xmalloc(sizeof(struct expression[cap]));
+	struct expression **pages = xmalloc(sizeof_array(struct expression, cap));
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
 		if (last.kind == SQ_TK_UNDEFINED)
 			die("missing rparen for book initialization");
 
 		if (len == cap)
-			pages = xrealloc(pages, sizeof(struct expression[cap *= 2]));
+			pages = xrealloc(pages, sizeof_array(struct expression, cap *= 2));
 
 		pages[len++] = parse_expression();
 
@@ -160,8 +160,8 @@ static struct book *parse_book() {
 
 static struct dict *parse_codex() {
 	unsigned len = 0, cap = 8;
-	struct expression **keys = xmalloc(sizeof(struct expression[cap]));
-	struct expression **vals = xmalloc(sizeof(struct expression[cap]));
+	struct expression **keys = xmalloc(sizeof_array(struct expression, cap));
+	struct expression **vals = xmalloc(sizeof_array(struct expression, cap));
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACE)) {
 		if (last.kind == SQ_TK_UNDEFINED)
@@ -169,8 +169,8 @@ static struct dict *parse_codex() {
 
 		if (len == cap) {
 			cap *= 2;
-			keys = xrealloc(keys, sizeof(struct expression[cap]));
-			vals = xrealloc(vals, sizeof(struct expression[cap]));
+			keys = xrealloc(keys, sizeof_array(struct expression, cap));
+			vals = xrealloc(vals, sizeof_array(struct expression, cap));
 		}
 
 		bool was_label;
@@ -547,10 +547,10 @@ static struct class_declaration *parse_form_declaration() {
 	} else if (last.kind == SQ_TK_LABEL) {
 		fdecl->name = last.identifier;
 		unsigned cap = 4;
-		fdecl->parents = xmalloc(sizeof(char *[cap]));
+		fdecl->parents = xmalloc(sizeof_array(char *, cap));
 		while (true) {
 			if (cap == fdecl->nparents)
-				fdecl->parents = xrealloc(fdecl->parents, sizeof(char *[cap *= 2]));
+				fdecl->parents = xrealloc(fdecl->parents, sizeof_array(char *, cap *= 2));
 
 			if (take().kind == SQ_TK_IDENT) {
 				fdecl->parents[fdecl->nparents++] = last.identifier;
@@ -573,10 +573,10 @@ static struct class_declaration *parse_form_declaration() {
 	EXPECT(SQ_TK_LBRACE, "expected '{' before 'form' contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
-	fdecl->matter = xmalloc(sizeof(struct matter_declaration[MAX_LEN]));
-	fdecl->meths = xmalloc(sizeof(struct sq_journey *[MAX_LEN]));
-	fdecl->funcs = xmalloc(sizeof(struct sq_journey *[MAX_LEN]));
-	fdecl->essences = xmalloc(sizeof(struct essence_declaration[MAX_LEN]));
+	fdecl->matter = xmalloc(sizeof_array(struct matter_declaration, MAX_LEN));
+	fdecl->meths = xmalloc(sizeof_array(struct sq_journey *, MAX_LEN));
+	fdecl->funcs = xmalloc(sizeof_array(struct sq_journey *, MAX_LEN));
+	fdecl->essences = xmalloc(sizeof_array(struct essence_declaration, MAX_LEN));
 	fdecl->constructor = NULL;
 	fdecl->nmatter = 0;
 	fdecl->nfuncs = 0;
@@ -650,7 +650,7 @@ static struct class_declaration *parse_form_declaration() {
 				unsigned cap = 4;
 
 				type->count = 0;
-				type->names = xmalloc(sizeof(char *[cap]));
+				type->names = xmalloc(sizeof_array(char *, cap));
 				// while
 				// fdecl->m
 
@@ -684,9 +684,9 @@ struct type_annotation {
 
 #undef MAX_LEN
 
-	fdecl->matter = xrealloc(fdecl->matter, sizeof(char *[fdecl->nmatter]));
-	fdecl->meths = xrealloc(fdecl->meths, sizeof(struct sq_journey *[fdecl->nmeths]));
-	fdecl->funcs = xrealloc(fdecl->funcs, sizeof(struct sq_journey *[fdecl->nfuncs]));
+	fdecl->matter = xrealloc(fdecl->matter, sizeof_array(char *, fdecl->nmatter));
+	fdecl->meths = xrealloc(fdecl->meths, sizeof_array(struct sq_journey *, fdecl->nmeths));
+	fdecl->funcs = xrealloc(fdecl->funcs, sizeof_array(struct sq_journey *, fdecl->nfuncs));
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
 
@@ -724,7 +724,7 @@ static struct func_declaration *parse_func_declaration(bool guard, bool is_metho
 	EXPECT(SQ_TK_RPAREN, "expected ')' after func fields");
 
 	fdecl->nargs = field_name_count;
-	fdecl->args = memdup(field_names, sizeof(char *[field_name_count]));
+	fdecl->args = memdup(field_names, sizeof_array(char *, field_name_count));
 	if (!(fdecl->body = parse_brace_statements("journey")))
 		die("no body given for function");
 	return fdecl;
@@ -744,7 +744,7 @@ static struct if_statement *parse_if_statement() {
 		if (last.kind == SQ_TK_IF) {
 			if_stmt->iffalse = xmalloc(sizeof(struct statements));
 			if_stmt->iffalse->len = 1;
-			if_stmt->iffalse->stmts = xmalloc(sizeof(struct statement *[2]));
+			if_stmt->iffalse->stmts = xmalloc(sizeof_array(struct statement *, 2));
 			if_stmt->iffalse->stmts[0] = xmalloc(sizeof(struct statement));
 			if_stmt->iffalse->stmts[0]->kind = SQ_PS_SIF;
 			if_stmt->iffalse->stmts[0]->ifstmt = parse_if_statement();
@@ -766,7 +766,7 @@ static struct switch_statement *parse_switch_statement() {
 	sw_stmt->alas = NULL;
 	sw_stmt->ncases = 0;
 	unsigned capacity = 8;
-	sw_stmt->cases = xmalloc(sizeof(struct case_statement[capacity]));
+	sw_stmt->cases = xmalloc(sizeof_array(struct case_statement, capacity));
 
 	if (!(sw_stmt->cond = parse_expression()))
 		die("missing condition for 'fork'");
@@ -789,7 +789,7 @@ static struct switch_statement *parse_switch_statement() {
 
 		case SQ_TK_CASE:
 			if (sw_stmt->ncases == capacity)
-				sw_stmt->cases = xrealloc(sw_stmt->cases, sizeof(struct case_statement[capacity *= 2]));
+				sw_stmt->cases = xrealloc(sw_stmt->cases, sizeof_array(struct case_statement, capacity *= 2));
 
 			sw_stmt->cases[sw_stmt->ncases].expr = parse_expression();
 
@@ -894,13 +894,13 @@ static struct statement *parse_statement() {
 
 static struct statements *parse_statements() {
 	unsigned cap = 256, len=0;
-	struct statement **list = xmalloc(sizeof(struct statement *[cap]));
+	struct statement **list = xmalloc(sizeof_array(struct statement *, cap));
 
 	bool endl = true;
 	while ((list[len] = parse_statement())) {
 		// if (!endl && list[len-1]->kind == SQ_PS_SEXPR) die("missing `;` between statements");
 		if (++len == cap - 1)
-			list = xrealloc(list, sizeof(struct statement *[cap*=2]));
+			list = xrealloc(list, sizeof_array(struct statement *, cap*=2));
 
 		endl = false;
 		while (take_endline().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL)

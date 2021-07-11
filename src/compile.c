@@ -51,7 +51,7 @@ struct sq_code {
 
 #define RESIZE(cap, len, pos, type) \
 	if (code->cap == code->len) \
-		code->pos = xrealloc(code->pos, sizeof(type [code->cap*=2]));
+		code->pos = xrealloc(code->pos, sizeof_array(type , code->cap*=2));
 
 #ifdef SQ_LOG
 #define LOG(...) printf(__VA_ARGS__)
@@ -86,7 +86,7 @@ static unsigned next_local(struct sq_code *code) {
 static unsigned declare_constant(struct sq_code *code, sq_value value) {
 	if (code->consts.cap == code->consts.len) {
 		code->consts.cap *= 2;
-		code->consts.ary = xrealloc(code->consts.ary, sizeof(sq_value[code->consts.cap]));
+		code->consts.ary = xrealloc(code->consts.ary, sizeof_array(sq_value, code->consts.cap));
 	}
 
 #ifdef SQ_LOG
@@ -153,7 +153,7 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 	// reallocate if necessary
 	if (globals.len == globals.cap) {
 		globals.cap *= 2;
-		globals.ary = xrealloc(globals.ary, sizeof(struct global[globals.cap]));
+		globals.ary = xrealloc(globals.ary, sizeof_array(struct global, globals.cap));
 	}
 
 	LOG("global[%d]: %s\n", globals.len, name);
@@ -273,17 +273,17 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
 
 	form->nrecollections = fdecl->nfuncs;
-	form->recollections = xmalloc(sizeof(struct sq_journey *[form->nrecollections]));
+	form->recollections = xmalloc(sizeof_array(struct sq_journey *, form->nrecollections));
 	for (unsigned i = 0; i < form->nrecollections; ++i)
 		form->recollections[i] = compile_function(fdecl->funcs[i], false);
 
 	form->nchanges = fdecl->nmeths;
-	form->changes = xmalloc(sizeof(struct sq_journey *[form->nchanges]));
+	form->changes = xmalloc(sizeof_array(struct sq_journey *, form->nchanges));
 	for (unsigned i = 0; i < form->nchanges; ++i)
 		form->changes[i] = compile_function(fdecl->meths[i], true);
 
 	form->nessences = fdecl->nessences;
-	form->essences = xmalloc(sizeof(struct sq_form_essence[form->nessences]));
+	form->essences = xmalloc(sizeof_array(struct sq_form_essence, form->nessences));
 	for (unsigned i = 0; i < fdecl->nessences; ++i) {
 		form->essences[i].name = fdecl->essences[i].name;
 		form->essences[i].value = SQ_NI;
@@ -310,7 +310,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		}
 	}
 
-	form->parents = xmalloc(sizeof(struct sq_form *[fdecl->nparents]));
+	form->parents = xmalloc(sizeof_array(struct sq_form *, fdecl->nparents));
 	form->nparents = fdecl->nparents;
 
 	for (unsigned i = 0; i < fdecl->nparents; ++i) {
@@ -915,7 +915,7 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 
 	// havent found the label, add it. (note we increase len here)
 	if (len == code->labels.cap)
-		code->labels.ary = xrealloc(code->labels.ary, sizeof(struct label[code->labels.cap *= 2]));
+		code->labels.ary = xrealloc(code->labels.ary, sizeof_array(struct label, code->labels.cap *= 2));
 
 	code->labels.ary[len].name = label;
 	if (in_mem) {
@@ -1068,20 +1068,20 @@ static struct sq_journey *compile_function(struct func_declaration *fndecl, bool
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
-	code.bytecode = xmalloc(sizeof(union sq_bytecode[code.codecap]));
+	code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
 
 	code.nlocals = 0;
 	code.consts.cap = 64;
 	code.consts.len = 0;
-	code.consts.ary = xmalloc(sizeof(sq_value [code.consts.cap]));
+	code.consts.ary = xmalloc(sizeof_array(sq_value , code.consts.cap));
 
 	code.vars.len = fndecl->nargs;
 	code.vars.cap = 16 + code.vars.len;
-	code.vars.ary = xmalloc(sizeof(struct local[code.vars.cap]));
+	code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
 
 	code.labels.len = 0;
 	code.labels.cap = 4;
-	code.labels.ary = xmalloc(sizeof(struct label[code.labels.cap]));
+	code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
 
 	unsigned offset = 0;
 
@@ -1111,7 +1111,7 @@ static struct sq_journey *compile_function(struct func_declaration *fndecl, bool
 
 struct sq_program *sq_program_compile(const char *stream) {
 	globals.len = 1;
-	globals.ary = xmalloc(sizeof(struct local[globals.cap = 16]));
+	globals.ary = xmalloc(sizeof_array(struct local, globals.cap = 16));
 	globals.ary[0].name = strdup("ARGV");
 	globals.ary[0].value = SQ_NI;
 
@@ -1129,7 +1129,7 @@ struct sq_program *sq_program_compile(const char *stream) {
 	program->main = compile_function(&maindecl, false);
 
 	program->nglobals = globals.len;
-	program->globals = xmalloc(sizeof(sq_value [globals.len]));
+	program->globals = xmalloc(sizeof_array(sq_value , globals.len));
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		program->globals[i] = globals.ary[i].value;
 

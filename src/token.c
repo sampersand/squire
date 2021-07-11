@@ -284,7 +284,7 @@ static struct sq_token parse_identifier(void) {
 	token.kind = SQ_TK_IDENT;
 	unsigned len = 0, cap = 16;
 
-	token.identifier = xmalloc(sizeof(char [cap]));
+	token.identifier = xmalloc(sizeof_array(char , cap));
 
 	while (true) {
 		if (isupper(*sq_stream) && len && !isupper(token.identifier[0])) {
@@ -302,7 +302,7 @@ static struct sq_token parse_identifier(void) {
 		} else break;
 	}
 
-	token.identifier = xrealloc(token.identifier, sizeof(char [len + 1]));
+	token.identifier = xrealloc(token.identifier, sizeof_array(char , len + 1));
 	token.identifier[len] = '\0';
 
 	// check to see if we're a label

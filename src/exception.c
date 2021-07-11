@@ -35,7 +35,7 @@ void sq_exception_init(struct sq_program *program) {
 	to_text->consts = NULL;
 	to_text->program = program;
 	to_text->is_method = true;
-	to_text->bytecode = xmalloc(sizeof(union sq_bytecode[4]));
+	to_text->bytecode = xmalloc(sizeof_array(union sq_bytecode, 4));
 	to_text->bytecode[0].opcode = SQ_OC_ILOAD;
 	to_text->bytecode[1].index = 0;
 	to_text->bytecode[2].index = 0;
