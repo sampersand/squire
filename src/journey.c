@@ -549,8 +549,8 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			value = NEXT_LOCAL();
 			const char *field = sq_value_as_text(function->consts[NEXT_INDEX()])->ptr;
 
-			 if (!strcmp(field, "genus"))
-			 	goto genus_kindof;
+			if (!strcmp(field, "genus"))
+				goto genus_kindof;
 
 			if (!strcmp(field, "length"))
 				value = sq_value_new((sq_numeral) sq_value_length(value));

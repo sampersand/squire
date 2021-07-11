@@ -10,16 +10,16 @@ proclaim($add(2, 3)); # => same as `proclaim(2 + 3)`.
 ab = "ab"
 # Conditional compilation
 @if $ab == "ab"
-    @henceforth $life = 42
+	@henceforth $life = 42
 @alasif $ab == "bc"
-    @henceforth $life = 43
+	@henceforth $life = 43
 @alas
-    @henceforth $foo = "bar"
+	@henceforth $foo = "bar"
 @end
 
 # Looping. requires the use of arrays.
 @foreach i in [$ab, "cd", "ef"]
-    proclaim($i + "\n");
+	proclaim($i + "\n");
 @end
 
 # Interpret a value as a token stream
@@ -446,12 +446,12 @@ static bool parse_macro_identifier(char *name) {
 		return true;
 
 	if (!strcmp(name, "__COUNTER__")) {
-	 	expansions[++expansion_pos].tokens = xmalloc(sizeof(struct sq_token));
-	 	expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMERAL;
-	 	expansions[expansion_pos].tokens[0].numeral = unique_value++;
-	 	expansions[expansion_pos].len = 1;
-	 	expansions[expansion_pos].pos = 0;
-	 	return false;
+		expansions[++expansion_pos].tokens = xmalloc(sizeof(struct sq_token));
+		expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMERAL;
+		expansions[expansion_pos].tokens[0].numeral = unique_value++;
+		expansions[expansion_pos].len = 1;
+		expansions[expansion_pos].pos = 0;
+		return false;
 	}
 
 	struct macro_variable *var;

@@ -9,7 +9,11 @@ jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
 sq_value exception;
 unsigned current_exception_handler;
 
-void sq_throw(const char *fmt, ...) {
+struct sq_form sq_exception_form = {
+
+};
+
+void sq_throw2(struct sq_form *form, const char *fmt, ...) {
 	char *message;
 	va_list args;
 	va_start(args, fmt);

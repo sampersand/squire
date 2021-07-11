@@ -48,15 +48,15 @@ struct sq_form {
 
 	struct sq_journey **recollections;
 	struct sq_form_essence {
-        char *name;
-        sq_value value;
-        sq_value type; // may be SQ_UNDEFINED.
-    } *essences;
+		char *name;
+		sq_value value;
+		sq_value type; // may be SQ_UNDEFINED.
+	} *essences;
 
-    struct sq_form_matter {
-        char *name;
-        sq_value type; // may be SQ_UNDEFINED.
-    } *matter;
+	struct sq_form_matter {
+		char *name;
+		sq_value type; // may be SQ_UNDEFINED.
+	} *matter;
 	struct sq_journey **changes, *imitate;
 	struct sq_form **parents;
 };

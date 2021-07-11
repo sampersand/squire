@@ -31,7 +31,7 @@ static void convert(unsigned numeral, char one, char five, char ten, char **out)
 
 	case 9: *(*out)++ = one;
 	case 10: *(*out)++ = ten; break;
-	default: die("uh oh, numeral %d is out of bounds", numeral);
+	default: bug("uh oh, numeral %d is out of bounds", numeral);
 	}
 }
 

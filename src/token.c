@@ -13,18 +13,18 @@ static bool parse_macro_identifier(char *);
 
 static size_t fraktur_length(const char *stream, size_t *index) {
 	static const char *const FRAKTUR[26 * 2] = {
-		// A    B    C    D    E    F    G    H    I
+		// A	B	C	D	E	F	G	H	I
 		  "𝔄", "𝔅", "ℭ", "𝔇", "𝔈", "𝔉", "𝔊", "ℌ", "ℑ",
-		// J    K    L    M    N    O    P    Q    R
+		// J	K	L	M	N	O	P	Q	R
 		  "𝔍", "𝔎", "𝔏", "𝔐", "𝔑", "𝔒", "𝔓", "𝔔", "ℜ",
-		// S    T    U    V    W    X    Y    Z
+		// S	T	U	V	W	X	Y	Z
 		  "𝔖", "𝔗", "𝔘", "𝔙", "𝔚", "𝔛", "𝔜", "ℨ",
 
-		// a    b    c    d    e    f    g    h    i
+		// a	b	c	d	e	f	g	h	i
 		  "𝔞", "𝔟", "𝔠", "𝔡", "𝔢", "𝔣", "𝔤", "𝔥", "𝔦",
-		// j    k    l    m    n    o    p    q    r
+		// j	k	l	m	n	o	p	q	r
 		  "𝔧", "𝔨", "𝔩", "𝔪", "𝔫", "𝔬", "𝔭", "𝔮", "𝔯",
-		// s    t    u    v    w    x    y    z
+		// s	t	u	v	w	x	y	z
 		  "𝔰", "𝔱", "𝔲", "𝔳", "𝔴", "𝔵", "𝔶", "𝔷"
 	};
 
