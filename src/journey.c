@@ -68,6 +68,9 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 	sq_value value = SQ_NI;
 	enum sq_opcode opcode;
 
+	if (function->argc != argc)
+		sq_throw("argument mismatch: expected %d, given %d", function->argc, argc);
+
 	for (unsigned i = 0; i < argc; ++i)
 		locals[i] = args[i];
 

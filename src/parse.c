@@ -684,7 +684,7 @@ struct type_annotation {
 
 #undef MAX_LEN
 
-	fdecl->matter = xrealloc(fdecl->matter, sizeof_array(char *, fdecl->nmatter));
+	fdecl->matter = xrealloc(fdecl->matter, sizeof_array(struct matter_declaration, fdecl->nmatter));
 	fdecl->meths = xrealloc(fdecl->meths, sizeof_array(struct sq_journey *, fdecl->nmeths));
 	fdecl->funcs = xrealloc(fdecl->funcs, sizeof_array(struct sq_journey *, fdecl->nfuncs));
 

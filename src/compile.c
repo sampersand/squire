@@ -260,15 +260,13 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	declare_global_variable(form->name, sq_value_new(form));
 
 	form->nmatter = fdecl->nmatter;
-	form->matter = xmalloc(sizeof(struct sq_form_matter));
-	printf("nmatter=%d\n", fdecl->nmatter);
+	form->matter = xmalloc(sizeof_array(struct sq_form_matter, form->nmatter));
+
 	for (unsigned i = 0; i < fdecl->nmatter; ++i) {
 		form->matter[i].name = fdecl->matter[i].name;
 		form->matter[i].type = SQ_UNDEFINED;
 		assert(fdecl->matter[i].type == NULL); // todo
 	}
-
-	declare_global_variable(form->name, SQ_NI);
 
 	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
 

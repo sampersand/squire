@@ -120,9 +120,9 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 
 	if (!form->imitate) {
 		if (args.pargc != form->nmatter)
-			sq_throw("Argument error: expected %u args, was given %u", form->nmatter, args.pargc);
+			sq_throw("argument count mismatch: expected %u, given %u", form->nmatter, args.pargc);
 
-		imitation->matter = args.pargv;
+		imitation->matter = memdup(args.pargv, sizeof_array(sq_value, form->nmatter));
 	} else {
 		imitation->matter = xmalloc(sizeof_array(sq_value, form->nmatter));
 
