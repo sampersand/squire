@@ -17,16 +17,16 @@ struct sq_codex;
 typedef uint64_t sq_value;
 typedef bool sq_veracity;
 
-typedef enum {
-	SQ_TCONST,
-	SQ_TNUMERAL,
-	SQ_TTEXT,
-	SQ_TFORM,
-	SQ_TIMITATION,
-	SQ_TFUNCTION,
-	SQ_TBOOK,
-	SQ_TCODEX,
-} sq_vtag;
+enum {
+	SQ_TCONST     = 0,
+	SQ_TNUMERAL   = 1,
+	SQ_TTEXT      = 2,
+	SQ_TFORM      = 3,
+	SQ_TIMITATION = 4,
+	SQ_TFUNCTION  = 5,
+	SQ_TBOOK      = 6,
+	SQ_TCODEX     = 7,
+};
 
 #define SQ_VSHIFT 4
 #define SQ_VMASK_BITS ((1<<SQ_VSHIFT)-1)

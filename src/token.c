@@ -386,7 +386,6 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("journey",      SQ_TK_FUNC);
 	CHECK_FOR_START_KW("renowned",     SQ_TK_GLOBAL);
 	CHECK_FOR_START_KW("nigh",         SQ_TK_LOCAL);
-	CHECK_FOR_START_KW("import",       SQ_TK_IMPORT); // `befriend`? `beseech`?
 
 	CHECK_FOR_START_KW("if",           SQ_TK_IF); // _should_ we have a better one?
 	CHECK_FOR_START_KW("alas",         SQ_TK_ELSE);

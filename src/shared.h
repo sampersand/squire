@@ -13,6 +13,7 @@
 #define SQ_NONNULL SQ_ATTR(nonnull)
 
 #include "exception.h"
+
 #define die sq_throw
 #define todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
 #define bug(msg, ...) (fprintf(stderr, "bug at " __FILE__ ":%s:%d: " msg, __func__, __LINE__, __VA_ARGS__),abort())

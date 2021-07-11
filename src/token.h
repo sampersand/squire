@@ -17,7 +17,6 @@ enum sq_token_kind {
 
 	SQ_TK_GLOBAL = 0x20,
 	SQ_TK_LOCAL,
-	SQ_TK_IMPORT,
 
 	SQ_TK_IF = 0x30,
 	SQ_TK_ELSE,

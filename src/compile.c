@@ -877,26 +877,6 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 }
 
 static void compile_statements(struct sq_code *code, struct statements *stmts);
-static void compile_import(struct sq_code *code, char *import) {
-	FILE *stream = fopen(import, "r");
-	if (!stream) die("unable to open file: '%s': %s", import, strerror(errno));
-
-	if (fseek(stream, 0, SEEK_END)) die("unable to seek to end: %s", strerror(errno));
-	long length = ftell(stream);
-	if (fseek(stream, 0, SEEK_SET)) die("unable to seek to start: %s", strerror(errno));
-
-	char contents[length + 1];
-	contents[length] = '\0';
-	fread(contents, 1, length, stream);
-
-	if (ferror(stream)) die("unable to read contents: %s", strerror(errno));
-	if (fclose(stream) == EOF) die("unable to close stream: %s", strerror(errno));
-
-	struct statements *stmts = sq_parse_statements(contents);
-	if (!stmts) die("invalid syntax.");
-
-	compile_statements(code, stmts);
-}
 
 static unsigned compile_global(struct sq_code *code, struct scope_declaration *gdecl) {
 	unsigned index = new_global(gdecl->name);
@@ -1064,7 +1044,6 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	switch (stmt->kind) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
 	case SQ_PS_SLOCAL: compile_local(code, stmt->ldecl); break;
-	case SQ_PS_SIMPORT: compile_import(code, stmt->import); break;
 	case SQ_PS_SCLASS: compile_form_declaration(code, stmt->cdecl); break;
 	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
