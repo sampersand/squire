@@ -230,7 +230,5 @@ sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *fun
 		acc[0] = sq_journey_run(func, 2, acc);
 	}
 
-	sq_value_free(acc[1]);
-
 	return acc[0];
 }

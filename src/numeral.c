@@ -1,8 +1,8 @@
- #include "roman.h"
+#include "numeral.h"
 #include "shared.h"
+#include "text.h"
 #include <ctype.h>
 #include <string.h>
-#include <inttypes.h>
 
 enum roman_numeral {
 	SQ_TK_ROMAN_I = 1,
@@ -35,13 +35,20 @@ static void convert(unsigned numeral, char one, char five, char ten, char **out)
 	}
 }
 
-// lol this is so bad.
-char *sq_numeral_to_roman(sq_numeral numeral) {
-	if (numeral == 0)
-		return strdup("N");
 
-	char *buf = xmalloc(40); // todo: find an actual max size lol
-	char *ret = buf;
+#ifdef SQ_NUMERAL_TO_ARABIC
+struct sq_text sq_text_zero = SQ_TEXT_STATIC("0"); 
+#else
+struct sq_text sq_text_zero = SQ_TEXT_STATIC("N"); 
+#endif /* SQ_NUMERAL_TO_ARABIC */
+
+// lol this is so bad.
+struct sq_text *sq_numeral_to_roman(sq_numeral numeral) {
+	if (!numeral)
+		return &sq_text_zero;
+
+	struct sq_text *buf = sq_text_allocate(40); // todo: find an actual max size lol
+	char *ret = buf->ptr;
 
 	// todo: if numeral is min possible.
 	if (numeral < 0) {
@@ -64,15 +71,22 @@ char *sq_numeral_to_roman(sq_numeral numeral) {
 			numeral -= SQ_TK_ROMAN_M;
 		}
 	}
+
 	*ret = '\0';
+	buf->length = ret - buf->ptr;
 
 	return buf;
 }
 
 // note that this returns an owned text.
-char *sq_numeral_to_arabic(sq_numeral numeral) {
-	char *buf = xmalloc(40);
-	snprintf(buf, 40, "%"PRId64, numeral);
+struct sq_text *sq_numeral_to_arabic(sq_numeral numeral) {
+	if (!numeral)
+		return &sq_text_zero;
+
+	struct sq_text *buf = sq_text_allocate(40);
+	snprintf(buf->ptr, 40, "%"PRId64, numeral);
+	buf->length = strlen(buf->ptr);
+
 	return buf;
 }
 

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include "shared.h"
-#include "roman.h"
 
 const char *sq_stream;
 static char put_back_quote;
@@ -346,7 +345,7 @@ static struct sq_token next_normal_token(void) {
 	if (isdigit(*sq_stream))
 		return parse_arabic_numeral();
 
-	if (sq_roman_is_numeral(*sq_stream)) {
+	if (sq_numeral_is_roman(*sq_stream)) {
 		token.numeral = sq_roman_to_numeral(sq_stream, &sq_stream);
 		if (token.numeral >= 0)
 			return (token.kind = SQ_TK_NUMERAL), token;

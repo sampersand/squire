@@ -4,7 +4,6 @@
 #include "shared.h"
 #include "form.h"
 #include "book.h"
-#include "roman.h"
 #include "codex.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -304,12 +303,12 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			/** ARABIC **/
 			case SQ_INT_ARABIC:
 				value = NEXT_LOCAL();
-				SET_NEXT_LOCAL() = sq_value_new(sq_text_new(sq_numeral_to_arabic(sq_value_to_numeral(value))));
+				SET_NEXT_LOCAL() = sq_value_new(sq_numeral_to_arabic(sq_value_to_numeral(value)));
 				break;
 
 			case SQ_INT_ROMAN:
 				value = NEXT_LOCAL();
-				SET_NEXT_LOCAL() = sq_value_new(sq_text_new(sq_numeral_to_roman(sq_value_to_numeral(value))));
+				SET_NEXT_LOCAL() = sq_value_new(sq_numeral_to_roman(sq_value_to_numeral(value)));
 				break;
 
 			default:

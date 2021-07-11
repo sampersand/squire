@@ -4,7 +4,6 @@
 #include "journey.h"
 #include "shared.h"
 #include "text.h"
-#include "roman.h"
 #include "codex.h"
 #include <string.h>
 #include <inttypes.h>
@@ -136,14 +135,14 @@ const char *sq_value_typename(sq_value value) {
 }
 
 sq_value sq_value_kindof(sq_value value) {
-	static struct sq_text KIND_VERACITY = SQ_STRING_STATIC("veracity");
-	static struct sq_text KIND_NI = SQ_STRING_STATIC("ni");
-	static struct sq_text KIND_NUMERAL = SQ_STRING_STATIC("numeral");
-	static struct sq_text KIND_TEXT = SQ_STRING_STATIC("text");
-	static struct sq_text KIND_FUNCTION = SQ_STRING_STATIC("journey");
-	static struct sq_text KIND_FORM = SQ_STRING_STATIC("form");
-	static struct sq_text KIND_ARRAY = SQ_STRING_STATIC("book");
-	static struct sq_text KIND_CODEX = SQ_STRING_STATIC("codex");
+	static struct sq_text KIND_VERACITY = SQ_TEXT_STATIC("veracity");
+	static struct sq_text KIND_NI = SQ_TEXT_STATIC("ni");
+	static struct sq_text KIND_NUMERAL = SQ_TEXT_STATIC("numeral");
+	static struct sq_text KIND_TEXT = SQ_TEXT_STATIC("text");
+	static struct sq_text KIND_FUNCTION = SQ_TEXT_STATIC("journey");
+	static struct sq_text KIND_FORM = SQ_TEXT_STATIC("form");
+	static struct sq_text KIND_ARRAY = SQ_TEXT_STATIC("book");
+	static struct sq_text KIND_CODEX = SQ_TEXT_STATIC("codex");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
@@ -345,7 +344,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 	case SQ_TTEXT: {
 		struct sq_text *rstr = sq_value_to_text(rhs);
-		struct sq_text *result = sq_text_alloc(AS_STRING(lhs)->length + rstr->length);
+		struct sq_text *result = sq_text_allocate(AS_STRING(lhs)->length + rstr->length);
 
 		memcpy(result->ptr, AS_STR(lhs), AS_STRING(lhs)->length);
 		memcpy(result->ptr + AS_STRING(lhs)->length, rstr->ptr, AS_STRING(rhs)->length + 1);
@@ -446,7 +445,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		if (amnt == 1)
 			return sq_value_new(sq_text_clone(AS_STRING(lhs)));
 
-		struct sq_text *result = sq_text_alloc(AS_STRING(lhs)->length * amnt);
+		struct sq_text *result = sq_text_allocate(AS_STRING(lhs)->length * amnt);
 		char *ptr = result->ptr;
 
 		for (unsigned i = 0; i < amnt; ++i) {
@@ -548,9 +547,9 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 }
 
 struct sq_text *sq_value_to_text(sq_value value) {
-	static struct sq_text yay_string = SQ_STRING_STATIC("yay");
-	static struct sq_text nay_string = SQ_STRING_STATIC("nay");
-	static struct sq_text ni_string = SQ_STRING_STATIC("ni");
+	static struct sq_text yay_string = SQ_TEXT_STATIC("yay");
+	static struct sq_text nay_string = SQ_TEXT_STATIC("nay");
+	static struct sq_text ni_string = SQ_TEXT_STATIC("ni");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
@@ -559,15 +558,8 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		else
 			return value == SQ_YAY ? &yay_string : &nay_string;
 
-	case SQ_TNUMERAL: {
-		char *buf;
-#ifdef sq_numeral_TO_ROMAN
-		buf = sq_numeral_to_roman(AS_NUMBER(value));
-#else
-		buf = sq_numeral_to_arabic(AS_NUMBER(value));
-#endif
-		return sq_text_new(buf);
-	}
+	case SQ_TNUMERAL:
+		return sq_numeral_to_text(AS_NUMBER(value));
 
 	case SQ_TTEXT:
 		sq_text_clone(AS_STRING(value));

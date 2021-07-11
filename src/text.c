@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct sq_text sq_text_empty = SQ_STRING_STATIC("");
+struct sq_text sq_text_empty = SQ_TEXT_STATIC("");
 
 static struct sq_text *allocate_text(unsigned length) {
 	assert(length != 0);
@@ -31,7 +31,7 @@ struct sq_text *sq_text_new2(char *ptr, unsigned length) {
 	return text;
 }
 
-struct sq_text *sq_text_alloc(unsigned length) {
+struct sq_text *sq_text_allocate(unsigned length) {
 	if (length == 0)
 		return &sq_text_empty;
 
