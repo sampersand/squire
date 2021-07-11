@@ -2,9 +2,9 @@
 #define SQ_BYTECODE_H
 
 enum sq_interrupts {
-	SQ_INT_TONUMBER     = 0x01, // [A,DST] DST <- A.to_numeral()
-	SQ_INT_TOSTRING     = 0x02, // [A,DST] DST <- A.to_text()
-	SQ_INT_TOBOOLEAN    = 0x03, // [A,DST] DST <- A.to_veracity()
+	SQ_INT_TONUMERAL    = 0x01, // [A,DST] DST <- A.to_numeral()
+	SQ_INT_TOTEXT       = 0x02, // [A,DST] DST <- A.to_text()
+	SQ_INT_TOVERACITY   = 0x03, // [A,DST] DST <- A.to_veracity()
 	SQ_INT_KINDOF       = 0x04, // [A,DST] DST <- A.genus
 
 	SQ_INT_PRINT        = 0x10, // [A,DST] Print `A`, DST <- ni
@@ -13,7 +13,7 @@ enum sq_interrupts {
 	SQ_INT_PROMPT       = 0x13, // [DST] DST <- next line from stdin
 	SQ_INT_SYSTEM       = 0x14, // [CMD,DST] DST <- stdout of running `cmd`.
 	SQ_INT_EXIT         = 0x15, // [CODE] Exits with the given code.
-	SQ_INT_RANDOM       = 0x16, // [DST] DST <- random number
+	SQ_INT_RANDOM       = 0x16, // [DST] DST <- random numeral
 
 	SQ_INT_SUBSTR       = 0x20, // [A,B,C,DST] DST <- A[B..B+C]
 	SQ_INT_LENGTH       = 0x21, // [A,DST] DST <- length A: book/codex/text
@@ -23,8 +23,8 @@ enum sq_interrupts {
 	SQ_INT_ARRAY_INSERT = 0x32, // [A,B,C,DST] A.insert(len=B,pos=C); (Stores in DST, though this is not intended)
 	SQ_INT_ARRAY_DELETE = 0x33, // [A,B,DST] DST <- A.delete(B)
 
-	SQ_INT_ARABIC       = 0x40, // [A,DST] DST <- A.to_number().arabic()
-	SQ_INT_ROMAN        = 0x41, // [A,DST] DST <- A.to_number().roman()
+	SQ_INT_ARABIC       = 0x40, // [A,DST] DST <- A.to_numeral().arabic()
+	SQ_INT_ROMAN        = 0x41, // [A,DST] DST <- A.to_numeral().roman()
 };
 
 

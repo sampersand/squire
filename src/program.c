@@ -3,7 +3,7 @@
 #include "value.h"
 #include "journey.h"
 #include "shared.h"
-#include "string.h"
+#include "text.h"
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -13,7 +13,7 @@ sq_value create_argv(unsigned argc, const char **argv) {
 	sq_value *args = xmalloc(sizeof(sq_value[argc]));
 
 	for (unsigned i = 0; i < argc; ++i)
-		args[i] = sq_value_new_string(sq_string_new(strdup(argv[i])));
+		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));
 
 	return sq_value_new_book(sq_book_new2(argc, args));
 }
@@ -27,7 +27,7 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	sq_value args[argc];
 
 	for (unsigned i = 0; i < argc; ++i)
-		args[i] = sq_value_new_string(sq_string_new(strdup(argv[i])));
+		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));
 
 	sq_value_free(sq_journey_run(program->main, 0, NULL));
 

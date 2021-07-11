@@ -39,7 +39,7 @@ static size_t fraktur_length(const char *stream, size_t *index) {
 	return 0;
 }
 
-static struct sq_string *parse_fraktur_bareword(void) {
+static struct sq_text *parse_fraktur_bareword(void) {
 	size_t fraktur_len, fraktur_pos;
 
 	if (!(fraktur_len = fraktur_length(sq_stream, &fraktur_pos)))
@@ -70,7 +70,7 @@ static struct sq_string *parse_fraktur_bareword(void) {
 		--len;
 
 	fraktur[len] = '\0';
-	return sq_string_new2(fraktur, len);
+	return sq_text_new2(fraktur, len);
 }
 
 
@@ -143,16 +143,16 @@ static unsigned tohex(char c) {
 
 static struct sq_token parse_arabic_numeral(void) {
 	struct sq_token token;
-	token.kind = SQ_TK_NUMBER;
-	token.number = 0;
+	token.kind = SQ_TK_NUMERAL;
+	token.numeral = 0;
 
 	do {
-		token.number = token.number * 10 + (*sq_stream - '0');
+		token.numeral = token.numeral * 10 + (*sq_stream - '0');
 	} while (isdigit(*++sq_stream));
 
 	if (isalpha(*sq_stream) || *sq_stream == '_')
 		die("invalid trailing characters on arabic numeral literal: %llu%c\n",
-			(long long) token.number, *sq_stream);
+			(long long) token.numeral, *sq_stream);
 
 	return token;
 }
@@ -196,9 +196,9 @@ static struct sq_token next_interpolation_token(void) {
 	return token;
 }
 // whelp, `"foo \(bar)!" * 3` will not expand properly, so we need to have
-// every string return a leading `(` first...; but that's too hard rn.
+// every text return a leading `(` first...; but that's too hard rn.
 
-static struct sq_token parse_string(void) {
+static struct sq_token parse_text(void) {
 	unsigned length = 0;
 	char *dst = xmalloc(strlen(sq_stream));
 	char quote, c;
@@ -274,8 +274,8 @@ done:
 	dst[length] = '\0';
 
 	struct sq_token token;
-	token.kind = SQ_TK_STRING;
-	token.string = sq_string_new2(dst, length);
+	token.kind = SQ_TK_TEXT;
+	token.text = sq_text_new2(dst, length);
 
 	return token;
 }
@@ -335,7 +335,7 @@ struct sq_token sq_next_token() {
 static struct sq_token next_normal_token(void) {
 	struct sq_token token;
 
-	if (put_back_quote) return parse_string();
+	if (put_back_quote) return parse_text();
 
 	strip_whitespace(false);
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
@@ -347,20 +347,20 @@ static struct sq_token next_normal_token(void) {
 		return parse_arabic_numeral();
 
 	if (sq_roman_is_numeral(*sq_stream)) {
-		token.number = sq_roman_to_number(sq_stream, &sq_stream);
-		if (token.number >= 0)
-			return (token.kind = SQ_TK_NUMBER), token;
+		token.numeral = sq_roman_to_numeral(sq_stream, &sq_stream);
+		if (token.numeral >= 0)
+			return (token.kind = SQ_TK_NUMERAL), token;
 	}
 
-	struct sq_string *fraktur;
+	struct sq_text *fraktur;
 	if ((fraktur = parse_fraktur_bareword()) != NULL) {
-		token.kind = SQ_TK_STRING;
-		token.string = fraktur;
+		token.kind = SQ_TK_TEXT;
+		token.text = fraktur;
 		return token;
 	}
 
 	if (*sq_stream == '\'' || *sq_stream == '\"')
-		return parse_string();
+		return parse_text();
 
 	if (*sq_stream == '@') {
 		++sq_stream;
@@ -399,9 +399,9 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("fork",         SQ_TK_SWITCH);
 	CHECK_FOR_START_KW("path",         SQ_TK_CASE);
 
-	CHECK_FOR_START_KW("yay",          SQ_TK_TRUE);
-	CHECK_FOR_START_KW("nay",          SQ_TK_FALSE);
-	CHECK_FOR_START_KW("ni",           SQ_TK_NULL);
+	CHECK_FOR_START_KW("yay",          SQ_TK_YAY);
+	CHECK_FOR_START_KW("nay",          SQ_TK_NAY);
+	CHECK_FOR_START_KW("ni",           SQ_TK_NI);
 
 	if (isalpha(*sq_stream) || *sq_stream == '_')
 		return parse_identifier();
@@ -452,12 +452,13 @@ void sq_token_dump(const struct sq_token *token) {
 	case SQ_TK_IF: printf("Keyword(if)"); break;
 	case SQ_TK_ELSE: printf("Keyword(else)"); break;
 	case SQ_TK_RETURN: printf("Keyword(return)"); break;
-	case SQ_TK_TRUE: printf("Keyword(true)"); break;
-	case SQ_TK_FALSE: printf("Keyword(false)"); break;
+	case SQ_TK_YAY: printf("Keyword(true)"); break;
+	case SQ_TK_NAY: printf("Keyword(false)"); break;
+	case SQ_TK_NI: printf("Keyword(ni)"); break;
 
 	case SQ_TK_IDENT: printf("Ident(%s)", token->identifier); break;
-	case SQ_TK_NUMBER: printf("Number(%lld)", (long long) token->number); break;
-	case SQ_TK_STRING: printf("String(%s)", token->string->ptr); break;
+	case SQ_TK_NUMERAL: printf("Numeral(%lld)", (long long) token->numeral); break;
+	case SQ_TK_TEXT: printf("Text(%s)", token->text->ptr); break;
 
 	case SQ_TK_LBRACE: printf("Punct({)"); break;
 	case SQ_TK_RBRACE: printf("Punct(})"); break;

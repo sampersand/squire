@@ -1,6 +1,6 @@
 #include "codex.h"
 #include "shared.h"
-#include "string.h"
+#include "text.h"
 #include <string.h>
 
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages) {
@@ -40,45 +40,45 @@ void sq_codex_deallocate(struct sq_codex *codex) {
 	free(codex);
 }
 
-struct sq_string *sq_codex_to_string(const struct sq_codex *codex) {
+struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 	unsigned len = 0, cap = 64;
-	char *string = xmalloc(cap);
-	string[len++] = '{';
+	char *str = xmalloc(cap);
+	str[len++] = '{';
 
 	for (unsigned i = 0; i < codex->length; ++i) {
 		if (i) {
 			if (cap <= len + 2)
-				string = xrealloc(string, cap *= 2);
-			string[len++] = ',';
-			string[len++] = ' ';
+				str = xrealloc(str, cap *= 2);
+			str[len++] = ',';
+			str[len++] = ' ';
 		}
 
-		struct sq_string *key = sq_value_to_string(codex->pages[i].key);
+		struct sq_text *key = sq_value_to_text(codex->pages[i].key);
 	
 		if (cap <= key->length + len + 2)
-			string = xrealloc(string, cap = key->length + len * 2 + 2);
+			str = xrealloc(str, cap = key->length + len * 2 + 2);
 	
-		memcpy(string + len, key->ptr, key->length);
+		memcpy(str + len, key->ptr, key->length);
 		len += key->length;
-		string[len++] = ':';
-		string[len++] = ' ';
-		sq_string_free(key);
+		str[len++] = ':';
+		str[len++] = ' ';
+		sq_text_free(key);
 
-		struct sq_string *value = sq_value_to_string(codex->pages[i].value);
+		struct sq_text *value = sq_value_to_text(codex->pages[i].value);
 	
 		if (cap <= value->length + len + 2)
-			string = xrealloc(string, cap = value->length + len * 2 + 2);
+			str = xrealloc(str, cap = value->length + len * 2 + 2);
 	
-		memcpy(string + len, value->ptr, value->length);
+		memcpy(str + len, value->ptr, value->length);
 		len += value->length;
-		sq_string_free(value);
+		sq_text_free(value);
 	}
 
-	string = xrealloc(string, len + 2);
-	string[len++] = '}';
-	string[len] = '\0';
+	str = xrealloc(str, len + 2);
+	str[len++] = '}';
+	str[len] = '\0';
 
-	return sq_string_new2(string, len);
+	return sq_text_new2(str, len);
 }
 
 struct sq_codex_page *sq_codex_fetch_page(struct sq_codex *codex, sq_value key) {
@@ -91,7 +91,7 @@ struct sq_codex_page *sq_codex_fetch_page(struct sq_codex *codex, sq_value key) 
 
 sq_value sq_codex_delete(struct sq_codex *codex, sq_value key) {
 	struct sq_codex_page *page = sq_codex_fetch_page(codex, key);
-	sq_value result = SQ_NULL;
+	sq_value result = SQ_NI;
 
 	if (page) {
 		sq_value_free(page->key);
@@ -104,14 +104,14 @@ sq_value sq_codex_delete(struct sq_codex *codex, sq_value key) {
 		return page->value;
 	}
 
-	return SQ_NULL;
+	return SQ_NI;
 }
 
 sq_value sq_codex_index(struct sq_codex *codex, sq_value key) {
 	struct sq_codex_page *page = sq_codex_fetch_page(codex, key);
 	
 	if (page == NULL)
-		return SQ_NULL;
+		return SQ_NI;
 
 	return sq_value_clone(page->value);
 }

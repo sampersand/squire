@@ -297,7 +297,7 @@ static bool should_compile(char *filename) {
 static void parse_transcribe(void) {
 	strip_whitespace(true);
 	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
-	char *filename = parse_string().string->ptr; // lol memfree?
+	char *filename = parse_text().text->ptr; // lol memfree?
 
 	if (!should_compile(filename)) return;
 
@@ -447,8 +447,8 @@ static bool parse_macro_identifier(char *name) {
 
 	if (!strcmp(name, "__COUNTER__")) {
 	 	expansions[++expansion_pos].tokens = xmalloc(sizeof(struct sq_token));
-	 	expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMBER;
-	 	expansions[expansion_pos].tokens[0].number = unique_value++;
+	 	expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMERAL;
+	 	expansions[expansion_pos].tokens[0].numeral = unique_value++;
 	 	expansions[expansion_pos].len = 1;
 	 	expansions[expansion_pos].pos = 0;
 	 	return false;

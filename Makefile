@@ -10,7 +10,7 @@ objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 
 CFLAGS+=-F$(SRCDIR)
 
-CFLAGS+=-DSQ_NUMBER_TO_ROMAN
+CFLAGS+=-DSQ_NUMERAL_TO_ROMAN
 
 ifdef DEBUG
 CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG

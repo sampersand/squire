@@ -3,7 +3,7 @@
 #include "shared.h"
 #include "parse.h"
 #include "form.h"
-#include "string.h"
+#include "text.h"
 #include <string.h>
 #include <errno.h>
 
@@ -144,7 +144,7 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 	int index = lookup_global_variable(name);
 
 	if (index != -1) {
-		if (globals.ary[index].value != SQ_NULL && value != SQ_NULL)
+		if (globals.ary[index].value != SQ_NI && value != SQ_NI)
 			die("attempted to redefine global variable '%s'", name);
 		globals.ary[index].value = value;
 		return index;
@@ -169,7 +169,7 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 static int new_global(const char *name) {
 	int index = lookup_global_variable(name);
 
-	return (index == -1) ? declare_global_variable(name, SQ_NULL) : index;
+	return (index == -1) ? declare_global_variable(name, SQ_NI) : index;
 }
 
 static unsigned declare_local_variable(struct sq_code *code, const char *name) {
@@ -242,7 +242,7 @@ static unsigned load_variable_class(struct sq_code *code, struct variable *var, 
 	while ((var = var->field)) {
 		set_opcode(code, SQ_OC_ILOAD);
 		set_index(code, *parent = index);
-		set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(var->name)))));
+		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->name)))));
 		set_index(code, index = next_local(code));
 	}
 
@@ -257,7 +257,7 @@ static struct sq_journey *compile_function(struct func_declaration *fndecl, bool
 
 static void compile_form_declaration(struct sq_code *code, struct class_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
-	declare_global_variable(form->name, sq_value_new_form(form));
+	declare_global_variable(form->name, sq_value_new(form));
 
 	form->nmatter = fdecl->nmatter;
 	form->matter = xmalloc(sizeof(struct sq_form_matter));
@@ -268,7 +268,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		assert(fdecl->matter[i].type == NULL); // todo
 	}
 
-	declare_global_variable(form->name, SQ_NULL);
+	declare_global_variable(form->name, SQ_NI);
 
 	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
 
@@ -286,7 +286,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	form->essences = xmalloc(sizeof(struct sq_form_essence[form->nessences]));
 	for (unsigned i = 0; i < fdecl->nessences; ++i) {
 		form->essences[i].name = fdecl->essences[i].name;
-		form->essences[i].value = SQ_NULL;
+		form->essences[i].value = SQ_NI;
 	}
 
 	if (fdecl->nessences) {
@@ -297,14 +297,14 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 
 		for (unsigned i = 0; i < fdecl->nessences; ++i) {
 			if (!fdecl->essences[i].value) {
-				form->essences[i].value = SQ_NULL;
+				form->essences[i].value = SQ_NI;
 				continue;
 			}
 			unsigned index = compile_expression(code, fdecl->essences[i].value);
 
 			set_opcode(code, SQ_OC_ISTORE);
 			set_opcode(code, global);
-			set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(fdecl->essences[i].name)))));
+			set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->essences[i].name)))));
 			set_index(code, index);
 			set_index(code, index);
 		}
@@ -332,12 +332,12 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 static void compile_func_declaration(struct func_declaration *fdecl) {
 	assert(fdecl->name != NULL);
 
-	declare_global_variable(strdup(fdecl->name), SQ_NULL);
+	declare_global_variable(strdup(fdecl->name), SQ_NI);
 
 	struct sq_journey *func = compile_function(fdecl, false);
 	free(fdecl); // but none of the fields, as they're now owned by `func`.
 
-	declare_global_variable(func->name, sq_value_new_function(func));
+	declare_global_variable(func->name, sq_value_new(func));
 }
 
 static void compile_if_statement(struct sq_code *code, struct if_statement *ifstmt) {
@@ -390,7 +390,7 @@ static void compile_return_statement(struct sq_code *code, struct return_stateme
 	unsigned index;
 
 	if (rstmt->value == NULL) {
-		index = load_constant(code, SQ_NULL);
+		index = load_constant(code, SQ_NI);
 	} else {
 		index = compile_expression(code, rstmt->value);
 	}
@@ -554,24 +554,24 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		struct sq_journey *func = compile_function(primary->lambda, false);
 		free(primary->lambda);
 
-		result = load_constant(code, sq_value_new_function(func));
+		result = load_constant(code, sq_value_new(func));
 		break;
 	}
 
-	case SQ_PS_PNUMBER:
-		result = load_constant(code, sq_value_new_number(primary->number));
+	case SQ_PS_PNUMERAL:
+		result = load_constant(code, sq_value_new(primary->numeral));
 		break;
 
-	case SQ_PS_PSTRING:
-		result = load_constant(code, sq_value_new_string(primary->string));
+	case SQ_PS_PTEXT:
+		result = load_constant(code, sq_value_new(primary->text));
 		break;
 
-	case SQ_PS_PBOOLEAN:
-		result = load_constant(code, sq_value_new_boolean(primary->boolean));
+	case SQ_PS_PVERACITY:
+		result = load_constant(code, sq_value_new(primary->veracity));
 		break;
 
-	case SQ_PS_PNULL:
-		result = load_constant(code, SQ_NULL);
+	case SQ_PS_PNI:
+		result = load_constant(code, SQ_NI);
 		break;
 
 	case SQ_PS_PVARIABLE:
@@ -769,10 +769,10 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 
 	BUILTIN_FN("proclaim",  SQ_INT_PRINTLN, 1);
 	BUILTIN_FN("proclaimn", SQ_INT_PRINT, 1);
-	BUILTIN_FN("tally",     SQ_INT_TONUMBER, 1);
-	BUILTIN_FN("numeral",   SQ_INT_TONUMBER, 1);
-	BUILTIN_FN("text",      SQ_INT_TOSTRING, 1); // `prose` ?
-	BUILTIN_FN("veracity",  SQ_INT_TOBOOLEAN, 1); // `veracity`
+	BUILTIN_FN("tally",     SQ_INT_TONUMERAL, 1);
+	BUILTIN_FN("numeral",   SQ_INT_TONUMERAL, 1);
+	BUILTIN_FN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
+	BUILTIN_FN("veracity",  SQ_INT_TOVERACITY, 1); // `veracity`
 	BUILTIN_FN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
 	BUILTIN_FN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",    SQ_INT_SUBSTR, 3);
@@ -858,7 +858,7 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 
 		set_opcode(code, SQ_OC_ISTORE);
 		set_opcode(code, variable);
-		set_index(code, new_constant(code, sq_value_new_string(sq_string_new(strdup(var->field->name)))));
+		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->field->name)))));
 		set_index(code, index);
 		set_index(code, index = next_local(code));
 
@@ -1134,7 +1134,7 @@ struct sq_program *sq_program_compile(const char *stream) {
 	globals.len = 1;
 	globals.ary = xmalloc(sizeof(struct local[globals.cap = 16]));
 	globals.ary[0].name = strdup("ARGV");
-	globals.ary[0].value = SQ_NULL;
+	globals.ary[0].value = SQ_NI;
 
 	program = xmalloc(sizeof(struct sq_program));
 	program->nglobals = 1;

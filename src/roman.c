@@ -14,10 +14,10 @@ enum roman_numeral {
 	SQ_TK_ROMAN_M = 1000,
 };
 
-static void convert(unsigned number, char one, char five, char ten, char **out) {
-	if (5 < number && number <= 8) *(*out)++ = five;
+static void convert(unsigned numeral, char one, char five, char ten, char **out) {
+	if (5 < numeral && numeral <= 8) *(*out)++ = five;
 
-	switch (number) {
+	switch (numeral) {
 	case 3: *(*out)++ = one;
 	case 2: *(*out)++ = one;
 	case 1: *(*out)++ = one; break;
@@ -31,37 +31,37 @@ static void convert(unsigned number, char one, char five, char ten, char **out) 
 
 	case 9: *(*out)++ = one;
 	case 10: *(*out)++ = ten; break;
-	default: die("uh oh, number %d is out of bounds", number);
+	default: die("uh oh, numeral %d is out of bounds", numeral);
 	}
 }
 
 // lol this is so bad.
-char *sq_number_to_roman(sq_number number) {
-	if (number == 0)
+char *sq_numeral_to_roman(sq_numeral numeral) {
+	if (numeral == 0)
 		return strdup("N");
 
 	char *buf = xmalloc(40); // todo: find an actual max size lol
 	char *ret = buf;
 
-	// todo: if number is min possible.
-	if (number < 0) {
+	// todo: if numeral is min possible.
+	if (numeral < 0) {
 		*ret++ = '-';
-		number *= -1;
+		numeral *= -1;
 	}
 
-	while (number > 0) {
-		if (number <= 10) {
-			convert(number, 'I', 'V', 'X', &ret);
+	while (numeral > 0) {
+		if (numeral <= 10) {
+			convert(numeral, 'I', 'V', 'X', &ret);
 			break;
-		} else if (number <= 100) {
-			convert(number / 10, 'X', 'L', 'C', &ret);
-			number %= 10;
-		} else if (number <= 1000) {
-			convert(number / 100, 'C', 'D', 'M', &ret);
-			number %= 100;
+		} else if (numeral <= 100) {
+			convert(numeral / 10, 'X', 'L', 'C', &ret);
+			numeral %= 10;
+		} else if (numeral <= 1000) {
+			convert(numeral / 100, 'C', 'D', 'M', &ret);
+			numeral %= 100;
 		} else {
 			*ret++ = 'M';
-			number -= SQ_TK_ROMAN_M;
+			numeral -= SQ_TK_ROMAN_M;
 		}
 	}
 	*ret = '\0';
@@ -69,15 +69,15 @@ char *sq_number_to_roman(sq_number number) {
 	return buf;
 }
 
-// note that this returns an owned string.
-char *sq_number_to_arabic(sq_number number) {
+// note that this returns an owned text.
+char *sq_numeral_to_arabic(sq_numeral numeral) {
 	char *buf = xmalloc(40);
-	snprintf(buf, 40, "%"PRId64, number);
+	snprintf(buf, 40, "%"PRId64, numeral);
 	return buf;
 }
 
-sq_number sq_roman_to_number(const char *input, const char **output) {
-	sq_number number = 0;
+sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
+	sq_numeral numeral = 0;
 	enum roman_numeral stage = 0, parsed;
 
 	// ie if the input is just `N` (ie `0`).
@@ -103,10 +103,10 @@ sq_number sq_roman_to_number(const char *input, const char **output) {
 		}
 
 
-		number += parsed;
+		numeral += parsed;
 
 		if (stage == 0 || parsed <= stage) stage = parsed;
-		else number -= stage * 2;
+		else numeral -= stage * 2;
 
 		++input;
 	}
@@ -116,5 +116,5 @@ done:
 	if (output)
 		*output = input;
 
-	return number;
+	return numeral;
 }

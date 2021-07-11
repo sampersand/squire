@@ -2,7 +2,7 @@
 #define SQ_TOKEN_H
 
 #include "value.h"
-#include "string.h"
+#include "text.h"
 
 enum sq_token_kind {
 	SQ_TK_UNDEFINED = 0,
@@ -33,13 +33,13 @@ enum sq_token_kind {
 
 	SQ_TK_MACRO_VAR = 0x40,
 
-	SQ_TK_TRUE = 0x50,
-	SQ_TK_FALSE,
-	SQ_TK_NULL,
+	SQ_TK_YAY = 0x50,
+	SQ_TK_NAY,
+	SQ_TK_NI,
 
 	SQ_TK_IDENT = 0x60,
-	SQ_TK_NUMBER,
-	SQ_TK_STRING,
+	SQ_TK_NUMERAL,
+	SQ_TK_TEXT,
 	SQ_TK_LABEL,
 
 	SQ_TK_LBRACE = 0x70,
@@ -77,8 +77,8 @@ enum sq_token_kind {
 struct sq_token {
 	enum sq_token_kind kind;
 	union {
-		sq_number number;
-		struct sq_string *string;
+		sq_numeral numeral;
+		struct sq_text *text;
 		char *identifier;
 	};
 };

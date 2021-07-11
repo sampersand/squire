@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdio.h>
-#include "number.h"
+#include "numeral.h"
 
-struct sq_string;
+struct sq_text;
 struct sq_form;
 struct sq_imitation;
 struct sq_journey;
@@ -15,11 +15,12 @@ struct sq_book;
 struct sq_codex;
 
 typedef uint64_t sq_value;
+typedef bool sq_veracity;
 
 typedef enum {
 	SQ_TCONST,
-	SQ_TNUMBER,
-	SQ_TSTRING,
+	SQ_TNUMERAL,
+	SQ_TTEXT,
 	SQ_TFORM,
 	SQ_TIMITATION,
 	SQ_TFUNCTION,
@@ -32,18 +33,18 @@ typedef enum {
 #define SQ_VMASK(value, kind) ((value) | (kind))
 #define SQ_VTAG(value) ((value) & SQ_VMASK_BITS)
 #define SQ_VUNMASK(value) ((value) & ~SQ_VMASK_BITS)
-#define SQ_TRUE SQ_VMASK((1 << SQ_VSHIFT), SQ_TCONST)
-#define SQ_FALSE SQ_VMASK(0, SQ_TCONST)
-#define SQ_NULL SQ_VMASK((2 << SQ_VSHIFT), SQ_TCONST)
+#define SQ_YAY SQ_VMASK((1 << SQ_VSHIFT), SQ_TCONST)
+#define SQ_NAY SQ_VMASK(0, SQ_TCONST)
+#define SQ_NI SQ_VMASK((2 << SQ_VSHIFT), SQ_TCONST)
 #define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_TCONST)
 
 #define SQ_VALUE_ALIGN _Alignas(1<<SQ_VSHIFT)
 
 
 // #define SQ_TAG(kind) _Generic((kind){0}, \
-// 	sq_number: SQ_TNUMBER, \
+// 	sq_numeral: SQ_TNUMERAL, \
 // 	bool: SQ_TCONST, \
-// 	struct sq_string: SQ_TSTRING, \
+// 	struct sq_text: SQ_TTEXT, \
 // 	struct sq_form: SQ_TFORM, \
 // 	struct sq_imitation: SQ_TIMITATION, \
 // 	struct sq_journey: SQ_TFUNCTION, \
@@ -53,9 +54,9 @@ typedef enum {
 
 // #define sq_value_is(x, kind) (SQ_VTAG(x) == SQ_TAG(kind))
 // #define sq_value_as(x, kind) (assert(sq_value_is(x, kind), _Generic(kind, \
-// 	sq_number: (x) >> SQ_VSHIFT, \
-// 	bool: (x) == SQ_TRUE, \
-// 	struct sq_string *: (kind) SQ_VUNMASK(x), \
+// 	sq_numeral: (x) >> SQ_VSHIFT, \
+// 	bool: (x) == SQ_YAY, \
+// 	struct sq_text *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_form *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_imitation *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_journey *: (kind) SQ_VUNMASK(x), \
@@ -65,9 +66,9 @@ typedef enum {
 // (SQ_VTAG(x) == SQ_TAG(kind))
 
 #define sq_value_new(x) (_Generic(x, \
-	sq_number: sq_value_new_number, \
-	bool: sq_value_new_boolean, \
-	struct sq_string *: sq_value_new_string, \
+	sq_numeral: sq_value_new_numeral, \
+	sq_veracity: sq_value_new_veracity, \
+	struct sq_text *: sq_value_new_text, \
 	struct sq_form *: sq_value_new_form, \
 	struct sq_imitation *: sq_value_new_imitation, \
 	struct sq_journey *: sq_value_new_function, \
@@ -76,18 +77,18 @@ typedef enum {
 )(x))
 
 
-static inline sq_value sq_value_new_number(sq_number number) {
-	assert(number == (((sq_number) (((sq_value) number << SQ_VSHIFT)) >> SQ_VSHIFT)));
-	return SQ_VMASK(((sq_value) number) << SQ_VSHIFT, SQ_TNUMBER);
+static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
+	assert(numeral == (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
+	return SQ_VMASK(((sq_value) numeral) << SQ_VSHIFT, SQ_TNUMERAL);
 }
 
-static inline sq_value sq_value_new_boolean(bool boolean) {
-	return boolean ? SQ_TRUE : SQ_FALSE;
+static inline sq_value sq_value_new_veracity(sq_veracity veracity) {
+	return veracity ? SQ_YAY : SQ_NAY;
 }
 
-static inline sq_value sq_value_new_string(struct sq_string *string) {
-	assert(!SQ_VTAG((sq_value) string));
-	return SQ_VMASK((sq_value) string, SQ_TSTRING);
+static inline sq_value sq_value_new_text(struct sq_text *text) {
+	assert(!SQ_VTAG((sq_value) text));
+	return SQ_VMASK((sq_value) text, SQ_TTEXT);
 }
 
 static inline sq_value sq_value_new_form(struct sq_form *form) {
@@ -115,20 +116,20 @@ static inline sq_value sq_value_new_codex(struct sq_codex *dict) {
 	return SQ_VMASK((sq_value) dict, SQ_TCODEX);
 }
 
-static inline bool sq_value_is_null(sq_value value) {
-	return value == SQ_NULL;
+static inline bool sq_value_is_ni(sq_value value) {
+	return value == SQ_NI;
 }
 
-static inline bool sq_value_is_number(sq_value value) {
-	return SQ_VTAG(value) == SQ_TNUMBER;
+static inline bool sq_value_is_numeral(sq_value value) {
+	return SQ_VTAG(value) == SQ_TNUMERAL;
 }
 
-static inline bool sq_value_is_boolean(sq_value value) {
-	return value == SQ_TRUE || value == SQ_FALSE;
+static inline bool sq_value_is_veracity(sq_value value) {
+	return value == SQ_YAY || value == SQ_NAY;
 }
 
-static inline bool sq_value_is_string(sq_value value) {
-	return SQ_VTAG(value) == SQ_TSTRING;
+static inline bool sq_value_is_text(sq_value value) {
+	return SQ_VTAG(value) == SQ_TTEXT;
 }
 
 static inline bool sq_value_is_form(sq_value value) {
@@ -151,20 +152,19 @@ static inline bool sq_value_is_codex(sq_value value) {
 	return SQ_VTAG(value) == SQ_TCODEX;
 }
 
-static inline sq_number sq_value_as_number(sq_value value) {
-	assert(sq_value_is_number(value));
-	return ((sq_number) value) >> SQ_VSHIFT;
+static inline sq_numeral sq_value_as_numeral(sq_value value) {
+	assert(sq_value_is_numeral(value));
+	return ((sq_numeral) value) >> SQ_VSHIFT;
 }
 
-static inline bool sq_value_as_boolean(sq_value value) {
-	if (!sq_value_is_boolean(value)) *(volatile int *)(0);
-	assert(sq_value_is_boolean(value));
-	return value == SQ_TRUE;
+static inline bool sq_value_as_veracity(sq_value value) {
+	assert(sq_value_is_veracity(value));
+	return value == SQ_YAY;
 }
 
-static inline struct sq_string *sq_value_as_string(sq_value value) {
-	assert(sq_value_is_string(value));
-	return (struct sq_string *) SQ_VUNMASK(value);
+static inline struct sq_text *sq_value_as_text(sq_value value) {
+	assert(sq_value_is_text(value));
+	return (struct sq_text *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_form *sq_value_as_form(sq_value value) {
@@ -201,7 +201,7 @@ sq_value sq_value_kindof(sq_value value);
 
 bool sq_value_not(sq_value arg);
 bool sq_value_eql(sq_value lhs, sq_value rhs);
-sq_number sq_value_cmp(sq_value lhs, sq_value rhs);
+sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs);
 sq_value sq_value_neg(sq_value arg);
 sq_value sq_value_add(sq_value lhs, sq_value rhs);
 sq_value sq_value_sub(sq_value lhs, sq_value rhs);
@@ -212,9 +212,9 @@ sq_value sq_value_index(sq_value value, sq_value key);
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val);
 
 size_t sq_value_length(sq_value value);
-struct sq_string *sq_value_to_string(sq_value value);
-sq_number sq_value_to_number(sq_value value);
-bool sq_value_to_boolean(sq_value value);
+struct sq_text *sq_value_to_text(sq_value value);
+sq_numeral sq_value_to_numeral(sq_value value);
+bool sq_value_to_veracity(sq_value value);
 struct sq_book *sq_value_to_book(sq_value value);
 struct sq_codex *sq_value_to_codex(sq_value value);
 

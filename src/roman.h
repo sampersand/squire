@@ -1,16 +1,16 @@
 #ifndef SQ_ROMAN_H
 #define SQ_ROMAN_H
 
-#include "number.h"
+#include "numeral.h"
 #include <stdbool.h>
 
-sq_number sq_roman_to_number(const char *input, const char **output);
+sq_numeral sq_roman_to_numeral(const char *input, const char **output);
 
-// note that this returns an owned string.
-char *sq_number_to_roman(sq_number);
+// note that this returns an owned text.
+char *sq_numeral_to_roman(sq_numeral);
 
-// note that this returns an owned string.
-char *sq_number_to_arabic(sq_number);
+// note that this returns an owned text.
+char *sq_numeral_to_arabic(sq_numeral);
 
 static inline bool sq_roman_is_numeral(char c) {
 	return c == 'N' || c == 'I' || c == 'V' || c == 'X'

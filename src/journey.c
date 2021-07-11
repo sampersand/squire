@@ -1,5 +1,5 @@
 #include "journey.h"
-#include "string.h"
+#include "text.h"
 #include "program.h"
 #include "shared.h"
 #include "form.h"
@@ -64,7 +64,7 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 
 	sq_value imitation = sq_value_new_imitation(sq_imitation_new(form, xmalloc(sizeof(sq_value[form->nmatter]))));
 	for (unsigned i = 0; i < form->nmatter; ++i)
-		sq_value_as_imitation(imitation)->matter[i] = SQ_NULL;
+		sq_value_as_imitation(imitation)->matter[i] = SQ_NI;
 
 	sq_value fn_args[argc + 1];
 	fn_args[0] = sq_value_clone(imitation);
@@ -89,14 +89,14 @@ static sq_value create_form_imitation(struct sq_form *form, unsigned argc, sq_va
 
 sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_value *args) {
 	sq_value locals[function->nlocals];
-	sq_value value = SQ_NULL;
+	sq_value value = SQ_NI;
 	enum sq_opcode opcode;
 
 	for (unsigned i = 0; i < argc; ++i)
 		locals[i] = args[i];
 
 	for (unsigned i = argc; i < function->nlocals; ++i)
-		locals[i] = SQ_NULL;
+		locals[i] = SQ_NI;
 
 	unsigned ip = 0;
 
@@ -114,17 +114,17 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 
 		case SQ_OC_INT: {
 			unsigned idx;
-			struct sq_string *string;
+			struct sq_text *text;
 
 			switch ((idx = NEXT_INDEX())) {
 			case SQ_INT_PRINT:
 			case SQ_INT_PRINTLN:
-				string = sq_value_to_string(NEXT_LOCAL());
-				if (idx == SQ_INT_PRINTLN) puts(string->ptr);
-				else printf("%s", string->ptr);
+				text = sq_value_to_text(NEXT_LOCAL());
+				if (idx == SQ_INT_PRINTLN) puts(text->ptr);
+				else printf("%s", text->ptr);
 				fflush(stdout);
-				sq_string_free(string);
-				SET_NEXT_LOCAL() = SQ_NULL;
+				sq_text_free(text);
+				SET_NEXT_LOCAL() = SQ_NI;
 				break;
 
 			case SQ_INT_DUMP: {
@@ -135,44 +135,44 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 				break;
 			}
 
-			case SQ_INT_TOSTRING: {
-				string = sq_value_to_string(NEXT_LOCAL());
-				SET_NEXT_LOCAL() = sq_value_new_string(string);
+			case SQ_INT_TOTEXT: {
+				text = sq_value_to_text(NEXT_LOCAL());
+				SET_NEXT_LOCAL() = sq_value_new(text);
 				break;
 			}
 
-			case SQ_INT_TONUMBER: {
-				sq_number number = sq_value_to_number(NEXT_LOCAL());
-				SET_NEXT_LOCAL() = sq_value_new_number(number);
+			case SQ_INT_TONUMERAL: {
+				sq_numeral numeral = sq_value_to_numeral(NEXT_LOCAL());
+				SET_NEXT_LOCAL() = sq_value_new(numeral);
 				break;
 			}
 			
-			case SQ_INT_TOBOOLEAN: {
-				bool boolean = sq_value_to_boolean(NEXT_LOCAL());
-				SET_NEXT_LOCAL() = sq_value_new_boolean(boolean);
+			case SQ_INT_TOVERACITY: {
+				sq_veracity veracity = sq_value_to_veracity(NEXT_LOCAL());
+				SET_NEXT_LOCAL() = sq_value_new(veracity);
 				break;
 			}
 
 			case SQ_INT_SUBSTR: {
-				string = sq_value_to_string(NEXT_LOCAL());
-				sq_number start = sq_value_to_number(NEXT_LOCAL());
+				text = sq_value_to_text(NEXT_LOCAL());
+				sq_numeral start = sq_value_to_numeral(NEXT_LOCAL());
 				if (!start--) sq_throw("cannot index by N.");
-				sq_number count = sq_value_to_number(NEXT_LOCAL());
-				struct sq_string *result;
+				sq_numeral count = sq_value_to_numeral(NEXT_LOCAL());
+				struct sq_text *result;
 
-				if (!*string->ptr) 
-					result = sq_string_new(strdup(""));
+				if (!*text->ptr) 
+					result = sq_text_new(strdup(""));
 				else
-					result = sq_string_new(strndup(string->ptr + start, count));
+					result = sq_text_new(strndup(text->ptr + start, count));
 
-				SET_NEXT_LOCAL() = sq_value_new_string(result);
+				SET_NEXT_LOCAL() = sq_value_new(result);
 				break;
 			}
 
 			case SQ_INT_LENGTH:
 				value = NEXT_LOCAL();
 
-				SET_NEXT_LOCAL() = sq_value_new_number((sq_number) sq_value_length(value));
+				SET_NEXT_LOCAL() = sq_value_new((sq_numeral) sq_value_length(value));
 				break;
 
 			case SQ_INT_KINDOF: {
@@ -186,16 +186,16 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			}
 
 			case SQ_INT_EXIT:
-				exit(sq_value_to_number(NEXT_LOCAL()));
+				exit(sq_value_to_numeral(NEXT_LOCAL()));
 
 			case SQ_INT_SYSTEM: {
-				string = sq_value_to_string(NEXT_LOCAL());
-				char *str = string->ptr;
+				text = sq_value_to_text(NEXT_LOCAL());
+				char *str = text->ptr;
 				FILE *stream = popen(str, "r");
 
 				if (stream == NULL) die("unable to execute command '%s'.", str);
 
-				// sq_string_free(string);
+				// sq_text_free(text);
 
 				size_t tmp;
 				size_t capacity = 2048;
@@ -222,7 +222,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 				if (pclose(stream) == -1)
 					die("unable to close command stream");
 
-				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(result));
+				SET_NEXT_LOCAL() = sq_value_new(sq_text_new(result));
 				break;
 			}
 
@@ -244,12 +244,12 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 					line[length] = '\0';
 				}
 
-				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(line));
+				SET_NEXT_LOCAL() = sq_value_new(sq_text_new(line));
 				break;
 			}
 
 			case SQ_INT_RANDOM:
-				SET_NEXT_LOCAL() = sq_value_new_number(rand());
+				SET_NEXT_LOCAL() = sq_value_new((sq_numeral) rand());
 				break;
 
 			case SQ_INT_BOOK_NEW: {
@@ -282,7 +282,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 				if (!sq_value_is_book(value)) die("can only insert into books");
 				struct sq_book *book = sq_value_as_book(value);
 
-				unsigned index = sq_value_to_number(NEXT_LOCAL());
+				unsigned index = sq_value_to_numeral(NEXT_LOCAL());
 				sq_book_insert2(book, index, NEXT_LOCAL());
 				SET_NEXT_LOCAL() = sq_value_clone(value);
 				break;
@@ -292,7 +292,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 				value = NEXT_LOCAL();
 				sq_value index = NEXT_LOCAL();
 				if (sq_value_is_book(value))
-					SET_NEXT_LOCAL() = sq_book_delete2(sq_value_as_book(value), sq_value_to_number(index));
+					SET_NEXT_LOCAL() = sq_book_delete2(sq_value_as_book(value), sq_value_to_numeral(index));
 				else if (sq_value_is_codex(value))
 					SET_NEXT_LOCAL() = sq_codex_delete(sq_value_as_codex(value), index);
 				else 
@@ -304,12 +304,12 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			/** ARABIC **/
 			case SQ_INT_ARABIC:
 				value = NEXT_LOCAL();
-				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_arabic(sq_value_to_number(value))));
+				SET_NEXT_LOCAL() = sq_value_new(sq_text_new(sq_numeral_to_arabic(sq_value_to_numeral(value))));
 				break;
 
 			case SQ_INT_ROMAN:
 				value = NEXT_LOCAL();
-				SET_NEXT_LOCAL() = sq_value_new_string(sq_string_new(sq_number_to_roman(sq_value_to_number(value))));
+				SET_NEXT_LOCAL() = sq_value_new(sq_text_new(sq_numeral_to_roman(sq_value_to_numeral(value))));
 				break;
 
 			default:
@@ -343,7 +343,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			value = NEXT_LOCAL();
 			unsigned dst = NEXT_INDEX();
 
-			if (!sq_value_to_boolean(value))
+			if (!sq_value_to_veracity(value))
 				ip = dst;
 
 			continue;
@@ -353,7 +353,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			value = NEXT_LOCAL();
 			unsigned dst = NEXT_INDEX();
 
-			if (sq_value_to_boolean(value))
+			if (sq_value_to_veracity(value))
 				ip = dst;
 
 			continue;
@@ -410,47 +410,47 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 				continue;
 
 			locals[exception_index] = exception;
-			exception = SQ_NULL;
+			exception = SQ_NI;
 			ip = catch_index;
 			continue;
 		}
 
 	/*** Operators ***/
 		case SQ_OC_EQL:
-			value = sq_value_new_boolean(sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
+			value = sq_value_new(sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
 			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_NEQ:
-			value = sq_value_new_boolean(!sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
+			value = sq_value_new((sq_veracity) !sq_value_eql(locals[REL_INDEX(0)], locals[REL_INDEX(1)]));
 			ip += 2;
 			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_LTH:
-			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) < 0);
+			value = sq_value_new((sq_veracity) (sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) < 0));
 			ip += 2;
 			SET_NEXT_LOCAL() = value;
 			sq_value_clone(value);
 			continue;
 
 		case SQ_OC_GTH:
-			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) > 0);
+			value = sq_value_new((sq_veracity) (sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) > 0));
 			ip += 2;
 			sq_value_clone(value);
 			SET_NEXT_LOCAL() = value;
 			continue;
 		case SQ_OC_LEQ:
-			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) <= 0);
+			value = sq_value_new((sq_veracity) (sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) <= 0));
 			ip += 2;
 			sq_value_clone(value);
 			SET_NEXT_LOCAL() = value;
 			continue;
 		case SQ_OC_GEQ:
-			value = sq_value_new_boolean(sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) >= 0);
+			value = sq_value_new((sq_veracity) (sq_value_cmp(locals[REL_INDEX(0)], locals[REL_INDEX(1)]) >= 0));
 			ip += 2;
 			sq_value_clone(value);
 			SET_NEXT_LOCAL() = value;
@@ -498,7 +498,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 			continue;
 
 		case SQ_OC_NOT:
-			value = sq_value_new_boolean(sq_value_not(NEXT_LOCAL()));
+			value = sq_value_new(sq_value_not(NEXT_LOCAL()));
 			sq_value_clone(value);
 			SET_NEXT_LOCAL() = value;
 			continue;
@@ -548,13 +548,13 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 
 		case SQ_OC_ILOAD: {
 			value = NEXT_LOCAL();
-			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
+			const char *field = sq_value_as_text(function->consts[NEXT_INDEX()])->ptr;
 
 			 if (!strcmp(field, "genus"))
 			 	goto genus_kindof;
 
 			if (!strcmp(field, "length"))
-				value = sq_value_new_number((sq_number) sq_value_length(value));
+				value = sq_value_new((sq_numeral) sq_value_length(value));
 			else if (sq_value_is_form(value)) {
 				struct sq_form *form = sq_value_as_form(value);
 				value = sq_form_lookup(form, field);
@@ -587,7 +587,7 @@ sq_value sq_journey_run(const struct sq_journey *function, unsigned argc, sq_val
 		case SQ_OC_ISTORE: {
 			sq_value target = NEXT_LOCAL();
 			sq_value *valueptr;
-			const char *field = sq_value_as_string(function->consts[NEXT_INDEX()])->ptr;
+			const char *field = sq_value_as_text(function->consts[NEXT_INDEX()])->ptr;
 
 			if (sq_value_is_imitation(target)) {
 				struct sq_imitation *imitation = sq_value_as_imitation(target);

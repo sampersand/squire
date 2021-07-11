@@ -1,5 +1,5 @@
 #include "exception.h"
-#include "string.h"
+#include "text.h"
 #include "value.h"
 #include <stdarg.h>
 #include <stdlib.h>
@@ -16,7 +16,7 @@ void sq_throw(const char *fmt, ...) {
 	vasprintf(&message, fmt, args);
 	va_end(args);
 
-	sq_throw_value(sq_value_new_string(sq_string_new(message)));
+	sq_throw_value(sq_value_new_text(sq_text_new(message)));
 }
 
 void sq_throw_value(sq_value value)  {

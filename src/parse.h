@@ -16,7 +16,6 @@ struct statement {
 		SQ_PS_STHROW,
 		SQ_PS_SRETURN,
 
-		SQ_PS_SIMPORT,
 		SQ_PS_SGLOBAL,
 		SQ_PS_SLOCAL,
 
@@ -31,7 +30,6 @@ struct statement {
 
 	union {
 		struct scope_declaration *gdecl, *ldecl;
-		char *import;
 		struct class_declaration *cdecl;
 		struct func_declaration *fdecl;
 		struct if_statement *ifstmt;
@@ -199,10 +197,10 @@ struct primary {
 	enum {
 		SQ_PS_PPAREN,
 		SQ_PS_PLAMBDA,
-		SQ_PS_PNUMBER,
-		SQ_PS_PSTRING,
-		SQ_PS_PBOOLEAN,
-		SQ_PS_PNULL,
+		SQ_PS_PNUMERAL,
+		SQ_PS_PTEXT,
+		SQ_PS_PVERACITY,
+		SQ_PS_PNI,
 		SQ_PS_PVARIABLE,
 		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
@@ -211,9 +209,9 @@ struct primary {
 	union {
 		struct expression *expr;
 		struct func_declaration *lambda;
-		sq_number number;
-		struct sq_string *string;
-		bool boolean;
+		sq_numeral numeral;
+		struct sq_text *text;
+		sq_veracity veracity;
 		struct variable *variable;
 		struct book *book;
 		struct dict *dict;

@@ -3,16 +3,16 @@
 #include "form.h"
 #include "journey.h"
 #include "shared.h"
-#include "string.h"
+#include "text.h"
 #include "roman.h"
 #include "codex.h"
 #include <string.h>
 #include <inttypes.h>
 #include <limits.h>
 
-#define IS_STRING sq_value_is_string
-#define AS_STRING sq_value_as_string
-#define AS_NUMBER sq_value_as_number
+#define IS_STRING sq_value_is_text
+#define AS_STRING sq_value_as_text
+#define AS_NUMBER sq_value_as_numeral
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
 #define AS_JOURNEY sq_value_as_function
@@ -28,19 +28,19 @@ void sq_value_dump(sq_value value) {
 void sq_value_dump_to(FILE *out, sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
-		if (sq_value_is_null(value))
-			fprintf(out, "Null()");
+		if (value == SQ_NI)
+			fprintf(out, "Ni()");
 		else
-			fprintf(out, "Boolean(%s)", sq_value_as_boolean(value) ? "true" : "false");
+			fprintf(out, "Veracity(%s)", sq_value_as_veracity(value) ? "yay" : "nay");
 
 		break;
 
-	case SQ_TNUMBER:
-		fprintf(out, "Number(%"PRId64")", AS_NUMBER(value));
+	case SQ_TNUMERAL:
+		fprintf(out, "Numeral(%"PRId64")", AS_NUMBER(value));
 		break;
 
-	case SQ_TSTRING:
-		fprintf(out, "String(%s)", AS_STR(value));
+	case SQ_TTEXT:
+		fprintf(out, "Text(%s)", AS_STR(value));
 		break;
 
 	case SQ_TFORM:
@@ -70,23 +70,23 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 
 sq_value sq_value_clone(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TSTRING:
-		return sq_value_new_string(sq_string_clone(AS_STRING(value)));
+	case SQ_TTEXT:
+		return sq_value_new(sq_text_clone(AS_STRING(value)));
 
 	case SQ_TFORM:
-		return sq_value_new_form(sq_form_clone(AS_FORM(value)));
+		return sq_value_new(sq_form_clone(AS_FORM(value)));
 
 	case SQ_TIMITATION:
-		return sq_value_new_imitation(sq_imitation_clone(AS_IMITATION(value)));
+		return sq_value_new(sq_imitation_clone(AS_IMITATION(value)));
 
 	case SQ_TFUNCTION:
-		return sq_value_new_function(sq_journey_clone(AS_JOURNEY(value)));
+		return sq_value_new(sq_journey_clone(AS_JOURNEY(value)));
 
 	case SQ_TBOOK:
-		return sq_value_new_book(sq_book_clone(AS_BOOK(value)));
+		return sq_value_new(sq_book_clone(AS_BOOK(value)));
 
 	case SQ_TCODEX:
-		return sq_value_new_codex(sq_codex_clone(AS_CODEX(value)));
+		return sq_value_new(sq_codex_clone(AS_CODEX(value)));
 
 	default:
 		return value;
@@ -95,8 +95,8 @@ sq_value sq_value_clone(sq_value value) {
 
 void sq_value_free(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TSTRING:
-		sq_string_free(AS_STRING(value));
+	case SQ_TTEXT:
+		sq_text_free(AS_STRING(value));
 		return;
 
 	case SQ_TFORM:
@@ -123,9 +123,9 @@ void sq_value_free(sq_value value) {
 
 const char *sq_value_typename(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TCONST: return sq_value_is_null(value) ? "ni" : "veracity";
-	case SQ_TNUMBER: return "numeral";
-	case SQ_TSTRING: return "text";
+	case SQ_TCONST: return value == SQ_NI ? "ni" : "veracity";
+	case SQ_TNUMERAL: return "numeral";
+	case SQ_TTEXT: return "text";
 	case SQ_TIMITATION: return "imitation";
 	case SQ_TFUNCTION: return "journey";
 	case SQ_TFORM: return "form";
@@ -136,39 +136,39 @@ const char *sq_value_typename(sq_value value) {
 }
 
 sq_value sq_value_kindof(sq_value value) {
-	static struct sq_string KIND_BOOLEAN = SQ_STRING_STATIC("veracity");
-	static struct sq_string KIND_NULL = SQ_STRING_STATIC("ni");
-	static struct sq_string KIND_NUMBER = SQ_STRING_STATIC("numeral");
-	static struct sq_string KIND_STRING = SQ_STRING_STATIC("text");
-	static struct sq_string KIND_FUNCTION = SQ_STRING_STATIC("journey");
-	static struct sq_string KIND_form = SQ_STRING_STATIC("form");
-	static struct sq_string KIND_ARRAY = SQ_STRING_STATIC("book");
-	static struct sq_string KIND_CODEX = SQ_STRING_STATIC("codex");
+	static struct sq_text KIND_VERACITY = SQ_STRING_STATIC("veracity");
+	static struct sq_text KIND_NI = SQ_STRING_STATIC("ni");
+	static struct sq_text KIND_NUMERAL = SQ_STRING_STATIC("numeral");
+	static struct sq_text KIND_TEXT = SQ_STRING_STATIC("text");
+	static struct sq_text KIND_FUNCTION = SQ_STRING_STATIC("journey");
+	static struct sq_text KIND_FORM = SQ_STRING_STATIC("form");
+	static struct sq_text KIND_ARRAY = SQ_STRING_STATIC("book");
+	static struct sq_text KIND_CODEX = SQ_STRING_STATIC("codex");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
-		return sq_value_new_string(sq_value_is_null(value) ? &KIND_NULL : &KIND_BOOLEAN);
+		return sq_value_new(value == SQ_NI ? &KIND_NI : &KIND_VERACITY);
 
-	case SQ_TNUMBER:
-		return sq_value_new_string(&KIND_NUMBER);
+	case SQ_TNUMERAL:
+		return sq_value_new(&KIND_NUMERAL);
 
-	case SQ_TSTRING:
-		return sq_value_new_string(&KIND_STRING);
+	case SQ_TTEXT:
+		return sq_value_new(&KIND_TEXT);
 
 	case SQ_TIMITATION:
-		return sq_value_new_form(sq_form_clone(AS_IMITATION(value)->form));
+		return sq_value_new(sq_form_clone(AS_IMITATION(value)->form));
 
 	case SQ_TFUNCTION:
-		return sq_value_new_string(&KIND_FUNCTION);
+		return sq_value_new(&KIND_FUNCTION);
 
 	case SQ_TFORM:
-		return sq_value_new_string(&KIND_form);
+		return sq_value_new(&KIND_FORM);
 
 	case SQ_TBOOK:
-		return sq_value_new_string(&KIND_ARRAY);
+		return sq_value_new(&KIND_ARRAY);
 
 	case SQ_TCODEX:
-		return sq_value_new_string(&KIND_CODEX);
+		return sq_value_new(&KIND_CODEX);
 
 	default:
 		bug("unknown tag '%d'", (int) SQ_VTAG(value));
@@ -176,12 +176,12 @@ sq_value sq_value_kindof(sq_value value) {
 }
 
 bool sq_value_not(sq_value arg) {
-	return sq_value_to_boolean(arg) == SQ_FALSE;
+	return sq_value_to_veracity(arg) == SQ_NAY;
 }
 
 bool sq_value_eql(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TSTRING:
+	case SQ_TTEXT:
 		return IS_STRING(rhs) && !strcmp(AS_STR(lhs), AS_STR(rhs));
 
 	case SQ_TBOOK:
@@ -226,14 +226,14 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 	}
 }
 
-sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
+sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER:
-		return AS_NUMBER(lhs) - sq_value_to_number(rhs);
+	case SQ_TNUMERAL:
+		return AS_NUMBER(lhs) - sq_value_to_numeral(rhs);
 
-	case SQ_TSTRING:
-		// todo: free string
-		return strcmp(AS_STR(lhs), sq_value_to_string(rhs)->ptr);
+	case SQ_TTEXT:
+		// todo: free text
+		return strcmp(AS_STR(lhs), sq_value_to_text(rhs)->ptr);
 
 	case SQ_TIMITATION:
 		todo("cmp imitation");
@@ -249,8 +249,8 @@ sq_number sq_value_cmp(sq_value lhs, sq_value rhs) {
 
 sq_value sq_value_neg(sq_value arg) {
 	switch (SQ_VTAG(arg)) {
-	case SQ_TNUMBER:
-		return sq_value_new_number(-AS_NUMBER(arg));
+	case SQ_TNUMERAL:
+		return sq_value_new(-AS_NUMBER(arg));
 
 	case SQ_TIMITATION: {
 		struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "-@");
@@ -267,24 +267,24 @@ sq_value sq_value_neg(sq_value arg) {
 
 sq_value sq_value_index(sq_value value, sq_value key) {
 	switch (SQ_VTAG(value)) {
-	case SQ_TSTRING: {
-		int index = sq_value_to_number(key);
+	case SQ_TTEXT: {
+		int index = sq_value_to_numeral(key);
 
 		if (!index--) sq_throw("cannot index by N.");
 		if (index < 0)
 			index += AS_STRING(value)->length;
 
 		if (index < 0 || AS_STRING(value)->length <= (unsigned) index)
-			return SQ_NULL;
+			return SQ_NI;
 
 		char *c = xmalloc(sizeof(char [2]));
 		c[0] = AS_STR(value)[index];
 		c[1] = '\0';
-		return sq_value_new_string(sq_string_new2(c, 2));
+		return sq_value_new(sq_text_new2(c, 2));
 	}
 
 	case SQ_TBOOK:
-		return sq_book_index2(AS_BOOK(value), sq_value_to_number(key));
+		return sq_book_index2(AS_BOOK(value), sq_value_to_numeral(key));
 
 	case SQ_TCODEX:
 		return sq_codex_index(AS_CODEX(value), key);
@@ -307,7 +307,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TBOOK:
-		sq_book_index_assign2(AS_BOOK(value), sq_value_to_number(key), val);
+		sq_book_index_assign2(AS_BOOK(value), sq_value_to_numeral(key), val);
 		return;
 
 	case SQ_TCODEX:
@@ -334,25 +334,25 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	// bool free_rhs = false;
 
-	if (sq_value_is_string(rhs)) {
+	if (sq_value_is_text(rhs)) {
 		// free_lhs = true;
-		lhs = sq_value_new_string(sq_value_to_string(lhs));
+		lhs = sq_value_new(sq_value_to_text(lhs));
 	}
 
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER:
-		return sq_value_new_number(AS_NUMBER(lhs) + sq_value_to_number(rhs));
+	case SQ_TNUMERAL:
+		return sq_value_new(AS_NUMBER(lhs) + sq_value_to_numeral(rhs));
 
-	case SQ_TSTRING: {
-		struct sq_string *rstr = sq_value_to_string(rhs);
-		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length + rstr->length);
+	case SQ_TTEXT: {
+		struct sq_text *rstr = sq_value_to_text(rhs);
+		struct sq_text *result = sq_text_alloc(AS_STRING(lhs)->length + rstr->length);
 
 		memcpy(result->ptr, AS_STR(lhs), AS_STRING(lhs)->length);
 		memcpy(result->ptr + AS_STRING(lhs)->length, rstr->ptr, AS_STRING(rhs)->length + 1);
 
-		// sq_string_free(rstr);
+		// sq_text_free(rstr);
 		// if (free_lhs) sq_value_free(lhs);
-		return sq_value_new_string(result);
+		return sq_value_new(result);
 	}
 
 	case SQ_TBOOK: {
@@ -371,7 +371,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 			pages[lary->length + i] = sq_value_clone(rary->pages[i]);
 
 		// sq_book_free(rary);
-		return sq_value_new_book(sq_book_new2(length, pages));
+		return sq_value_new(sq_book_new2(length, pages));
 	}
 
 	case SQ_TCODEX: {
@@ -387,7 +387,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		// 	elements[i] = sq_value_clone(rary->elements[i]);
 
 		// sq_book_free(rhs);
-		// return sq_value_new_book(lary);
+		// return sq_value_new(lary);
 	}
 
 
@@ -408,8 +408,8 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER:
-		return sq_value_new_number(AS_NUMBER(lhs) - sq_value_to_number(rhs));
+	case SQ_TNUMERAL:
+		return sq_value_new(AS_NUMBER(lhs) - sq_value_to_numeral(rhs));
 
 	case SQ_TBOOK:
 		todo("set difference");
@@ -434,19 +434,19 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 
 sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER:
-		return sq_value_new_number(AS_NUMBER(lhs) * sq_value_to_number(rhs));
+	case SQ_TNUMERAL:
+		return sq_value_new(AS_NUMBER(lhs) * sq_value_to_numeral(rhs));
 
-	case SQ_TSTRING: {
-		sq_number amnt = sq_value_to_number(rhs);
+	case SQ_TTEXT: {
+		sq_numeral amnt = sq_value_to_numeral(rhs);
 		if (amnt == 0 || AS_STRING(lhs)->length == 0)
-			return sq_value_new_string(&sq_string_empty);
+			return sq_value_new(&sq_text_empty);
 		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_STRING(lhs)->length) >= UINT_MAX)
-			sq_throw("string multiplication by %"PRId64" is out of range", amnt);
+			sq_throw("text multiplication by %"PRId64" is out of range", amnt);
 		if (amnt == 1)
-			return sq_value_new_string(sq_string_clone(AS_STRING(lhs)));
+			return sq_value_new(sq_text_clone(AS_STRING(lhs)));
 
-		struct sq_string *result = sq_string_alloc(AS_STRING(lhs)->length * amnt);
+		struct sq_text *result = sq_text_alloc(AS_STRING(lhs)->length * amnt);
 		char *ptr = result->ptr;
 
 		for (unsigned i = 0; i < amnt; ++i) {
@@ -454,19 +454,19 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 			ptr += AS_STRING(lhs)->length;
 		}
 
-		return sq_value_new_string(result);
+		return sq_value_new(result);
 	}
 
 	case SQ_TBOOK:;
 		struct sq_book *book = AS_BOOK(lhs);
 
-		if (sq_value_is_number(rhs)) {
-			sq_number num = AS_NUMBER(rhs);
+		if (sq_value_is_numeral(rhs)) {
+			sq_numeral num = AS_NUMBER(rhs);
 			if (num < 0) sq_throw("cannot repeat by %"PRId64" is out of range", num);
 			return sq_value_new(sq_book_repeat(book, num));
 		}
 
-		if (sq_value_is_string(rhs))
+		if (sq_value_is_text(rhs))
 			return sq_value_new(sq_book_join(book, AS_STRING(rhs)));
 
 		if (sq_value_is_book(rhs))
@@ -493,10 +493,10 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER: {
-		sq_number rnum = sq_value_to_number(rhs);
+	case SQ_TNUMERAL: {
+		sq_numeral rnum = sq_value_to_numeral(rhs);
 		if (!rnum) die("cannot divide by N");
-		return sq_value_new_number(AS_NUMBER(lhs) / rnum);
+		return sq_value_new(AS_NUMBER(lhs) / rnum);
 	}
 
 	case SQ_TIMITATION: {
@@ -517,10 +517,10 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 
 sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_TNUMBER: {
-		sq_number rnum = sq_value_to_number(rhs);
+	case SQ_TNUMERAL: {
+		sq_numeral rnum = sq_value_to_numeral(rhs);
 		if (!rnum) die("cannot modulo by N");
-		return sq_value_new_number(AS_NUMBER(lhs) % rnum);
+		return sq_value_new(AS_NUMBER(lhs) % rnum);
 	}
 
 	case SQ_TBOOK:;
@@ -547,107 +547,107 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	}
 }
 
-struct sq_string *sq_value_to_string(sq_value value) {
-	static struct sq_string truestring = SQ_STRING_STATIC("yay");
-	static struct sq_string falsestring = SQ_STRING_STATIC("nay");
-	static struct sq_string nullstring = SQ_STRING_STATIC("ni");
+struct sq_text *sq_value_to_text(sq_value value) {
+	static struct sq_text yay_string = SQ_STRING_STATIC("yay");
+	static struct sq_text nay_string = SQ_STRING_STATIC("nay");
+	static struct sq_text ni_string = SQ_STRING_STATIC("ni");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
-		if (sq_value_is_null(value))
-			return &nullstring;
+		if (value == SQ_NI)
+			return &ni_string;
 		else
-			return value == SQ_TRUE ? &truestring : &falsestring;
+			return value == SQ_YAY ? &yay_string : &nay_string;
 
-	case SQ_TNUMBER: {
+	case SQ_TNUMERAL: {
 		char *buf;
-#ifdef SQ_NUMBER_TO_ROMAN
-		buf = sq_number_to_roman(AS_NUMBER(value));
+#ifdef sq_numeral_TO_ROMAN
+		buf = sq_numeral_to_roman(AS_NUMBER(value));
 #else
-		buf = sq_number_to_arabic(AS_NUMBER(value));
+		buf = sq_numeral_to_arabic(AS_NUMBER(value));
 #endif
-		return sq_string_new(buf);
+		return sq_text_new(buf);
 	}
 
-	case SQ_TSTRING:
-		sq_string_clone(AS_STRING(value));
+	case SQ_TTEXT:
+		sq_text_clone(AS_STRING(value));
 		return AS_STRING(value);
 
 	case SQ_TFORM:
-		return sq_string_new(strdup(AS_FORM(value)->name));
+		return sq_text_new(strdup(AS_FORM(value)->name));
+
+	case SQ_TBOOK:
+		return sq_book_to_text(AS_BOOK(value));
+
+	case SQ_TCODEX:
+		return sq_codex_to_text(AS_CODEX(value));
 
 	case SQ_TIMITATION: {
 		struct sq_journey *to_text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
 
 		if (to_text != NULL) {
-			sq_value string = sq_journey_run(to_text, 1, &value);
-			if (!sq_value_is_string(string))
+			sq_value text = sq_journey_run(to_text, 1, &value);
+			if (!sq_value_is_text(text))
 				die("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
-			return AS_STRING(string);
+			return AS_STRING(text);
 		}
 		// else fallthrough
 	}
 
-	case SQ_TBOOK:
-		return sq_book_to_string(AS_BOOK(value));
-
-	case SQ_TCODEX:
-		return sq_codex_to_string(AS_CODEX(value));
-
 	case SQ_TFUNCTION:
-		die("cannot convert %s to a string", TYPENAME(value));
+		die("cannot convert %s to a text", TYPENAME(value));
 
 	default:
 		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
-sq_number sq_value_to_number(sq_value value) {
+sq_numeral sq_value_to_numeral(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
-		return value == SQ_TRUE ? 1 : 0;
+		return value == SQ_YAY ? 1 : 0;
 
-	case SQ_TNUMBER:
+	case SQ_TNUMERAL:
 		return AS_NUMBER(value);
 
-	case SQ_TSTRING:
+	case SQ_TTEXT:
 		return strtoll(AS_STR(value), NULL, 10);
+
+	case SQ_TBOOK:
+		return sq_value_new(sq_book_to_text(AS_BOOK(value)));
 
 	case SQ_TIMITATION: {
 		struct sq_journey *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
 
 		if (to_numeral != NULL) {
-			sq_value number = sq_journey_run(to_numeral, 1, &value);
-			if (!sq_value_is_number(number))
-				die("to_numeral for an imitation of '%s' didn't return a number", AS_IMITATION(value)->form->name);
-			return AS_NUMBER(number);
+			sq_value numeral = sq_journey_run(to_numeral, 1, &value);
+			if (!sq_value_is_numeral(numeral))
+				die("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->name);
+			return AS_NUMBER(numeral);
 		}
 		// else fallthrough
 	}
 
-	case SQ_TBOOK:
-		return sq_value_new_string(sq_book_to_string(AS_BOOK(value)));
-
 	case SQ_TFORM:
 	case SQ_TFUNCTION:
 	case SQ_TCODEX:
-		die("cannot convert %s to a number", TYPENAME(value));
+		die("cannot convert %s to a numeral", TYPENAME(value));
 
 	default:
 		bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
-bool sq_value_to_boolean(sq_value value) {
+bool sq_value_to_veracity(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_TCONST:
-		return value == SQ_TRUE;
+		return value == SQ_YAY;
 
-	case SQ_TNUMBER:
-		return AS_NUMBER(value) ? SQ_TRUE : SQ_FALSE;
+	case SQ_TNUMERAL:
+		return AS_NUMBER(value) ? SQ_YAY : SQ_NAY;
 
-	case SQ_TSTRING:
-		return *AS_STR(value) ? SQ_TRUE : SQ_FALSE;
+	case SQ_TTEXT:
+		return *AS_STR(value) ? SQ_YAY : SQ_NAY;
 
 	case SQ_TBOOK:
 		return AS_BOOK(value)->length;
@@ -659,17 +659,17 @@ bool sq_value_to_boolean(sq_value value) {
 		struct sq_journey *to_veracity = sq_imitation_lookup_change(AS_IMITATION(value), "to_veracity");
 
 		if (to_veracity != NULL) {
-			sq_value boolean = sq_journey_run(to_veracity, 1, &value);
-			if (!sq_value_is_boolean(boolean))
-				die("to_veracity for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
-			return sq_value_as_boolean(boolean);
+			sq_value veracity = sq_journey_run(to_veracity, 1, &value);
+			if (!sq_value_is_veracity(veracity))
+				die("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
+			return sq_value_as_veracity(veracity);
 		}
 		// else fallthrough
 	}
 
 	case SQ_TFORM:
 	case SQ_TFUNCTION:
-		die("cannot convert %s to a boolean", TYPENAME(value));
+		die("cannot convert %s to a veracity", TYPENAME(value));
 
 	default:
 		bug("<UNDEFINED: %"PRId64">", value);
@@ -684,23 +684,23 @@ size_t sq_value_length(sq_value value) {
 	case SQ_TCODEX:
 		return sq_value_as_codex(value)->length;
 
-	case SQ_TSTRING:
+	case SQ_TTEXT:
 		return AS_STRING(value)->length;
 
 	case SQ_TIMITATION: {
 		struct sq_journey *length = sq_imitation_lookup_change(AS_IMITATION(value), "length");
 
 		if (length != NULL) {
-			sq_value boolean = sq_journey_run(length, 1, &value);
-			if (!sq_value_is_number(boolean))
-				die("length for an imitation of '%s' didn't return a boolean", AS_IMITATION(value)->form->name);
-			return AS_NUMBER(boolean);
+			sq_value veracity = sq_journey_run(length, 1, &value);
+			if (!sq_value_is_numeral(veracity))
+				die("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
+			return AS_NUMBER(veracity);
 		}
 		// else fallthrough
 	}
 
 	case SQ_TCONST:
-	case SQ_TNUMBER:
+	case SQ_TNUMERAL:
 	case SQ_TFORM:
 	case SQ_TFUNCTION:
 		die("cannot get length of %s", TYPENAME(value));

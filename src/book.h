@@ -67,26 +67,26 @@ static inline void sq_book_free(struct sq_book *book) {
 /** Inserts `value` at the given index.
  * 
  * If `index` is out of bounds, the book is expanded and the missing pages
- * are replaced with `SQ_NULL`.
+ * are replaced with `SQ_NI`.
  */
 void sq_book_insert(struct sq_book *book, size_t index, sq_value value);
 
 /** Removes an element at `index` from the book, returning it.
  *
- * If `index` is out of bounds, `SQ_NULL` is returned.
+ * If `index` is out of bounds, `SQ_NI` is returned.
  */
 sq_value sq_book_delete(struct sq_book *book, size_t index);
 
 /**
  * Fetches the `index`th element from `book`.
  * 
- * If `index` is out of bounds, `SQ_NULL` is returend.
+ * If `index` is out of bounds, `SQ_NI` is returend.
  */
 sq_value sq_book_index(const struct sq_book *book, size_t index);
 
 /** Replaces the `index`th element of `book` with `value.
  * 
- * If `index` is out of bounds, this fills the missing values with `SQ_NULL`s.
+ * If `index` is out of bounds, this fills the missing values with `SQ_NI`s.
  **/
 void sq_book_index_assign(struct sq_book *book, size_t index, sq_value value);
 
@@ -128,12 +128,12 @@ static inline void sq_book_index_assign2(struct sq_book *book, ssize_t index, sq
 }
 
 
-/** Converts an book to its string representation */
-struct sq_string *sq_book_to_string(const struct sq_book *book);
+/** Converts an book to its text representation */
+struct sq_text *sq_book_to_text(const struct sq_book *book);
 
 struct sq_codex *sq_book_to_codex(const struct sq_book *book);
 struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt);
-struct sq_string *sq_book_join(const struct sq_book *book, const struct sq_string *sep);
+struct sq_text *sq_book_join(const struct sq_book *book, const struct sq_text *sep);
 struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book *rhs);
 struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_journey *func);
 struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_journey *func);

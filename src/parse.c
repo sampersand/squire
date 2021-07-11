@@ -224,24 +224,24 @@ static struct primary *parse_primary() {
 		primary.kind = SQ_PS_PCODEX;
 		primary.dict = parse_codex();
 		break;
-	case SQ_TK_NUMBER:
-		primary.kind = SQ_PS_PNUMBER;
-		primary.number = last.number;
+	case SQ_TK_NUMERAL:
+		primary.kind = SQ_PS_PNUMERAL;
+		primary.numeral = last.numeral;
 		break;
-	case SQ_TK_STRING:
-		primary.kind = SQ_PS_PSTRING;
-		primary.string = last.string;
+	case SQ_TK_TEXT:
+		primary.kind = SQ_PS_PTEXT;
+		primary.text = last.text;
 		break;
-	case SQ_TK_TRUE:
-		primary.kind = SQ_PS_PBOOLEAN;
-		primary.boolean = true;
+	case SQ_TK_YAY:
+		primary.kind = SQ_PS_PVERACITY;
+		primary.veracity = true;
 		break;
-	case SQ_TK_FALSE:
-		primary.kind = SQ_PS_PBOOLEAN;
-		primary.boolean = false;
+	case SQ_TK_NAY:
+		primary.kind = SQ_PS_PVERACITY;
+		primary.veracity = false;
 		break;
-	case SQ_TK_NULL:
-		primary.kind = SQ_PS_PNULL;
+	case SQ_TK_NI:
+		primary.kind = SQ_PS_PNI;
 		break;
 	case SQ_TK_IDENT: {
 		untake();
@@ -428,7 +428,7 @@ static struct bool_expression *parse_bool_expression() {
 
 	if (eql.kind != SQ_PS_BEQL) {
 		if (!(eql.rhs = parse_bool_expression()))
-			die("missing right-hand side for boolean-like operation");
+			die("missing right-hand side for veracity-like operation");
 	}
 
 	return memdup(&eql, sizeof(struct bool_expression));
@@ -534,12 +534,6 @@ static struct scope_declaration *parse_local_declaration() {
 	}
 
 	return local;
-}
-
-static char *parse_import_declaration() {
-	GUARD(SQ_TK_IMPORT);
-	EXPECT(SQ_TK_STRING, "expected a string after 'import'");
-	return last.string->ptr;
 }
 
 static struct class_declaration *parse_form_declaration() {
@@ -881,7 +875,6 @@ static struct statement *parse_statement() {
 
 	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
-	else if ((stmt.import = parse_import_declaration())) stmt.kind = SQ_PS_SIMPORT;
 	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
 	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;
 	else if ((stmt.cdecl = parse_form_declaration())) stmt.kind = SQ_PS_SCLASS;

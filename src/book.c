@@ -1,7 +1,7 @@
 #include "book.h"
 #include "shared.h"
 #include "exception.h"
-#include "string.h"
+#include "text.h"
 #include "journey.h"
 #include <stdio.h>
 #include <string.h>
@@ -68,7 +68,7 @@ static void expand_book(struct sq_book *book, size_t length) {
 	}
 
 	while (book->length < length)
-		book->pages[book->length++] = SQ_NULL;
+		book->pages[book->length++] = SQ_NI;
 }
 
 void sq_book_insert(struct sq_book *book, size_t index, sq_value value) {
@@ -87,7 +87,7 @@ void sq_book_insert(struct sq_book *book, size_t index, sq_value value) {
 sq_value sq_book_delete(struct sq_book *book, size_t index) {
 
 	if (book->length <= index)
-		return SQ_NULL;
+		return SQ_NI;
 
 	sq_value result = book->pages[index];
 
@@ -104,7 +104,7 @@ sq_value sq_book_delete(struct sq_book *book, size_t index) {
 
 sq_value sq_book_index(const struct sq_book *book, size_t index) {
 	if (book->length <= index)
-		return SQ_NULL;
+		return SQ_NI;
 
 	return sq_value_clone(book->pages[index]);
 }
@@ -115,34 +115,34 @@ void sq_book_index_assign(struct sq_book *book, size_t index, sq_value value) {
 	book->pages[index] = value;
 }
 
-struct sq_string *sq_book_to_string(const struct sq_book *book) {
+struct sq_text *sq_book_to_text(const struct sq_book *book) {
 	unsigned len = 0, cap = 64;
-	char *string = xmalloc(cap);
-	string[len++] = '[';
+	char *str = xmalloc(cap);
+	str[len++] = '[';
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		if (i) {
 			if (cap <= len + 2)
-				string = xrealloc(string, cap *= 2);
-			string[len++] = ',';
-			string[len++] = ' ';
+				str = xrealloc(str, cap *= 2);
+			str[len++] = ',';
+			str[len++] = ' ';
 		}
 
-		struct sq_string *inner = sq_value_to_string(book->pages[i]);
+		struct sq_text *inner = sq_value_to_text(book->pages[i]);
 	
 		if (cap <= inner->length + len)
-			string = xrealloc(string, cap = inner->length + len * 2);
+			str = xrealloc(str, cap = inner->length + len * 2);
 	
-		memcpy(string + len, inner->ptr, inner->length);
+		memcpy(str + len, inner->ptr, inner->length);
 		len += inner->length;
-		sq_string_free(inner);
+		sq_text_free(inner);
 	}
 
-	string = xrealloc(string, len + 2);
-	string[len++] = ']';
-	string[len] = '\0';
+	str = xrealloc(str, len + 2);
+	str[len++] = ']';
+	str[len] = '\0';
 
-	return sq_string_new2(string, len);
+	return sq_text_new2(str, len);
 }
 
 struct sq_codex *sq_book_to_codex(const struct sq_book *book) {
@@ -160,32 +160,32 @@ struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt) {
 	return new;
 }
 
-struct sq_string *sq_book_join(const struct sq_book *book, const struct sq_string *sep) {
+struct sq_text *sq_book_join(const struct sq_book *book, const struct sq_text *sep) {
 	unsigned len = 0, cap = 64, seplen = strlen(sep->ptr);
-	char *string = xmalloc(cap);
+	char *str = xmalloc(cap);
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		if (i) {
 			if (cap <= len + seplen)
-				string = xrealloc(string, cap = cap * 2 + seplen);
+				str = xrealloc(str, cap = cap * 2 + seplen);
 
-			memcpy(string + len, sep->ptr, seplen);
+			memcpy(str + len, sep->ptr, seplen);
 			len += seplen;
 		}
 
-		struct sq_string *str = sq_value_to_string(book->pages[i]);
-		if (cap <= str->length + len)
-			string = xrealloc(string, cap = cap * 2 + str->length);
+		struct sq_text *text = sq_value_to_text(book->pages[i]);
+		if (cap <= text->length + len)
+			str = xrealloc(str, cap = cap * 2 + text->length);
 
-		memcpy(string + len, str->ptr, str->length);
-		len += str->length;
-		sq_string_free(str);
+		memcpy(str + len, text->ptr, text->length);
+		len += text->length;
+		sq_text_free(text);
 	}
 
-	string = xrealloc(string, len + 1);
-	string[len] = '\0';
+	str = xrealloc(str, len + 1);
+	str[len] = '\0';
 
-	return sq_string_new2(string, len);
+	return sq_text_new2(str, len);
 }
 
 struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book *rhs) {
@@ -215,14 +215,14 @@ struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_journ
 	struct sq_book *result = sq_book_allocate(book->length);
 
 	for (unsigned i = 0; i < book->length; ++i)
-		if (sq_value_to_boolean(sq_journey_run(func, 1, &book->pages[i])))
+		if (sq_value_to_veracity(sq_journey_run(func, 1, &book->pages[i])))
 			result->pages[result->length++] = sq_value_clone(book->pages[i]);
 
 	return result;
 }
 
 sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *func) {
-	if (!book->length) return SQ_NULL;
+	if (!book->length) return SQ_NI;
 	sq_value acc[2] = { sq_value_clone(book->pages[0]) };
 
 	for (unsigned i = 0; i < book->length; ++i) {

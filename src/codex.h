@@ -36,7 +36,7 @@ static inline void sq_codex_free(struct sq_codex *codex) {
 		sq_codex_deallocate(codex);
 }
 
-struct sq_string *sq_codex_to_string(const struct sq_codex *codex);
+struct sq_text *sq_codex_to_text(const struct sq_codex *codex);
 unsigned sq_codex_length(const struct sq_codex *codex);
 struct sq_codex_page *sq_codex_fetch_page(struct sq_codex *codex, sq_value key);
 
