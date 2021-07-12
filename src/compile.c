@@ -302,9 +302,8 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 
 			set_opcode(code, SQ_OC_ISTORE);
 			set_opcode(code, global);
+			set_index(code, index);
 			set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->essences[i].name)))));
-			set_index(code, index);
-			set_index(code, index);
 		}
 	}
 
@@ -856,9 +855,8 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 
 		set_opcode(code, SQ_OC_ISTORE);
 		set_opcode(code, variable);
-		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->field->name)))));
 		set_index(code, index);
-		set_index(code, index = next_local(code));
+		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->field->name)))));
 
 		return index;
 	}

@@ -46,7 +46,7 @@ int main(int argc, const char **argv) {
 		free(contents);
 	}
 
-	sq_program_run(program, argc - 2, argv + 2);
+	sq_program_run(program, argc - 3, argv + 3);
 	sq_program_free(program);
 
 	return 0;

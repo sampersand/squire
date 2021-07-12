@@ -373,6 +373,7 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_NEG:
 		case SQ_OC_CALL:
 		case SQ_OC_GSTORE:
+		case SQ_OC_ILOAD:
 			return 1;
 
 		case SQ_OC_EQL:
@@ -387,11 +388,10 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_DIV:
 		case SQ_OC_MOD:
 		case SQ_OC_INDEX:
-		case SQ_OC_ILOAD:
+		case SQ_OC_ISTORE:
 			return 2;
 
 		case SQ_OC_INDEX_ASSIGN:
-		case SQ_OC_ISTORE:
 			return 3;
 
 		default:
@@ -577,13 +577,20 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		case SQ_OC_ILOAD:
-			assert(sq_value_is_text(operands[1]));
+			index = next_index(sf);
+			//assert(index <= sf->journey->nconsts);
+			assert(sq_value_is_text(operands[1] = sf->journey->consts[index]));
+
 			set_next_local(sf, sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
 			continue;
 
 		case SQ_OC_ISTORE:
-			assert(sq_value_is_text(operands[1]));
-			sq_value_set_attr(operands[0], sq_value_as_text(operands[1])->ptr, operands[2]);
+			index = next_index(sf);
+
+			assert(index <= sf->journey->nconsts);
+			assert(sq_value_is_text(operands[2] = sf->journey->consts[index]));
+
+			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
 			continue;
 
 		default:
