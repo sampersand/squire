@@ -95,10 +95,10 @@ static struct variable *parse_variable(void) {
 
 
 static struct function_call *parse_func_call(struct variable *func) {
-	struct expression *args[MAX_ARGC];
+	struct expression *args[SQ_JOURNEY_MAX_ARGC];
 	unsigned arg_count = 0;
 
-	while (take().kind != SQ_TK_RPAREN && arg_count <= MAX_ARGC) {
+	while (take().kind != SQ_TK_RPAREN && arg_count <= SQ_JOURNEY_MAX_ARGC) {
 		if (last.kind == SQ_TK_UNDEFINED) die("missing rparen for fn call");
 		untake();
 

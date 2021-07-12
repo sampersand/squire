@@ -4,6 +4,8 @@
 #include "form.h"
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 // jmp_buf redo_location;
 jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
@@ -42,16 +44,16 @@ void sq_exception_init(struct sq_program *program) {
 	to_text->bytecode[3].index = 0;
 
 
-struct sq_journey {
-	SQ_VALUE_ALIGN char *name;
-	unsigned refcount; // negative indicates a global function.
+// struct sq_journey {
+// 	SQ_VALUE_ALIGN char *name;
+// 	unsigned refcount; // negative indicates a global function.
 
-	unsigned argc, nlocals, nconsts, codelen;
-	sq_value *consts;
-	struct sq_program *program;
-	union sq_bytecode *bytecode;
-	bool is_method;
-};
+// 	unsigned argc, nlocals, nconsts, codelen;
+// 	sq_value *consts;
+// 	struct sq_program *program;
+// 	union sq_bytecode *bytecode;
+// 	bool is_method;
+// };
 
 }
 
@@ -81,3 +83,6 @@ void sq_throw_value(sq_value value)  {
 	longjmp(exception_handlers[--current_exception_handler], 1);
 }
 
+void sq_io_error(const char *reason) {
+  sq_throw("io error when %s: %s", reason, strerror(errno));
+}

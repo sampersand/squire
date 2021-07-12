@@ -206,7 +206,7 @@ struct sq_book *sq_book_map(const struct sq_book *book, const struct sq_journey 
 	struct sq_book *result = sq_book_allocate(book->length);
 
 	for (unsigned i = 0; i < book->length; ++i)
-		result->pages[result->length++] = sq_journey_run(func, 1, &book->pages[i]);
+		result->pages[result->length++] = sq_journey_run_deprecated(func, 1, &book->pages[i]);
 
 	return result;
 }
@@ -215,7 +215,7 @@ struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_journ
 	struct sq_book *result = sq_book_allocate(book->length);
 
 	for (unsigned i = 0; i < book->length; ++i)
-		if (sq_value_to_veracity(sq_journey_run(func, 1, &book->pages[i])))
+		if (sq_value_to_veracity(sq_journey_run_deprecated(func, 1, &book->pages[i])))
 			result->pages[result->length++] = sq_value_clone(book->pages[i]);
 
 	return result;
@@ -227,7 +227,7 @@ sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *fun
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		acc[1] = book->pages[i];
-		acc[0] = sq_journey_run(func, 2, acc);
+		acc[0] = sq_journey_run_deprecated(func, 2, acc);
 	}
 
 	return acc[0];

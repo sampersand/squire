@@ -31,7 +31,7 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	for (unsigned i = 0; i < argc; ++i)
 		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));
 
-	sq_value_free(sq_journey_run(program->main, 0, NULL));
+	sq_value_free(sq_journey_run_deprecated(program->main, 0, NULL));
 
 	for (unsigned i = 0; i < argc; ++i)
 		sq_value_free(args[i]);

@@ -883,9 +883,8 @@ static unsigned compile_global(struct sq_code *code, struct scope_declaration *g
 
 	unsigned result = compile_expression(code, gdecl->value);
 	set_opcode(code, SQ_OC_GSTORE);
-	set_index(code, index);
 	set_index(code, result);
-	set_index(code, index = next_local(code));
+	set_index(code, index);
 
 done:
 

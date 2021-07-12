@@ -78,17 +78,29 @@ sq_value *sq_form_lookup_essence(struct sq_form *form, const char *name) {
 	return NULL;
 }
 
-sq_value sq_form_lookup(struct sq_form *form, const char *name) {
-	struct sq_journey *recollection = sq_form_lookup_recollection(form, name);
+sq_value sq_form_get_attr(struct sq_form *form, const char *attr) {
+	struct sq_journey *recall = sq_form_lookup_recollection(form, attr);
 
-	if (recollection != NULL)
-		return sq_value_new_function(sq_journey_clone(recollection));
+	if (recall != NULL)
+		return sq_value_new(sq_journey_clone(recall));
 
-	sq_value *essence = sq_form_lookup_essence(form, name);
+	sq_value *essence = sq_form_lookup_essence(form, attr);
 	if (essence != NULL)
 		return sq_value_clone(*essence);
 
 	return SQ_UNDEFINED;
+}
+
+bool sq_form_set_attr(struct sq_form *form, const char *attr, sq_value value) {
+	sq_value *essence = sq_form_lookup_essence(form, attr);
+
+	if (essence == NULL)
+		return false;
+
+	sq_value_free(*essence);
+	*essence = value;
+
+	return true;
 }
 
 void sq_form_dump(FILE *out, const struct sq_form *form) {
@@ -133,7 +145,7 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 		fn_args[0] = sq_value_new(sq_imitation_clone(imitation));
 		memcpy(fn_args + 1, args.pargv, sizeof_array(sq_value, args.pargc));
 
-		sq_value_free(sq_journey_run(form->imitate, args.pargc + 1, fn_args));
+		sq_value_free(sq_journey_run_deprecated(form->imitate, args.pargc + 1, fn_args));
 	}
 
 	return imitation;
@@ -181,18 +193,29 @@ sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char 
 	return NULL;
 }
 
-sq_value sq_imitation_lookup(struct sq_imitation *imitation, const char *name) {
+sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name) {
 	struct sq_journey *change = sq_imitation_lookup_change(imitation, name);
 
 	if (change != NULL)
-		return sq_value_new_function(sq_journey_clone(change));
+		return sq_value_new(sq_journey_clone(change));
 
 	sq_value *matter = sq_imitation_lookup_matter(imitation, name);
-
 	if (matter != NULL)
 		return sq_value_clone(*matter);
 
 	return SQ_UNDEFINED;
+}
+
+bool sq_imitation_set_attr(struct sq_imitation *imitation, const char *attr, sq_value value) {
+	sq_value *matter = sq_imitation_lookup_matter(imitation, attr);
+
+	if (matter == NULL)
+		return false;
+
+	sq_value_free(*matter);
+	*matter = value;
+
+	return true;
 }
 
 void sq_imitation_deallocate(struct sq_imitation *imitation) {

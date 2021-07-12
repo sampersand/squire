@@ -134,7 +134,7 @@ const char *sq_value_typename(sq_value value) {
 	}
 }
 
-sq_value sq_value_kindof(sq_value value) {
+sq_value sq_value_genus(sq_value value) {
 	static struct sq_text KIND_VERACITY = SQ_TEXT_STATIC("veracity");
 	static struct sq_text KIND_NI = SQ_TEXT_STATIC("ni");
 	static struct sq_text KIND_NUMERAL = SQ_TEXT_STATIC("numeral");
@@ -216,7 +216,7 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (eql != NULL)
-			return sq_journey_run(eql, 2, args);
+			return sq_journey_run_deprecated(eql, 2, args);
 		// fallthrough
 	}
 
@@ -241,7 +241,7 @@ sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 		die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	// 	struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "<=>");
 
-	// 	if (neg != NULL) return sq_journey_run(neg, 1, &arg);
+	// 	if (neg != NULL) return sq_journey_run_deprecated(neg, 1, &arg);
 	// }
 	}
 }
@@ -255,7 +255,7 @@ sq_value sq_value_neg(sq_value arg) {
 		struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "-@");
 
 		if (neg != NULL)
-			return sq_journey_run(neg, 1, &arg);
+			return sq_journey_run_deprecated(neg, 1, &arg);
 		// fallthrough
 	}
 
@@ -293,7 +293,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		sq_value args[2] = { value, key };
 
 		if (index != NULL)
-			return sq_journey_run(index, 2, args);
+			return sq_journey_run_deprecated(index, 2, args);
 		// fallthrough
 	}
 
@@ -318,7 +318,7 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 		sq_value args[3] = { value, key, val };
 
 		if (index_assign != NULL) {
-			sq_journey_run(index_assign, 2, args);
+			sq_journey_run_deprecated(index_assign, 2, args);
 			return;
 		}
 
@@ -395,7 +395,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (add != NULL)
-			return sq_journey_run(add, 2, args);
+			return sq_journey_run_deprecated(add, 2, args);
 		// fallthrough
 	}
 
@@ -421,7 +421,7 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (sub != NULL)
-			return sq_journey_run(sub, 2, args);
+			return sq_journey_run_deprecated(sub, 2, args);
 		// fallthrough
 	}
 
@@ -480,7 +480,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (mul != NULL)
-			return sq_journey_run(mul, 2, args);
+			return sq_journey_run_deprecated(mul, 2, args);
 		// fallthrough
 	}
 
@@ -503,7 +503,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (div != NULL)
-			return sq_journey_run(div, 2, args);
+			return sq_journey_run_deprecated(div, 2, args);
 
 		// fallthrough
 	}
@@ -535,7 +535,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (mod != NULL)
-			return sq_journey_run(mod, 2, args);
+			return sq_journey_run_deprecated(mod, 2, args);
 
 		// fallthrough
 	}
@@ -545,6 +545,23 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		die("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 }
+
+sq_value sq_value_call(sq_value tocall, struct sq_args args) {
+	switch (sq_value_genus_tag(tocall)) {
+	case SQ_G_FORM:
+		return sq_value_new(sq_form_imitate(sq_value_as_form(tocall), args));
+
+	case SQ_G_JOURNEY:
+		return sq_journey_run(sq_value_as_journey(tocall), args);
+
+	case SQ_G_IMITATION:
+		todo("call imitation"); 
+
+	default:
+		sq_throw("cannot call '%s'.", TYPENAME(tocall));
+	}
+}
+
 
 struct sq_text *sq_value_to_text(sq_value value) {
 	static struct sq_text yay_string = SQ_TEXT_STATIC("yay");
@@ -578,7 +595,7 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		struct sq_journey *to_text = sq_imitation_lookup_change(AS_IMITATION(value), "to_text");
 
 		if (to_text != NULL) {
-			sq_value text = sq_journey_run(to_text, 1, &value);
+			sq_value text = sq_journey_run_deprecated(to_text, 1, &value);
 			if (!sq_value_is_text(text))
 				die("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
 			return AS_STRING(text);
@@ -612,7 +629,7 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 		struct sq_journey *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
 
 		if (to_numeral != NULL) {
-			sq_value numeral = sq_journey_run(to_numeral, 1, &value);
+			sq_value numeral = sq_journey_run_deprecated(to_numeral, 1, &value);
 			if (!sq_value_is_numeral(numeral))
 				die("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(numeral);
@@ -651,7 +668,7 @@ bool sq_value_to_veracity(sq_value value) {
 		struct sq_journey *to_veracity = sq_imitation_lookup_change(AS_IMITATION(value), "to_veracity");
 
 		if (to_veracity != NULL) {
-			sq_value veracity = sq_journey_run(to_veracity, 1, &value);
+			sq_value veracity = sq_journey_run_deprecated(to_veracity, 1, &value);
 			if (!sq_value_is_veracity(veracity))
 				die("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
 			return sq_value_as_veracity(veracity);
@@ -683,7 +700,7 @@ size_t sq_value_length(sq_value value) {
 		struct sq_journey *length = sq_imitation_lookup_change(AS_IMITATION(value), "length");
 
 		if (length != NULL) {
-			sq_value veracity = sq_journey_run(length, 1, &value);
+			sq_value veracity = sq_journey_run_deprecated(length, 1, &value);
 			if (!sq_value_is_numeral(veracity))
 				die("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(veracity);
@@ -707,6 +724,7 @@ struct sq_book *sq_value_to_book(sq_value value) {
 	case SQ_TBOOK:
 		++AS_BOOK(value)->refcount;
 		return AS_BOOK(value);
+
 	default:
 		todo("others to book");
 	}
@@ -715,4 +733,82 @@ struct sq_book *sq_value_to_book(sq_value value) {
 struct sq_codex *sq_value_to_codex(sq_value value) {
 	(void) value;
 	die("todo");
+}
+
+
+sq_value sq_value_get_attr(sq_value soul, const char *attr) {
+	if (!strcmp(attr, "genus"))
+		return sq_value_genus(soul);
+
+	if (!strcmp(attr, "length"))
+		return sq_value_new((sq_numeral) sq_value_length(soul));
+
+	sq_value result = SQ_UNDEFINED;
+
+	switch (sq_value_genus_tag(soul)) {
+		case SQ_G_FORM:
+			result = sq_form_get_attr(sq_value_as_form(soul), attr);
+			break;
+
+		case SQ_G_IMITATION:
+			result = sq_imitation_get_attr(sq_value_as_imitation(soul), attr);
+			break;
+
+		case SQ_G_BOOK:
+			if (!strcmp(attr, "verso"))
+				result = sq_book_index(sq_value_as_book(soul), 1);
+			else if (!strcmp(attr, "recto"))
+				result = sq_book_index2(sq_value_as_book(soul), -1);
+			break;
+
+		case SQ_G_CONST:
+		case SQ_G_NUMERAL:
+		case SQ_G_TEXT:
+		case SQ_G_JOURNEY:
+		case SQ_G_CODEX:
+			break;
+	}
+
+	if (result == SQ_UNDEFINED)
+		sq_throw("unknown attribute '%s' for genus '%s'", attr, TYPENAME(soul));
+
+	return result;
+}
+
+void sq_value_set_attr(sq_value soul, const char *attr, sq_value value) {
+	switch (sq_value_genus_tag(soul)) {
+	case SQ_G_FORM:
+		if (sq_form_set_attr(sq_value_as_form(soul), attr, value))
+			return;
+
+		break;
+
+	case SQ_G_IMITATION:
+		if (sq_imitation_set_attr(sq_value_as_imitation(soul), attr, value))
+			return;
+
+		break;
+
+	case SQ_G_BOOK:
+		if (!strcmp(attr, "verso")) {
+			sq_book_index_assign(sq_value_as_book(soul), 1, value);
+			return;
+		}
+
+		if (!strcmp(attr, "recto")) {
+			sq_book_index_assign2(sq_value_as_book(soul), -1, value);
+			return;
+		}
+
+		break;
+
+	case SQ_G_CONST:
+	case SQ_G_NUMERAL:
+	case SQ_G_TEXT:
+	case SQ_G_JOURNEY:
+	case SQ_G_CODEX:
+		break;
+	}
+
+	sq_throw("cannot assign attribute '%s' for a type of genus '%s'", attr, TYPENAME(soul));
 }

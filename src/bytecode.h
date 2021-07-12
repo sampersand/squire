@@ -1,7 +1,7 @@
 #ifndef SQ_BYTECODE_H
 #define SQ_BYTECODE_H
 
-enum sq_interrupts {
+enum sq_interrupt {
 	SQ_INT_TONUMERAL    = 0x01, // [A,DST] DST <- A.to_numeral()
 	SQ_INT_TOTEXT       = 0x02, // [A,DST] DST <- A.to_text()
 	SQ_INT_TOVERACITY   = 0x03, // [A,DST] DST <- A.to_veracity()
@@ -44,21 +44,21 @@ enum sq_opcode {
 	SQ_OC_THROW        = 0x17, // [IDX] Throws an exception
 	SQ_OC_POPTRYCATCH  = 0x19, // [] Removes a `catch` block from the stack.
 
-	SQ_OC_EQL          = 0x20, // [A,B,DST] DST <- A + B
-	SQ_OC_NEQ          = 0x21, // [A,B,DST] DST <- A != B
-	SQ_OC_LTH          = 0x22, // [A,B,DST] DST <- A < B
-	SQ_OC_GTH          = 0x23, // [A,B,DST] DST <- A > B
-	SQ_OC_LEQ          = 0x24, // [A,B,DST] DST <- A <= B
-	SQ_OC_GEQ          = 0x25, // [A,B,DST] DST <- A >= B
-	SQ_OC_ADD          = 0x26, // [A,B,DST] DST <- A + B
-	SQ_OC_SUB          = 0x27, // [A,B,DST] DST <- A - B
-	SQ_OC_MUL          = 0x28, // [A,B,DST] DST <- A * B
-	SQ_OC_DIV          = 0x29, // [A,B,DST] DST <- A / B
-	SQ_OC_MOD          = 0x2A, // [A,B,DST] DST <- A % B
-	SQ_OC_NOT          = 0x2B, // [A,DST] DST <- !A
-	SQ_OC_NEG          = 0x2C, // [A,DST] DST <- -A` (ie unary minus)
-	SQ_OC_INDEX        = 0x2D, // [A,B,DST] DST <- A[B]
-	SQ_OC_INDEX_ASSIGN = 0x2E, // [A,B,C] Performs `A[B]=C`; no destination.
+	SQ_OC_NOT          = 0x20, // [A,DST] DST <- !A
+	SQ_OC_NEG          = 0x21, // [A,DST] DST <- -A` (ie unary minus)
+	SQ_OC_EQL          = 0x22, // [A,B,DST] DST <- A + B
+	SQ_OC_NEQ          = 0x23, // [A,B,DST] DST <- A != B
+	SQ_OC_LTH          = 0x24, // [A,B,DST] DST <- A < B
+	SQ_OC_GTH          = 0x25, // [A,B,DST] DST <- A > B
+	SQ_OC_LEQ          = 0x26, // [A,B,DST] DST <- A <= B
+	SQ_OC_GEQ          = 0x27, // [A,B,DST] DST <- A >= B
+	SQ_OC_ADD          = 0x28, // [A,B,DST] DST <- A + B
+	SQ_OC_SUB          = 0x29, // [A,B,DST] DST <- A - B
+	SQ_OC_MUL          = 0x2a, // [A,B,DST] DST <- A * B
+	SQ_OC_DIV          = 0x2b, // [A,B,DST] DST <- A / B
+	SQ_OC_MOD          = 0x2c, // [A,B,DST] DST <- A % B
+	SQ_OC_INDEX        = 0x2d, // [A,B,DST] DST <- A[B]
+	SQ_OC_INDEX_ASSIGN = 0x2e, // [A,B,C] Performs `A[B]=C`; no destination.
 
 	SQ_OC_CLOAD        = 0x30, // [CNST,DST] DST <- constant `CNST`
 	SQ_OC_GLOAD        = 0x31, // [GLBL,DST] DST <- global `GLBL`
@@ -70,6 +70,8 @@ enum sq_opcode {
 union sq_bytecode {
 	enum sq_opcode opcode;
 	unsigned index;
+	enum sq_interrupt interrupt;
+	unsigned count;
 };
 
 #endif /* !SQ_BYTECODE_H */

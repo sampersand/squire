@@ -118,7 +118,8 @@ struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char 
  * Note that unlike `sq_form_lookup_essence` and `sq_form_lookup_recollection`,
  * this function passes ownership of the returned `sq_value` to the caller.
  */
-sq_value sq_form_lookup(struct sq_form *form, const char *name);
+sq_value sq_form_get_attr(struct sq_form *form, const char *attr);
+bool sq_form_set_attr(struct sq_form *form, const char *name, sq_value value);
 
 
 /** Creates a new imitation of `form`, given the arguments.
@@ -126,7 +127,6 @@ sq_value sq_form_lookup(struct sq_form *form, const char *name);
  * An exception will be thrown if the arguments aren't valid.
  */
 struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args);
-
 
 /**
  * Creates a new imitation (instance) for the given `form`, with the given
@@ -154,7 +154,8 @@ struct sq_journey *sq_imitation_lookup_change(struct sq_imitation *imitation, co
  * Note that unlike `sq_imitation_lookup_matter` and `sq_imitation_lookup_change`,
  * this function passes ownership of the returned `sq_value` to the caller.
  */
-sq_value sq_imitation_lookup(struct sq_imitation *imitation, const char *name);
+sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name);
+bool sq_imitation_set_attr(struct sq_imitation *imitation, const char *name, sq_value value);
 
 // Simply increases the refcount of `imitation`; it shouldn't have a zero refcount.
 static inline struct sq_imitation *sq_imitation_clone(struct sq_imitation *imitation) {

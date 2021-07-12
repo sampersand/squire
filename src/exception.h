@@ -23,6 +23,8 @@ void sq_throw2(struct sq_form *form, const char *fmt, ...) SQ_ATTR(cold,noreturn
 
 #define sq_throw(...) sq_throw2(&sq_exception_form, __VA_ARGS__)
 
+void sq_io_error(const char *reason) SQ_ATTR(cold,noreturn);
+
 /*
   catapult "lol" # you catapult a "projectile"
 } victory { # nothing was thrown

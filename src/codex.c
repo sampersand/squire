@@ -14,6 +14,17 @@ struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_code
 	return codex;
 }
 
+struct sq_codex *sq_codex_allocate(unsigned capacity) {
+	struct sq_codex *codex = xmalloc(sizeof(struct sq_codex));
+
+	codex->length = 0;
+	codex->capacity = capacity;
+	codex->refcount = 1;
+
+	codex->pages = xmalloc(sizeof_array(struct sq_codex_page, capacity));
+	return codex;
+}
+
 void sq_codex_dump(FILE *out, const struct sq_codex *codex) {
 	fprintf(out, "Codex(");
 

@@ -10,6 +10,7 @@
 struct sq_text;
 struct sq_form;
 struct sq_imitation;
+struct sq_args;
 struct sq_journey;
 struct sq_book;
 struct sq_codex;
@@ -17,6 +18,7 @@ struct sq_codex;
 typedef uint64_t sq_value;
 typedef bool sq_veracity;
 
+// deprecated
 enum {
 	SQ_TCONST     = 0,
 	SQ_TNUMERAL   = 1,
@@ -25,14 +27,32 @@ enum {
 	SQ_TIMITATION = 4,
 	SQ_TFUNCTION  = 5,
 	SQ_TBOOK      = 6,
+	
 	SQ_TCODEX     = 7,
+};
+
+enum sq_genus_tag {
+	SQ_G_CONST     = 0,
+	SQ_G_NUMERAL   = 1,
+	SQ_G_TEXT      = 2,
+	SQ_G_FORM      = 3,
+	SQ_G_IMITATION = 4,
+	SQ_G_JOURNEY   = 5,
+	SQ_G_BOOK      = 6,
+	SQ_G_CODEX     = 7,
 };
 
 #define SQ_VSHIFT 4
 #define SQ_VMASK_BITS ((1<<SQ_VSHIFT)-1)
 #define SQ_VMASK(value, kind) ((value) | (kind))
-#define SQ_VTAG(value) ((value) & SQ_VMASK_BITS)
 #define SQ_VUNMASK(value) ((value) & ~SQ_VMASK_BITS)
+
+#define SQ_VTAG(value) ((value) & SQ_VMASK_BITS) // deprecated
+
+static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
+	return value & SQ_VMASK_BITS;
+}
+
 #define SQ_YAY SQ_VMASK((1 << SQ_VSHIFT), SQ_TCONST)
 #define SQ_NAY SQ_VMASK(0, SQ_TCONST)
 #define SQ_NI SQ_VMASK((2 << SQ_VSHIFT), SQ_TCONST)
@@ -101,9 +121,10 @@ static inline sq_value sq_value_new_imitation(struct sq_imitation *imitation) {
 	return SQ_VMASK((sq_value) imitation, SQ_TIMITATION);
 }
 
-static inline sq_value sq_value_new_function(struct sq_journey *function) {
-	assert(!SQ_VTAG((sq_value) function));
-	return SQ_VMASK((sq_value) function, SQ_TFUNCTION);
+#define sq_value_new_function sq_value_new_journey // deprecated
+static inline sq_value sq_value_new_journey(struct sq_journey *journey) {
+	assert(!SQ_VTAG((sq_value) journey));
+	return SQ_VMASK((sq_value) journey, SQ_TFUNCTION);
 }
 
 static inline sq_value sq_value_new_book(struct sq_book *book) {
@@ -140,7 +161,8 @@ static inline bool sq_value_is_imitation(sq_value value) {
 	return SQ_VTAG(value) == SQ_TIMITATION;
 }
 
-static inline bool sq_value_is_function(sq_value value) {
+#define sq_value_is_function sq_value_is_journey // deprecated
+static inline bool sq_value_is_journey(sq_value value) {
 	return SQ_VTAG(value) == SQ_TFUNCTION;
 }
 
@@ -177,8 +199,9 @@ static inline struct sq_imitation *sq_value_as_imitation(sq_value value) {
 	return (struct sq_imitation *) SQ_VUNMASK(value);
 }
 
-static inline struct sq_journey *sq_value_as_function(sq_value value) {
-	assert(sq_value_is_function(value));
+#define sq_value_as_function sq_value_as_journey // deprecated
+static inline struct sq_journey *sq_value_as_journey(sq_value value) {
+	assert(sq_value_is_journey(value));
 	return (struct sq_journey *) SQ_VUNMASK(value);
 }
 
@@ -197,11 +220,28 @@ void sq_value_dump(sq_value value);
 void sq_value_dump_to(FILE *out, sq_value value);
 void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value);
-sq_value sq_value_kindof(sq_value value);
+sq_value sq_value_genus(sq_value value);
 
 bool sq_value_not(sq_value arg);
 bool sq_value_eql(sq_value lhs, sq_value rhs);
+static inline bool sq_value_neq(sq_value lhs, sq_value rhs) {
+	return !sq_value_eql(lhs, rhs);
+}
+
 sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs);
+static inline bool sq_value_lth(sq_value lhs, sq_value rhs) {
+	return sq_value_cmp(lhs, rhs) < 0;
+}
+static inline bool sq_value_gth(sq_value lhs, sq_value rhs) {
+	return sq_value_cmp(lhs, rhs) > 0;
+}
+static inline bool sq_value_leq(sq_value lhs, sq_value rhs) {
+	return sq_value_cmp(lhs, rhs) <= 0;
+}
+static inline bool sq_value_geq(sq_value lhs, sq_value rhs) {
+	return sq_value_cmp(lhs, rhs) >= 0;
+}
+
 sq_value sq_value_neg(sq_value arg);
 sq_value sq_value_add(sq_value lhs, sq_value rhs);
 sq_value sq_value_sub(sq_value lhs, sq_value rhs);
@@ -210,6 +250,9 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs);
 sq_value sq_value_mod(sq_value lhs, sq_value rhs);
 sq_value sq_value_index(sq_value value, sq_value key);
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val);
+sq_value sq_value_call(sq_value soul, struct sq_args args);
+sq_value sq_value_get_attr(sq_value soul, const char *attr);
+void sq_value_set_attr(sq_value soul, const char *attr, sq_value value);
 
 size_t sq_value_length(sq_value value);
 struct sq_text *sq_value_to_text(sq_value value);
