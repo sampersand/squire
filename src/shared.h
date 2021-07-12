@@ -17,7 +17,11 @@
 
 #define die sq_throw
 #define todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
-#define bug(msg, ...) (fprintf(stderr, "bug at " __FILE__ ":%s:%d: " msg, __func__, __LINE__, __VA_ARGS__),abort())
+#define bug(...) (\
+	fprintf(stderr, "bug at " __FILE__ ":%s:%d: ", __func__, __LINE__),\
+	fprintf(stderr, __VA_ARGS__),\
+	fputc('\n', stderr),\
+	abort())
 
 void *xcalloc(size_t count, size_t size) SQ_ATTR(malloc);
 void *xmalloc(size_t size) SQ_ATTR(malloc);

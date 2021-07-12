@@ -30,8 +30,8 @@ void sq_form_deallocate(struct sq_form *form) {
 	free(form->recollections);
 
 	for (unsigned i = 0; i < form->nmatter; ++i) {
-		if (form->matter[i].type != SQ_UNDEFINED)
-			sq_value_free(form->matter[i].type);
+		if (form->matter[i].genus != SQ_UNDEFINED)
+			sq_value_free(form->matter[i].genus);
 		free(form->matter[i].name);
 	}
 
@@ -43,7 +43,8 @@ void sq_form_deallocate(struct sq_form *form) {
 	for (unsigned i = 0; i < form->nparents; ++i)
 		sq_form_free(form->parents[i]);
 
-	sq_journey_free(form->imitate);
+	if (form->imitate)
+		sq_journey_free(form->imitate);
 
 	free(form->changes);
 	free(form->parents);
@@ -65,12 +66,12 @@ struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char 
 	return NULL;
 }
 
-sq_value *sq_form_lookup_essence(struct sq_form *form, const char *name) {
+struct sq_essence *sq_form_lookup_essence(struct sq_form *form, const char *name) {
 	for (unsigned i = 0; i < form->nessences; ++i)
 		if (!strcmp(name, form->essences[i].name))
-			return &form->essences[i].value;
+			return &form->essences[i];
 
-	sq_value *essence;
+	struct sq_essence *essence;
 	for (unsigned i = 0; i < form->nparents; ++i)
 		if ((essence = sq_form_lookup_essence(form->parents[i], name)))
 			return essence;
@@ -84,21 +85,24 @@ sq_value sq_form_get_attr(struct sq_form *form, const char *attr) {
 	if (recall != NULL)
 		return sq_value_new(sq_journey_clone(recall));
 
-	sq_value *essence = sq_form_lookup_essence(form, attr);
+	struct sq_essence *essence = sq_form_lookup_essence(form, attr);
 	if (essence != NULL)
-		return sq_value_clone(*essence);
+		return sq_value_clone(essence->value);
 
 	return SQ_UNDEFINED;
 }
 
 bool sq_form_set_attr(struct sq_form *form, const char *attr, sq_value value) {
-	sq_value *essence = sq_form_lookup_essence(form, attr);
+	struct sq_essence *essence = sq_form_lookup_essence(form, attr);
 
 	if (essence == NULL)
 		return false;
 
-	sq_value_free(*essence);
-	*essence = value;
+	if (essence->genus != SQ_UNDEFINED && !sq_value_matches(essence->genus, value))
+		sq_throw("essence didnt match!");
+
+	sq_value_free(essence->value);
+	essence->value = value;
 
 	return true;
 }
@@ -111,9 +115,9 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 			putc(',', out);
 
 		fprintf(out, " %s", form->matter[i].name);
-		if (form->matter[i].type != SQ_UNDEFINED) {
+		if (form->matter[i].genus != SQ_UNDEFINED) {
 			fprintf(out, " (");
-			sq_value_dump_to(out, form->matter[i].type);
+			sq_value_dump_to(out, form->matter[i].genus);
 			putc(')', out);
 		}
 	}

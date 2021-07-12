@@ -252,6 +252,7 @@ static unsigned load_variable_class(struct sq_code *code, struct variable *var, 
 }
 
 static unsigned compile_expression(struct sq_code *code, struct expression *expr);
+static unsigned compile_primary(struct sq_code *code, struct primary *primary);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
 static struct sq_journey *compile_function(struct func_declaration *fndecl, bool is_method);
 
@@ -264,8 +265,8 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 
 	for (unsigned i = 0; i < fdecl->nmatter; ++i) {
 		form->matter[i].name = fdecl->matter[i].name;
-		form->matter[i].type = SQ_UNDEFINED;
-		assert(fdecl->matter[i].type == NULL); // todo
+		form->matter[i].genus = SQ_UNDEFINED;
+		assert(fdecl->matter[i].genus == NULL); // todo
 	}
 
 	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
@@ -281,10 +282,11 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		form->changes[i] = compile_function(fdecl->meths[i], true);
 
 	form->nessences = fdecl->nessences;
-	form->essences = xmalloc(sizeof_array(struct sq_form_essence, form->nessences));
+	form->essences = xmalloc(sizeof_array(struct sq_essence, form->nessences));
 	for (unsigned i = 0; i < fdecl->nessences; ++i) {
 		form->essences[i].name = fdecl->essences[i].name;
 		form->essences[i].value = SQ_NI;
+		form->essences[i].genus = SQ_UNDEFINED;
 	}
 
 	if (fdecl->nessences) {
@@ -294,16 +296,28 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		set_index(code, global = next_local(code));
 
 		for (unsigned i = 0; i < fdecl->nessences; ++i) {
+			// note: this is technically extraneous if we never access the essence
+			unsigned index;
+			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->essences[i].name))));
+
+			if (fdecl->essences[i].genus != NULL) {
+				index = compile_primary(code, fdecl->essences[i].genus);
+				set_opcode(code, SQ_OC_FEGENUS_STORE);
+				set_index(code, global);
+				set_index(code, index);
+				set_index(code, const_index);
+			}
+
 			if (!fdecl->essences[i].value) {
 				form->essences[i].value = SQ_NI;
 				continue;
 			}
-			unsigned index = compile_expression(code, fdecl->essences[i].value);
 
+			index = compile_expression(code, fdecl->essences[i].value);
 			set_opcode(code, SQ_OC_ISTORE);
-			set_opcode(code, global);
+			set_index(code, global);
 			set_index(code, index);
-			set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->essences[i].name)))));
+			set_index(code, const_index);
 		}
 	}
 
@@ -421,9 +435,9 @@ static void compile_switch_statement(struct sq_code *code, struct switch_stateme
 
 	for (unsigned i = 0; i < sw->ncases; ++i) {
 		unsigned case_index = compile_expression(code, sw->cases[i].expr);
-		set_opcode(code, SQ_OC_EQL);
-		set_index(code, condition_index);
+		set_opcode(code, SQ_OC_MATCHES);
 		set_index(code, case_index);
+		set_index(code, condition_index);
 		set_index(code, case_index); // overwrite the case with the destination
 
 		set_opcode(code, SQ_OC_JMP_TRUE);
@@ -512,8 +526,6 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 
 	return index;
 }
-
-static unsigned compile_primary(struct sq_code *code, struct primary *primary);
 
 static unsigned compile_index(struct sq_code *code, struct index *index) {
 	unsigned into = compile_primary(code, index->into);
@@ -691,6 +703,7 @@ static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
 	switch (eql->kind) {
 	case SQ_PS_EEQL: set_opcode(code, SQ_OC_EQL); break;
 	case SQ_PS_ENEQ: set_opcode(code, SQ_OC_NEQ); break;
+	case SQ_PS_EMATCHES: set_opcode(code, SQ_OC_MATCHES); break;
 	case SQ_PS_ECMP: result = lhs; goto done;
 	default: bug("unknown eql kind '%d'", eql->kind);
 	}
@@ -836,7 +849,6 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 				set_opcode(code, SQ_OC_GSTORE);
 				set_index(code, ~variable);
 				set_index(code, index);
-				set_index(code, index = next_local(code));
 			}
 
 			return index;

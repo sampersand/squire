@@ -387,8 +387,10 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_MUL:
 		case SQ_OC_DIV:
 		case SQ_OC_MOD:
+		case SQ_OC_MATCHES:
 		case SQ_OC_INDEX:
 		case SQ_OC_ISTORE:
+		case SQ_OC_FEGENUS_STORE:
 			return 2;
 
 		case SQ_OC_INDEX_ASSIGN:
@@ -553,6 +555,10 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			sq_value_index_assign(operands[0], sq_value_clone(operands[1]), sq_value_clone(operands[2]));
 			continue;
 
+		case SQ_OC_MATCHES:
+			set_next_local(sf, sq_value_new(sq_value_matches(operands[0], operands[1])));
+			continue;
+
 	/*** Interpreter Stuff ***/
 		case SQ_OC_CLOAD:
 			index = next_index(sf);
@@ -578,7 +584,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 		case SQ_OC_ILOAD:
 			index = next_index(sf);
-			//assert(index <= sf->journey->nconsts);
+			assert(index <= sf->journey->nconsts);
 			assert(sq_value_is_text(operands[1] = sf->journey->consts[index]));
 
 			set_next_local(sf, sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
@@ -593,9 +599,17 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
 			continue;
 
-		default:
-			todo("!");
+		case SQ_OC_FEGENUS_STORE:
+			index = next_index(sf);
+
+			assert(sq_value_is_form(operands[0]));
+			assert(index < sq_value_as_form(operands[0])->nessences);
+			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
+			sq_value_as_form(operands[0])->essences[index].genus = sq_value_clone(operands[1]);
+			continue;
 		}
+
+		bug("unknown opcode: %d", opcode);
 	}
 
 	return SQ_NI;

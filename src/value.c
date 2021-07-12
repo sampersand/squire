@@ -470,6 +470,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 		if (sq_value_is_book(rhs))
 			return sq_value_new(sq_book_product(book, AS_BOOK(rhs)));
+
 		if (sq_value_is_function(rhs))
 			return sq_value_new(sq_book_map(book, AS_JOURNEY(rhs)));
 
@@ -811,4 +812,53 @@ void sq_value_set_attr(sq_value soul, const char *attr, sq_value value) {
 	}
 
 	sq_throw("cannot assign attribute '%s' for a type of genus '%s'", attr, TYPENAME(soul));
+}
+
+bool sq_value_matches(sq_value formlike, sq_value to_check) {
+	bool matches;
+	switch (sq_value_genus_tag(formlike)) {
+	case SQ_G_FORM: {
+		sq_value genus = sq_value_genus(to_check);
+		
+		matches = sq_value_eql(genus, to_check);
+
+		sq_value_free(genus);
+		return matches;
+	}
+
+	case SQ_G_JOURNEY: {
+		struct sq_args args = { .pargc = 1, .pargv = &to_check };
+		sq_value_clone(to_check); // as we pass ownership.
+
+		sq_value result = sq_journey_run(sq_value_as_journey(formlike), args);
+		matches = sq_value_to_veracity(result);
+
+		sq_value_free(result);
+		return matches;
+	}
+
+	case SQ_G_TEXT:
+		// temporary hack until we get forms for primitives too
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Numeral") && sq_value_is_numeral(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Text") && sq_value_is_text(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Veracity") && sq_value_is_veracity(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Ni") && to_check == SQ_NI) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Form") && sq_value_is_form(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Imitation") && sq_value_is_imitation(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Journey") && sq_value_is_journey(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Book") && sq_value_is_book(to_check)) return true;
+		if (!strcmp(sq_value_as_text(formlike)->ptr, "Codex") && sq_value_is_codex(to_check)) return true;
+		// fallthrough
+
+	case SQ_G_CONSTANT:
+	case SQ_G_NUMERAL:
+		return sq_value_eql(formlike, to_check);
+
+	case SQ_G_IMITATION:
+	case SQ_G_BOOK:
+	case SQ_G_CODEX:
+		sq_throw("cannot `match` on %s", TYPENAME(to_check));
+	}
+
+	bug("unknown genus encountered: %d", sq_value_genus_tag(formlike));
 }

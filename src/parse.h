@@ -43,11 +43,6 @@ struct statement {
 	};
 };
 
-struct type_annotation {
-	unsigned count;
-	char **names;
-};
-
 struct scope_declaration {
 	char *name;
 	struct expression *value; // can be null
@@ -59,9 +54,13 @@ struct class_declaration {
 	char **parents;
 	struct matter_declaration {
 		char *name;
-		struct type_annotation *type; // may be null
+		struct primary *genus; // may be null
 	} *matter;
-	struct essence_declaration { char *name; struct expression *value; } *essences;
+	struct essence_declaration {
+		char *name;
+		struct expression *value;
+		struct primary *genus; // may be null
+	} *essences;
 	struct func_declaration **funcs, **meths, *constructor;
 };
 
@@ -155,7 +154,7 @@ struct bool_expression {
 };
 
 struct eql_expression {
-	enum { SQ_PS_ECMP, SQ_PS_EEQL, SQ_PS_ENEQ } kind;
+	enum { SQ_PS_ECMP, SQ_PS_EEQL, SQ_PS_ENEQ, SQ_PS_EMATCHES } kind;
 	struct cmp_expression *lhs;
 	struct eql_expression *rhs;
 };

@@ -68,6 +68,7 @@ enum sq_token_kind {
 	SQ_TK_NEG,
 	SQ_TK_AND,
 	SQ_TK_OR,
+	SQ_TK_MATCHES,
 	SQ_TK_ASSIGN,
 	SQ_TK_INDEX,
 	SQ_TK_INDEX_ASSIGN,

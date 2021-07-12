@@ -22,7 +22,7 @@ void sq_exception_init(struct sq_program *program) {
 	sq_exception_form.nmatter = 1;
 	sq_exception_form.matter = xmalloc(sizeof(struct sq_form_matter));
 	sq_exception_form.matter[0].name = "msg";
-	sq_exception_form.matter[0].type = SQ_UNDEFINED; // todo: make it text.
+	sq_exception_form.matter[0].genus = SQ_UNDEFINED; // todo: make it text.
 
 	sq_exception_form.nchanges = 1;
 	sq_exception_form.changes = xmalloc(sizeof(struct sq_journey *));

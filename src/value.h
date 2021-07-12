@@ -240,6 +240,7 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val);
 sq_value sq_value_call(sq_value soul, struct sq_args args);
 sq_value sq_value_get_attr(sq_value soul, const char *attr);
 void sq_value_set_attr(sq_value soul, const char *attr, sq_value value);
+bool sq_value_matches(sq_value formlike, sq_value to_check);
 
 size_t sq_value_length(sq_value value);
 struct sq_text *sq_value_to_text(sq_value value);

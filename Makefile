@@ -15,7 +15,10 @@ CFLAGS+=-DSQ_NUMERAL_TO_ROMAN
 ifdef DEBUG
 CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
 else
-CFLAGS+=-O2 -flto -march=native -DNDEBUG
+	CFLAGS+=-O2
+	ifdef OPTIMIZED
+		CFLAGS+= -flto -march=native -DNDEBUG
+	endif
 endif
 
 ifdef COMPUTED_GOTOS

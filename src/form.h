@@ -47,15 +47,15 @@ struct sq_form {
 	unsigned refcount;
 
 	struct sq_journey **recollections;
-	struct sq_form_essence {
+	struct sq_essence {
 		char *name;
 		sq_value value;
-		sq_value type; // may be SQ_UNDEFINED.
+		sq_value genus; // may be SQ_UNDEFINED.
 	} *essences;
 
 	struct sq_form_matter {
 		char *name;
-		sq_value type; // may be SQ_UNDEFINED.
+		sq_value genus; // may be SQ_UNDEFINED.
 	} *matter;
 	struct sq_journey **changes, *imitate;
 	struct sq_form **parents;
@@ -104,7 +104,7 @@ void sq_form_dump(FILE *out, const struct sq_form *form);
  * 
  * If no such essence exists, `NULL` is returned.
  */
-sq_value *sq_form_lookup_essence(struct sq_form *form, const char *name);
+struct sq_essence *sq_form_lookup_essence(struct sq_form *form, const char *name);
 
 /** Fetches a recollection (class function) on `form` named `name`.
  * 

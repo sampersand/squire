@@ -395,6 +395,9 @@ static struct eql_expression *parse_eql_expression() {
 	case SQ_TK_NEQ:
 		eql.kind = SQ_PS_ENEQ;
 		break;
+	case SQ_TK_MATCHES:
+		eql.kind = SQ_PS_EMATCHES;
+		break;
 	default:
 		eql.kind = SQ_PS_ECMP;
 		untake();
@@ -611,12 +614,15 @@ static struct class_declaration *parse_form_declaration() {
 		}
 
 		case SQ_TK_ESSENCE:
-			while (take().kind == SQ_TK_IDENT) {
+			while (take().kind == SQ_TK_IDENT || last.kind == SQ_TK_LABEL) {
 				if (fdecl->nessences > MAX_LEN)
 					die("too many essences!");
 
 				fdecl->essences[fdecl->nessences++].name = last.identifier;
 				fdecl->essences[fdecl->nessences - 1].value = NULL;
+				fdecl->essences[fdecl->nessences - 1].genus =
+					(last.kind == SQ_TK_IDENT) ? NULL : parse_primary();
+
 				if (take().kind == SQ_TK_COMMA)
 					continue;
 
@@ -626,6 +632,11 @@ static struct class_declaration *parse_form_declaration() {
 				}
 
 				fdecl->essences[fdecl->nessences - 1].value = parse_expression();
+
+				if (take().kind != SQ_TK_COMMA) {
+					untake();
+					break;
+				}
 			}
 
 			break;
@@ -641,25 +652,8 @@ static struct class_declaration *parse_form_declaration() {
 					die("too many fields!");
 
 				fdecl->matter[fdecl->nmatter].name = last.identifier;
-				if (last.kind == SQ_TK_IDENT) {
-					fdecl->matter[fdecl->nmatter].type = NULL;
-					goto comma_or_done;
-				}
-
-				struct type_annotation *type = xmalloc(sizeof(struct type_annotation));
-				unsigned cap = 4;
-
-				type->count = 0;
-				type->names = xmalloc(sizeof_array(char *, cap));
-				// while
-				// fdecl->m
-
-struct type_annotation {
-	unsigned count;
-	char **names;
-};
-
-			comma_or_done:
+				fdecl->matter[fdecl->nmatter].genus =
+					(last.kind == SQ_TK_IDENT) ? NULL : parse_primary();
 				++fdecl->nmatter;
 
 				if (take().kind != SQ_TK_COMMA) {
