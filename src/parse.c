@@ -719,9 +719,22 @@ static struct func_declaration *parse_func_declaration(bool guard, bool is_metho
 
 	fdecl->nargs = field_name_count;
 	fdecl->args = memdup(field_names, sizeof_array(char *, field_name_count));
-	if (!(fdecl->body = parse_brace_statements("journey")))
-		die("no body given for function");
-	return fdecl;
+
+	if (take().kind == SQ_TK_ASSIGN) {
+		fdecl->body = xmalloc(sizeof(struct statements));
+		fdecl->body->len = 1;
+		fdecl->body->stmts = xmalloc(sizeof(struct statement *));
+		fdecl->body->stmts[0] = xmalloc(sizeof(struct statement));
+		fdecl->body->stmts[0]->kind = SQ_PS_SRETURN;
+		fdecl->body->stmts[0]->rstmt = xmalloc(sizeof(struct return_statement));
+
+		if ((fdecl->body->stmts[0]->rstmt->value = parse_expression()))
+			return fdecl;
+	} else if (untake(), !(fdecl->body = parse_brace_statements("journey"))) {
+		return fdecl;
+	}
+
+	die("no body given for function");
 }
 
 static struct if_statement *parse_if_statement() {
