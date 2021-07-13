@@ -1,18 +1,10 @@
 @transcribe "assert.sq"
 
 form Literal {
-	matter value;
-
-@whereupon $DEBUG
-	imitate(value) {
-		soul.value = value
-		g = value.genus
-		$assert(g == 'numeral' || g == 'veracity' || g == 'ni');
-	}
-@nowhere;
+	matter value : [Numeral, Text, Veracity, Ni];
 
 	change run () { reward soul }
-	change to text() { reward text(soul.value) }
-	change to numeral() { reward numeral(soul.value) }
-	change to veracity() { reward veracity(soul.value) }
+	change to-text() { reward text(soul.value) }
+	change to-numeral() { reward numeral(soul.value) }
+	change to-veracity() { reward veracity(soul.value) }
 }

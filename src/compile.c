@@ -272,6 +272,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		if (fdecl->matter[i].genus) {
 			if (global == -1) {
 				global = lookup_global_variable(form->name);
+				printf("global=%d\n", global);
 				set_opcode(code, SQ_OC_GLOAD);
 				set_index(code, global);
 				set_index(code, global = next_local(code));
@@ -311,7 +312,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	// with the `for` loop above.
 	if (fdecl->nessences) {
 		if (global < 0) {
-			lookup_global_variable(form->name);
+			global = lookup_global_variable(form->name);
 			set_opcode(code, SQ_OC_GLOAD);
 			set_index(code, global);
 			set_index(code, global = next_local(code));

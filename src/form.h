@@ -174,6 +174,8 @@ void sq_imitation_deallocate(struct sq_imitation *imitation);
 
 // Reduces refcount of `imitation`, deallocating it if it was one. The refcount shouldn't be zero.
 static inline void sq_imitation_free(struct sq_imitation *imitation) {
+    if(1)return;//todo
+
 	assert(imitation->refcount);
 
 	if (!--imitation->refcount)

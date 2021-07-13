@@ -1,15 +1,15 @@
-form Not Idempotent {
-	change to numeral() {
+form NotIdempotent {
+	change to-numeral() {
 		ran = soul.run()
 		numeral(ran)
 	}
 
-	change to text() {
+	change to-text() {
 		ran = soul.run()
 		text(ran)
 	}
 
-	change to veracity() {
+	change to-veracity() {
 		ran = soul.run()
 		veracity(ran)
 	}

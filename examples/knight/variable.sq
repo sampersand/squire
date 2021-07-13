@@ -1,18 +1,16 @@
 @transcribe "assert.sq"
-@transcribe "not idempotent.sq"
+@transcribe "not-idempotent.sq"
+@transcribe "value.sq"
 
-form Variable : Not Idempotent {
-	matter name, value, assigned;
+form Variable : NotIdempotent, Value {
+	matter name: Text, value: [Value, ni],
 	essence declared = {};
 
-	imitate(name) {
-		$assert(name.genus == 𝔱𝔢𝔵𝔱)
-
+	imitate(name: Text) {
 		soul.name = name
-		soul.assigned = nay
 	}
 
-	recall fetch(name) {
+	recall fetch(name: Text): Variable {
 		declared = soul.declared;
 		var = declared[name];
 
@@ -23,16 +21,15 @@ form Variable : Not Idempotent {
 		}
 	}
 
-	change run() {
-		if !soul.assigned {
-			catapult "undefined variable '\(soul.name)'"
+	change run(): Value {
+		if ni == soul.value {
+			catapult "undefined variable '{soul.name}'"
 		}
 
-		soul.value
+		reward soul.value
 	}
 
-	change assign(value) {
-		soul.assigned = yay
+	change assign(value: Value) {
 		soul.value = value
 	}
 }

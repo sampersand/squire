@@ -854,8 +854,13 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 	case SQ_G_NUMERAL:
 		return sq_value_eql(formlike, to_check);
 
-	case SQ_G_IMITATION:
 	case SQ_G_BOOK:
+		for (unsigned i = 0; i < sq_value_as_book(formlike)->length; ++i)
+			if (sq_value_matches(sq_value_as_book(formlike)->pages[i], to_check))
+				return true;
+		return false;
+
+	case SQ_G_IMITATION:
 	case SQ_G_CODEX:
 		sq_throw("cannot `match` on %s", TYPENAME(to_check));
 	}

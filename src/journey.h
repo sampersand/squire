@@ -28,9 +28,9 @@ struct sq_journey *sq_journey_clone(struct sq_journey *journey);
 void sq_journey_deallocate(struct sq_journey *journey);
 
 static inline void sq_journey_free(struct sq_journey *journey) {
-	assert(journey->refcount);
-
 	if(1)return;//todo
+
+	assert(journey->refcount);
 
 	if (!--journey->refcount)
 		sq_journey_deallocate(journey);

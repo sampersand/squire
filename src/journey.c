@@ -21,7 +21,7 @@ struct sq_journey *sq_journey_clone(struct sq_journey *function) {
 }
 
 void sq_journey_deallocate(struct sq_journey *function) {
-	assert(function->refcount);
+	assert(!function->refcount);
 
 	for (unsigned i = 0; i < function->nconsts; ++i)
 		sq_value_free(function->consts[i]);
@@ -76,6 +76,7 @@ static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args ar
 }
 
 static void teardown_stackframe(struct sq_stackframe *stackframe) {
+	return; // todo
 	for (unsigned i = 0; i < stackframe->journey->nlocals; ++i)
 		sq_value_free(stackframe->locals[i]);
 }
@@ -563,21 +564,21 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 	/*** Interpreter Stuff ***/
 		case SQ_OC_CLOAD:
 			index = next_index(sf);
-			assert(index <= sf->journey->nconsts);
+			assert(index < sf->journey->nconsts);
 
 			set_next_local(sf, sq_value_clone(sf->journey->consts[index]));
 			continue;
 
 		case SQ_OC_GLOAD:
 			index = next_index(sf);
-			assert(index <= sf->journey->program->nglobals);
+			assert(index < sf->journey->program->nglobals);
 
 			set_next_local(sf, sq_value_clone(sf->journey->program->globals[index]));
 			continue;
 
 		case SQ_OC_GSTORE:
 			index = next_index(sf);
-			assert(index <= sf->journey->program->nglobals);
+			assert(index < sf->journey->program->nglobals);
 
 			sq_value_free(sf->journey->program->globals[index]);
 			sf->journey->program->globals[index] = sq_value_clone(operands[0]);
@@ -585,7 +586,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 		case SQ_OC_ILOAD:
 			index = next_index(sf);
-			assert(index <= sf->journey->nconsts);
+			assert(index < sf->journey->nconsts);
 			assert(sq_value_is_text(operands[1] = sf->journey->consts[index]));
 
 			set_next_local(sf, sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
@@ -594,7 +595,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_ISTORE:
 			index = next_index(sf);
 
-			assert(index <= sf->journey->nconsts);
+			assert(index < sf->journey->nconsts);
 			assert(sq_value_is_text(operands[2] = sf->journey->consts[index]));
 
 			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
