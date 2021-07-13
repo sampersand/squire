@@ -263,10 +263,28 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	form->nmatter = fdecl->nmatter;
 	form->matter = xmalloc(sizeof_array(struct sq_form_matter, form->nmatter));
 
+	int global = -1;
+
 	for (unsigned i = 0; i < fdecl->nmatter; ++i) {
 		form->matter[i].name = fdecl->matter[i].name;
 		form->matter[i].genus = SQ_UNDEFINED;
-		assert(fdecl->matter[i].genus == NULL); // todo
+
+		if (fdecl->matter[i].genus) {
+			if (global == -1) {
+				global = lookup_global_variable(form->name);
+				set_opcode(code, SQ_OC_GLOAD);
+				set_index(code, global);
+				set_index(code, global = next_local(code));
+			}
+
+			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->matter[i].name))));
+
+			unsigned kind = compile_primary(code, fdecl->matter[i].genus);
+			set_opcode(code, SQ_OC_FMGENUS_STORE);
+			set_index(code, global);
+			set_index(code, kind);
+			set_index(code, const_index);
+		}
 	}
 
 	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
@@ -289,11 +307,15 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		form->essences[i].genus = SQ_UNDEFINED;
 	}
 
+	// no idea why this is a separate block. i think it's a holdover of older code and can be merged in
+	// with the `for` loop above.
 	if (fdecl->nessences) {
-		unsigned global = lookup_global_variable(form->name);
-		set_opcode(code, SQ_OC_GLOAD);
-		set_index(code, global);
-		set_index(code, global = next_local(code));
+		if (global < 0) {
+			lookup_global_variable(form->name);
+			set_opcode(code, SQ_OC_GLOAD);
+			set_index(code, global);
+			set_index(code, global = next_local(code));
+		}
 
 		for (unsigned i = 0; i < fdecl->nessences; ++i) {
 			// note: this is technically extraneous if we never access the essence

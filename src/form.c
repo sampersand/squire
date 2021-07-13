@@ -138,6 +138,10 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 		if (args.pargc != form->nmatter)
 			sq_throw("argument count mismatch: expected %u, given %u", form->nmatter, args.pargc);
 
+		for (unsigned i = 0; i < args.pargc; ++i)
+			if (form->matter[i].genus != SQ_UNDEFINED && !sq_value_matches(form->matter[i].genus, args.pargv[i]))
+				sq_throw("type error in constructor");
+
 		imitation->matter = memdup(args.pargv, sizeof_array(sq_value, form->nmatter));
 	} else {
 		imitation->matter = xmalloc(sizeof_array(sq_value, form->nmatter));
@@ -187,14 +191,20 @@ struct sq_journey *sq_imitation_lookup_change(struct sq_imitation *imitation, co
 	return sq_form_lookup_change(imitation->form, name);
 }
 
-sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char *name) {
+int sq_imitation_lookup_matter_index(struct sq_imitation *imitation, const char *name) {
 	// note that we don't ask parents for matter. this is intentional, as only the base form can
 	// have matter.
 	for (unsigned i = 0; i < imitation->form->nmatter; ++i)
 		if (!strcmp(name, imitation->form->matter[i].name))
-			return &imitation->matter[i];
+			return i;
 
-	return NULL;
+	return -1;
+}
+
+sq_value *sq_imitation_lookup_matter(struct sq_imitation *imitation, const char *name) {
+	int index = sq_imitation_lookup_matter_index(imitation, name);
+
+	return index < 0 ? NULL : &imitation->matter[index];
 }
 
 sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name) {
@@ -211,13 +221,15 @@ sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name)
 }
 
 bool sq_imitation_set_attr(struct sq_imitation *imitation, const char *attr, sq_value value) {
-	sq_value *matter = sq_imitation_lookup_matter(imitation, attr);
+	int index = sq_imitation_lookup_matter_index(imitation, attr);
 
-	if (matter == NULL)
-		return false;
+	if (index < 0) return false;
 
-	sq_value_free(*matter);
-	*matter = value;
+	if (imitation->form->matter[index].genus != SQ_UNDEFINED && !sq_value_matches(imitation->form->matter[index].genus, value))
+		sq_throw("matter didnt match!");
+
+	sq_value_free(imitation->matter[index]);
+	imitation->matter[index] = value;
 
 	return true;
 }

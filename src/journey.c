@@ -391,6 +391,7 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_INDEX:
 		case SQ_OC_ISTORE:
 		case SQ_OC_FEGENUS_STORE:
+		case SQ_OC_FMGENUS_STORE:
 			return 2;
 
 		case SQ_OC_INDEX_ASSIGN:
@@ -606,6 +607,15 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			assert(index < sq_value_as_form(operands[0])->nessences);
 			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
 			sq_value_as_form(operands[0])->essences[index].genus = sq_value_clone(operands[1]);
+			continue;
+
+		case SQ_OC_FMGENUS_STORE:
+			index = next_index(sf);
+
+			assert(sq_value_is_form(operands[0]));
+			assert(index < sq_value_as_form(operands[0])->nmatter);
+			assert(sq_value_as_form(operands[0])->matter[index].genus == SQ_UNDEFINED);
+			sq_value_as_form(operands[0])->matter[index].genus = sq_value_clone(operands[1]);
 			continue;
 		}
 

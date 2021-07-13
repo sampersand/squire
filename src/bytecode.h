@@ -66,7 +66,8 @@ enum sq_opcode {
 	SQ_OC_GSTORE        = 0x32, // [SRC,GLBL] global GLBL <- SRC
 	SQ_OC_ILOAD         = 0x33, // [A,B,DST] DST <- A.B
 	SQ_OC_ISTORE        = 0x34, // [A,B,C,DST] Performs `A.B=C`; (Stores in DST, though this is not intended)
-	SQ_OC_FEGENUS_STORE = 0x35, // [A,B,C,DST] Performs `A.B=C`; (Stores in DST, though this is not intended)
+	SQ_OC_FEGENUS_STORE = 0x35, // [A,B,C] Sets `A.B`'s kind to constant `C` (essence)
+	SQ_OC_FMGENUS_STORE = 0x36, // [A,B,C] Sets `A.B`'s kind to constant `C` (matter)
 };
 
 union sq_bytecode {
