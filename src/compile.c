@@ -1138,11 +1138,43 @@ static struct sq_journey *compile_function(struct func_declaration *fndecl, bool
 	return fn;
 }
 
-struct sq_program *sq_program_compile(const char *stream) {
-	globals.len = 1;
+static void setup_globals(void) {
+	globals.len = 0;
 	globals.ary = xmalloc(sizeof_array(struct local, globals.cap = 16));
-	globals.ary[0].name = strdup("ARGV");
-	globals.ary[0].value = SQ_NI;
+
+	globals.ary[globals.len  ].name = strdup("ARGV");
+	globals.ary[globals.len++].value = SQ_NI;
+
+	globals.ary[globals.len  ].name = strdup("Numeral");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Numeral")));
+
+	globals.ary[globals.len  ].name = strdup("Text");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Text")));
+
+	globals.ary[globals.len  ].name = strdup("Veracity");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Veracity")));
+
+	globals.ary[globals.len  ].name = strdup("Ni");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Ni")));
+
+	globals.ary[globals.len  ].name = strdup("Journey");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Journey")));
+
+	globals.ary[globals.len  ].name = strdup("Imitation");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Imitation")));
+
+	globals.ary[globals.len  ].name = strdup("Form");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Form")));
+
+	globals.ary[globals.len  ].name = strdup("Book");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Book")));
+
+	globals.ary[globals.len  ].name = strdup("Codex");
+	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Codex")));
+}
+
+struct sq_program *sq_program_compile(const char *stream) {
+	setup_globals();
 
 	program = xmalloc(sizeof(struct sq_program));
 	program->nglobals = 1;
