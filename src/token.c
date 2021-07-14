@@ -295,8 +295,8 @@ static struct sq_token parse_identifier(void) {
 		} else if (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_')) {
 			++sq_stream;
 			token.identifier[len++] = '_';
-		} else if (*sq_stream == ' ' || *sq_stream == '\t') {
-			while (*sq_stream == ' ' || *sq_stream == '\t') ++sq_stream;
+		} else if (*sq_stream == ' ') {
+			while (*++sq_stream == ' ');
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
 		} else break;

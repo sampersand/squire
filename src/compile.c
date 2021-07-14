@@ -743,13 +743,17 @@ done:
 static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_) {
 	unsigned tmp = compile_eql(code, bool_->lhs);
 	unsigned target;
+
+	if (bool_->kind == SQ_PS_BEQL) {
+		target = tmp;
+		goto done;
+	}
 	
 	set_opcode(code, SQ_OC_MOV);
-	set_opcode(code, tmp);
-	set_opcode(code, target = next_local(code));
+	set_index(code, tmp);
+	set_index(code, target = next_local(code));
 
-	if (bool_->kind != SQ_PS_BEQL)
-		tmp = compile_bool(code, bool_->rhs);
+	tmp = compile_bool(code, bool_->rhs);
 
 	switch (bool_->kind) {
 	case SQ_PS_BAND: set_opcode(code, SQ_OC_JMP_FALSE); break;
@@ -1100,54 +1104,77 @@ static void compile_journey_pattern(
 ) {
 	(void) is_method;
 	pattern->pargc = jp->pargc;
-	pattern->required_pargc = 0;
 	pattern->kwargc = jp->kwargc;
 	pattern->splat = jp->splat != NULL;
 	pattern->splatsplat = jp->splatsplat != NULL;
 	pattern->pargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->pargc));
 	pattern->kwargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->kwargc));
 
-	for (unsigned i = 0; i < pattern->pargc; ++i) {
-		pattern->pargv[i].name = jp->pargv[i].name;
-		if (jp->pargv[i].default_ == NULL)
-			++pattern->required_pargc;
-
-		assert(jp->pargv[i].genus == NULL); // todo
-		assert(jp->pargv[i].default_ == NULL); // todo
-	}
-
-	for (unsigned i = 0; i < pattern->kwargc; ++i) {
-		pattern->kwargv[i].name = jp->kwargv[i].name;
-		assert(jp->kwargv[i].genus == NULL); // todo
-		assert(jp->kwargv[i].default_ == NULL); // todo
-	}
-
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
 	code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
 
-	code.nlocals = 0;
+	code.nlocals = pattern->pargc + pattern->kwargc + (pattern->splat ? 1 : 0) + (pattern->splatsplat ? 1 : 0);
 	code.consts.cap = 64;
 	code.consts.len = 0;
 	code.consts.ary = xmalloc(sizeof_array(sq_value, code.consts.cap));
 
-	code.vars.len = jp->pargc;
-	code.vars.cap = 16 + code.vars.len;
+	code.vars.len = 0;
+	code.vars.cap = SQ_JOURNEY_MAX_ARGC * 2 + 2; // *2 for both positional and kw, then +2 for splat and splatsplat
 	code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
 
 	code.labels.len = 0;
 	code.labels.cap = 4;
 	code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
 
-	unsigned offset = 0;
+	unsigned local_index = 0;
 
-	for (unsigned i = 0; i < jp->pargc; ++i) {
-		code.vars.ary[i+offset].name = strdup(jp->pargv[i].name);
-		code.vars.ary[i+offset].index = next_local(&code);
+	for (unsigned i = 0; i < pattern->pargc; ++i, ++code.vars.len) {
+		pattern->pargv[i].name = jp->pargv[i].name;
+
+		code.vars.ary[code.vars.len].name = strdup(jp->pargv[i].name);
+		code.vars.ary[code.vars.len].index = local_index++;
+
+		if (jp->pargv[i].default_ == NULL) { 
+			pattern->pargv[i].default_start = -1;
+		} else {
+			pattern->pargv[i].default_start = code.codelen;
+			printf("start=%d\n", pattern->pargv[i].default_start);
+			// printf("jp->argv[i].default_=%d\n", jp->pargv[i].default_->math->lhs->lhs->lhs->lhs->lhs->rhs->kind);
+			unsigned dst = compile_expression(&code, jp->pargv[i].default_);
+			set_opcode(&code, SQ_OC_RETURN);
+			set_index(&code, dst);
+			printf("stop\n");
+		}
+
+		assert(jp->pargv[i].genus == NULL); // todo
+	}
+
+	if (jp->splat) {
+		code.vars.ary[code.vars.len].name = strdup(jp->splat);
+		code.vars.ary[code.vars.len++].index = local_index++;
+	}
+
+	for (unsigned i = 0; i < pattern->kwargc; ++i, ++code.vars.len) {
+		pattern->kwargv[i].name = jp->kwargv[i].name;
+
+		code.vars.ary[code.vars.len].name = strdup(jp->pargv[i].name);
+		code.vars.ary[code.vars.len].index = local_index++;
+
+		assert(jp->kwargv[i].genus == NULL); // todo
+		assert(jp->kwargv[i].default_ == NULL); // todo
+		// todo: use `i` when compiling default.
+	}
+
+	if (jp->splatsplat) {
+		code.vars.ary[code.vars.len].name = strdup(jp->splatsplat);
+		code.vars.ary[code.vars.len++].index = local_index++;
 	}
 
 	assert(jp->body != NULL);
+
+	pattern->start_index = code.codelen;
 	compile_statements(&code, jp->body);
 
 	pattern->code.nlocals = code.nlocals;

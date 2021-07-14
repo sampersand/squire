@@ -678,25 +678,6 @@ static struct statements *parse_brace_statements(char *what) {
 	return stmts;
 }
 
-/*
-struct journey_declaration {
-	char *name;
-	unsigned npatterns;
-	struct journey_pattern {
-		unsigned nargs;
-		struct journey_argument {
-			char *name;
-			struct primary *genus; // may be NULL
-			struct expression *default_; // may be NULL.
-		} args[SQ_JOURNEY_MAX_ARGC];
-		char *splat; // may be NULL
-		char *splatsplat; // may be NULL
-		struct primary *return_genus; // may be NULL
-		struct statements *body;
-	} *patterns;
-};
-*/
-
 static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 	struct journey_argument *current;
 
@@ -721,6 +702,8 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			if (stage == STAGE_KW_ONLY) {
 				die("duplicate splat argument encountered");
 			} else if (take().kind == SQ_TK_COMMA || last.kind == SQ_TK_RPAREN) {
+				assert(!jp->splat);
+				jp->splat = strdup(""); // make it empty, so it still registers, but isn't accessible
 				untake();
 			} else if (last.kind != SQ_TK_IDENT) {
 				die("expected name (or nothing) after '*'");
@@ -733,11 +716,15 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			break;
 
 		case SQ_TK_POW:
-			if (take().kind != SQ_TK_IDENT)
+			if (take().kind == SQ_TK_COMMA || last.kind == SQ_TK_RPAREN) {
+				untake();
+				jp->splatsplat = strdup(""); // make it empty, so it still registers, but isn't accessible
+			} else if (last.kind == SQ_TK_IDENT) {
+				assert(!jp->splatsplat);
+				jp->splatsplat = last.identifier;
+			} else {
 				die("expected name after '**'");
-
-			assert(!jp->splatsplat);
-			jp->splatsplat = last.identifier;
+			}
 
 			if (take().kind != SQ_TK_COMMA) untake(); // allow trailing comma
 			if (take().kind != SQ_TK_RPAREN) die("missing closing paren");

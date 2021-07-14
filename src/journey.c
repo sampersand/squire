@@ -65,28 +65,78 @@ struct sq_stackframe {
 
 static sq_value run_stackframe(struct sq_stackframe *stackframe);
 
+static int assign_positional_arguments(
+	struct sq_stackframe *sf,
+	const struct sq_journey_pattern *pattern,
+	struct sq_args *args
+) {
+	unsigned i = 0;
+	struct sq_book *splat = NULL;
+	// first, assign all positional arguments that we can.
+	for (i = 0; i < args->pargc && i < pattern->pargc; ++i)
+		sf->locals[i] = sq_value_clone(args->pargv[i]);
+
+	if (pattern->pargc == args->pargc) {
+		// do nothing, all argument counts worked out.
+	} else if (i == pattern->pargc) {
+		// if we have extra arguments, then either stick them into splat or return error.
+		if (!pattern->splat) 
+			return -1; // too many arguments given, and no splat provided.
+
+		splat = sq_book_allocate(args->pargc - i);
+
+		for (unsigned j = i; j < args->pargc; ++j)
+			splat->pages[splat->length++] = sq_value_clone(args->pargv[j]);
+	} else {
+		// we have fewer arguments than total argument count, so either fill out defaults, or return -1.
+
+		// if the first argument we didn't supply doesn't have a default, we don tmatch
+		if (pattern->pargv[i].default_start < 0)
+			return -1;
+
+		for (; i < pattern->pargc; ++i) {
+			assert(0 <= pattern->pargv[i].default_start);
+
+			sf->ip = pattern->pargv[i].default_start;
+			sf->locals[i] = run_stackframe(sf);
+		}
+	}
+
+	if (pattern->splat && splat == NULL)
+		splat = sq_book_allocate(0);
+
+	if (splat != NULL)	
+		sf->locals[i++] = sq_value_new(splat);
+
+	// todo, check for genuses.
+
+	return i;
+}
+
 static sq_value try_run_pattern(
 	const struct sq_journey *journey,
 	const struct sq_journey_pattern *pattern,
-	const struct sq_args *args
+	struct sq_args *args
 ) {
-	// If we have too few parameters, or too many and there's no splat, then it's not good.
-	if (args->pargc < pattern->required_pargc || (pattern->pargc < args->pargc && !pattern->splat))
-		return SQ_UNDEFINED;
+	struct sq_stackframe sf = {
+		.journey = journey,
+		.pattern = pattern,
+		.locals = calloc(sizeof(sq_value), pattern->code.nlocals)
+	};
+
+	sq_value result = SQ_UNDEFINED;
+
+	int positional_argument_stop_index = assign_positional_arguments(&sf, pattern, args);
+
+	if (positional_argument_stop_index < 0)
+		goto free_and_return;
 
 	// todo: check for genuses, and handle defaults/keyword arguments/splat and splatsplat.
 
-	struct sq_stackframe sf = {
-		.ip = 0,
-		.journey = journey,
-		.pattern = pattern,
-		.locals = xmalloc(sizeof_array(sq_value, pattern->code.nlocals))
-	};
+	sf.ip = pattern->start_index;
+	result = run_stackframe(&sf);
 
-	for (unsigned i = 0; i < args->pargc && i < pattern->pargc; ++i) 
-		sf.locals[i] = args->pargv[i];
-
-	sq_value result = run_stackframe(&sf);
+free_and_return:
 
 	for (unsigned i = 0; i < pattern->code.nlocals; ++i)
 		sq_value_free(sf.locals[i]);
@@ -420,6 +470,7 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_CALL:
 		case SQ_OC_GSTORE:
 		case SQ_OC_ILOAD:
+		case SQ_OC_RETURN:
 			return 1;
 
 		case SQ_OC_EQL:

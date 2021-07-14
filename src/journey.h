@@ -21,7 +21,7 @@ struct sq_codeblock {
 };
 
 struct sq_journey_pattern {
-	unsigned pargc, kwargc, required_pargc;
+	unsigned pargc, kwargc, start_index;
 	bool splat, splatsplat;
 
 	struct sq_journey_argument {

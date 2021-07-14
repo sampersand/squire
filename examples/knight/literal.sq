@@ -1,10 +1,17 @@
-@transcribe "assert.sq"
+__END__#@transcribe "assert.sq"
 
+#123
+#"a\nb\(2123 a*3)\n"()
+#{a: 3, 5: 9}
+p
+journey foo(a, b)
 form Literal {
-	matter value : [Numeral, Text, Veracity, Ni];
-
-	change run () { reward soul }
-	change to-text() { reward text(soul.value) }
-	change to-numeral() { reward numeral(soul.value) }
-	change to-veracity() { reward veracity(soul.value) }
+	#essence foo, bar, a;
+	#matter value : [Numeral, Text, Veracity, Ni];
+	imitate(): {a } { a}
+	change a-b(a){reward a}
+	change run (a, b=34, c: Numeral, *d, **E) { soul }
+	#change to-text() { reward text(soul.value) }
+	#change to-numeral() { reward numeral(soul.value) }
+	#change to-veracity() { reward veracity(soul.value) }
 }
