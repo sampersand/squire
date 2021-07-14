@@ -1140,15 +1140,19 @@ static void compile_journey_pattern(
 			pattern->pargv[i].default_start = -1;
 		} else {
 			pattern->pargv[i].default_start = code.codelen;
-			printf("start=%d\n", pattern->pargv[i].default_start);
-			// printf("jp->argv[i].default_=%d\n", jp->pargv[i].default_->math->lhs->lhs->lhs->lhs->lhs->rhs->kind);
 			unsigned dst = compile_expression(&code, jp->pargv[i].default_);
 			set_opcode(&code, SQ_OC_RETURN);
 			set_index(&code, dst);
-			printf("stop\n");
 		}
 
-		assert(jp->pargv[i].genus == NULL); // todo
+		if (jp->pargv[i].genus == NULL) {
+			pattern->pargv[i].genus_start = -1;
+		} else {
+			pattern->pargv[i].genus_start = code.codelen;
+			unsigned dst = compile_primary(&code, jp->pargv[i].genus);
+			set_opcode(&code, SQ_OC_RETURN);
+			set_index(&code, dst);
+		}
 	}
 
 	if (jp->splat) {

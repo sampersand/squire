@@ -20,15 +20,15 @@ struct sq_codeblock {
 	union sq_bytecode *bytecode;
 };
 
+struct sq_journey_argument {
+	char *name;
+	int default_start, genus_start; // will be `-1` if no default or genus is supplied.
+};
+
 struct sq_journey_pattern {
 	unsigned pargc, kwargc, start_index;
 	bool splat, splatsplat;
-
-	struct sq_journey_argument {
-		char *name;
-		int default_start, genus_start; // will be `-1` if no default or genus is supplied.
-	} *pargv, *kwargv;
-
+	struct sq_journey_argument *pargv, *kwargv;
 	struct sq_codeblock code;
 };
 

@@ -102,6 +102,22 @@ static int assign_positional_arguments(
 		}
 	}
 
+	// make sure all the non-splat parameters match
+	assert(i == pattern->pargc);
+
+	for (unsigned j = 0; j < i; ++j) {
+		if (pattern->pargv[j].genus_start < 0)
+			continue;
+
+		sf->ip = pattern->pargv[j].genus_start;
+		sq_value genus = run_stackframe(sf);
+
+		bool matches = sq_value_matches(genus, sf->locals[j]);
+		sq_value_free(genus);
+		if (!matches)
+			return -1;
+	}
+
 	if (pattern->splat && splat == NULL)
 		splat = sq_book_allocate(0);
 
