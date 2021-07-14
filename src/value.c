@@ -122,27 +122,27 @@ void sq_value_free(sq_value value) {
 
 const char *sq_value_typename(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT: return value == SQ_NI ? "ni" : "veracity";
-	case SQ_G_NUMERAL: return "numeral";
-	case SQ_G_TEXT: return "text";
-	case SQ_G_IMITATION: return "imitation";
-	case SQ_G_JOURNEY: return "journey";
-	case SQ_G_FORM: return "form";
-	case SQ_G_BOOK: return "book";
-	case SQ_G_CODEX: return "codex";
+	case SQ_G_CONSTANT: return value == SQ_NI ? "Ni" : "Veracity";
+	case SQ_G_NUMERAL: return "Numeral";
+	case SQ_G_TEXT: return "Text";
+	case SQ_G_IMITATION: return "Imitation";
+	case SQ_G_JOURNEY: return "Journey";
+	case SQ_G_FORM: return "Form";
+	case SQ_G_BOOK: return "Book";
+	case SQ_G_CODEX: return "Codex";
 	default: bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
 
 sq_value sq_value_genus(sq_value value) {
 	static struct sq_text KIND_VERACITY = SQ_TEXT_STATIC("veracity");
-	static struct sq_text KIND_NI = SQ_TEXT_STATIC("ni");
-	static struct sq_text KIND_NUMERAL = SQ_TEXT_STATIC("numeral");
-	static struct sq_text KIND_TEXT = SQ_TEXT_STATIC("text");
-	static struct sq_text KIND_FUNCTION = SQ_TEXT_STATIC("journey");
-	static struct sq_text KIND_FORM = SQ_TEXT_STATIC("form");
-	static struct sq_text KIND_ARRAY = SQ_TEXT_STATIC("book");
-	static struct sq_text KIND_CODEX = SQ_TEXT_STATIC("codex");
+	static struct sq_text KIND_NI = SQ_TEXT_STATIC("Ni");
+	static struct sq_text KIND_NUMERAL = SQ_TEXT_STATIC("Numeral");
+	static struct sq_text KIND_TEXT = SQ_TEXT_STATIC("Text");
+	static struct sq_text KIND_FUNCTION = SQ_TEXT_STATIC("Journey");
+	static struct sq_text KIND_FORM = SQ_TEXT_STATIC("Form");
+	static struct sq_text KIND_ARRAY = SQ_TEXT_STATIC("Book");
+	static struct sq_text KIND_CODEX = SQ_TEXT_STATIC("Codex");
 
 	switch (SQ_VTAG(value)) {
 	case SQ_G_CONSTANT:
