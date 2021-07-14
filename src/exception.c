@@ -28,20 +28,24 @@ void sq_exception_init(struct sq_program *program) {
 	sq_exception_form.changes = xmalloc(sizeof(struct sq_journey *));
 	struct sq_journey *to_text = sq_exception_form.changes[0] = xmalloc(sizeof(struct sq_journey));
 
-	to_text->name = "to_text";
-	to_text->refcount = 1;
-	to_text->argc = 1;
-	to_text->nlocals = 1;
-	to_text->nconsts = 1;
-	to_text->codelen = 94;
-	to_text->consts = NULL;
-	to_text->program = program;
-	to_text->is_method = true;
-	to_text->bytecode = xmalloc(sizeof_array(union sq_bytecode, 4));
-	to_text->bytecode[0].opcode = SQ_OC_ILOAD;
-	to_text->bytecode[1].index = 0;
-	to_text->bytecode[2].index = 0;
-	to_text->bytecode[3].index = 0;
+	(void) to_text;
+	(void) program;
+
+	// todo: totext.
+	// to_text->name = "to_text";
+	// to_text->refcount = 1;
+	// to_text->argc = 1;
+	// to_text->nlocals = 1;
+	// to_text->nconsts = 1;
+	// to_text->codelen = 94;
+	// to_text->consts = NULL;
+	// to_text->program = program;
+	// to_text->is_method = true;
+	// to_text->bytecode = xmalloc(sizeof_array(union sq_bytecode, 4));
+	// to_text->bytecode[0].opcode = SQ_OC_ILOAD;
+	// to_text->bytecode[1].index = 0;
+	// to_text->bytecode[2].index = 0;
+	// to_text->bytecode[3].index = 0;
 
 
 // struct sq_journey {

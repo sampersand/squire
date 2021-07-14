@@ -11,44 +11,24 @@
 #include <unistd.h>
 #include <setjmp.h>
 
-/*
-
-struct sq_codeblock {
-	unsigned nlocals, nconsts, codelen;
-	sq_value *consts;
-	union sq_bytecode *bytecode;
-};
-
-struct sq_journey_pattern {
-	unsigned pargc, kwargc;
-	bool splat, splatsplat;
-
-	struct sq_journey_argument {
-		sq_value default_, genus; // both are SQ_UNDEFINED if not supplied.
-	} *pargv, *kwargv;
-
-	struct sq_codeblock code;
-};
-
-struct sq_journey {
-	SQ_VALUE_ALIGN char *name;
-	unsigned refcount, npatterns;
-	struct sq_program *program;
-	bool is_method;
-
-	struct sq_journey_pattern *patterns;
-};
-*/
-
 static void deallocate_pattern(struct sq_journey_pattern *pattern) {
 	for (unsigned i = 0; i < pattern->pargc; ++i) {
-		if (pattern->pargv[i].default_ != SQ_UNDEFINED) sq_value_free(pattern->pargv[i].default_);
-		if (pattern->pargv[i].genus != SQ_UNDEFINED) sq_value_free(pattern->pargv[i].genus);
+		free(pattern->pargv[i].name);
+		// if (pattern->pargv[i].default_ != SQ_UNDEFINED)
+		// 	sq_value_free(pattern->pargv[i].default_);
+
+		// if (pattern->pargv[i].genus != SQ_UNDEFINED)
+		// 	sq_value_free(pattern->pargv[i].genus);
+
 	}
 
 	for (unsigned i = 0; i < pattern->kwargc; ++i) {
-		if (pattern->kwargv[i].default_ != SQ_UNDEFINED) sq_value_free(pattern->kwargv[i].default_);
-		if (pattern->kwargv[i].genus != SQ_UNDEFINED) sq_value_free(pattern->kwargv[i].genus);
+		free(pattern->pargv[i].name);
+		// if (pattern->kwargv[i].default_ != SQ_UNDEFINED)
+		// 	sq_value_free(pattern->kwargv[i].default_);
+
+		// if (pattern->kwargv[i].genus != SQ_UNDEFINED)
+		// 	sq_value_free(pattern->kwargv[i].genus);
 	}
 
 	for (unsigned i = 0; i < pattern->code.nconsts; ++i)
@@ -82,74 +62,72 @@ struct sq_stackframe {
 	sq_value *locals;
 };
 
-static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args args);
+
 static sq_value run_stackframe(struct sq_stackframe *stackframe);
-static void teardown_stackframe(struct sq_stackframe *stackframe);
 
-static bool pattern_matches(const struct sq_journey_pattern *pattern, const struct sq_args *args) {
-	(void) pattern;
-	(void) args;
-	// todo
-	return true;
-}
+static sq_value try_run_pattern(
+	const struct sq_journey *journey,
+	const struct sq_journey_pattern *pattern,
+	const struct sq_args *args
+) {
+	// If we have too few parameters, or too many and there's no splat, then it's not good.
+	if (args->pargc < pattern->required_pargc || (pattern->pargc < args->pargc && !pattern->splat))
+		return SQ_UNDEFINED;
 
-static const struct sq_journey_pattern *find_pattern_to_run(const struct sq_journey *journey, const struct sq_args *args) {
-	for (unsigned i = 0; i < journey->npatterns; ++i)
-		if (pattern_matches(&journey->patterns[i], args))
-			return &journey->patterns[i];
+	// todo: check for genuses, and handle defaults/keyword arguments/splat and splatsplat.
 
-	return NULL;
-}
-
-sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
-	const struct sq_journey_pattern *pattern = find_pattern_to_run(journey, &args);
-
-	if (pattern == NULL)
-		sq_throw("no pattern matches for '%s'", journey->name);
-
-	sq_value locals[pattern->code.nlocals];
-	struct sq_stackframe stackframe = {
+	struct sq_stackframe sf = {
 		.ip = 0,
 		.journey = journey,
 		.pattern = pattern,
-		.locals = locals
+		.locals = xmalloc(sizeof_array(sq_value, pattern->code.nlocals))
 	};
 
-	setup_stackframe(&stackframe, args);
-	sq_value result = run_stackframe(&stackframe);
-	teardown_stackframe(&stackframe);
+	for (unsigned i = 0; i < args->pargc && i < pattern->pargc; ++i) 
+		sf.locals[i] = args->pargv[i];
+
+	sq_value result = run_stackframe(&sf);
+
+	for (unsigned i = 0; i < pattern->code.nlocals; ++i)
+		sq_value_free(sf.locals[i]);
+	free(sf.locals);
 
 	return result;
 }
 
-static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args args) {
-	unsigned index = 0;
-	for (unsigned i = 0; i < stackframe->pattern->pargc; ++i) {
-		if (i < args.pargc)
-			stackframe->locals[index++] = args.pargv[i];
-		else
-			stackframe->locals[]
-	}
-	if (stackframe->pattern->code.argc != args.pargc)
-		sq_throw("argument mismatch: expected %d, given %d", stackframe->pattern->argc, args.pargc);
+sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
+	sq_value result;
 
-	unsigned i = 0;
+	for (unsigned i = 0; i < journey->npatterns; ++i)
+		if ((result = try_run_pattern(journey, &journey->patterns[i], &args)) != SQ_UNDEFINED)
+			return result;
 
-	for (; i < args.pargc; ++i)
-		stackframe->locals[i] = args.pargv[i];
-
-	for (; i < stackframe->pattern->nlocals; ++i)
-		stackframe->locals[i] = SQ_NI;
+	// whelp, no pattern matched. exception time!
+	sq_throw("no patterns match for '%s'", journey->name);
 }
 
-static void teardown_stackframe(struct sq_stackframe *stackframe) {
-	return; // todo
-	for (unsigned i = 0; i < stackframe->journey->nlocals; ++i)
-		sq_value_free(stackframe->locals[i]);
-}
+// static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args args) {
+// 	unsigned index = 0;
+// 	for (unsigned i = 0; i < stackframe->pattern->pargc; ++i) {
+// 		if (i < args.pargc)
+// 			stackframe->locals[index++] = args.pargv[i];
+// 		else
+// 			stackframe->locals[]
+// 	}
+// 	if (stackframe->pattern->code.argc != args.pargc)
+// 		sq_throw("argument mismatch: expected %d, given %d", stackframe->pattern->argc, args.pargc);
+
+// 	unsigned i = 0;
+
+// 	for (; i < args.pargc; ++i)
+// 		stackframe->locals[i] = args.pargv[i];
+
+// 	for (; i < stackframe->pattern->nlocals; ++i)
+// 		stackframe->locals[i] = SQ_NI;
+// }
 
 static inline union sq_bytecode next_bytecode(struct sq_stackframe *sf) {
-	return sf->journey->bytecode[sf->ip++];
+	return sf->pattern->code.bytecode[sf->ip++];
 }
 
 static inline unsigned next_index(struct sq_stackframe *sf) {
@@ -165,7 +143,7 @@ static inline sq_value *next_local(struct sq_stackframe *sf) {
 }
 
 static void set_local(struct sq_stackframe *sf, unsigned index, sq_value value) {
-	assert(index <= sf->journey->nlocals);
+	assert(index <= sf->pattern->code.nlocals);
 
 	sq_value_free(sf->locals[index]);
 	sf->locals[index] = value;
@@ -475,8 +453,9 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 	enum sq_opcode opcode;
 	sq_value operands[MAX_OPERAND_COUNT];
 	unsigned arity, index;
+	const struct sq_codeblock *code = &sf->pattern->code;
 
-	while (sf->ip < sf->journey->codelen) {
+	while (sf->ip < code->codelen) {
 		opcode = next_bytecode(sf).opcode;
 		arity = normal_operands(opcode);
 
@@ -631,9 +610,9 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 	/*** Interpreter Stuff ***/
 		case SQ_OC_CLOAD:
 			index = next_index(sf);
-			assert(index < sf->journey->nconsts);
+			assert(index < code->nconsts);
 
-			set_next_local(sf, sq_value_clone(sf->journey->consts[index]));
+			set_next_local(sf, sq_value_clone(code->consts[index]));
 			continue;
 
 		case SQ_OC_GLOAD:
@@ -653,8 +632,8 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 		case SQ_OC_ILOAD:
 			index = next_index(sf);
-			assert(index < sf->journey->nconsts);
-			assert(sq_value_is_text(operands[1] = sf->journey->consts[index]));
+			assert(index < code->nconsts);
+			assert(sq_value_is_text(operands[1] = code->consts[index]));
 
 			set_next_local(sf, sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
 			continue;
@@ -662,8 +641,8 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_ISTORE:
 			index = next_index(sf);
 
-			assert(index < sf->journey->nconsts);
-			assert(sq_value_is_text(operands[2] = sf->journey->consts[index]));
+			assert(index < code->nconsts);
+			assert(sq_value_is_text(operands[2] = code->consts[index]));
 
 			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
 			continue;

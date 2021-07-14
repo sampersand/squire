@@ -21,11 +21,12 @@ struct sq_codeblock {
 };
 
 struct sq_journey_pattern {
-	unsigned pargc, kwargc;
+	unsigned pargc, kwargc, required_pargc;
 	bool splat, splatsplat;
 
 	struct sq_journey_argument {
-		sq_value default_, genus; // both are SQ_UNDEFINED if not supplied.
+		char *name;
+		int default_start, genus_start; // will be `-1` if no default or genus is supplied.
 	} *pargv, *kwargv;
 
 	struct sq_codeblock code;

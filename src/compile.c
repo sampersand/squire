@@ -1098,67 +1098,65 @@ static void compile_journey_pattern(
 	struct journey_pattern *jp,
 	bool is_method
 ) {
+	(void) is_method;
 	pattern->pargc = jp->pargc;
+	pattern->required_pargc = 0;
 	pattern->kwargc = jp->kwargc;
 	pattern->splat = jp->splat != NULL;
 	pattern->splatsplat = jp->splatsplat != NULL;
 	pattern->pargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->pargc));
 	pattern->kwargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->kwargc));
 
-	//for (unsigned i = 0; i < pattern->pargc; ++i)
+	for (unsigned i = 0; i < pattern->pargc; ++i) {
+		pattern->pargv[i].name = jp->pargv[i].name;
+		if (jp->pargv[i].default_ == NULL)
+			++pattern->required_pargc;
 
-/*
+		assert(jp->pargv[i].genus == NULL); // todo
+		assert(jp->pargv[i].default_ == NULL); // todo
+	}
 
-struct sq_journey_pattern {
-	unsigned pargc, kwargc;
-	bool splat, splatsplat;
+	for (unsigned i = 0; i < pattern->kwargc; ++i) {
+		pattern->kwargv[i].name = jp->kwargv[i].name;
+		assert(jp->kwargv[i].genus == NULL); // todo
+		assert(jp->kwargv[i].default_ == NULL); // todo
+	}
 
-	struct sq_journey_argument {
-		sq_value default_, genus; // both are SQ_UNDEFINED if not supplied.
-	} *pargv, *kwargv;
+	struct sq_code code;
+	code.codecap = 2048;
+	code.codelen = 0;
+	code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
 
-	unsigned nlocals, nconsts, codelen;
-	sq_value *consts;
-	union sq_bytecode *bytecode;
-};
+	code.nlocals = 0;
+	code.consts.cap = 64;
+	code.consts.len = 0;
+	code.consts.ary = xmalloc(sizeof_array(sq_value, code.consts.cap));
 
-struct journey_pattern {
-	unsigned pargc, kwargc;
-	struct journey_argument pargv[SQ_JOURNEY_MAX_ARGC], kwargv[SQ_JOURNEY_MAX_ARGC];
+	code.vars.len = jp->pargc;
+	code.vars.cap = 16 + code.vars.len;
+	code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
 
-	char *splat, *splatsplat; // both maybe NULL
-	struct primary *return_genus; // may be NULL
-	struct statements *body;
-} patterns[SQ_JOURNEY_MAX_PATTERNS];
+	code.labels.len = 0;
+	code.labels.cap = 4;
+	code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
 
-*/
-	// struct sq_code code;
-	// code.codecap = 2048;
-	// code.codelen = 0;
-	// code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
+	unsigned offset = 0;
 
-	// code.nlocals = 0;
-	// code.consts.cap = 64;
-	// code.consts.len = 0;
-	// code.consts.ary = xmalloc(sizeof_array(sq_value, code.consts.cap));
+	for (unsigned i = 0; i < jp->pargc; ++i) {
+		code.vars.ary[i+offset].name = strdup(jp->pargv[i].name);
+		code.vars.ary[i+offset].index = next_local(&code);
+	}
 
-	// code.vars.len = jd->nargs;
-	// code.vars.cap = 16 + code.vars.len;
-	// code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
+	assert(jp->body != NULL);
+	compile_statements(&code, jp->body);
 
-	// code.labels.len = 0;
-	// code.labels.cap = 4;
-	// code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
+	pattern->code.nlocals = code.nlocals;
+	pattern->code.nconsts = code.consts.len;
+	pattern->code.codelen = code.codelen;
+	pattern->code.consts = code.consts.ary;
+	pattern->code.bytecode = code.bytecode;
 
-	// unsigned offset = 0;
-
-	// for (unsigned i = 0; i < jd->nargs; ++i) {
-	// 	code.vars.ary[i+offset].name = jd->args[i];
-	// 	code.vars.ary[i+offset].index = next_local(&code);
-	// }
-
-	// if (jd->body != NULL)
-	// 	compile_statements(&code, jd->body);
+	// todo: free everything made by `code`.
 
 	return;
 }

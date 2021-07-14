@@ -710,6 +710,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 	} stage = STAGE_POSITIONAL;
 
 	// we assume the name has already been parsed.
+	EXPECT(SQ_TK_LPAREN, "expected '(' for pattern");
 
 	while (true) {
 		switch (take().kind) {
@@ -735,7 +736,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			if (take().kind != SQ_TK_IDENT)
 				die("expected name after '**'");
 
-			assert(!jp->splat);
+			assert(!jp->splatsplat);
 			jp->splatsplat = last.identifier;
 
 			if (take().kind != SQ_TK_COMMA) untake(); // allow trailing comma
@@ -776,7 +777,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			break;
 
 		default:
-			die("unexpected token encountered when parsing arguments: %d", last.kind);
+			die("unexpected token encountered when parsing arguments: 0x%x", last.kind);
 		}
 
 		// the next symbol after an argument either be a comma or a rparen
