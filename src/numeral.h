@@ -2,6 +2,7 @@
 #define sq_numeral_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 typedef int64_t sq_numeral;
 
@@ -19,9 +20,6 @@ extern struct sq_text sq_text_zero;
 # define sq_numeral_to_text sq_numeral_to_roman
 #endif /* SQ_NUMERAL_TO_ARABIC */
 
-static inline _Bool sq_numeral_is_roman(char c) {
-	return c == 'N' || c == 'I' || c == 'V' || c == 'X'
-		|| c == 'L' || c == 'C' || c == 'D' || c == 'M';
-}
+bool sq_numeral_starts(const char *text);
 
 #endif /* !sq_numeral_H */

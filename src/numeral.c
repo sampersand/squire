@@ -90,7 +90,51 @@ struct sq_text *sq_numeral_to_arabic(sq_numeral numeral) {
 	return buf;
 }
 
+
+static sq_numeral unicode_roman(const uint8_t *input, const char **output) {
+	assert(input[0] == 0xE2);
+	sq_numeral result;
+
+	if (input[1] == 0x85) {
+		assert(0xA0 <= input[2] && input[2] <= 0xBF);
+		uint8_t which = (input[2] - 0xA0) % 16; // % 16 because the `B` range is lowercase.
+
+		switch (which) {
+		case 0xC: result = 50; break;   /* L */
+		case 0xD: result = 100; break;  /* C */
+		case 0xE: result = 500; break;  /* D */
+		case 0xF: result = 1000; break; /* M */
+		default: result = which + 1; break; // all else
+		}
+	} else {
+		assert(input[1] == 0x86);
+		assert(0x80 <= input[2] && input[2] <= 0x88);
+
+		switch (input[2]) {
+		case 0: result = 1000; break;
+		case 1: result = 5000; break;
+		case 2: result = 10000; break;
+		case 3: result = 100; break;
+		case 4: result = 100; break;
+		case 5: result = 6; break;
+		case 6: result = 50; break;
+		case 7: result = 50000; break;
+		case 8: result = 100000; break;
+		default:
+			bug("bad input: %d", input[2]);
+		}
+	}
+
+	if (output)
+		*output = (const char *) (input + 3);
+
+	return result;
+}
+
 sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
+	if (strpbrk(input, "NIVXLCDM") == NULL)
+		return unicode_roman((const uint8_t *) input, output);
+
 	sq_numeral numeral = 0;
 	enum roman_numeral stage = 0, parsed;
 
@@ -131,4 +175,13 @@ done:
 		*output = input;
 
 	return numeral;
+}
+
+bool sq_numeral_starts(const char *text) {
+	if (strpbrk(text, "NIVXLCDM") != NULL) return true;
+	const uint8_t *utext = (const uint8_t *) text;
+	if (utext[0] != 0xE2) return false;
+
+	return (utext[1] == 0x85 && (0xa0 <= utext[2] && utext[2] <= 0xbf))
+	    || (utext[1] == 0x86 && (0x80 <= utext[2] && utext[2] <= 0x88));
 }
