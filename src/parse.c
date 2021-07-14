@@ -30,25 +30,6 @@ static struct sq_token take() {
 	return token;
 }
 
-static unsigned field_name_count;
-static char *field_names[256];
-
-static void parse_field_names(bool is_method) {
-	field_name_count = 0;
-
-	if (is_method)
-		field_names[field_name_count++] = strdup("soul");
-
-	while (take().kind == SQ_TK_IDENT) {
-		if (field_name_count > 255) die("too many fields!");
-		field_names[field_name_count++] = last.identifier;
-
-		if (take().kind != SQ_TK_COMMA)
-			break;
-	}
-
-	untake();
-}
 
 #define EXPECTED(kind_, iffalse) \
 	do { if (take().kind != kind_) { iffalse; } } while(0)
@@ -56,7 +37,6 @@ static void parse_field_names(bool is_method) {
 #define GUARD(kind_) EXPECTED(kind_, untake(); return NULL)
 
 static struct expression *parse_expression(void);
-
 
 static char *token_to_identifier(struct sq_token token) {
 	switch (token.kind) {
@@ -92,7 +72,6 @@ static struct variable *parse_variable(void) {
 	}
 	return var;
 }
-
 
 static struct function_call *parse_func_call(struct variable *func) {
 	struct expression *args[SQ_JOURNEY_MAX_ARGC];
@@ -200,7 +179,7 @@ static struct dict *parse_codex() {
 	return dict;
 }
 
-static struct func_declaration *parse_func_declaration(bool, bool);
+static struct journey_declaration *parse_journey_declaration(bool, bool);
 static struct primary *parse_primary() {
 	struct primary primary;
 
@@ -262,7 +241,7 @@ static struct primary *parse_primary() {
 	case SQ_TK_FUNC: {
 		untake();
 		primary.kind = SQ_PS_PLAMBDA;
-		primary.lambda = parse_func_declaration(true, false);
+		primary.lambda = parse_journey_declaration(true, false);
 		break;
 	}
 	default:
@@ -593,7 +572,7 @@ static struct class_declaration *parse_form_declaration() {
 		case SQ_TK_METHOD:
 		case SQ_TK_CLASSFN:
 		case SQ_TK_CONSTRUCTOR: {
-			struct func_declaration *fn = parse_func_declaration(false, 1);
+			struct journey_declaration *fn = parse_journey_declaration(false, 1);
 			if (tkn.kind == SQ_TK_CONSTRUCTOR) {
 				if (fdecl->constructor != NULL)
 					die("cannot have two constructors.");
@@ -699,42 +678,172 @@ static struct statements *parse_brace_statements(char *what) {
 	return stmts;
 }
 
-static struct func_declaration *parse_func_declaration(bool guard, bool is_method) {
+/*
+struct journey_declaration {
+	char *name;
+	unsigned npatterns;
+	struct journey_pattern {
+		unsigned nargs;
+		struct journey_argument {
+			char *name;
+			struct primary *genus; // may be NULL
+			struct expression *default_; // may be NULL.
+		} args[SQ_JOURNEY_MAX_ARGC];
+		char *splat; // may be NULL
+		char *splatsplat; // may be NULL
+		struct primary *return_genus; // may be NULL
+		struct statements *body;
+	} *patterns;
+};
+*/
+
+static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
+	struct journey_argument *current;
+
+	if (is_method) 
+		jp->pargv[jp->pargc++].name = strdup("soul"); // other two values are NULL b/c of calloc.
+
+	enum {
+		STAGE_POSITIONAL,
+		STAGE_DEFAULT,
+		STAGE_KW_ONLY,
+	} stage = STAGE_POSITIONAL;
+
+	// we assume the name has already been parsed.
+
+	while (true) {
+		switch (take().kind) {
+		case SQ_TK_RPAREN:
+			goto done_with_arguments;
+
+		case SQ_TK_MUL:
+			if (stage == STAGE_KW_ONLY) {
+				die("duplicate splat argument encountered");
+			} else if (take().kind == SQ_TK_COMMA || last.kind == SQ_TK_RPAREN) {
+				untake();
+			} else if (last.kind != SQ_TK_IDENT) {
+				die("expected name (or nothing) after '*'");
+			} else {
+				assert(!jp->splat);
+				jp->splat = last.identifier;
+			}
+
+			stage = STAGE_KW_ONLY;
+			break;
+
+		case SQ_TK_POW:
+			if (take().kind != SQ_TK_IDENT)
+				die("expected name after '**'");
+
+			assert(!jp->splat);
+			jp->splatsplat = last.identifier;
+
+			if (take().kind != SQ_TK_COMMA) untake(); // allow trailing comma
+			if (take().kind != SQ_TK_RPAREN) die("missing closing paren");
+			goto done_with_arguments;
+
+		case SQ_TK_IDENT:
+		case SQ_TK_LABEL:
+			// are we a keyword argument or a normal positional one?
+			if (stage == STAGE_KW_ONLY) {
+				if (jp->kwargc == SQ_JOURNEY_MAX_ARGC)
+					die("too many keyword arguments!");
+				current = &jp->kwargv[jp->kwargc++];
+			} else {
+				if (jp->pargc == SQ_JOURNEY_MAX_ARGC)
+					die("too many positional arguments!");
+				current = &jp->pargv[jp->pargc++];
+			}
+
+			// set the name of the argument
+			current->name = last.identifier;
+
+			// if we were a label (ie had a colon after it), parse a genus.
+			if (last.kind == SQ_TK_LABEL && !(current->genus = parse_primary()))
+				die("missing genus for argument '%s'", current->name);
+
+			// if the next symbol's an `=`, then parse the default value.
+			if (take().kind == SQ_TK_ASSIGN) {
+				if (!(current->default_ = parse_expression()))
+					die("missing default for argument '%s'", current->name);
+				stage = STAGE_DEFAULT;
+			} else if (stage == STAGE_DEFAULT) {
+				die("positional parameter after default ones");
+			} else {
+				untake();
+			}
+
+			break;
+
+		default:
+			die("unexpected token encountered when parsing arguments: %d", last.kind);
+		}
+
+		// the next symbol after an argument either be a comma or a rparen
+		switch (take().kind) {
+		case SQ_TK_COMMA:
+			break;
+
+		case SQ_TK_RPAREN:
+			goto done_with_arguments;
+
+		default:
+			die("unknown token within variable declaration list: %d", last.kind);
+		}
+	}
+
+done_with_arguments:
+
+	if (take().kind == SQ_TK_COLON)  {
+		if (!(jp->return_genus = parse_primary()))
+			die("unable to parse return genus");
+	} else {
+		untake();
+	}
+
+	// shorthand notation
+	if (take().kind == SQ_TK_ASSIGN) {
+		jp->body = xmalloc(sizeof(struct statements));
+		jp->body->len = 1;
+		jp->body->stmts = xmalloc(sizeof(struct statement *));
+		jp->body->stmts[0] = xmalloc(sizeof(struct statement));
+		jp->body->stmts[0]->kind = SQ_PS_SRETURN;
+		jp->body->stmts[0]->rstmt = xmalloc(sizeof(struct return_statement));
+
+		if ((jp->body->stmts[0]->rstmt->value = parse_expression()))
+			return;
+	} else if (untake(), (jp->body = parse_brace_statements("journey"))) {
+		return;
+	}
+
+	die("no body given for function");
+}
+
+static struct journey_declaration *parse_journey_declaration(bool guard, bool is_method) {
 	if (guard)
 		GUARD(SQ_TK_FUNC);
-	struct func_declaration *fdecl = xmalloc(sizeof(struct func_declaration));
+
+	struct journey_declaration *jd = xcalloc(1, sizeof(struct journey_declaration));
 
 	// optional name
 	if (take().kind == SQ_TK_LPAREN) {
 		untake();
-		fdecl->name = strdup("<anonymous>");
-	} else if (!(fdecl->name = token_to_identifier(last))) {
+		jd->name = strdup("<anonymous>");
+	} else if (!(jd->name = token_to_identifier(last))) {
 		die("unexpected token in func declaration list");
 	}
 
-	// require a lparen.
-	EXPECT(SQ_TK_LPAREN, "expected '(' before func fields");
-	parse_field_names(is_method);
-	EXPECT(SQ_TK_RPAREN, "expected ')' after func fields");
+	jd->npatterns = 0;
 
-	fdecl->nargs = field_name_count;
-	fdecl->args = memdup(field_names, sizeof_array(char *, field_name_count));
+	do {
+		if (SQ_JOURNEY_MAX_PATTERNS <= jd->npatterns)
+			die("too many patterns encountered");
 
-	if (take().kind == SQ_TK_ASSIGN) {
-		fdecl->body = xmalloc(sizeof(struct statements));
-		fdecl->body->len = 1;
-		fdecl->body->stmts = xmalloc(sizeof(struct statement *));
-		fdecl->body->stmts[0] = xmalloc(sizeof(struct statement));
-		fdecl->body->stmts[0]->kind = SQ_PS_SRETURN;
-		fdecl->body->stmts[0]->rstmt = xmalloc(sizeof(struct return_statement));
+		parse_journey_pattern(is_method, &jd->patterns[jd->npatterns++]);
+	} while (take().kind == SQ_TK_COMMA);
+	untake(); // to undo the last take.
 
-		if ((fdecl->body->stmts[0]->rstmt->value = parse_expression()))
-			return fdecl;
-	} else if (untake(), !(fdecl->body = parse_brace_statements("journey"))) {
-		return fdecl;
-	}
-
-	die("no body given for function");
+	return jd;
 }
 
 static struct if_statement *parse_if_statement() {
@@ -886,7 +995,7 @@ static struct statement *parse_statement() {
 	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
 	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;
 	else if ((stmt.cdecl = parse_form_declaration())) stmt.kind = SQ_PS_SCLASS;
-	else if ((stmt.fdecl = parse_func_declaration(true, false))) stmt.kind = SQ_PS_SFUNC;
+	else if ((stmt.jdecl = parse_journey_declaration(true, false))) stmt.kind = SQ_PS_SJOURNEY;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.sw_stmt = parse_switch_statement())) stmt.kind = SQ_PS_SSWITCH;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;

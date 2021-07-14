@@ -254,7 +254,7 @@ static unsigned load_variable_class(struct sq_code *code, struct variable *var, 
 static unsigned compile_expression(struct sq_code *code, struct expression *expr);
 static unsigned compile_primary(struct sq_code *code, struct primary *primary);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
-static struct sq_journey *compile_function(struct func_declaration *fndecl, bool is_method);
+static struct sq_journey *compile_journey(struct journey_declaration *jd, bool is_method);
 
 static void compile_form_declaration(struct sq_code *code, struct class_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
@@ -272,7 +272,6 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		if (fdecl->matter[i].genus) {
 			if (global == -1) {
 				global = lookup_global_variable(form->name);
-				printf("global=%d\n", global);
 				set_opcode(code, SQ_OC_GLOAD);
 				set_index(code, global);
 				set_index(code, global = next_local(code));
@@ -288,17 +287,17 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 		}
 	}
 
-	form->imitate = fdecl->constructor ? compile_function(fdecl->constructor, true) : NULL;
+	form->imitate = fdecl->constructor ? compile_journey(fdecl->constructor, true) : NULL;
 
 	form->nrecollections = fdecl->nfuncs;
 	form->recollections = xmalloc(sizeof_array(struct sq_journey *, form->nrecollections));
 	for (unsigned i = 0; i < form->nrecollections; ++i)
-		form->recollections[i] = compile_function(fdecl->funcs[i], false);
+		form->recollections[i] = compile_journey(fdecl->funcs[i], false);
 
 	form->nchanges = fdecl->nmeths;
 	form->changes = xmalloc(sizeof_array(struct sq_journey *, form->nchanges));
 	for (unsigned i = 0; i < form->nchanges; ++i)
-		form->changes[i] = compile_function(fdecl->meths[i], true);
+		form->changes[i] = compile_journey(fdecl->meths[i], true);
 
 	form->nessences = fdecl->nessences;
 	form->essences = xmalloc(sizeof_array(struct sq_essence, form->nessences));
@@ -363,13 +362,13 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	free(fdecl); // but none of the fields, as they're now owned by `form`.
 }
 
-static void compile_func_declaration(struct func_declaration *fdecl) {
-	assert(fdecl->name != NULL);
+static void compile_journey_declaration(struct journey_declaration *jd) {
+	assert(jd->name != NULL);
 
-	declare_global_variable(strdup(fdecl->name), SQ_NI);
+	declare_global_variable(strdup(jd->name), SQ_NI);
 
-	struct sq_journey *func = compile_function(fdecl, false);
-	free(fdecl); // but none of the fields, as they're now owned by `func`.
+	struct sq_journey *func = compile_journey(jd, false);
+	free(jd); // but none of the fields, as they're now owned by `func`.
 
 	declare_global_variable(func->name, sq_value_new(func));
 }
@@ -583,7 +582,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	case SQ_PS_PLAMBDA: {
-		struct sq_journey *func = compile_function(primary->lambda, false);
+		struct sq_journey *func = compile_journey(primary->lambda, false);
 		free(primary->lambda);
 
 		result = load_constant(code, sq_value_new(func));
@@ -1075,7 +1074,7 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
 	case SQ_PS_SLOCAL: compile_local(code, stmt->ldecl); break;
 	case SQ_PS_SCLASS: compile_form_declaration(code, stmt->cdecl); break;
-	case SQ_PS_SFUNC: compile_func_declaration(stmt->fdecl); break;
+	case SQ_PS_SJOURNEY: compile_journey_declaration(stmt->jdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;
 	case SQ_PS_SLABEL: compile_label_statement(code, stmt->label); break;
@@ -1094,49 +1093,90 @@ static void compile_statements(struct sq_code *code, struct statements *stmts) {
 		compile_statement(code, stmts->stmts[i]);
 }
 
-static struct sq_journey *compile_function(struct func_declaration *fndecl, bool is_method) {
-	struct sq_code code;
-	code.codecap = 2048;
-	code.codelen = 0;
-	code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
+static void compile_journey_pattern(
+	struct sq_journey_pattern *pattern,
+	struct journey_pattern *jp,
+	bool is_method
+) {
+	pattern->pargc = jp->pargc;
+	pattern->kwargc = jp->kwargc;
+	pattern->splat = jp->splat != NULL;
+	pattern->splatsplat = jp->splatsplat != NULL;
+	pattern->pargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->pargc));
+	pattern->kwargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->kwargc));
 
-	code.nlocals = 0;
-	code.consts.cap = 64;
-	code.consts.len = 0;
-	code.consts.ary = xmalloc(sizeof_array(sq_value , code.consts.cap));
+	//for (unsigned i = 0; i < pattern->pargc; ++i)
 
-	code.vars.len = fndecl->nargs;
-	code.vars.cap = 16 + code.vars.len;
-	code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
+/*
 
-	code.labels.len = 0;
-	code.labels.cap = 4;
-	code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
+struct sq_journey_pattern {
+	unsigned pargc, kwargc;
+	bool splat, splatsplat;
 
-	unsigned offset = 0;
+	struct sq_journey_argument {
+		sq_value default_, genus; // both are SQ_UNDEFINED if not supplied.
+	} *pargv, *kwargv;
 
-	for (unsigned i = 0; i < fndecl->nargs; ++i) {
-		code.vars.ary[i+offset].name = fndecl->args[i];
-		code.vars.ary[i+offset].index = next_local(&code);
-	}
+	unsigned nlocals, nconsts, codelen;
+	sq_value *consts;
+	union sq_bytecode *bytecode;
+};
 
-	if (fndecl->body != NULL)
-		compile_statements(&code, fndecl->body);
+struct journey_pattern {
+	unsigned pargc, kwargc;
+	struct journey_argument pargv[SQ_JOURNEY_MAX_ARGC], kwargv[SQ_JOURNEY_MAX_ARGC];
 
-	struct sq_journey *fn = xmalloc(sizeof(struct sq_journey));
+	char *splat, *splatsplat; // both maybe NULL
+	struct primary *return_genus; // may be NULL
+	struct statements *body;
+} patterns[SQ_JOURNEY_MAX_PATTERNS];
 
-	fn->refcount = -1; // todo: refcount
-	fn->name = fndecl->name;
-	fn->argc = fndecl->nargs;
-	fn->bytecode = code.bytecode;
-	fn->consts = code.consts.ary;
-	fn->nconsts = code.consts.len;
-	fn->nlocals = code.nlocals;
-	fn->program = program;
-	fn->codelen = code.codelen;
-	fn->is_method = is_method;
+*/
+	// struct sq_code code;
+	// code.codecap = 2048;
+	// code.codelen = 0;
+	// code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
 
-	return fn;
+	// code.nlocals = 0;
+	// code.consts.cap = 64;
+	// code.consts.len = 0;
+	// code.consts.ary = xmalloc(sizeof_array(sq_value, code.consts.cap));
+
+	// code.vars.len = jd->nargs;
+	// code.vars.cap = 16 + code.vars.len;
+	// code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
+
+	// code.labels.len = 0;
+	// code.labels.cap = 4;
+	// code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
+
+	// unsigned offset = 0;
+
+	// for (unsigned i = 0; i < jd->nargs; ++i) {
+	// 	code.vars.ary[i+offset].name = jd->args[i];
+	// 	code.vars.ary[i+offset].index = next_local(&code);
+	// }
+
+	// if (jd->body != NULL)
+	// 	compile_statements(&code, jd->body);
+
+	return;
+}
+
+static struct sq_journey *compile_journey(struct journey_declaration *jd, bool is_method) {
+	struct sq_journey *journey = xmalloc(sizeof(struct sq_journey));
+
+	journey->name = jd->name;
+	journey->refcount = 1;
+	journey->npatterns = jd->npatterns;
+	journey->program = program;
+	journey->is_method = is_method;
+	journey->patterns = xmalloc(sizeof_array(struct sq_journey_pattern, jd->npatterns));
+
+	for (unsigned i = 0; i < jd->npatterns; ++i)
+		compile_journey_pattern(&journey->patterns[i], &jd->patterns[i], is_method);
+
+	return journey;
 }
 
 static void setup_globals(void) {
@@ -1181,14 +1221,22 @@ struct sq_program *sq_program_compile(const char *stream) {
 	program->nglobals = 1;
 	program->globals = NULL;
 
-	struct func_declaration maindecl = {
+	struct journey_declaration maindecl = {
 		.name = strdup("main"),
-		.nargs = 0, // todo: pass commandline arguments
-		.args = NULL,
-		.body = sq_parse_statements(stream)
+		.npatterns = 1,
+		.patterns =  {
+			{
+				.pargc = 0,
+				.kwargc = 0,
+				.splat = NULL,
+				.splatsplat = NULL,
+				.return_genus = NULL,
+				.body = sq_parse_statements(stream)
+			}
+		}
 	};
 
-	program->main = compile_function(&maindecl, false);
+	program->main = compile_journey(&maindecl, false);
 
 	program->nglobals = globals.len;
 	program->globals = xmalloc(sizeof_array(sq_value , globals.len));

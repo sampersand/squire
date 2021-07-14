@@ -7,25 +7,48 @@
 #include <assert.h>
 
 struct sq_args {
-	unsigned pargc;
+	unsigned pargc, kwargc;
 	sq_value *pargv;
+	struct sq_arg_kw { const char *name; sq_value value; } *kwargv;
 };
 
-#define SQ_JOURNEY_MAX_ARGC 255
+#define SQ_JOURNEY_MAX_ARGC 32 // seems like a reasonable maximum
+
+struct sq_codeblock {
+	unsigned nlocals, nconsts, codelen;
+	sq_value *consts;
+	union sq_bytecode *bytecode;
+};
+
+struct sq_journey_pattern {
+	unsigned pargc, kwargc;
+	bool splat, splatsplat;
+
+	struct sq_journey_argument {
+		sq_value default_, genus; // both are SQ_UNDEFINED if not supplied.
+	} *pargv, *kwargv;
+
+	struct sq_codeblock code;
+};
 
 struct sq_journey {
 	SQ_VALUE_ALIGN char *name;
-	unsigned refcount;
-
-	unsigned argc, nlocals, nconsts, codelen;
-	sq_value *consts;
+	unsigned refcount, npatterns;
 	struct sq_program *program;
-	union sq_bytecode *bytecode;
 	bool is_method;
+
+	struct sq_journey_pattern *patterns;
 };
 
-struct sq_journey *sq_journey_clone(struct sq_journey *journey);
 void sq_journey_deallocate(struct sq_journey *journey);
+
+static inline struct sq_journey *sq_journey_clone(struct sq_journey *journey) {
+	assert(journey->refcount);
+
+	++journey->refcount;
+
+	return journey;
+}
 
 static inline void sq_journey_free(struct sq_journey *journey) {
 	if(1)return;//todo

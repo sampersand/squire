@@ -62,6 +62,7 @@ enum sq_token_kind {
 	SQ_TK_ADD,
 	SQ_TK_SUB,
 	SQ_TK_MUL,
+	SQ_TK_POW,
 	SQ_TK_DIV,
 	SQ_TK_MOD,
 	SQ_TK_NOT,

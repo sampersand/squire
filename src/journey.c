@@ -11,39 +11,74 @@
 #include <unistd.h>
 #include <setjmp.h>
 
-struct sq_journey *sq_journey_clone(struct sq_journey *function) {
-	assert(function->refcount);
+/*
 
-	if (0 < function->refcount)
-		++function->refcount;
+struct sq_codeblock {
+	unsigned nlocals, nconsts, codelen;
+	sq_value *consts;
+	union sq_bytecode *bytecode;
+};
 
-	return function;
+struct sq_journey_pattern {
+	unsigned pargc, kwargc;
+	bool splat, splatsplat;
+
+	struct sq_journey_argument {
+		sq_value default_, genus; // both are SQ_UNDEFINED if not supplied.
+	} *pargv, *kwargv;
+
+	struct sq_codeblock code;
+};
+
+struct sq_journey {
+	SQ_VALUE_ALIGN char *name;
+	unsigned refcount, npatterns;
+	struct sq_program *program;
+	bool is_method;
+
+	struct sq_journey_pattern *patterns;
+};
+*/
+
+static void deallocate_pattern(struct sq_journey_pattern *pattern) {
+	for (unsigned i = 0; i < pattern->pargc; ++i) {
+		if (pattern->pargv[i].default_ != SQ_UNDEFINED) sq_value_free(pattern->pargv[i].default_);
+		if (pattern->pargv[i].genus != SQ_UNDEFINED) sq_value_free(pattern->pargv[i].genus);
+	}
+
+	for (unsigned i = 0; i < pattern->kwargc; ++i) {
+		if (pattern->kwargv[i].default_ != SQ_UNDEFINED) sq_value_free(pattern->kwargv[i].default_);
+		if (pattern->kwargv[i].genus != SQ_UNDEFINED) sq_value_free(pattern->kwargv[i].genus);
+	}
+
+	for (unsigned i = 0; i < pattern->code.nconsts; ++i)
+		sq_value_free(pattern->code.consts[i]);
+
+	free(pattern->pargv);
+	free(pattern->kwargv);
+	free(pattern->code.consts);
+	free(pattern->code.bytecode);
 }
 
-void sq_journey_deallocate(struct sq_journey *function) {
-	assert(!function->refcount);
+void sq_journey_deallocate(struct sq_journey *journey) {
+	assert(!journey->refcount);
 
-	for (unsigned i = 0; i < function->nconsts; ++i)
-		sq_value_free(function->consts[i]);
+	for (unsigned i = 0; i < journey->npatterns; ++i)
+		deallocate_pattern(&journey->patterns[i]);
 
-	free(function->name);
-	free(function->consts);
-	free(function->bytecode);
-	free(function);
+	free(journey->name);
+	free(journey->patterns);
+	free(journey);
 }
 
-void sq_journey_dump(FILE *out, const struct sq_journey *function) {
-	fprintf(out, "Journey(%s, %d arg", function->name, function->argc);
-
-	if (function->argc != 1)
-		putc('s', out);
-
-	putc(')', out);
+void sq_journey_dump(FILE *out, const struct sq_journey *journey) {
+	fprintf(out, "Journey(%s, %d patterns)", journey->name, journey->npatterns);
 }
 
 struct sq_stackframe {
 	unsigned ip;
 	const struct sq_journey *journey;
+	const struct sq_journey_pattern *pattern;
 	sq_value *locals;
 };
 
@@ -51,9 +86,34 @@ static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args ar
 static sq_value run_stackframe(struct sq_stackframe *stackframe);
 static void teardown_stackframe(struct sq_stackframe *stackframe);
 
+static bool pattern_matches(const struct sq_journey_pattern *pattern, const struct sq_args *args) {
+	(void) pattern;
+	(void) args;
+	// todo
+	return true;
+}
+
+static const struct sq_journey_pattern *find_pattern_to_run(const struct sq_journey *journey, const struct sq_args *args) {
+	for (unsigned i = 0; i < journey->npatterns; ++i)
+		if (pattern_matches(&journey->patterns[i], args))
+			return &journey->patterns[i];
+
+	return NULL;
+}
+
 sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
-	sq_value locals[journey->nlocals];
-	struct sq_stackframe stackframe = { .ip = 0, .journey = journey, .locals = locals };
+	const struct sq_journey_pattern *pattern = find_pattern_to_run(journey, &args);
+
+	if (pattern == NULL)
+		sq_throw("no pattern matches for '%s'", journey->name);
+
+	sq_value locals[pattern->code.nlocals];
+	struct sq_stackframe stackframe = {
+		.ip = 0,
+		.journey = journey,
+		.pattern = pattern,
+		.locals = locals
+	};
 
 	setup_stackframe(&stackframe, args);
 	sq_value result = run_stackframe(&stackframe);
@@ -63,15 +123,22 @@ sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
 }
 
 static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args args) {
-	if (stackframe->journey->argc != args.pargc)
-		sq_throw("argument mismatch: expected %d, given %d", stackframe->journey->argc, args.pargc);
+	unsigned index = 0;
+	for (unsigned i = 0; i < stackframe->pattern->pargc; ++i) {
+		if (i < args.pargc)
+			stackframe->locals[index++] = args.pargv[i];
+		else
+			stackframe->locals[]
+	}
+	if (stackframe->pattern->code.argc != args.pargc)
+		sq_throw("argument mismatch: expected %d, given %d", stackframe->pattern->argc, args.pargc);
 
 	unsigned i = 0;
 
 	for (; i < args.pargc; ++i)
 		stackframe->locals[i] = args.pargv[i];
 
-	for (; i < stackframe->journey->nlocals; ++i)
+	for (; i < stackframe->pattern->nlocals; ++i)
 		stackframe->locals[i] = SQ_NI;
 }
 
@@ -474,7 +541,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			return sq_value_clone(operands[0]);
 
 		case SQ_OC_THROW:
-			// TODO: catch thrown values and free memory in the current function.
+			// TODO: catch thrown values and free memory in the current journey.
 			sq_throw_value(sq_value_clone(operands[0]));
 
 		case SQ_OC_POPTRYCATCH:

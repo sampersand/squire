@@ -1,6 +1,8 @@
 #ifndef SQ_PARSE_H
 #define SQ_PARSE_H
 
+#include "journey.h"
+
 struct statements *sq_parse_statements(const char *stream);
 
 struct statements {
@@ -11,7 +13,7 @@ struct statements {
 struct statement {
 	enum {
 		SQ_PS_SCLASS,
-		SQ_PS_SFUNC,
+		SQ_PS_SJOURNEY,
 		SQ_PS_STRYCATCH,
 		SQ_PS_STHROW,
 		SQ_PS_SRETURN,
@@ -31,7 +33,7 @@ struct statement {
 	union {
 		struct scope_declaration *gdecl, *ldecl;
 		struct class_declaration *cdecl;
-		struct func_declaration *fdecl;
+		struct journey_declaration *jdecl;
 		struct if_statement *ifstmt;
 		struct while_statement *wstmt;
 		struct return_statement *rstmt;
@@ -52,23 +54,39 @@ struct class_declaration {
 	char *name;
 	unsigned nmatter, nfuncs, nmeths, nparents, nessences;
 	char **parents;
+
+	struct journey_declaration **funcs, **meths, *constructor;
+
 	struct matter_declaration {
 		char *name;
-		struct primary *genus; // may be null
+		struct primary *genus; // may be NULL
 	} *matter;
+
 	struct essence_declaration {
 		char *name;
 		struct expression *value;
-		struct primary *genus; // may be null
+		struct primary *genus; // may be NULL
 	} *essences;
-	struct func_declaration **funcs, **meths, *constructor;
 };
 
-struct func_declaration {
+struct journey_argument {
 	char *name;
-	unsigned nargs;
-	char **args;
-	struct statements *body;
+	struct primary *genus; // may be NULL
+	struct expression *default_; // may be NULL.
+};
+
+#define SQ_JOURNEY_MAX_PATTERNS 255
+struct journey_declaration {
+	char *name;
+	unsigned npatterns;
+	struct journey_pattern {
+		unsigned pargc, kwargc;
+		struct journey_argument pargv[SQ_JOURNEY_MAX_ARGC], kwargv[SQ_JOURNEY_MAX_ARGC];
+
+		char *splat, *splatsplat; // both maybe NULL
+		struct primary *return_genus; // may be NULL
+		struct statements *body;
+	} patterns[SQ_JOURNEY_MAX_PATTERNS];
 };
 
 struct if_statement {
@@ -207,7 +225,7 @@ struct primary {
 	} kind;
 	union {
 		struct expression *expr;
-		struct func_declaration *lambda;
+		struct journey_declaration *lambda;
 		sq_numeral numeral;
 		struct sq_text *text;
 		sq_veracity veracity;
