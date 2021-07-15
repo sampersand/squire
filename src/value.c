@@ -817,14 +817,8 @@ void sq_value_set_attr(sq_value soul, const char *attr, sq_value value) {
 bool sq_value_matches(sq_value formlike, sq_value to_check) {
 	bool matches;
 	switch (sq_value_genus_tag(formlike)) {
-	case SQ_G_FORM: {
-		sq_value genus = sq_value_genus(to_check);
-		
-		matches = sq_value_eql(genus, to_check);
-
-		sq_value_free(genus);
-		return matches;
-	}
+	case SQ_G_FORM:
+		return sq_form_is_parent_of(sq_value_as_form(formlike), to_check);
 
 	case SQ_G_JOURNEY: {
 		struct sq_args args = { .pargc = 1, .pargv = &to_check };

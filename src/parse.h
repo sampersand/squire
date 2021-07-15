@@ -93,12 +93,12 @@ struct journey_declaration {
 struct if_statement {
 	struct expression *cond;
 	struct statements *iftrue;
-	struct statements *iffalse;
+	struct statements *iffalse; // may be NULL
 };
 
 struct switch_statement {
 	struct expression *cond;
-	struct statements *alas;
+	struct statements *alas; // may be NULL
 
 	struct case_statement {
 		struct expression *expr;

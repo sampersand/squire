@@ -3,5 +3,5 @@
 
 form Literal : Value {
 	matter value: $literals;
-	change run(): $literals = soul.value;
+	change run(): $literals => soul.value;
 }

@@ -277,13 +277,13 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 				set_index(code, global = next_local(code));
 			}
 
-			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->matter[i].name))));
+//			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->matter[i].name))));
 
 			unsigned kind = compile_primary(code, fdecl->matter[i].genus);
 			set_opcode(code, SQ_OC_FMGENUS_STORE);
 			set_index(code, global);
 			set_index(code, kind);
-			set_index(code, const_index);
+			set_index(code, i);
 		}
 	}
 
@@ -327,7 +327,7 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 				set_opcode(code, SQ_OC_FEGENUS_STORE);
 				set_index(code, global);
 				set_index(code, index);
-				set_index(code, const_index);
+				set_index(code, i);
 			}
 
 			if (!fdecl->essences[i].value) {

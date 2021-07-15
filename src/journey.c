@@ -727,14 +727,9 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			index = next_index(sf);
 
 			assert(sq_value_is_form(operands[0]));
-			struct sq_essence *essence = 
-				sq_form_lookup_essence(
-					sq_value_as_form(operands[0]),
-					sq_value_as_text(code->consts[index])->ptr
-				);
-			assert(essence != NULL);
-			assert(essence->genus == SQ_UNDEFINED);
-			essence->genus = sq_value_clone(operands[1]);
+			assert(index < sq_value_as_form(operands[0])->nessences);
+			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
+			sq_value_as_form(operands[0])->essences[index].genus = sq_value_clone(operands[1]);
 			continue;
 		}
 

@@ -107,6 +107,24 @@ bool sq_form_set_attr(struct sq_form *form, const char *attr, sq_value value) {
 	return true;
 }
 
+static bool is_form_a_parent_of(const struct sq_form *parent, const struct sq_form *child) {
+	if (parent == child) return true;
+
+	for (unsigned i = 0; i < child->nparents; ++i)
+		if (is_form_a_parent_of(parent, child->parents[i]))
+			return true;
+
+	return false;
+}
+
+bool sq_form_is_parent_of(const struct sq_form *form, sq_value value) {
+	if (!sq_value_is_imitation(value))
+		return false;
+
+	return is_form_a_parent_of(form, sq_value_as_imitation(value)->form);
+}
+
+
 void sq_form_dump(FILE *out, const struct sq_form *form) {
 	fprintf(out, "Form(%s:", form->name);
 

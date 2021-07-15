@@ -121,6 +121,7 @@ struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char 
 sq_value sq_form_get_attr(struct sq_form *form, const char *attr);
 bool sq_form_set_attr(struct sq_form *form, const char *name, sq_value value);
 
+bool sq_form_is_parent_of(const struct sq_form *form, sq_value value);
 
 /** Creates a new imitation of `form`, given the arguments.
  * 
