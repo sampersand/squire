@@ -339,8 +339,11 @@ static struct sq_token next_normal_token(void) {
 	strip_whitespace(false);
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
-	if (!*sq_stream || !strncmp(sq_stream, "@__END__", 8))
+	//printf("<<%s>>\n", sq_stream);
+	if (!strncmp(sq_stream, "@__END__", 8)) {
+		//printf("here?\n");
 		return token.kind = SQ_TK_UNDEFINED, token;
+	}
 
 	if (isdigit(*sq_stream))
 		return parse_arabic_numeral();
