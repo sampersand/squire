@@ -1,8 +1,22 @@
 form Parser {
 	matter stream;
 
-	change peek() {
-		reward soul.stream[I];
+	change peek() = soul.stream[I];
+	change take
+		() if  {
+		ret = soul.stream[I];
+		soul.stream = substr(soul.stream, I, length(soul.stream));
+		reward ret;
+	}
+
+	change next() {
+		fork soul.peek() {
+		path [' ', "\t", "\n", "\r", '(', ')', '[', ']', '{', '}', ':']:
+			reward soul.next();
+		path '#':
+			whilst soul.next()
+		}
+		handle()
 	}
 }
 

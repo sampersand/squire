@@ -147,7 +147,16 @@ static sq_value try_run_pattern(
 	if (positional_argument_stop_index < 0)
 		goto free_and_return;
 
-	// todo: check for genuses, and handle defaults/keyword arguments/splat and splatsplat.
+	// todo: handle keyword arguments
+
+	// ie we have a condition
+	if (0 <= pattern->condition_start) {
+		sf.ip = pattern->condition_start;
+		sq_value condition = run_stackframe(&sf);
+		bool is_valid = sq_value_to_numeral(condition);
+		sq_value_free(condition);
+		if (!is_valid) goto free_and_return;
+	}
 
 	sf.ip = pattern->start_index;
 	result = run_stackframe(&sf);
@@ -714,14 +723,20 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
 			continue;
 
-		case SQ_OC_FEGENUS_STORE:
+		case SQ_OC_FEGENUS_STORE: {
 			index = next_index(sf);
 
 			assert(sq_value_is_form(operands[0]));
-			assert(index < sq_value_as_form(operands[0])->nessences);
-			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
-			sq_value_as_form(operands[0])->essences[index].genus = sq_value_clone(operands[1]);
+			struct sq_essence *essence = 
+				sq_form_lookup_essence(
+					sq_value_as_form(operands[0]),
+					sq_value_as_text(code->consts[index])->ptr
+				);
+			assert(essence != NULL);
+			assert(essence->genus == SQ_UNDEFINED);
+			essence->genus = sq_value_clone(operands[1]);
 			continue;
+		}
 
 		case SQ_OC_FMGENUS_STORE:
 			index = next_index(sf);

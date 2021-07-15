@@ -139,7 +139,7 @@ sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
 	enum roman_numeral stage = 0, parsed;
 
 	// ie if the input is just `N` (ie `0`).
-	if (*input == 'N' && !isalnum(input[1])) {
+	if (input[0] == 'N' && !isalnum(input[1])) {
 		input++;
 		goto done;
 	}
@@ -178,7 +178,7 @@ done:
 }
 
 bool sq_numeral_starts(const char *text) {
-	if (strpbrk(text, "NIVXLCDM") != NULL) return true;
+	if (strpbrk(text, "NIVXLCDM") == text) return true;
 	const uint8_t *utext = (const uint8_t *) text;
 	if (utext[0] != 0xE2) return false;
 

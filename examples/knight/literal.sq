@@ -1,4 +1,7 @@
-#__END__#@transcribe "assert.sq"
+@transcribe "value.sq"
+@henceforth $literals = [Numeral, Text, yay, nay, ni];
 
-dismount(0);
-
+form Literal : Value {
+	matter value: $literals;
+	change run(): $literals = soul.value;
+}

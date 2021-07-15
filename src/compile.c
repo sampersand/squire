@@ -1176,6 +1176,15 @@ static void compile_journey_pattern(
 		code.vars.ary[code.vars.len++].index = local_index++;
 	}
 
+	if (jp->condition) {
+		pattern->condition_start = code.codelen;
+		unsigned dst = compile_expression(&code, jp->condition);
+		set_opcode(&code, SQ_OC_RETURN);
+		set_index(&code, dst);
+	} else {
+		pattern->condition_start = -1;
+	}
+
 	assert(jp->body != NULL);
 
 	pattern->start_index = code.codelen;

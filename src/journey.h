@@ -28,6 +28,7 @@ struct sq_journey_argument {
 struct sq_journey_pattern {
 	unsigned pargc, kwargc, start_index;
 	bool splat, splatsplat;
+	int condition_start; // if `-1`, there is no condition.
 	struct sq_journey_argument *pargv, *kwargv;
 	struct sq_codeblock code;
 };

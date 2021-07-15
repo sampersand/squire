@@ -52,6 +52,7 @@ enum sq_token_kind {
 	SQ_TK_COMMA,
 	SQ_TK_COLON,
 	SQ_TK_DOT,
+	SQ_TK_ARROW,
 
 	SQ_TK_EQL = 0x80,
 	SQ_TK_NEQ,

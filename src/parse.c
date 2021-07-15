@@ -789,8 +789,14 @@ done_with_arguments:
 		untake();
 	}
 
+	if (take().kind == SQ_TK_IF) {
+		if (!(jp->condition = parse_expression())) die("unable to parse if condition");
+	} else {
+		untake();
+	}
+
 	// shorthand notation
-	if (take().kind == SQ_TK_ASSIGN) {
+	if (take().kind == SQ_TK_ARROW) {
 		jp->body = xmalloc(sizeof(struct statements));
 		jp->body->len = 1;
 		jp->body->stmts = xmalloc(sizeof(struct statement *));

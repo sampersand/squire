@@ -86,6 +86,7 @@ struct journey_declaration {
 		char *splat, *splatsplat; // both maybe NULL
 		struct primary *return_genus; // may be NULL
 		struct statements *body;
+		struct expression *condition; // may be NULL
 	} patterns[SQ_JOURNEY_MAX_PATTERNS];
 };
 

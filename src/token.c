@@ -12,6 +12,7 @@ static void parse_macro_statement(char *);
 static bool parse_macro_identifier(char *);
 
 static size_t fraktur_length(const char *stream, size_t *index) {
+
 	static const char *const FRAKTUR[26 * 2] = {
 		// A	B	C	D	E	F	G	H	I
 		  "𝔄", "𝔅", "ℭ", "𝔇", "𝔈", "𝔉", "𝔊", "ℌ", "ℑ",
@@ -340,7 +341,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 
 	//printf("<<%s>>\n", sq_stream);
-	if (!strncmp(sq_stream, "@__END__", 8)) {
+	if (!*sq_stream || !strncmp(sq_stream, "@__END__", 8)) {
 		//printf("here?\n");
 		return token.kind = SQ_TK_UNDEFINED, token;
 	}
@@ -427,6 +428,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("!=", SQ_TK_NEQ);
 	CHECK_FOR_START("<=", SQ_TK_LEQ);
 	CHECK_FOR_START(">=", SQ_TK_GEQ);
+	CHECK_FOR_START("=>", SQ_TK_ARROW);
 	CHECK_FOR_START("**", SQ_TK_POW);
 	CHECK_FOR_START("<", SQ_TK_LTH);
 	CHECK_FOR_START(">", SQ_TK_GTH);
