@@ -53,7 +53,7 @@ struct sq_code {
 	if (code->cap == code->len) \
 		code->pos = xrealloc(code->pos, sizeof_array(type , code->cap*=2));
 
-#ifdef SQ_LOG
+#ifdef SQ_LOG_COMPILER
 #define LOG(...) printf(__VA_ARGS__)
 #else
 #define LOG(...) ((void) 0)
@@ -89,11 +89,11 @@ static unsigned declare_constant(struct sq_code *code, sq_value value) {
 		code->consts.ary = xrealloc(code->consts.ary, sizeof_array(sq_value, code->consts.cap));
 	}
 
-#ifdef SQ_LOG
+#ifdef SQ_LOG_COMPILER
 	printf("consts[%d]=", code->consts.len); 
 	sq_value_dump(value);
 	putchar('\n');
-#endif /* SQ_LOG */
+#endif /* SQ_LOG_COMPILER */
 
 	code->consts.ary[code->consts.len] = value;
 	return code->consts.len++;

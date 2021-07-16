@@ -77,4 +77,7 @@ union sq_bytecode {
 	unsigned count;
 };
 
+const char *sq_interrupt_repr(enum sq_interrupt interrupt);
+const char *sq_opcode_repr(enum sq_opcode opcode);
+
 #endif /* !SQ_BYTECODE_H */

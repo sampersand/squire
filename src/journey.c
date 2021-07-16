@@ -5,6 +5,12 @@
 #include "form.h"
 #include "book.h"
 #include "codex.h"
+#include "log.h"
+
+#if SQ_LOG_LEVEL != 3
+#error "oh"
+#endif
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -168,40 +174,57 @@ sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
 	sq_throw("no patterns match for '%s'", journey->name);
 }
 
-// static void setup_stackframe(struct sq_stackframe *stackframe, struct sq_args args) {
-// 	unsigned index = 0;
-// 	for (unsigned i = 0; i < stackframe->pattern->pargc; ++i) {
-// 		if (i < args.pargc)
-// 			stackframe->locals[index++] = args.pargv[i];
-// 		else
-// 			stackframe->locals[]
-// 	}
-// 	if (stackframe->pattern->code.argc != args.pargc)
-// 		sq_throw("argument mismatch: expected %d, given %d", stackframe->pattern->argc, args.pargc);
-
-// 	unsigned i = 0;
-
-// 	for (; i < args.pargc; ++i)
-// 		stackframe->locals[i] = args.pargv[i];
-
-// 	for (; i < stackframe->pattern->nlocals; ++i)
-// 		stackframe->locals[i] = SQ_NI;
-// }
-
 static inline union sq_bytecode next_bytecode(struct sq_stackframe *sf) {
 	return sf->pattern->code.bytecode[sf->ip++];
 }
 
+static inline enum sq_interrupt next_interrupt(struct sq_stackframe *sf) {
+	enum sq_interrupt interrupt = next_bytecode(sf).interrupt;
+
+	SQ_LOG_TRACE("stackframe[%p, ip=%u].interrupt=%s", (void *) sf, sf->ip, sq_interrupt_repr(interrupt));
+
+	return interrupt;
+}
+
+static inline enum sq_opcode next_opcode(struct sq_stackframe *sf) {
+	enum sq_opcode opcode = next_bytecode(sf).opcode;
+
+	SQ_LOG_TRACE("stackframe[%p, ip=%u].opcode=%s", (void *) sf, sf->ip, sq_opcode_repr(opcode));
+
+	return opcode;
+}
+
 static inline unsigned next_index(struct sq_stackframe *sf) {
-	return next_bytecode(sf).index;
+	unsigned index = next_bytecode(sf).index;
+
+	SQ_LOG_TRACE("stackframe[%p, ip=%u].index=%d", (void *) sf, sf->ip, index);
+
+	return index;
 }
 
 static inline unsigned next_count(struct sq_stackframe *sf) {
-	return next_bytecode(sf).count;
+	unsigned count = next_bytecode(sf).count;
+
+	SQ_LOG_TRACE("stackframe[%p, ip=%u].count=%d", (void *) sf, sf->ip, count);
+
+	return count;
 }
 
 static inline sq_value *next_local(struct sq_stackframe *sf) {
-	return &sf->locals[next_index(sf)];
+	unsigned index = next_index(sf);
+	assert(index < sf->pattern->code.nlocals);
+
+	sq_value *result = &sf->locals[index];
+
+#ifdef SQ_LOG_TRACE
+	SQ_LOG_PREFIX("TRACE");
+	printf("stackframe[%p, ip=%u].local[%d]=", (void *) sf, sf->ip, index);
+	sq_value_dump_to(stdout, *result);
+	putchar('\n');
+#endif /* SQ_LOG_TRACE */
+
+	return result;
+
 }
 
 static void set_local(struct sq_stackframe *sf, unsigned index, sq_value value) {
@@ -254,7 +277,7 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 }
 
 static void handle_interrupt(struct sq_stackframe *sf) {
-	enum sq_interrupt interrupt = next_bytecode(sf).interrupt;
+	enum sq_interrupt interrupt = next_interrupt(sf);
 	sq_value operands[MAX_INTERRUPT_OPERAND_COUNT];
 	struct sq_text *text;
 
@@ -520,7 +543,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 	const struct sq_codeblock *code = &sf->pattern->code;
 
 	while (sf->ip < code->codelen) {
-		opcode = next_bytecode(sf).opcode;
+		opcode = next_opcode(sf);
 		arity = normal_operands(opcode);
 
 		for (unsigned i = 0; i < arity; ++i)
@@ -561,6 +584,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_COMEFROM: {
 			int i;
 			int amnt = (int) next_index(sf);
+
 			for (i = 0; i < amnt - 1; ++i)
 				if (!fork()) break;
 			sf->ip += i;
