@@ -215,10 +215,6 @@ static void set_next_local(struct sq_stackframe *sf, sq_value value) {
 	set_local(sf, next_index(sf), value);
 }
 
-static inline unsigned next_relative_index(struct sq_stackframe *sf) {
-	return next_index(sf) + sf->ip;
-}
-
 #define MAX_INTERRUPT_OPERAND_COUNT 3
 static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	switch (interrupt) {
@@ -546,12 +542,12 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 	/*** Control Flow ***/
 		case SQ_OC_JMP:
-			sf->ip = next_relative_index(sf);
+			sf->ip = next_index(sf);
 			continue;
 
 		case SQ_OC_JMP_TRUE:
 		case SQ_OC_JMP_FALSE:
-			index = next_relative_index(sf);
+			index = next_index(sf);
 
 			if (sq_value_to_veracity(operands[0]) == (opcode == SQ_OC_JMP_TRUE))
 				sf->ip = index;

@@ -1,0 +1,5 @@
+fork I {
+	alas: dump(I) # prints
+}
+
+dump(I) # doeosnt print lol

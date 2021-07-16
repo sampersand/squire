@@ -59,21 +59,37 @@ struct sq_code {
 #define LOG(...) ((void) 0)
 #endif
 
-static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
-	LOG("bytecode[%d].opcode=%x\n", code->codelen, opcode);
 
+static void extend_bytecode_cap(struct sq_code *code){
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
+}
+
+static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
+	LOG("bytecode[%d].opcode=%s\n", code->codelen, sq_opcode_repr(opcode));
+	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].opcode = opcode;
 }
 
 static void set_index(struct sq_code *code, unsigned index) {
 	LOG("bytecode[%d].index=%d\n", code->codelen, index);
-
-	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
+	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].index = index;
 }
 
-static void set_target(struct sq_code *code, unsigned target) {
+static void set_interrupt(struct sq_code *code, enum sq_interrupt interrupt) {
+	LOG("bytecode[%d].interrupt=%s\n", code->codelen, sq_interrupt_repr(interrupt));
+	extend_bytecode_cap(code);
+	code->bytecode[code->codelen++].interrupt = interrupt;
+}
+
+static void set_count(struct sq_code *code, unsigned count) {
+	LOG("bytecode[%d].count=%d\n", code->codelen, count);
+
+	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
+	code->bytecode[code->codelen++].count = count;
+}
+
+static void set_target_to_codelen(struct sq_code *code, unsigned target) {
 	LOG("bytecode[%d].index=%d [update]\n", target, code->codelen);
 
 	code->bytecode[target].index = code->codelen;
@@ -389,11 +405,11 @@ static void compile_if_statement(struct sq_code *code, struct if_statement *ifst
 		finished_label = code->codelen;
 		set_index(code, 0);
 
-		set_target(code, iffalse_label);
+		set_target_to_codelen(code, iffalse_label);
 		compile_statements(code, ifstmt->iffalse);
-		set_target(code, finished_label);
+		set_target_to_codelen(code, finished_label);
 	} else {
-		set_target(code, iffalse_label);
+		set_target_to_codelen(code, iffalse_label);
 	}
 
 	free(ifstmt);
@@ -414,7 +430,7 @@ static void compile_while_statement(struct sq_code *code, struct while_statement
 
 	set_opcode(code, SQ_OC_JMP);
 	set_index(code, condition_label);
-	set_target(code, finished_label);
+	set_target_to_codelen(code, finished_label);
 
 	free(wstmt);
 }
@@ -453,7 +469,7 @@ alas:
 */
 static void compile_switch_statement(struct sq_code *code, struct switch_statement *sw) {
 	unsigned condition_index = compile_expression(code, sw->cond);
-	unsigned *jump_to_body_indices[sw->ncases];
+	unsigned jump_to_body_indices[sw->ncases];
 
 	for (unsigned i = 0; i < sw->ncases; ++i) {
 		unsigned case_index = compile_expression(code, sw->cases[i].expr);
@@ -464,43 +480,44 @@ static void compile_switch_statement(struct sq_code *code, struct switch_stateme
 
 		set_opcode(code, SQ_OC_JMP_TRUE);
 		set_index(code, case_index);
-		jump_to_body_indices[i] = CURRENT_INDEX_PTR(code);
-		set_index(code, 0xffff);
+		jump_to_body_indices[i] = code->codelen;
+		set_index(code, 65530);
 	}
 
-	unsigned *jump_to_end_indices[sw->ncases + 1];
+	int jump_to_end_indices[sw->ncases + 1];
 
 	if (sw->alas)
 		compile_statements(code, sw->alas);
 
 	set_opcode(code, SQ_OC_JMP);
-	jump_to_end_indices[sw->ncases] = CURRENT_INDEX_PTR(code);
-	set_index(code, 0xffff);
+	jump_to_end_indices[sw->ncases] = code->codelen;
+	set_index(code, 65531);
 
 	unsigned amnt_of_blank = 0;
 	for (unsigned i = 0; i < sw->ncases; ++i) {
 		if (sw->cases[i].body == NULL) {
 			amnt_of_blank++;
-			jump_to_end_indices[i] = NULL;
+			jump_to_end_indices[i] = -1;
 			continue;
 		}
 
 		for (unsigned j = 0; j < amnt_of_blank; ++j)
-			*jump_to_body_indices[i - j - 1] = code->codelen;
+			jump_to_body_indices[i - j - 1] = code->codelen;
 		amnt_of_blank = 0;
-		*jump_to_body_indices[i] = code->codelen;
+		set_target_to_codelen(code, jump_to_body_indices[i]);
+		jump_to_body_indices[i] = code->codelen;
 		compile_statements(code, sw->cases[i].body);
 		set_opcode(code, SQ_OC_JMP);
-		jump_to_end_indices[i] = CURRENT_INDEX_PTR(code);
-		set_index(code, 0xffff);
+		jump_to_end_indices[i] = code->codelen;
+		set_index(code, 65532);
 	}
 
 	for (unsigned j = 0; j < amnt_of_blank; ++j)
-		*jump_to_body_indices[sw->ncases - j - 1] = code->codelen;
+		jump_to_body_indices[sw->ncases - j - 1] = code->codelen;
 
-	for (unsigned i = 0; i < sw->ncases + 1; ++i) {
-		if (jump_to_end_indices[i])
-			*jump_to_end_indices[i] = code->codelen;
+	for (unsigned i = 0; i <= sw->ncases; ++i) {
+		if (0 <= jump_to_end_indices[i])
+			set_target_to_codelen(code, jump_to_end_indices[i]);
 	}
 
 	free(sw->cases);
@@ -514,8 +531,8 @@ static unsigned compile_book(struct sq_code *code, struct book *book) {
 		indices[i] = compile_expression(code, book->pages[i]);
 
 	set_opcode(code, SQ_OC_INT);
-	set_index(code, SQ_INT_BOOK_NEW);
-	set_index(code, book->npages);
+	set_interrupt(code, SQ_INT_BOOK_NEW);
+	set_count(code, book->npages);
 
 	for (unsigned i = 0; i < book->npages; ++i)
 		set_index(code, indices[i]);
@@ -535,8 +552,8 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 	}
 
 	set_opcode(code, SQ_OC_INT);
-	set_index(code, SQ_INT_CODEX_NEW);
-	set_index(code, dict->neles);
+	set_interrupt(code, SQ_INT_CODEX_NEW);
+	set_count(code, dict->neles);
 
 	for (unsigned i = 0; i < dict->neles; ++i) {
 		set_index(code, keys[i]);
@@ -764,12 +781,12 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 
 	set_index(code, target);
 	unsigned dst = code->codelen;
-	set_index(code, 0xffff);
+	set_index(code, 65533);
 
 	set_opcode(code, SQ_OC_MOV);
 	set_index(code, tmp);
 	set_index(code, target);
-	set_target(code, dst);
+	set_target_to_codelen(code, dst);
 
 done:
 
@@ -789,7 +806,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		unsigned var = load_variable_class(code, fncall->func, &dst);
 		set_opcode(code, SQ_OC_CALL);
 		set_index(code, var);
-		set_index(code, fncall->arglen + 1);
+		set_count(code, fncall->arglen + 1);
 		set_index(code, dst);
 		goto arguments;
 	}
@@ -799,7 +816,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		if (fncall->arglen != argc_) \
 			die("exactly %d arg(s) are required for '%s'", argc_, name_); \
 		set_opcode(code, SQ_OC_INT); \
-		set_index(code, int_); \
+		set_interrupt(code, int_); \
 		goto arguments; \
 	}
 
@@ -810,17 +827,17 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
 	BUILTIN_FN("veracity",  SQ_INT_TOVERACITY, 1); // `veracity`
 	BUILTIN_FN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
-	BUILTIN_FN("length",	SQ_INT_LENGTH, 1); // `fathoms` ? furlong
-	BUILTIN_FN("substr",	SQ_INT_SUBSTR, 3);
+	BUILTIN_FN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
+	BUILTIN_FN("substr",    SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("dismount",  SQ_INT_EXIT, 1);
 	BUILTIN_FN("genus",     SQ_INT_KINDOF, 1);
 	BUILTIN_FN("hex",       SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
 	BUILTIN_FN("inquire",   SQ_INT_PROMPT, 0);
-	BUILTIN_FN("gamble",	SQ_INT_RANDOM, 0);
-	BUILTIN_FN("insert",	SQ_INT_ARRAY_INSERT, 3);
-	BUILTIN_FN("delete",	SQ_INT_ARRAY_DELETE, 2); // `slay`?
+	BUILTIN_FN("gamble",    SQ_INT_RANDOM, 0);
+	BUILTIN_FN("insert",    SQ_INT_ARRAY_INSERT, 3);
+	BUILTIN_FN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
 	BUILTIN_FN("roman",     SQ_INT_ROMAN, 1);
-	BUILTIN_FN("arabic",	SQ_INT_ARABIC, 1);
+	BUILTIN_FN("arabic",    SQ_INT_ARABIC, 1);
 
 	set_opcode(code, SQ_OC_NOOP);
 	unsigned var = load_variable_class(code, fncall->func, NULL);
