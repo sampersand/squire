@@ -1,0 +1,15 @@
+journey msg-for
+	(n) if !(n % XV)  => 'FizzBuzz',
+	(n) if !(n % III) => 'Fizz',
+	(n) if !(n % V)   => 'Buzz',
+	(n)               => n;
+
+journey fizzbuzz(max=C) {
+	i = I
+	whilst i <= max {
+		proclaim(msg-for(i))
+		i=i+I
+	}
+}
+
+fizzbuzz();

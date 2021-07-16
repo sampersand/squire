@@ -1,5 +1,13 @@
-fork I {
-	alas: dump(I) # prints
-}
+@henceforth $divides($numer) = (journey(n) => !(n % $numer));
 
-dump(I) # doeosnt print lol
+i = I
+whilst i <= C {
+	fork i {
+		path $divides(XV):  proclaim('FizzBuzz')
+		path $divides(III): proclaim('Fizz')
+		path $divides(V):   proclaim('Buzz')
+		alas:               proclaim(i)
+	}
+
+	i = i + I
+}
