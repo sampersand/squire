@@ -12,24 +12,11 @@
 #include <setjmp.h>
 
 static void deallocate_pattern(struct sq_journey_pattern *pattern) {
-	for (unsigned i = 0; i < pattern->pargc; ++i) {
+	for (unsigned i = 0; i < pattern->pargc; ++i)
 		free(pattern->pargv[i].name);
-		// if (pattern->pargv[i].default_ != SQ_UNDEFINED)
-		// 	sq_value_free(pattern->pargv[i].default_);
 
-		// if (pattern->pargv[i].genus != SQ_UNDEFINED)
-		// 	sq_value_free(pattern->pargv[i].genus);
-
-	}
-
-	for (unsigned i = 0; i < pattern->kwargc; ++i) {
-		free(pattern->pargv[i].name);
-		// if (pattern->kwargv[i].default_ != SQ_UNDEFINED)
-		// 	sq_value_free(pattern->kwargv[i].default_);
-
-		// if (pattern->kwargv[i].genus != SQ_UNDEFINED)
-		// 	sq_value_free(pattern->kwargv[i].genus);
-	}
+	for (unsigned i = 0; i < pattern->kwargc; ++i)
+		free(pattern->kwargv[i].name);
 
 	for (unsigned i = 0; i < pattern->code.nconsts; ++i)
 		sq_value_free(pattern->code.consts[i]);
@@ -418,6 +405,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	// [A,DST] DST <- length A: book/codex/text
 	case SQ_INT_LENGTH:
 		set_next_local(sf, sq_value_new((sq_numeral) sq_value_length(operands[0])));
+		return;
 
 
 	// [N,...,DST] DST <- N key-value pairs.

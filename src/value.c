@@ -654,10 +654,10 @@ bool sq_value_to_veracity(sq_value value) {
 		return value == SQ_YAY;
 
 	case SQ_G_NUMERAL:
-		return AS_NUMBER(value) ? SQ_YAY : SQ_NAY;
+		return AS_NUMBER(value);
 
 	case SQ_G_TEXT:
-		return *AS_STR(value) ? SQ_YAY : SQ_NAY;
+		return *AS_STR(value);
 
 	case SQ_G_BOOK:
 		return AS_BOOK(value)->length;

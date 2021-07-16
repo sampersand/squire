@@ -7,7 +7,7 @@ struct _nothing_to_see_here;
 #include "shared.h"
 
 char *strdup(char *str) {
-	size_t length = strlen(str);
+	size_t length = strlen(str) + 1;
 
 	return memcpy(xmalloc(length), str, length);
 }
