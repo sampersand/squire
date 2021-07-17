@@ -7,8 +7,9 @@ BINDIR?=bin
 exe=$(BINDIR)/squire
 dyn=$(BINDIR)/libsquire.so
 objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
+objects+=$(patsubst $(SRCDIR)/**/%.c,$(OBJDIR)/**/%.o,$(wildcard $(SRCDIR)/**/*.c))
 
-CFLAGS+=-F$(SRCDIR)
+CFLAGS+=-F$(SRCDIR) -I$(SRCDIR)
 
 CFLAGS+=-DSQ_NUMERAL_TO_ROMAN
 

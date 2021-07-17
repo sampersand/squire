@@ -5,11 +5,11 @@
 #include "shared.h"
 #include "text.h"
 #include "codex.h"
+#include "other/other.h"
 #include <string.h>
 #include <inttypes.h>
 #include <limits.h>
 
-#define IS_STRING sq_value_is_text
 #define AS_STRING sq_value_as_text
 #define AS_NUMBER sq_value_as_numeral
 #define AS_FORM sq_value_as_form
@@ -17,6 +17,7 @@
 #define AS_JOURNEY sq_value_as_function
 #define AS_BOOK sq_value_as_book
 #define AS_CODEX sq_value_as_codex
+#define AS_OTHER sq_value_as_other
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_STRING(c)->ptr)
 
@@ -26,11 +27,13 @@ void sq_value_dump(sq_value value) {
 
 void sq_value_dump_to(FILE *out, sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT:
+	case SQ_G_OTHER:
 		if (value == SQ_NI)
 			fprintf(out, "Ni()");
-		else
+		else if (sq_value_is_veracity(value))
 			fprintf(out, "Veracity(%s)", sq_value_as_veracity(value) ? "yay" : "nay");
+		else
+			sq_other_dump(out, AS_OTHER(value));
 
 		break;
 
@@ -87,6 +90,10 @@ sq_value sq_value_clone(sq_value value) {
 	case SQ_G_CODEX:
 		return sq_value_new(sq_codex_clone(AS_CODEX(value)));
 
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			return sq_value_new(sq_other_clone(AS_OTHER(value)));
+
 	default:
 		return value;
 	}
@@ -117,12 +124,23 @@ void sq_value_free(sq_value value) {
 	case SQ_G_CODEX:
 		sq_codex_free(AS_CODEX(value));
 		return;
+
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			sq_other_free(AS_OTHER(value));
+
+		return;
 	}
 }
 
 const char *sq_value_typename(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT: return value == SQ_NI ? "Ni" : "Veracity";
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			return sq_other_typename(AS_OTHER(value));
+		else
+			return value == SQ_NI ? "Ni" : "Veracity";
+
 	case SQ_G_NUMERAL: return "Numeral";
 	case SQ_G_TEXT: return "Text";
 	case SQ_G_IMITATION: return "Imitation";
@@ -135,7 +153,7 @@ const char *sq_value_typename(sq_value value) {
 }
 
 sq_value sq_value_genus(sq_value value) {
-	static struct sq_text KIND_VERACITY = SQ_TEXT_STATIC("veracity");
+	static struct sq_text KIND_VERACITY = SQ_TEXT_STATIC("Veracity");
 	static struct sq_text KIND_NI = SQ_TEXT_STATIC("Ni");
 	static struct sq_text KIND_NUMERAL = SQ_TEXT_STATIC("Numeral");
 	static struct sq_text KIND_TEXT = SQ_TEXT_STATIC("Text");
@@ -145,8 +163,11 @@ sq_value sq_value_genus(sq_value value) {
 	static struct sq_text KIND_CODEX = SQ_TEXT_STATIC("Codex");
 
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT:
-		return sq_value_new(value == SQ_NI ? &KIND_NI : &KIND_VERACITY);
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			return sq_other_genus(AS_OTHER(value));
+		else
+			return sq_value_new(value == SQ_NI ? &KIND_NI : &KIND_VERACITY);
 
 	case SQ_G_NUMERAL:
 		return sq_value_new(&KIND_NUMERAL);
@@ -175,13 +196,13 @@ sq_value sq_value_genus(sq_value value) {
 }
 
 bool sq_value_not(sq_value arg) {
-	return sq_value_to_veracity(arg) == SQ_NAY;
+	return !sq_value_to_veracity(arg);
 }
 
 bool sq_value_eql(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_TEXT:
-		return IS_STRING(rhs) && !strcmp(AS_STR(lhs), AS_STR(rhs));
+		return sq_value_is_text(rhs) && !strcmp(AS_STR(lhs), AS_STR(rhs));
 
 	case SQ_G_BOOK:
 		if (!sq_value_is_book(rhs)) return false;
@@ -355,7 +376,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	}
 
 	case SQ_G_BOOK: {
-		if (sq_value_is_function(rhs))
+		if (sq_value_is_journey(rhs))
 			return sq_value_new(sq_book_select(AS_BOOK(lhs), AS_JOURNEY(rhs)));
 
 		struct sq_book *lary = AS_BOOK(lhs), *rary = sq_value_to_book(rhs);
@@ -471,7 +492,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		if (sq_value_is_book(rhs))
 			return sq_value_new(sq_book_product(book, AS_BOOK(rhs)));
 
-		if (sq_value_is_function(rhs))
+		if (sq_value_is_journey(rhs))
 			return sq_value_new(sq_book_map(book, AS_JOURNEY(rhs)));
 
 		goto error;
@@ -526,7 +547,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	case SQ_G_BOOK:;
 		struct sq_book *book = AS_BOOK(lhs);
 
-		if (sq_value_is_function(rhs))
+		if (sq_value_is_journey(rhs))
 			return sq_book_reduce(book, AS_JOURNEY(rhs));
 
 		goto error;
@@ -563,15 +584,16 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 	}
 }
 
-
 struct sq_text *sq_value_to_text(sq_value value) {
 	static struct sq_text yay_string = SQ_TEXT_STATIC("yay");
 	static struct sq_text nay_string = SQ_TEXT_STATIC("nay");
 	static struct sq_text ni_string = SQ_TEXT_STATIC("ni");
 
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT:
-		if (value == SQ_NI)
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			return sq_other_to_text(AS_OTHER(value));
+		else if (value == SQ_NI)
 			return &ni_string;
 		else
 			return value == SQ_YAY ? &yay_string : &nay_string;
@@ -614,8 +636,11 @@ struct sq_text *sq_value_to_text(sq_value value) {
 
 sq_numeral sq_value_to_numeral(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT:
-		return value == SQ_YAY ? 1 : 0;
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			return sq_other_to_numeral(AS_OTHER(value));
+		else
+			return value == SQ_YAY ? 1 : 0;
 
 	case SQ_G_NUMERAL:
 		return AS_NUMBER(value);
@@ -650,8 +675,11 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 
 bool sq_value_to_veracity(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_CONSTANT:
-		return value == SQ_YAY;
+	case SQ_G_OTHER:
+		if (sq_value_is_other(value))
+			return sq_other_to_veracity(AS_OTHER(value));
+		else
+			return value == SQ_YAY;
 
 	case SQ_G_NUMERAL:
 		return AS_NUMBER(value);
@@ -709,7 +737,7 @@ size_t sq_value_length(sq_value value) {
 		// else fallthrough
 	}
 
-	case SQ_G_CONSTANT:
+	case SQ_G_OTHER:
 	case SQ_G_NUMERAL:
 	case SQ_G_FORM:
 	case SQ_G_JOURNEY:
@@ -747,27 +775,31 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 	sq_value result = SQ_UNDEFINED;
 
 	switch (sq_value_genus_tag(soul)) {
-		case SQ_G_FORM:
-			result = sq_form_get_attr(sq_value_as_form(soul), attr);
-			break;
+	case SQ_G_FORM:
+		result = sq_form_get_attr(sq_value_as_form(soul), attr);
+		break;
 
-		case SQ_G_IMITATION:
-			result = sq_imitation_get_attr(sq_value_as_imitation(soul), attr);
-			break;
+	case SQ_G_IMITATION:
+		result = sq_imitation_get_attr(sq_value_as_imitation(soul), attr);
+		break;
 
-		case SQ_G_BOOK:
-			if (!strcmp(attr, "verso"))
-				result = sq_book_index(sq_value_as_book(soul), 1);
-			else if (!strcmp(attr, "recto"))
-				result = sq_book_index2(sq_value_as_book(soul), -1);
-			break;
+	case SQ_G_BOOK:
+		if (!strcmp(attr, "verso"))
+			result = sq_book_index(sq_value_as_book(soul), 1);
+		else if (!strcmp(attr, "recto"))
+			result = sq_book_index2(sq_value_as_book(soul), -1);
+		break;
 
-		case SQ_G_CONSTANT:
-		case SQ_G_NUMERAL:
-		case SQ_G_TEXT:
-		case SQ_G_JOURNEY:
-		case SQ_G_CODEX:
-			break;
+	case SQ_G_OTHER:
+		if (sq_value_is_other(soul))
+			return sq_other_get_attr(AS_OTHER(soul), attr);
+		// else, fallthrough
+
+	case SQ_G_NUMERAL:
+	case SQ_G_TEXT:
+	case SQ_G_JOURNEY:
+	case SQ_G_CODEX:
+		break;
 	}
 
 	if (result == SQ_UNDEFINED)
@@ -803,7 +835,11 @@ void sq_value_set_attr(sq_value soul, const char *attr, sq_value value) {
 
 		break;
 
-	case SQ_G_CONSTANT:
+	case SQ_G_OTHER:
+		if (sq_value_is_other(soul) && sq_other_set_attr(AS_OTHER(soul), attr, value))
+			return;
+		// else, fallthrough
+
 	case SQ_G_NUMERAL:
 	case SQ_G_TEXT:
 	case SQ_G_JOURNEY:
@@ -844,7 +880,10 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 		if (!strcmp(sq_value_as_text(formlike)->ptr, "Codex") && sq_value_is_codex(to_check)) return true;
 		// fallthrough
 
-	case SQ_G_CONSTANT:
+	case SQ_G_OTHER:
+		if (sq_value_is_other(formlike))
+			return sq_other_matches(AS_OTHER(formlike), to_check);
+		// else, fallthrough
 	case SQ_G_NUMERAL:
 		return sq_value_eql(formlike, to_check);
 

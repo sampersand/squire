@@ -14,12 +14,13 @@ struct sq_args;
 struct sq_journey;
 struct sq_book;
 struct sq_codex;
+struct sq_other;
 
 typedef uint64_t sq_value;
 typedef bool sq_veracity;
 
 enum sq_genus_tag {
-	SQ_G_CONSTANT  = 0,
+	SQ_G_OTHER     = 0,
 	SQ_G_NUMERAL   = 1,
 	SQ_G_TEXT      = 2,
 	SQ_G_FORM      = 3,
@@ -40,10 +41,10 @@ static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
 	return value & SQ_VMASK_BITS;
 }
 
-#define SQ_YAY SQ_VMASK((1 << SQ_VSHIFT), SQ_G_CONSTANT)
-#define SQ_NAY SQ_VMASK(0, SQ_G_CONSTANT)
-#define SQ_NI SQ_VMASK((2 << SQ_VSHIFT), SQ_G_CONSTANT)
-#define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_G_CONSTANT)
+#define SQ_YAY SQ_VMASK((1 << SQ_VSHIFT), SQ_G_OTHER)
+#define SQ_NAY SQ_VMASK((2 << SQ_VSHIFT), SQ_G_OTHER)
+#define SQ_NI SQ_VMASK((0 << SQ_VSHIFT), SQ_G_OTHER)
+#define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_G_OTHER)
 
 #define SQ_VALUE_ALIGN _Alignas(1<<SQ_VSHIFT)
 
@@ -80,7 +81,8 @@ static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
 	struct sq_imitation *: sq_value_new_imitation, \
 	struct sq_journey *: sq_value_new_function, \
 	struct sq_book *: sq_value_new_book, \
-	struct sq_codex *: sq_value_new_codex \
+	struct sq_codex *: sq_value_new_codex, \
+	struct sq_other *: sq_value_new_other \
 )(x))
 
 
@@ -124,6 +126,11 @@ static inline sq_value sq_value_new_codex(struct sq_codex *dict) {
 	return SQ_VMASK((sq_value) dict, SQ_G_CODEX);
 }
 
+static inline sq_value sq_value_new_other(struct sq_other *other) {
+	assert(!SQ_VTAG((sq_value) other));
+	return SQ_VMASK((sq_value) other, SQ_G_OTHER);
+}
+
 static inline bool sq_value_is_ni(sq_value value) {
 	return value == SQ_NI;
 }
@@ -148,7 +155,6 @@ static inline bool sq_value_is_imitation(sq_value value) {
 	return SQ_VTAG(value) == SQ_G_IMITATION;
 }
 
-#define sq_value_is_function sq_value_is_journey // deprecated
 static inline bool sq_value_is_journey(sq_value value) {
 	return SQ_VTAG(value) == SQ_G_JOURNEY;
 }
@@ -159,6 +165,10 @@ static inline bool sq_value_is_book(sq_value value) {
 
 static inline bool sq_value_is_codex(sq_value value) {
 	return SQ_VTAG(value) == SQ_G_CODEX;
+}
+
+static inline bool sq_value_is_other(sq_value value) {
+	return SQ_VTAG(value) == SQ_G_OTHER && value > SQ_UNDEFINED;
 }
 
 static inline sq_numeral sq_value_as_numeral(sq_value value) {
@@ -202,6 +212,11 @@ static inline struct sq_codex *sq_value_as_codex(sq_value value) {
 	return (struct sq_codex *) SQ_VUNMASK(value);
 }
 
+static inline struct sq_other *sq_value_as_other(sq_value value) {
+	assert(sq_value_is_other(value));
+	return (struct sq_other *) SQ_VUNMASK(value);
+}
+
 sq_value sq_value_clone(sq_value value);
 void sq_value_dump(sq_value value);
 void sq_value_dump_to(FILE *out, sq_value value);
@@ -219,12 +234,15 @@ sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs);
 static inline bool sq_value_lth(sq_value lhs, sq_value rhs) {
 	return sq_value_cmp(lhs, rhs) < 0;
 }
+
 static inline bool sq_value_gth(sq_value lhs, sq_value rhs) {
 	return sq_value_cmp(lhs, rhs) > 0;
 }
+
 static inline bool sq_value_leq(sq_value lhs, sq_value rhs) {
 	return sq_value_cmp(lhs, rhs) <= 0;
 }
+
 static inline bool sq_value_geq(sq_value lhs, sq_value rhs) {
 	return sq_value_cmp(lhs, rhs) >= 0;
 }
