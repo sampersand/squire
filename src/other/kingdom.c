@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+void sq_kingdom_initialize(struct sq_kingdom *kingdom, unsigned capacity) {
+	kingdom->nsubjects = 0;
+	kingdom->subject_cap = capacity;
+	kingdom->subjects = xmalloc(sizeof_array(struct sq_kingdom_subject, capacity));
+}
+
 void sq_kingdom_dump(FILE *out, const struct sq_kingdom *kingdom) {
 	fprintf(out, "Kingdom(%s, {", kingdom->name);
 

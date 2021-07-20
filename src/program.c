@@ -9,6 +9,11 @@
 #include <time.h>
 #include <string.h>
 
+extern void sq_io_startup(struct sq_program *program);
+void sq_program_initialize(struct sq_program *program) {
+	sq_exception_init(program);
+	sq_io_startup(program);	
+}
 
 sq_value create_argv(unsigned argc, const char **argv) {
 	sq_value *args = xmalloc(sizeof_array(sq_value, argc));
@@ -26,6 +31,7 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 
 	program->globals[0] = create_argv(argc, argv);
 	sq_exception_init(program);
+	sq_io_startup(program);
 
 	sq_value args[argc];
 

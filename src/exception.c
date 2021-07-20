@@ -87,6 +87,16 @@ void sq_throw_value(sq_value value)  {
 	longjmp(exception_handlers[--current_exception_handler], 1);
 }
 
-void sq_io_error(const char *reason) {
-  sq_throw("io error when %s: %s", reason, strerror(errno));
+void sq_throw_io(const char *fmt, ...) {
+	const char *error = strerror(errno);
+	char *message;
+	va_list args;
+	va_start(args, fmt);
+	vasprintf(&message, fmt, args);
+	va_end(args);
+
+	char *msg2;
+	asprintf(&msg2, "io error %s: %s", message, error);
+
+	sq_throw_value(sq_value_new_text(sq_text_new(msg2)));
 }

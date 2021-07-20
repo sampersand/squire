@@ -8,6 +8,7 @@ exe=$(BINDIR)/squire
 dyn=$(BINDIR)/libsquire.so
 objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 objects+=$(patsubst $(SRCDIR)/**/%.c,$(OBJDIR)/**/%.o,$(wildcard $(SRCDIR)/**/*.c))
+objects+=$(patsubst $(SRCDIR)/**/**/%.c,$(OBJDIR)/**/**/%.o,$(wildcard $(SRCDIR)/**/**/*.c))
 
 CFLAGS+=-F$(SRCDIR) -I$(SRCDIR)
 

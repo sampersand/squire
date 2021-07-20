@@ -14,6 +14,7 @@ struct sq_kingdom {
 	} *subjects;
 };
 
+void sq_kingdom_initialize(struct sq_kingdom *kingdom, unsigned capacity);
 void sq_kingdom_dump(FILE *out, const struct sq_kingdom *kingdom);
 void sq_kingdom_deallocate(struct sq_kingdom *kingdom);
 sq_value sq_kingdom_get_attr(const struct sq_kingdom *kingdom, const char *attr);

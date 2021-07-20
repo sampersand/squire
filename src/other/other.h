@@ -3,12 +3,12 @@
 
 #include <assert.h>
 #include "value.h"
-#include "scroll.h"
+#include "io/scroll.h"
 #include "external.h"
 #include "kingdom.h"
 
 struct sq_other {
-	unsigned refcount;
+	int refcount;
 
 	enum sq_other_kind {
 		SQ_OK_SCROLL,
@@ -57,14 +57,19 @@ bool sq_other_matches(const struct sq_other *formlike, sq_value to_check);
 
 static inline struct sq_other *sq_other_clone(struct sq_other *other) {
 	assert(other->refcount);
-	other->refcount++;
+
+	if (0 < other->refcount)
+		other->refcount++;
+
 	return other;
 }
 
 static inline void sq_other_free(struct sq_other *other) {
+	// hahaha... freaking double frees suck.
+	if(1)return;
 	assert(other->refcount);
 
-	if (!--other->refcount)
+	if (0 < other->refcount && !--other->refcount)
 		sq_other_deallocate(other);
 }
 

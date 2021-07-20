@@ -3,22 +3,6 @@
 #include "exception.h"
 #include <stdlib.h>
 
-// struct sq_other {
-// 	unsigned refcount;
-
-// 	enum sq_other_kind {
-// 		SQ_OK_SCROLL,
-// 		SQ_OK_EXTERNAL,
-// 		SQ_OK_KINGDOM,
-// 	} kind;
-
-// 	union {
-// 		struct sq_scroll scroll;
-// 		struct sq_external external;
-// 		struct sq_kingdom kingdom;
-// 	};
-// };
-
 void sq_other_dump(FILE *out, const struct sq_other *other) {
 	switch (other->kind) {
 	case SQ_OK_SCROLL:

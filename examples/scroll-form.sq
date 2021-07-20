@@ -1,0 +1,34 @@
+# An exampe of a scroll form---exists until we get an actual scroll form.
+form Scroll {
+	matter file;
+	matter _size: [Numeral, ni]
+
+	imitate(filename: Text, mode: Text) {
+		soul.file = Scroll_open(filename, mode);
+	}
+
+	change to-text(): Text => soul.file.filename;
+	change write(msg): Ni => Scroll_write(soul.file, msg)
+	change read
+		(): Text => Scroll_readall(soul.file),
+		(amnt: Numeral): Text => Scroll_read(soul.file, amnt);
+
+	change close() => Scroll_close(soul.file);
+
+	change size() {
+		if soul._size == ni {
+			f = Scroll_open(soul.file.filename, "r");
+			Scroll_seek(f, -I, II);
+			soul._size = Scroll_tell(f);
+			Scroll_close(f);
+		}
+
+		reward soul._size;
+	}
+}
+
+s = Scroll("examples/scroll-form.sq", "r");
+
+proclaim(s.size());
+proclaim(s.read(1));
+proclaim(s);

@@ -12,6 +12,7 @@ struct statements {
 
 struct statement {
 	enum {
+		SQ_PS_SKINGDOM,
 		SQ_PS_SCLASS,
 		SQ_PS_SJOURNEY,
 		SQ_PS_STRYCATCH,
@@ -31,6 +32,7 @@ struct statement {
 	} kind;
 
 	union {
+		struct kingdom_declaration *kdecl;
 		struct scope_declaration *gdecl, *ldecl;
 		struct class_declaration *cdecl;
 		struct journey_declaration *jdecl;
@@ -43,6 +45,11 @@ struct statement {
 		char *label, *comefrom;
 		struct expression *expr;
 	};
+};
+
+struct kingdom_declaration {
+	char *name;
+	struct statement *statements;
 };
 
 struct scope_declaration {
@@ -164,6 +171,7 @@ struct index {
 struct variable {
 	char *name;
 	struct variable *field;
+	bool is_namespace_access; // currently assigned to, but ignored for namespaces.
 };
 
 struct bool_expression {

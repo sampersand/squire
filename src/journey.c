@@ -1,6 +1,7 @@
 #include "journey.h"
 #include "text.h"
 #include "program.h"
+#include "other/other.h"
 #include "shared.h"
 #include "form.h"
 #include "book.h"
@@ -231,7 +232,6 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	case SQ_INT_ARABIC:
 	case SQ_INT_ROMAN:
 		return 1;
-
 	case SQ_INT_PROMPT:
 	case SQ_INT_RANDOM:
 		return 0;
@@ -246,6 +246,17 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	case SQ_INT_CODEX_NEW:
 	case SQ_INT_BOOK_NEW:
 		return 0;
+
+	// temporary hacks until we get kingdoms working.
+	case SQ_INT_FOPEN: return 2;
+	case SQ_INT_FCLOSE: return 1;
+	case SQ_INT_FREAD: return 2;
+	case SQ_INT_FREADALL: return 1;
+	case SQ_INT_FWRITE: return 2;
+	case SQ_INT_FTELL: return 1;
+	case SQ_INT_FSEEK: return 3;
+
+
 	}
 }
 
@@ -253,6 +264,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	enum sq_interrupt interrupt = next_bytecode(sf).interrupt;
 	sq_value operands[MAX_INTERRUPT_OPERAND_COUNT];
 	struct sq_text *text;
+	struct sq_other *other;
 
 	for (unsigned i = 0; i < interrupt_operands(interrupt); ++i)
 		operands[i] = *next_local(sf);
@@ -282,7 +294,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	case SQ_INT_PRINT:
 		text = sq_value_to_text(operands[0]);
 		if (!fputs(text->ptr, stdout))
-			sq_io_error("proclaimnl");
+			sq_throw_io("proclaimnl");
 
 		sq_text_free(text);
 		set_next_local(sf, SQ_NI);
@@ -292,7 +304,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	case SQ_INT_PRINTLN:
 		text = sq_value_to_text(operands[0]);
 		if (!puts(text->ptr))
-			sq_io_error("proclaim");
+			sq_throw_io("proclaim");
 
 		sq_text_free(text);
 		set_next_local(sf, SQ_NI);
@@ -336,7 +348,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		FILE *stream = popen(str, "r");
 
 		if (stream == NULL)
-			sq_io_error("opening `hex` stream");
+			sq_throw_io("opening `hex` stream");
 
 		sq_text_free(text);
 
@@ -356,14 +368,14 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		}
 
 		// Abort if `stream` had an error.
-		if (ferror(stream)) sq_io_error("reading `hex` result stream");
+		if (ferror(stream)) sq_throw_io("reading `hex` result stream");
 
 		result = xrealloc(result, length + 1);
 		result[length] = '\0';
 
 		// Abort if we cant close stream.
 		if (pclose(stream) == -1)
-			sq_io_error("closing `hex` output stream");
+			sq_throw_io("closing `hex` output stream");
 
 		set_next_local(sf, sq_value_new(sq_text_new(result)));
 		return;
@@ -466,6 +478,69 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	case SQ_INT_ROMAN:
 		set_next_local(sf, sq_value_new(sq_numeral_to_roman(sq_value_to_numeral(operands[0]))));
 		return;
+
+	// temporary hacks until we get kingdoms working.
+	case SQ_INT_FOPEN: {
+		other = xmalloc(sizeof(struct sq_other));
+		other->refcount = 1;
+		other->kind = SQ_OK_SCROLL;
+		struct sq_text *filename = sq_value_to_text(operands[0]);
+		struct sq_text *mode = sq_value_to_text(operands[1]);
+		sq_scroll_init(&other->scroll, filename->ptr, mode->ptr);
+		sq_text_free(filename);
+		sq_text_free(mode);
+
+		set_next_local(sf, sq_value_new(other));
+		return;
+	}
+
+	case SQ_INT_FCLOSE:
+		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
+			sq_throw("can only close scrolls, not '%s'", sq_value_typename(operands[0]));
+		sq_scroll_close(sq_other_as_scroll(other));
+		set_next_local(sf, SQ_NI);
+		return;
+
+	case SQ_INT_FREAD:
+		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
+			sq_throw("can only read scrolls, not '%s'", sq_value_typename(operands[0]));
+
+		set_next_local(sf, sq_value_new(sq_scroll_read(sq_other_as_scroll(other), sq_value_to_numeral(operands[1]))));
+		return;
+
+	case SQ_INT_FREADALL:
+		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
+			sq_throw("can only read scrolls, not '%s'", sq_value_typename(operands[0]));
+
+		set_next_local(sf, sq_value_new(sq_scroll_read_all(sq_other_as_scroll(other))));
+		return;
+
+	case SQ_INT_FWRITE:
+		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
+			sq_throw("can only write scrolls, not '%s'", sq_value_typename(operands[0]));
+
+		text = sq_value_to_text(operands[1]);
+		sq_scroll_write(sq_other_as_scroll(other), text->ptr, text->length);
+		sq_text_free(text);
+
+		set_next_local(sf, SQ_NI);
+		return;
+
+	case SQ_INT_FTELL:
+		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
+			sq_throw("can only tell scrolls, not '%s'", sq_value_typename(operands[0]));
+
+		set_next_local(sf, sq_value_new((sq_numeral) sq_scroll_tell(sq_other_as_scroll(other))));
+		return;
+
+	case SQ_INT_FSEEK:
+		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
+			sq_throw("can only seek scrolls, not '%s'", sq_value_typename(operands[0]));
+
+		sq_scroll_seek(sq_other_as_scroll(other), sq_value_to_numeral(operands[1]), sq_value_to_numeral(operands[2]));
+		set_next_local(sf, SQ_NI);
+		return;
+
 	}
 }
 

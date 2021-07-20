@@ -64,7 +64,8 @@ static struct variable *parse_variable(void) {
 	if (!(var->name = token_to_identifier(take())))
 		return untake(), free(var), NULL;
 
-	if (take().kind == SQ_TK_DOT) {
+	if (take().kind == SQ_TK_DOT || last.kind == SQ_TK_COLONCOLON) {
+		var->is_namespace_access = (last.kind == SQ_TK_COLONCOLON);
 		var->field = parse_variable();
 	} else {
 		untake();
@@ -485,6 +486,12 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	}
 
 	return expr;
+}
+
+struct kingdom_declaration *parse_kingdom_declaration() {
+	GUARD(SQ_TK_KINGDOM);
+
+	
 }
 
 static struct scope_declaration *parse_global_declaration() {
@@ -984,7 +991,8 @@ static struct statement *parse_statement() {
 	while (take().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL) {}
 	untake();
 
-	if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
+	if ((stmt.kdecl = parse_kingdom_declaration())) stmt.kind = SQ_PS_SKINGDOM;
+	else if ((stmt.gdecl = parse_global_declaration())) stmt.kind = SQ_PS_SGLOBAL;
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
 	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;

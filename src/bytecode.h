@@ -25,6 +25,15 @@ enum sq_interrupt {
 
 	SQ_INT_ARABIC       = 0x40, // [A,DST] DST <- A.to_numeral().arabic()
 	SQ_INT_ROMAN        = 0x41, // [A,DST] DST <- A.to_numeral().roman()
+
+	// temporary hacks until we get kingdoms working.
+	SQ_INT_FOPEN,
+	SQ_INT_FCLOSE,
+	SQ_INT_FREAD,
+	SQ_INT_FREADALL,
+	SQ_INT_FWRITE,
+	SQ_INT_FTELL,
+	SQ_INT_FSEEK,
 };
 
 

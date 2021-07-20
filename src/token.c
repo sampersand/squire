@@ -313,7 +313,7 @@ static struct sq_token parse_identifier(void) {
 		else
 			++sq_stream;
 
-	if (*sq_stream == ':')
+	if (*sq_stream == ':' && sq_stream[1] != ':')
 		++sq_stream, token.kind = SQ_TK_LABEL;
 
 	return token;
@@ -400,6 +400,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("retreat",      SQ_TK_CATCH);
 	CHECK_FOR_START_KW("fork",         SQ_TK_SWITCH);
 	CHECK_FOR_START_KW("path",         SQ_TK_CASE);
+	CHECK_FOR_START_KW("kingdom",      SQ_TK_KINGDOM);
 
 	CHECK_FOR_START_KW("yay",          SQ_TK_YAY);
 	CHECK_FOR_START_KW("nay",          SQ_TK_NAY);
@@ -421,6 +422,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
 	CHECK_FOR_START(",", SQ_TK_COMMA);
 	CHECK_FOR_START(".", SQ_TK_DOT);
+	CHECK_FOR_START("::", SQ_TK_COLONCOLON);
 	CHECK_FOR_START(":", SQ_TK_COLON);
 
 	CHECK_FOR_START("~~", SQ_TK_MATCHES);

@@ -378,6 +378,13 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 	free(fdecl); // but none of the fields, as they're now owned by `form`.
 }
 
+static void compile_kingdom_declaration(struct sq_code *code, struct kingdom_declaration *kdecl) {
+	(void) code;
+	(void) kdecl;
+	todo("compile_kingdom_declaration: %s", "");
+	abort();
+}
+
 static void compile_journey_declaration(struct journey_declaration *jd) {
 	assert(jd->name != NULL);
 
@@ -838,6 +845,13 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
 	BUILTIN_FN("roman",     SQ_INT_ROMAN, 1);
 	BUILTIN_FN("arabic",    SQ_INT_ARABIC, 1);
+	BUILTIN_FN("Scroll_open", SQ_INT_FOPEN, 2);
+	BUILTIN_FN("Scroll_close", SQ_INT_FCLOSE, 1);
+	BUILTIN_FN("Scroll_read", SQ_INT_FREAD, 2);
+	BUILTIN_FN("Scroll_readall", SQ_INT_FREADALL, 1);
+	BUILTIN_FN("Scroll_write", SQ_INT_FWRITE, 2);
+	BUILTIN_FN("Scroll_tell", SQ_INT_FTELL, 1);
+	BUILTIN_FN("Scroll_seek", SQ_INT_FSEEK, 3);
 
 	set_opcode(code, SQ_OC_NOOP);
 	unsigned var = load_variable_class(code, fncall->func, NULL);
@@ -1095,6 +1109,7 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SGLOBAL: compile_global(code, stmt->gdecl); break;
 	case SQ_PS_SLOCAL: compile_local(code, stmt->ldecl); break;
 	case SQ_PS_SCLASS: compile_form_declaration(code, stmt->cdecl); break;
+	case SQ_PS_SKINGDOM: compile_kingdom_declaration(code, stmt->kdecl); break;
 	case SQ_PS_SJOURNEY: compile_journey_declaration(stmt->jdecl); break;
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;
@@ -1105,7 +1120,6 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_STHROW: compile_throw_statement(code, stmt->throwstmt); break;
 	case SQ_PS_SSWITCH: compile_switch_statement(code, stmt->sw_stmt); break;
 	case SQ_PS_SEXPR: compile_expression(code, stmt->expr); break;
-	default: bug("unknown statement kind '%d'", stmt->kind);
 	}
 }
 
