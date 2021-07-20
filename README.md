@@ -12,13 +12,13 @@ Possible additions:
 	- [ ] conditional compilation
 	- [ ] `foreach`
 	- [ ] `evaluate`
-- [ ] pattern matching
+- [x] pattern matching
 - [ ] varidict functions and keyword parameters
 - [ ] modules
 - [x] dictionaries
 - [x] interpolation
 - [ ] overload
-- [ ] pattern matching on functions
+- [x] pattern matching on functions
 
 
 # Glossary
