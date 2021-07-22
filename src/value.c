@@ -9,8 +9,9 @@
 #include <string.h>
 #include <inttypes.h>
 #include <limits.h>
+#include <math.h>
 
-#define AS_STRING sq_value_as_text
+#define AS_TEXT sq_value_as_text
 #define AS_NUMBER sq_value_as_numeral
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
@@ -19,7 +20,7 @@
 #define AS_CODEX sq_value_as_codex
 #define AS_OTHER sq_value_as_other
 #define TYPENAME sq_value_typename
-#define AS_STR(c) (AS_STRING(c)->ptr)
+#define AS_STR(c) (AS_TEXT(c)->ptr)
 
 void sq_value_dump(sq_value value) {
 	sq_value_dump_to(stdout, value);
@@ -73,7 +74,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 sq_value sq_value_clone(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_G_TEXT:
-		return sq_value_new(sq_text_clone(AS_STRING(value)));
+		return sq_value_new(sq_text_clone(AS_TEXT(value)));
 
 	case SQ_G_FORM:
 		return sq_value_new(sq_form_clone(AS_FORM(value)));
@@ -102,7 +103,7 @@ sq_value sq_value_clone(sq_value value) {
 void sq_value_free(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_G_TEXT:
-		sq_text_free(AS_STRING(value));
+		sq_text_free(AS_TEXT(value));
 		return;
 
 	case SQ_G_FORM:
@@ -292,9 +293,9 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 
 		if (!index--) sq_throw("cannot index by N.");
 		if (index < 0)
-			index += AS_STRING(value)->length;
+			index += AS_TEXT(value)->length;
 
-		if (index < 0 || AS_STRING(value)->length <= (unsigned) index)
+		if (index < 0 || AS_TEXT(value)->length <= (unsigned) index)
 			return SQ_NI;
 
 		char *c = xmalloc(sizeof_array(char , 2));
@@ -365,10 +366,10 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 	case SQ_G_TEXT: {
 		struct sq_text *rstr = sq_value_to_text(rhs);
-		struct sq_text *result = sq_text_allocate(AS_STRING(lhs)->length + rstr->length);
+		struct sq_text *result = sq_text_allocate(AS_TEXT(lhs)->length + rstr->length);
 
-		memcpy(result->ptr, AS_STR(lhs), AS_STRING(lhs)->length);
-		memcpy(result->ptr + AS_STRING(lhs)->length, rstr->ptr, AS_STRING(rhs)->length + 1);
+		memcpy(result->ptr, AS_STR(lhs), AS_TEXT(lhs)->length);
+		memcpy(result->ptr + AS_TEXT(lhs)->length, rstr->ptr, AS_TEXT(rhs)->length + 1);
 
 		// sq_text_free(rstr);
 		// if (free_lhs) sq_value_free(lhs);
@@ -459,19 +460,19 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 	case SQ_G_TEXT: {
 		sq_numeral amnt = sq_value_to_numeral(rhs);
-		if (amnt == 0 || AS_STRING(lhs)->length == 0)
+		if (amnt == 0 || AS_TEXT(lhs)->length == 0)
 			return sq_value_new(&sq_text_empty);
-		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_STRING(lhs)->length) >= UINT_MAX)
+		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_TEXT(lhs)->length) >= UINT_MAX)
 			sq_throw("text multiplication by %"PRId64" is out of range", amnt);
 		if (amnt == 1)
-			return sq_value_new(sq_text_clone(AS_STRING(lhs)));
+			return sq_value_new(sq_text_clone(AS_TEXT(lhs)));
 
-		struct sq_text *result = sq_text_allocate(AS_STRING(lhs)->length * amnt);
+		struct sq_text *result = sq_text_allocate(AS_TEXT(lhs)->length * amnt);
 		char *ptr = result->ptr;
 
 		for (unsigned i = 0; i < amnt; ++i) {
-			memcpy(ptr, AS_STR(lhs), AS_STRING(lhs)->length + 1);
-			ptr += AS_STRING(lhs)->length;
+			memcpy(ptr, AS_STR(lhs), AS_TEXT(lhs)->length + 1);
+			ptr += AS_TEXT(lhs)->length;
 		}
 
 		return sq_value_new(result);
@@ -487,7 +488,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		}
 
 		if (sq_value_is_text(rhs))
-			return sq_value_new(sq_book_join(book, AS_STRING(rhs)));
+			return sq_value_new(sq_book_join(book, AS_TEXT(rhs)));
 
 		if (sq_value_is_book(rhs))
 			return sq_value_new(sq_book_product(book, AS_BOOK(rhs)));
@@ -568,6 +569,31 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	}
 }
 
+
+sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
+	switch (SQ_VTAG(lhs)) {
+	case SQ_G_NUMERAL: {
+		sq_numeral rnum = sq_value_to_numeral(rhs);
+		if (!rnum) die("cannot modulo by N");
+		return sq_value_new((sq_numeral) pow(AS_NUMBER(lhs), rnum));
+	}
+
+	case SQ_G_IMITATION: {
+		struct sq_journey *pow = sq_imitation_lookup_change(AS_IMITATION(lhs), "**");
+		sq_value args[2] = { lhs, rhs };
+
+		if (pow != NULL)
+			return sq_journey_run_deprecated(pow, 2, args);
+
+		// fallthrough
+	}
+
+	default:
+		die("cannot exponentiate '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+	}
+}
+
+
 sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 	switch (sq_value_genus_tag(tocall)) {
 	case SQ_G_FORM:
@@ -602,8 +628,8 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		return sq_numeral_to_text(AS_NUMBER(value));
 
 	case SQ_G_TEXT:
-		sq_text_clone(AS_STRING(value));
-		return AS_STRING(value);
+		sq_text_clone(AS_TEXT(value));
+		return AS_TEXT(value);
 
 	case SQ_G_FORM:
 		return sq_text_new(strdup(AS_FORM(value)->name));
@@ -621,7 +647,7 @@ struct sq_text *sq_value_to_text(sq_value value) {
 			sq_value text = sq_journey_run_deprecated(to_text, 1, &value);
 			if (!sq_value_is_text(text))
 				die("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
-			return AS_STRING(text);
+			return AS_TEXT(text);
 		}
 		// else fallthrough
 	}
@@ -646,7 +672,10 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 		return AS_NUMBER(value);
 
 	case SQ_G_TEXT:
-		return strtoll(AS_STR(value), NULL, 10);
+		if (sq_numeral_starts(AS_STR(value)))
+			return sq_roman_to_numeral(AS_STR(value), NULL);
+		else
+			return strtoll(AS_STR(value), NULL, 10);
 
 	case SQ_G_BOOK:
 		return sq_value_new(sq_book_to_text(AS_BOOK(value)));
@@ -723,7 +752,7 @@ size_t sq_value_length(sq_value value) {
 		return sq_value_as_codex(value)->length;
 
 	case SQ_G_TEXT:
-		return AS_STRING(value)->length;
+		return AS_TEXT(value)->length;
 
 	case SQ_G_IMITATION: {
 		struct sq_journey *length = sq_imitation_lookup_change(AS_IMITATION(value), "length");
@@ -753,6 +782,20 @@ struct sq_book *sq_value_to_book(sq_value value) {
 	case SQ_G_BOOK:
 		++AS_BOOK(value)->refcount;
 		return AS_BOOK(value);
+
+	case SQ_G_TEXT: {
+		const struct sq_text *text = AS_TEXT(value);
+		struct sq_book *book = sq_book_allocate(text->length);
+
+		for (unsigned i = 0; i < text->length; ++i) {
+			char *data = xmalloc(2);
+			data[0] = text->ptr[i];
+			data[1] = '\0';
+			book->pages[book->length++] = sq_value_new(sq_text_new2(data, 1));
+		}
+
+		return book;
+	}
 
 	default:
 		todo("others to book");

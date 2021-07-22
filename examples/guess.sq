@@ -1,49 +1,24 @@
-form Scroll {
-	matter file;
-	matter _size: [Numeral, ni]
+MAX = (ARGV[I]) || C
+secret = gamble() % MAX
+proclaim("Guessing game! Pick a number from I-\(MAX)!")
 
-	imitate(filename: Text, mode: Text) {
-		soul.file = Scroll_open(filename, mode);
-	}
+guesses = N
+done = nay
 
-	change to-text(): Text => soul.file.filename;
-	change write(msg): Ni => Scroll_write(soul.file, msg)
-	change read
-		(): Text => /*Scroll_readall(soul.file)*/ soul.read(soul.size() + I),
-		(amnt: Numeral): Text => Scroll_read(soul.file, amnt);
+whilst yay {
+	guess = numeral(inquire())
+	guesses = guesses + I
 
-	change close() => Scroll_close(soul.file);
+	fork (guess <=> secret) {
+		path N:
+			proclaim("Perfect! it took you \(guesses) tries")
+			dismount(0)
 
-	change size() {
-		if soul._size == ni {
-			f = Scroll_open(soul.file.filename, "r");
-			Scroll_seek(f, -I, II);
-			soul._size = Scroll_tell(f);
-			Scroll_close(f);
-		}
+		path (journey(n) => n < 0):
+			proclaim("too small!")
 
-		reward soul._size;
+		alas:
+			proclaim("too large!")
 	}
 }
 
-s = Scroll("guess.sq", "r");	'";#';
-#s.write("Hello, world!");
-proclaim(s.size());
-proclaim(s.read(1));
-proclaim(s);
-#file = Scroll_open("guess.sq", "r");
-
-
-
-@__END__
-MAX = (ARGV[I]) || C;
-secret = gamble() % MAX;
-
-proclaim("Guessing game! Pick a number from I-\(MAX)!");
-abort();
-
-guesses = N;
-
-whilst (guess = inquire()) {
-
-}

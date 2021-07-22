@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "value.h"
 #include "io/scroll.h"
+#include "io/envoy.h"
 #include "external.h"
 #include "kingdom.h"
 
@@ -14,12 +15,14 @@ struct sq_other {
 		SQ_OK_SCROLL,
 		SQ_OK_EXTERNAL,
 		SQ_OK_KINGDOM,
+		SQ_OK_ENVOY
 	} kind;
 
 	union {
 		struct sq_scroll scroll;
 		struct sq_external external;
 		struct sq_kingdom kingdom;
+		struct sq_envoy envoy;
 	};
 };
 
@@ -41,6 +44,11 @@ static inline struct sq_external *sq_other_as_external(struct sq_other *other) {
 static inline struct sq_kingdom *sq_other_as_kingdom(struct sq_other *other) {
 	assert(other->kind == SQ_OK_KINGDOM);
 	return &other->kingdom;
+}
+
+static inline struct sq_envoy *sq_other_as_envoy(struct sq_other *other) {
+	assert(other->kind == SQ_OK_ENVOY);
+	return &other->envoy;
 }
 
 void sq_other_dump(FILE *out, const struct sq_other *other);

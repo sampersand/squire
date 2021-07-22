@@ -46,10 +46,12 @@ static char *token_to_identifier(struct sq_token token) {
 	case SQ_TK_LEQ: return strdup("<=");
 	case SQ_TK_GTH: return strdup(">");
 	case SQ_TK_GEQ: return strdup(">=");
+	case SQ_TK_CMP: return strdup("<=>");
 	case SQ_TK_ADD: return strdup("+");
 	case SQ_TK_SUB: return strdup("-");
 	case SQ_TK_NEG: return strdup("-@");
 	case SQ_TK_MUL: return strdup("*");
+	case SQ_TK_POW: return strdup("**");
 	case SQ_TK_DIV: return strdup("/");
 	case SQ_TK_MOD: return strdup("%");
 	case SQ_TK_INDEX: return strdup("[]");
@@ -275,10 +277,33 @@ static struct unary_expression *parse_unary_expression() {
 	return memdup(&unary, sizeof(struct unary_expression));
 }
 
+static struct pow_expression *parse_pow_expression() {
+	struct pow_expression pow;
+
+	if (!(pow.lhs = parse_unary_expression()))
+		return NULL;
+
+	switch (take().kind) {
+	case SQ_TK_POW:
+		pow.kind = SQ_PS_PPOW;
+		break;
+	default:
+		pow.kind = SQ_PS_PUNARY;
+		untake();
+	}
+
+	if (pow.kind != SQ_PS_PUNARY) {
+		if (!(pow.rhs = parse_pow_expression()))
+			die("missing right-hand side for pow-like operation");
+	}
+
+	return memdup(&pow, sizeof(struct pow_expression));
+}
+
 static struct mul_expression *parse_mul_expression() {
 	struct mul_expression mul;
 
-	if (!(mul.lhs = parse_unary_expression()))
+	if (!(mul.lhs = parse_pow_expression()))
 		return NULL;
 
 	switch (take().kind) {
@@ -292,11 +317,11 @@ static struct mul_expression *parse_mul_expression() {
 		mul.kind = SQ_PS_MMOD;
 		break;
 	default:
-		mul.kind = SQ_PS_MUNARY;
+		mul.kind = SQ_PS_MPOW;
 		untake();
 	}
 
-	if (mul.kind != SQ_PS_MUNARY) {
+	if (mul.kind != SQ_PS_MPOW) {
 		if (!(mul.rhs = parse_mul_expression()))
 			die("missing right-hand side for mul-like operation");
 	}
@@ -348,6 +373,9 @@ static struct cmp_expression *parse_cmp_expression() {
 		break;
 	case SQ_TK_GEQ:
 		cmp.kind = SQ_PS_CGEQ;
+		break;
+	case SQ_TK_CMP:
+		cmp.kind = SQ_PS_CCMP;
 		break;
 	default:
 		cmp.kind = SQ_PS_CADD;
@@ -468,11 +496,12 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		|| expr->math->lhs->kind != SQ_PS_ECMP
 		|| expr->math->lhs->lhs->kind != SQ_PS_CADD
 		|| expr->math->lhs->lhs->lhs->kind != SQ_PS_AMUL
-		|| expr->math->lhs->lhs->lhs->lhs->kind != SQ_PS_MUNARY
-		|| expr->math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
+		|| expr->math->lhs->lhs->lhs->lhs->kind != SQ_PS_MPOW
+		|| expr->math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_PUNARY
+		|| expr->math->lhs->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
 	) return expr;
 
-	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->rhs;
+	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->lhs->rhs;
 
 	if (last.kind == SQ_TK_LBRACKET) {
 		expr->kind = SQ_PS_EINDEX;
@@ -490,8 +519,8 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 
 struct kingdom_declaration *parse_kingdom_declaration() {
 	GUARD(SQ_TK_KINGDOM);
-
-	
+	// TODO
+	return NULL;
 }
 
 static struct scope_declaration *parse_global_declaration() {

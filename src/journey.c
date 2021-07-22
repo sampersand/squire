@@ -222,6 +222,8 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	case SQ_INT_TONUMERAL:
 	case SQ_INT_TOTEXT:
 	case SQ_INT_TOVERACITY:
+	case SQ_INT_TOBOOK:
+	case SQ_INT_TOCODEX:
 	case SQ_INT_KINDOF:
 	case SQ_INT_PRINT:
 	case SQ_INT_PRINTLN:
@@ -285,6 +287,16 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		set_next_local(sf, sq_value_new(sq_value_to_veracity(operands[0])));
 		return;
 
+	// [A,DST] DST <- A.to_book()
+	case SQ_INT_TOBOOK:
+		set_next_local(sf, sq_value_new(sq_value_to_book(operands[0])));
+		return;
+
+	// [A,DST] DST <- A.to_codex()
+	case SQ_INT_TOCODEX:
+		set_next_local(sf, sq_value_new(sq_value_to_codex(operands[0])));
+		return;
+
 	// [A,DST] DST <- A.genus
 	case SQ_INT_KINDOF:
 		set_next_local(sf, sq_value_clone(sq_value_genus(operands[0])));
@@ -295,6 +307,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		text = sq_value_to_text(operands[0]);
 		if (!fputs(text->ptr, stdout))
 			sq_throw_io("proclaimnl");
+		fflush(stdout);
 
 		sq_text_free(text);
 		set_next_local(sf, SQ_NI);
@@ -305,6 +318,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		text = sq_value_to_text(operands[0]);
 		if (!puts(text->ptr))
 			sq_throw_io("proclaim");
+		fflush(stdout);
 
 		sq_text_free(text);
 		set_next_local(sf, SQ_NI);
@@ -563,11 +577,13 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_GTH:
 		case SQ_OC_LEQ:
 		case SQ_OC_GEQ:
+		case SQ_OC_CMP:
 		case SQ_OC_ADD:
 		case SQ_OC_SUB:
 		case SQ_OC_MUL:
 		case SQ_OC_DIV:
 		case SQ_OC_MOD:
+		case SQ_OC_POW:
 		case SQ_OC_MATCHES:
 		case SQ_OC_INDEX:
 		case SQ_OC_ISTORE:
@@ -705,6 +721,10 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			set_next_local(sf, sq_value_new(sq_value_geq(operands[0], operands[1])));
 			continue;
 
+		case SQ_OC_CMP:
+			set_next_local(sf, sq_value_new(sq_value_cmp(operands[0], operands[1])));
+			continue;
+
 	/** Math **/
 		case SQ_OC_NEG:
 			set_next_local(sf, sq_value_neg(operands[0]));
@@ -728,6 +748,10 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 		case SQ_OC_MOD:
 			set_next_local(sf, sq_value_mod(operands[0], operands[1]));
+			continue;
+
+		case SQ_OC_POW:
+			set_next_local(sf, sq_value_pow(operands[0], operands[1]));
 			continue;
 
 		case SQ_OC_INDEX:

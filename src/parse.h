@@ -177,31 +177,37 @@ struct variable {
 struct bool_expression {
 	enum { SQ_PS_BEQL, SQ_PS_BAND, SQ_PS_BOR } kind;
 	struct eql_expression *lhs;
-	struct bool_expression *rhs;
+	struct bool_expression *rhs; // may be NULL.
 };
 
 struct eql_expression {
 	enum { SQ_PS_ECMP, SQ_PS_EEQL, SQ_PS_ENEQ, SQ_PS_EMATCHES } kind;
 	struct cmp_expression *lhs;
-	struct eql_expression *rhs;
+	struct eql_expression *rhs; // may be NULL.
 };
 
 struct cmp_expression {
-	enum { SQ_PS_CADD, SQ_PS_CLTH, SQ_PS_CLEQ, SQ_PS_CGTH, SQ_PS_CGEQ } kind;
+	enum { SQ_PS_CADD, SQ_PS_CLTH, SQ_PS_CLEQ, SQ_PS_CGTH, SQ_PS_CGEQ, SQ_PS_CCMP } kind;
 	struct add_expression *lhs;
-	struct cmp_expression *rhs;
+	struct cmp_expression *rhs; // may be NULL.
 };
 
 struct add_expression {
 	enum { SQ_PS_AMUL, SQ_PS_AADD, SQ_PS_ASUB } kind;
 	struct mul_expression *lhs;
-	struct add_expression *rhs;
+	struct add_expression *rhs; // may be NULL.
 };
 
 struct mul_expression {
-	enum { SQ_PS_MUNARY, SQ_PS_MMUL, SQ_PS_MDIV, SQ_PS_MMOD } kind;
+	enum { SQ_PS_MPOW, SQ_PS_MMUL, SQ_PS_MDIV, SQ_PS_MMOD } kind;
+	struct pow_expression *lhs;
+	struct mul_expression *rhs; // may be NULL.
+};
+
+struct pow_expression {
+	enum { SQ_PS_PUNARY, SQ_PS_PPOW } kind;
 	struct unary_expression *lhs;
-	struct mul_expression *rhs;
+	struct pow_expression *rhs; // may be NULL.
 };
 
 struct unary_expression {

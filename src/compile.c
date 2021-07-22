@@ -662,19 +662,43 @@ done:
 	return result;
 }
 
+static unsigned compile_pow(struct sq_code *code, struct pow_expression *pow) {
+	unsigned lhs, rhs, result;
+
+	lhs = compile_unary(code, pow->lhs);
+
+	if (pow->kind != SQ_PS_PUNARY)
+		rhs = compile_pow(code, pow->rhs);
+
+	switch (pow->kind) {
+	case SQ_PS_PPOW: set_opcode(code, SQ_OC_POW); break;
+	case SQ_PS_PUNARY: result = lhs; goto done;
+	default: bug("unknown pow kind '%d'", pow->kind);
+	}
+
+	set_index(code, lhs);
+	set_index(code, rhs);
+	set_index(code, result = next_local(code));
+
+done:
+
+	free(pow);
+	return result;
+}
+
 static unsigned compile_mul(struct sq_code *code, struct mul_expression *mul) {
 	unsigned lhs, rhs, result;
 
-	lhs = compile_unary(code, mul->lhs);
+	lhs = compile_pow(code, mul->lhs);
 
-	if (mul->kind != SQ_PS_MUNARY)
+	if (mul->kind != SQ_PS_MPOW)
 		rhs = compile_mul(code, mul->rhs);
 
 	switch (mul->kind) {
 	case SQ_PS_MMUL: set_opcode(code, SQ_OC_MUL); break;
 	case SQ_PS_MDIV: set_opcode(code, SQ_OC_DIV); break;
 	case SQ_PS_MMOD: set_opcode(code, SQ_OC_MOD); break;
-	case SQ_PS_MUNARY: result = lhs; goto done;
+	case SQ_PS_MPOW: result = lhs; goto done;
 	default: bug("unknown mul kind '%d'", mul->kind);
 	}
 
@@ -724,6 +748,7 @@ static unsigned compile_cmp(struct sq_code *code, struct cmp_expression *cmp) {
 	case SQ_PS_CLEQ: set_opcode(code, SQ_OC_LEQ); break;
 	case SQ_PS_CGTH: set_opcode(code, SQ_OC_GTH); break;
 	case SQ_PS_CGEQ: set_opcode(code, SQ_OC_GEQ); break;
+	case SQ_PS_CCMP: set_opcode(code, SQ_OC_CMP); break;
 	case SQ_PS_CADD: result = lhs; goto done;
 	default: bug("unknown cmp kind '%d'", cmp->kind);
 	}
@@ -829,22 +854,28 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 
 	BUILTIN_FN("proclaim",  SQ_INT_PRINTLN, 1);
 	BUILTIN_FN("proclaimn", SQ_INT_PRINT, 1);
+	BUILTIN_FN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
+	BUILTIN_FN("inquire",   SQ_INT_PROMPT, 0);
+	BUILTIN_FN("dismount",  SQ_INT_EXIT, 1);
+	BUILTIN_FN("hex",       SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
+
 	BUILTIN_FN("tally",     SQ_INT_TONUMERAL, 1);
 	BUILTIN_FN("numeral",   SQ_INT_TONUMERAL, 1);
 	BUILTIN_FN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
-	BUILTIN_FN("veracity",  SQ_INT_TOVERACITY, 1); // `veracity`
-	BUILTIN_FN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
+	BUILTIN_FN("veracity",  SQ_INT_TOVERACITY, 1);
+	BUILTIN_FN("book",      SQ_INT_TOBOOK, 1);
+	BUILTIN_FN("codex",     SQ_INT_TOCODEX, 1);
+	BUILTIN_FN("genus",     SQ_INT_KINDOF, 1);
+
 	BUILTIN_FN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",    SQ_INT_SUBSTR, 3);
-	BUILTIN_FN("dismount",  SQ_INT_EXIT, 1);
-	BUILTIN_FN("genus",     SQ_INT_KINDOF, 1);
-	BUILTIN_FN("hex",       SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
-	BUILTIN_FN("inquire",   SQ_INT_PROMPT, 0);
-	BUILTIN_FN("gamble",    SQ_INT_RANDOM, 0);
 	BUILTIN_FN("insert",    SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
+
+	BUILTIN_FN("gamble",    SQ_INT_RANDOM, 0);
 	BUILTIN_FN("roman",     SQ_INT_ROMAN, 1);
 	BUILTIN_FN("arabic",    SQ_INT_ARABIC, 1);
+
 	BUILTIN_FN("Scroll_open", SQ_INT_FOPEN, 2);
 	BUILTIN_FN("Scroll_close", SQ_INT_FCLOSE, 1);
 	BUILTIN_FN("Scroll_read", SQ_INT_FREAD, 2);

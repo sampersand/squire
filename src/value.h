@@ -253,6 +253,7 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs);
 sq_value sq_value_mul(sq_value lhs, sq_value rhs);
 sq_value sq_value_div(sq_value lhs, sq_value rhs);
 sq_value sq_value_mod(sq_value lhs, sq_value rhs);
+sq_value sq_value_pow(sq_value lhs, sq_value rhs);
 sq_value sq_value_index(sq_value value, sq_value key);
 void sq_value_index_assign(sq_value value, sq_value key, sq_value val);
 sq_value sq_value_call(sq_value soul, struct sq_args args);

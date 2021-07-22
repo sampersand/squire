@@ -18,5 +18,6 @@ void sq_io_startup(struct sq_program *program) {
 	sq_kingdom_initialize(sq_io_kingdom, 8);
 	// sq_kingdom_set_attr(sq_io_kingdom, "Scroll", sq_scroll_form);
 
-	program->globals;
+	// todo: set `Kingdom` in `globals`.
+	(void) program->globals;
 }

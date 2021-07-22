@@ -16,6 +16,10 @@ void sq_other_dump(FILE *out, const struct sq_other *other) {
 	case SQ_OK_KINGDOM:
 		sq_kingdom_dump(out, sq_other_as_kingdom((struct sq_other *) other));
 		break;
+
+	case SQ_OK_ENVOY:
+		sq_envoy_dump(out, sq_other_as_envoy((struct sq_other *) other));
+		break;
 	}
 }
 
@@ -33,6 +37,10 @@ void sq_other_deallocate(struct sq_other *other) {
 	case SQ_OK_KINGDOM:
 		sq_kingdom_deallocate(sq_other_as_kingdom(other));
 		break;
+
+	case SQ_OK_ENVOY:
+		sq_envoy_deallocate(sq_other_as_envoy(other));
+		break;
 	}
 
 	free(other);
@@ -48,12 +56,16 @@ const char *sq_other_typename(const struct sq_other *other) {
 
 	case SQ_OK_KINGDOM:
 		return "Kingdom";
+
+	case SQ_OK_ENVOY:
+		return "Envoy";
 	}
 }
 
 sq_value sq_other_genus(const struct sq_other *other) {
 	static struct sq_text KIND_SCROLL = SQ_TEXT_STATIC("Scroll");
 	static struct sq_text KIND_KINGDOM = SQ_TEXT_STATIC("Kingdom");
+	static struct sq_text KIND_ENVOY = SQ_TEXT_STATIC("Envoy");
 
 	switch (other->kind) {
 	case SQ_OK_SCROLL:
@@ -64,6 +76,9 @@ sq_value sq_other_genus(const struct sq_other *other) {
 
 	case SQ_OK_KINGDOM:
 		return sq_value_new(&KIND_KINGDOM);
+
+	case SQ_OK_ENVOY:
+		return sq_value_new(&KIND_ENVOY);
 	}
 }
 
@@ -77,6 +92,9 @@ struct sq_text *sq_other_to_text(const struct sq_other *other) {
 
 	case SQ_OK_KINGDOM:
 		return sq_text_new(strdup(sq_other_as_kingdom((struct sq_other *) other)->name));
+
+	case SQ_OK_ENVOY:
+		todo("SQ_OK_ENVOY to text");
 	}
 }
 
@@ -87,9 +105,11 @@ sq_numeral sq_other_to_numeral(const struct sq_other *other) {
 
 	case SQ_OK_KINGDOM:
 		if (!strcmp(sq_other_as_kingdom((struct sq_other *) other)->name, "Samperland"))
-			return 1; // Samperland's #1
+			return 1; // Samperland's #1 LOL.
 		// else fallthrough
+
 	case SQ_OK_SCROLL:
+	case SQ_OK_ENVOY:
 		sq_throw("cannot convert '%s' to a numeral", sq_other_typename(other));
 	}
 }
@@ -101,6 +121,7 @@ sq_veracity sq_other_to_veracity(const struct sq_other *other) {
 
 	case SQ_OK_SCROLL:
 	case SQ_OK_KINGDOM:
+	case SQ_OK_ENVOY:
 		sq_throw("cannot get veracity of '%s'", sq_other_typename(other));
 	}
 }
@@ -115,16 +136,22 @@ sq_value sq_other_get_attr(const struct sq_other *other, const char *attr) {
 
 	case SQ_OK_KINGDOM:
 		return sq_kingdom_get_attr(sq_other_as_kingdom((struct sq_other *) other), attr);
+
+	case SQ_OK_ENVOY:
+		return sq_envoy_get_attr(sq_other_as_envoy((struct sq_other *) other), attr);
 	}
 }
 
 bool sq_other_set_attr(struct sq_other *other, const char *attr, sq_value value) {
 	switch (other->kind) {
 	case SQ_OK_EXTERNAL:
-		return sq_external_set_attr(sq_other_as_external((struct sq_other *) other), attr, value);
+		return sq_external_set_attr(sq_other_as_external(other), attr, value);
 
 	case SQ_OK_KINGDOM:
-		return sq_kingdom_set_attr(sq_other_as_kingdom((struct sq_other *) other), attr, value);
+		return sq_kingdom_set_attr(sq_other_as_kingdom(other), attr, value);
+
+	case SQ_OK_ENVOY:
+		return sq_envoy_set_attr(sq_other_as_envoy(other), attr, value);
 
 	case SQ_OK_SCROLL:
 		return false;
@@ -139,6 +166,7 @@ bool sq_other_matches(const struct sq_other *formlike, sq_value to_check) {
 
 	case SQ_OK_SCROLL:
 	case SQ_OK_KINGDOM:
+	case SQ_OK_ENVOY:
 		return sq_value_eql(sq_value_new((struct sq_other *) formlike), to_check);
 	}
 }

@@ -1,0 +1,5 @@
+form Hangman {
+	matter word, guesses;
+}
+
+proclaim(book("abc"))
