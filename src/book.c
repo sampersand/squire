@@ -225,7 +225,7 @@ sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *fun
 	if (!book->length) return SQ_NI;
 	sq_value acc[2] = { sq_value_clone(book->pages[0]) };
 
-	for (unsigned i = 0; i < book->length; ++i) {
+	for (unsigned i = 1; i < book->length; ++i) {
 		acc[1] = book->pages[i];
 		acc[0] = sq_journey_run_deprecated(func, 2, acc);
 	}

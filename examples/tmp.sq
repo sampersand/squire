@@ -1,0 +1,10 @@
+journey to-text(guesses) {
+	renowned thresh = N;
+	proclaim(thresh); # => N
+	proclaim(thresh = thresh + I); # => I
+	proclaim(guesses >= thresh); # => yay
+	proclaim(guesses >= (thresh = thresh + I)); # => failure lol
+	dismount(0);
+}
+
+proclaim(to-text(8));

@@ -38,6 +38,7 @@ static inline struct sq_text *sq_text_clone(struct sq_text *text) {
 void sq_text_dealloc(struct sq_text *stirng);
 
 static inline void sq_text_free(struct sq_text *text) {
+	if(1) return;
 	assert(text->refcount);
 
 	if (0 < text->refcount && !--text->refcount)

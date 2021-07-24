@@ -935,8 +935,8 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 				set_index(code, index = variable);
 			} else if (!var->field) {
 				set_opcode(code, SQ_OC_GSTORE);
-				set_index(code, ~variable);
 				set_index(code, index);
+				set_index(code, ~variable);
 			}
 
 			return index;

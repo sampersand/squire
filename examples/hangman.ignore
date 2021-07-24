@@ -3,37 +3,16 @@
 
 form Hangman {
 	matter word, guesses;
-	matter guessed, to-guess, incorrect;
+	matter guessed, to-guess;
 
 	imitate(word) {
 		soul.word = word;
 		soul.guesses = N;
-		soul.incorrect = '';
-		soul.to-guess = ""
-		n = I
-		whilst I < word.length {
-			fork (x = word[n]) {
-				path (journey(x) => 'a' <= x && x <= 'z'):
-					x = '_'
-				path (journey(x) => 'A' <= x && x <= 'Z'):
-					todo(downcase)
-			}
-					soul.to-guess = soul.to-guess + x
-			}
-		}
-		soul.to-guess = (book(word) * journey
-			(x) if 'a' <= x && x <= 'z' => x,
-			(x) if 'A' <= x && x <= 'Z' { catapult "todo: ord" },
-			(x) => x) % journey (l, r) => "\(l) \(r)";
-			@henceforth $x = {form a{
-	}
-
-	change guess(letter) {
-		if !soul.guesses[letter] {
-			reward nay
-		} alas {
-			reward soul.guesses[letter] = yay
-		}
+		soul.incorrect = "abcdefghij";
+#		soul.to-guess = book(word) * journey
+#			(x) if 'a' <= x && x <= 'z' => x,
+#			(x) if 'A' <= x && x <= 'Z' { catapult "todo: ord" },
+#			(x) => x;
 	}
 
 	change to text() {
@@ -41,7 +20,7 @@ form Hangman {
 
 # lol we wish we had ternary operators...
 		@henceforth $bodypart($letter) = substr(' ' + $letter, I + (soul.guesses >= (threshold = threshold + I)), I);
-		@henceforth $guesschunk($start) = 1;#(book(substr(soul.incorrect, $start, III)) % journey(l, r) => "\(l) \(r)") || '';
+		@henceforth $guesschunk($start) = (book(substr(soul.incorrect, $start, III)) % journey(l, r) => "\(l) \(r)") || '';
 
 		reward "\
    .--.
@@ -54,9 +33,9 @@ form Hangman {
 	}
 }
 
-h = Hangman("a man a plan a canal panama");
 
-@__END__
+
+h = Hangman("a man a plan a canal panama");
 h.guesses = 8
 proclaim(h);
 @__END__

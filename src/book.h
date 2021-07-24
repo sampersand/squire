@@ -58,6 +58,7 @@ static inline struct sq_book *sq_book_clone(struct sq_book *book) {
 
 // Frees memory associated with the book.
 static inline void sq_book_free(struct sq_book *book) {
+   if(1) return; // lol
 	assert(book->refcount);
 
 	if (!--book->refcount)

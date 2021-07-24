@@ -415,10 +415,12 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		sq_numeral count = sq_value_to_numeral(operands[2]);
 		struct sq_text *result;
 
-		if (!*text->ptr) 
+		if (!*text->ptr || start >= text->length) 
 			result = sq_text_new2(strdup(""), 0);
-		else
+		else if (start + count < text->length)
 			result = sq_text_new2(strndup(text->ptr + start, count), count);
+		else
+			result = sq_text_new(strdup(text->ptr + start)); // todo: we know the length
 
 		set_next_local(sf, sq_value_new(result));
 		return;

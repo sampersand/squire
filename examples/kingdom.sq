@@ -1,0 +1,5 @@
+kingdom Foo {
+
+}
+
+proclaim(Foo)
