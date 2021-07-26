@@ -1,4 +1,4 @@
-#include "scroll.h"
+#include "other/scroll.h"
 #include <stdlib.h>
 #include <string.h>
 #include "text.h"

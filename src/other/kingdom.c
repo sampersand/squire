@@ -1,4 +1,4 @@
-#include "kingdom.h"
+#include "other/kingdom.h"
 #include "shared.h"
 #include <stdlib.h>
 #include <string.h>

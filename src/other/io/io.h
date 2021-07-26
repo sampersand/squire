@@ -1,7 +1,7 @@
 #ifndef SQ_IO_H
 #define SQ_IO_H
 
-#include "scroll.h"
+#include "other/scroll.h"
 #include "other/kingdom.h"
 
 struct sq_program;

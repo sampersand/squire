@@ -1,7 +1,7 @@
-#include "external.h"
+#include "other/external.h"
+#include "other/other.h"
 #include "text.h"
 #include "exception.h"
-#include "other.h"
 #include <string.h>
 
 void sq_external_dump(FILE *out, const struct sq_external *external) {

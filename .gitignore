@@ -1,4 +1,3 @@
-squire
-squire.DSYM
+./squire
 bin/*
 obj/*

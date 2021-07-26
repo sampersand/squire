@@ -1,4 +1,4 @@
-#include "other.h"
+#include "other/other.h"
 #include "text.h"
 #include "exception.h"
 #include <stdlib.h>

@@ -3,8 +3,8 @@
 
 #include <assert.h>
 #include "value.h"
-#include "io/scroll.h"
-#include "io/envoy.h"
+#include "other/scroll.h"
+#include "other/envoy.h"
 #include "external.h"
 #include "kingdom.h"
 
