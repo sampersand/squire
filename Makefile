@@ -7,8 +7,10 @@ BINDIR?=bin
 exe=$(BINDIR)/squire
 dyn=$(BINDIR)/libsquire.so
 objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
-objects+=$(patsubst $(SRCDIR)/**/%.c,$(OBJDIR)/**/%.o,$(wildcard $(SRCDIR)/**/*.c))
-objects+=$(patsubst $(SRCDIR)/**/**/%.c,$(OBJDIR)/**/**/%.o,$(wildcard $(SRCDIR)/**/**/*.c))
+objects+=$(patsubst $(SRCDIR)/value/%.c,$(OBJDIR)/value/%.o,$(wildcard $(SRCDIR)/value/*.c))
+objects+=$(patsubst $(SRCDIR)/program/%.c,$(OBJDIR)/program/%.o,$(wildcard $(SRCDIR)/program/*.c))
+objects+=$(patsubst $(SRCDIR)/other/%.c,$(OBJDIR)/other/%.o,$(wildcard $(SRCDIR)/other/*.c))
+objects+=$(patsubst $(SRCDIR)/other/io/%.c,$(OBJDIR)/other/io/%.o,$(wildcard $(SRCDIR)/other/io/*.c))
 
 CFLAGS+=-F$(SRCDIR) -Iinclude
 
@@ -34,7 +36,7 @@ all: $(exe)
 shared: $(dyn)
 
 clean:
-	@-rm -r bin obj squire.dSYM
+	@-rm -r $(BINDIR) $(BINDIR)
 
 optimized:
 	$(CC) $(CFLAGS) -o $(exe) $(wildcard $(SRCDIR)/*.c)
@@ -49,11 +51,11 @@ $(BINDIR):
 	@mkdir -p $(BINDIR)
 
 $(OBJDIR):
-	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)/value $(OBJDIR)/program $(OBJDIR)/other/io
 
 $(objects): | $(OBJDIR)
 
-$(OBJDIR)/token.o: $(SRCDIR)/token.c $(SRCDIR)/macro.c
+$(OBJDIR)/program/token.o: $(SRCDIR)/program/token.c $(SRCDIR)/program/macro.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
