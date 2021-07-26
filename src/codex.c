@@ -1,6 +1,7 @@
-#include "codex.h"
-#include "shared.h"
-#include "text.h"
+#include <squire/codex.h>
+#include <squire/shared.h>
+#include <squire/text.h>
+
 #include <string.h>
 
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages) {

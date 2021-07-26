@@ -13,7 +13,7 @@
 #define SQ_NONNULL SQ_ATTR(nonnull)
 #define sizeof_array(kind, length) (sizeof(kind) * (length))
 
-#include "exception.h"
+#include <squire/exception.h>
 
 #define die sq_throw
 #define todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))

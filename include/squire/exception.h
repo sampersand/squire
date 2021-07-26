@@ -6,8 +6,8 @@
 #endif
 
 #include <setjmp.h>
-#include "value.h"
-#include "shared.h"
+#include <squire/value.h>
+#include <squire/shared.h>
 
 // jmp_buf redo_location;
 extern jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];

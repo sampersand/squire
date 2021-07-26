@@ -2,7 +2,7 @@
 #define SQ_EXTERNAL_H
 
 #include <stdio.h>
-#include "value.h"
+#include <squire/value.h>
 
 struct sq_external;
 

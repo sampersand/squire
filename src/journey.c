@@ -1,11 +1,12 @@
-#include "journey.h"
-#include "text.h"
-#include "program.h"
-#include "other/other.h"
-#include "shared.h"
-#include "form.h"
-#include "book.h"
-#include "codex.h"
+#include <squire/other/other.h>
+#include <squire/journey.h>
+#include <squire/text.h>
+#include <squire/program.h>
+#include <squire/shared.h>
+#include <squire/form.h>
+#include <squire/book.h>
+#include <squire/codex.h>
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

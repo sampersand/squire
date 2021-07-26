@@ -1,6 +1,7 @@
-#include "other/other.h"
-#include "text.h"
-#include "exception.h"
+#include <squire/other/other.h>
+#include <squire/text.h>
+#include <squire/exception.h>
+
 #include <stdlib.h>
 
 void sq_other_dump(FILE *out, const struct sq_other *other) {

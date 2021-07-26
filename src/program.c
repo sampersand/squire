@@ -1,10 +1,11 @@
-#include "book.h"
-#include "program.h"
-#include "value.h"
-#include "journey.h"
-#include "shared.h"
-#include "exception.h"
-#include "text.h"
+#include <squire/book.h>
+#include <squire/program.h>
+#include <squire/value.h>
+#include <squire/journey.h>
+#include <squire/shared.h>
+#include <squire/exception.h>
+#include <squire/text.h>
+
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>

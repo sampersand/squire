@@ -1,6 +1,6 @@
 #ifndef sq_codex_H
 
-#include "value.h"
+#include <squire/value.h>
 
 struct sq_codex {
 	SQ_VALUE_ALIGN struct sq_codex_page *pages;

@@ -1,6 +1,7 @@
-#include "numeral.h"
-#include "shared.h"
-#include "text.h"
+#include <squire/numeral.h>
+#include <squire/shared.h>
+#include <squire/text.h>
+
 #include <ctype.h>
 #include <string.h>
 

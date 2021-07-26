@@ -1,7 +1,7 @@
-#include "io.h"
-#include "other/kingdom.h"
-#include "other/other.h"
-#include "program.h"
+#include <squire/other/io.h>
+#include <squire/other/kingdom.h>
+#include <squire/other/other.h>
+#include <squire/program.h>
 
 static struct sq_other sq_io_kingdom_other = {
 	.refcount = -1,

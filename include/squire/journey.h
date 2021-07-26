@@ -1,9 +1,10 @@
 #ifndef SQ_FUNCTION_H
 #define SQ_FUNCTION_H
 
-#include "value.h"
-#include "bytecode.h"
-#include "program.h"
+#include <squire/value.h>
+#include <squire/bytecode.h>
+#include <squire/program.h>
+
 #include <assert.h>
 
 struct sq_args {

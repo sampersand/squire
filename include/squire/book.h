@@ -1,7 +1,8 @@
 #ifndef SQ_BOOK_H
 
-#include "value.h"
-#include "shared.h"
+#include <squire/value.h>
+#include <squire/shared.h>
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdalign.h>

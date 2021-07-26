@@ -2,9 +2,9 @@
 struct _nothing_to_see_here;
 #else
 
+#include <squire/shared.h>
 #include <string.h>
 #include <stdint.h>
-#include "shared.h"
 
 char *strdup(char *str) {
 	size_t length = strlen(str) + 1;

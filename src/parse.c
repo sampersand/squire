@@ -1,9 +1,10 @@
-#include "token.h"
-#include "program.h"
-#include "journey.h"
-#include "parse.h"
-#include "shared.h"
-#include "form.h"
+#include <squire/token.h>
+#include <squire/program.h>
+#include <squire/journey.h>
+#include <squire/parse.h>
+#include <squire/shared.h>
+#include <squire/form.h>
+
 #include <string.h>
 
 struct sq_token last;

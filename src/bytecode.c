@@ -1,4 +1,4 @@
-#include "bytecode.h"
+#include <squire/bytecode.h>
 
 const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 	switch (interrupt) {

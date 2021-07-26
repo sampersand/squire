@@ -1,7 +1,8 @@
-#include "other/external.h"
-#include "other/other.h"
-#include "text.h"
-#include "exception.h"
+#include <squire/other/external.h>
+#include <squire/other/other.h>
+#include <squire/text.h>
+#include <squire/exception.h>
+
 #include <string.h>
 
 void sq_external_dump(FILE *out, const struct sq_external *external) {

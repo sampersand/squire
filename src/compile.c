@@ -1,9 +1,10 @@
-#include "program.h"
-#include "journey.h"
-#include "shared.h"
-#include "parse.h"
-#include "form.h"
-#include "text.h"
+#include <squire/program.h>
+#include <squire/journey.h>
+#include <squire/shared.h>
+#include <squire/parse.h>
+#include <squire/form.h>
+#include <squire/text.h>
+
 #include <string.h>
 #include <errno.h>
 

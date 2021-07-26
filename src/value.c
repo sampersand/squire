@@ -1,11 +1,12 @@
-#include "value.h"
-#include "book.h"
-#include "form.h"
-#include "journey.h"
-#include "shared.h"
-#include "text.h"
-#include "codex.h"
-#include "other/other.h"
+#include <squire/value.h>
+#include <squire/book.h>
+#include <squire/form.h>
+#include <squire/journey.h>
+#include <squire/shared.h>
+#include <squire/text.h>
+#include <squire/codex.h>
+#include <squire/other/other.h>
+
 #include <string.h>
 #include <inttypes.h>
 #include <limits.h>

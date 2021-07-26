@@ -1,12 +1,13 @@
 #ifndef SQ_OTHER_H
 #define SQ_OTHER_H
 
+#include <squire/value.h>
+#include <squire/other/scroll.h>
+#include <squire/other/envoy.h>
+#include <squire/other/external.h>
+#include <squire/other/kingdom.h>
+
 #include <assert.h>
-#include "value.h"
-#include "other/scroll.h"
-#include "other/envoy.h"
-#include "external.h"
-#include "kingdom.h"
 
 struct sq_other {
 	int refcount;

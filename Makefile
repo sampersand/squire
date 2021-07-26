@@ -10,7 +10,7 @@ objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 objects+=$(patsubst $(SRCDIR)/**/%.c,$(OBJDIR)/**/%.o,$(wildcard $(SRCDIR)/**/*.c))
 objects+=$(patsubst $(SRCDIR)/**/**/%.c,$(OBJDIR)/**/**/%.o,$(wildcard $(SRCDIR)/**/**/*.c))
 
-CFLAGS+=-F$(SRCDIR) -Iinclude/squire/
+CFLAGS+=-F$(SRCDIR) -Iinclude
 
 CFLAGS+=-DSQ_NUMERAL_TO_ROMAN
 

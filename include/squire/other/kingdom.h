@@ -1,7 +1,7 @@
 #ifndef SQ_KINGDOM_H
 #define SQ_KINGDOM_H
 
-#include "value.h"
+#include <squire/value.h>
 
 // lol, todo better hashmaps than linked lists
 struct sq_kingdom {

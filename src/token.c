@@ -1,8 +1,9 @@
-#include "token.h"
+#include <squire/token.h>
+#include <squire/shared.h>
+
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
-#include "shared.h"
 
 const char *sq_stream;
 static char put_back_quote;

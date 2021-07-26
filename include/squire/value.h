@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdio.h>
-#include "numeral.h"
+#include <squire/numeral.h>
 
 struct sq_text;
 struct sq_form;

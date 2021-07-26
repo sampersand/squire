@@ -1,7 +1,7 @@
 #ifndef SQ_PROGRAM_H
 #define SQ_PROGRAM_H
 
-#include "value.h"
+#include <squire/value.h>
 
 struct sq_program {
 	unsigned nglobals;

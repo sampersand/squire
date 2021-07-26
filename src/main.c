@@ -1,8 +1,9 @@
+#include <squire/program.h>
+#include <squire/shared.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "program.h"
-#include "shared.h"
 
 #define ERROR(msg) (perror(msg),exit(1))
 

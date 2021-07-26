@@ -1,6 +1,7 @@
-#include "text.h"
-#include "assert.h"
-#include "shared.h"
+#include <squire/text.h>
+#include <squire/shared.h>
+
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 

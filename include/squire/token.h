@@ -1,8 +1,8 @@
 #ifndef SQ_TOKEN_H
 #define SQ_TOKEN_H
 
-#include "value.h"
-#include "text.h"
+#include <squire/value.h>
+#include <squire/text.h>
 
 enum sq_token_kind {
 	SQ_TK_UNDEFINED = 0,

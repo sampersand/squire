@@ -1,8 +1,9 @@
 #ifndef SQ_SCROLL_H
 #define SQ_SCROLL_H
 
+#include <squire/value.h>
+
 #include <stdio.h>
-#include "value.h"
 
 struct sq_scroll {
 	char *filename, *mode;

@@ -2,7 +2,7 @@
 #define SQ_STRING_H
 
 #include <string.h>
-#include "value.h"
+#include <squire/value.h>
 
 struct sq_text {
 	SQ_VALUE_ALIGN char *ptr;

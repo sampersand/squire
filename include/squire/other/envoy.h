@@ -1,7 +1,7 @@
 #ifndef SQ_ENVOY_H
 #define SQ_ENVOY_H
 
-#include "value.h"
+#include <squire/value.h>
 
 struct sq_envoy {
 	void *dyllib;

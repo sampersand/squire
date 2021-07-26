@@ -1,9 +1,10 @@
-#include "other/scroll.h"
+#include <squire/other/scroll.h>
+#include <squire/other/kingdom.h>
+#include <squire/text.h>
+#include <squire/exception.h>
+
 #include <stdlib.h>
 #include <string.h>
-#include "text.h"
-#include "exception.h"
-#include "other/kingdom.h"
 
 static struct sq_kingdom scroll_kingdom = {
 	.name = "IO",

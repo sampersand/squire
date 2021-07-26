@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include "book.h"
-#include "shared.h"
-#include "exception.h"
-#include "text.h"
-#include "journey.h"
+#include <squire/book.h>
+#include <squire/shared.h>
+#include <squire/exception.h>
+#include <squire/text.h>
+#include <squire/journey.h>
 
 struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
 	assert(length <= capacity);

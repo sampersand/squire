@@ -1,5 +1,6 @@
-#include "other/kingdom.h"
-#include "shared.h"
+#include <squire/other/kingdom.h>
+#include <squire/shared.h>
+
 #include <stdlib.h>
 #include <string.h>
 

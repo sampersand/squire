@@ -1,8 +1,8 @@
-#include "other/envoy.h"
-#include "shared.h"
-#include <string.h>
-#include "exception.h"
+#include <squire/exception.h>
+#include <squire/other/envoy.h>
+#include <squire/shared.h>
 
+#include <string.h>
 #include <dlfcn.h>
 #include <ffi/ffi.h>
 

@@ -1,8 +1,8 @@
 #ifndef SQ_IO_H
 #define SQ_IO_H
 
-#include "other/scroll.h"
-#include "other/kingdom.h"
+#include <squire/other/scroll.h>
+#include <squire/other/kingdom.h>
 
 struct sq_program;
 extern struct sq_kingdom *sq_io_kingdom;

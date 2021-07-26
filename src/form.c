@@ -1,7 +1,8 @@
+#include <squire/form.h>
+#include <squire/shared.h>
+
 #include <string.h>
 #include <assert.h>
-#include "form.h"
-#include "shared.h"
 
 struct sq_form *sq_form_new(char *name) {
 	assert(name != NULL);

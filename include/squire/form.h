@@ -1,9 +1,9 @@
 #ifndef SQ_FORM_H
 #define SQ_FORM_H
 
-#include "value.h"
-#include "journey.h"
-#include "shared.h"
+#include <squire/value.h>
+#include <squire/journey.h>
+#include <squire/shared.h>
 
 #include <assert.h>
 #include <stddef.h>

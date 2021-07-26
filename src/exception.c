@@ -1,7 +1,8 @@
-#include "exception.h"
-#include "text.h"
-#include "value.h"
-#include "form.h"
+#include <squire/exception.h>
+#include <squire/text.h>
+#include <squire/value.h>
+#include <squire/form.h>
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>

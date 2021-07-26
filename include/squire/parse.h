@@ -1,7 +1,7 @@
 #ifndef SQ_PARSE_H
 #define SQ_PARSE_H
 
-#include "journey.h"
+#include <squire/journey.h>
 
 struct statements *sq_parse_statements(const char *stream);
 
