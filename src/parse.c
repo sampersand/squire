@@ -517,10 +517,43 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	return expr;
 }
 
+static struct variable *parse_variable(void);
+static struct statements *parse_brace_statements(char *);
+
+#define MAX_KINGDOMS 255
+
+char *kingdoms[MAX_KINGDOMS];
+unsigned current_kingdom;
+
 struct kingdom_declaration *parse_kingdom_declaration() {
 	GUARD(SQ_TK_KINGDOM);
-	// TODO
-	return NULL;
+
+	if (MAX_KINGDOMS <= current_kingdom)
+		die("too many nested kingdoms");
+
+	// this is terrible
+	struct variable *var = parse_variable();
+	struct kingdom_declaration *kingdom = xmalloc(sizeof(struct kingdom_declaration));
+	kingdom->name = var->name;
+	bool is_first = true;
+
+	while (var->field) {
+		if (!var->is_namespace_access)
+			die("expected a namespace access, not %s.%s", kingdom->name, var->field);
+
+		kingdom->name = xrealloc(kingdom->name, strlen(kingdom->name) + strlen(var->field->name) + 3);
+		strcat(kingdom->name, "::");
+		strcat(kingdom->name, var->field->name);
+		if (!is_first) free(var->name);
+		is_first = true;
+		var = var->field;
+	}
+
+	kingdoms[current_kingdom++] = kingdom->name;
+	// kingdom->statements = parse_brace_statements("kingdom");
+	--current_kingdom;
+
+	return kingdom;
 }
 
 static struct scope_declaration *parse_global_declaration() {
@@ -554,9 +587,9 @@ static struct scope_declaration *parse_local_declaration() {
 	return local;
 }
 
-static struct class_declaration *parse_form_declaration() {
+static struct form_declaration *parse_form_declaration() {
 	GUARD(SQ_TK_CLASS);
-	struct class_declaration *fdecl = xmalloc(sizeof(struct class_declaration));
+	struct form_declaration *fdecl = xmalloc(sizeof(struct form_declaration));
 	fdecl->nparents = 0;
 
 	// optional name
@@ -622,7 +655,7 @@ static struct class_declaration *parse_form_declaration() {
 					die("too many form methods!");
 				fdecl->funcs[fdecl->nfuncs++] = fn;
 			} else {
-				die("[bug] its not a constructor, func, or classfn?");
+				die("[bug] its not a constructor, func, or formfn?");
 			}
 
 			break;

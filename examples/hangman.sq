@@ -1,5 +1,5 @@
+@transcribe "utils.sq"
 @henceforth $LETTERS_IN_ALPHABET = 26;
-#@henceforth $ternary($cond, $ift, $iff) = (journey(){})
 
 form Hangman {
 	matter word, guesses;
@@ -9,7 +9,8 @@ form Hangman {
 		soul.word = word;
 		soul.guesses = N;
 		soul.incorrect = '';
-		soul.to-guess = ""
+		soul.to-guess = "";
+		
 		n = I
 		whilst I < word.length {
 			fork (x = word[n]) {

@@ -1,0 +1,24 @@
+form TextUtils {
+	essence LETTERS_IN_ALPHABET = 26;
+
+	recall is-upper(n) => 'A' <= n && n <= 'Z'; 
+	recall is-lower(n) => 'a' <= n && n <= 'z';
+	recall to-lower(n) {
+		fork n {
+			path'A':reward'a';path'B':reward'b';path'C':reward'c';path'D':reward'd';path'E':reward'e';
+			path'F':reward'f';path'G':reward'g';path'H':reward'h';path'I':reward'i';path'J':reward'j';
+			path'K':reward'k';path'L':reward'l';path'M':reward'm';path'N':reward'n';path'O':reward'o';
+			path'P':reward'p';path'Q':reward'q';path'R':reward'r';path'S':reward's';path'T':reward't';
+			path'U':reward'u';path'V':reward'v';path'W':reward'w';path'X':reward'x';path'Y':reward'z';path'Z':reward'z'
+			alas:reward n
+		}
+	}
+}
+
+
+
+renowned TextUtils;
+proclaim(TextUtils.to-lower('A'));
+proclaim(TextUtils.is-lower('a'));
+#proclaim(TextUtils.l("a"));
+ 

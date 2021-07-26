@@ -34,7 +34,7 @@ struct statement {
 	union {
 		struct kingdom_declaration *kdecl;
 		struct scope_declaration *gdecl, *ldecl;
-		struct class_declaration *cdecl;
+		struct form_declaration *cdecl;
 		struct journey_declaration *jdecl;
 		struct if_statement *ifstmt;
 		struct while_statement *wstmt;
@@ -49,7 +49,24 @@ struct statement {
 
 struct kingdom_declaration {
 	char *name;
-	struct statement *statements;
+	unsigned nsubjects;
+	struct {
+		enum {
+			SQ_PS_K_FORM,
+			SQ_PS_K_STATEMENT,
+			SQ_PS_K_JOURNEY,
+			SQ_PS_K_RENOWNED,
+			SQ_PS_K_KINGDOM,
+		} kind;
+
+		union {
+			struct form_declaration *form_decl;	
+			struct statement *statement;
+			struct journey *journey;
+			struct scope_declaration *renowned;
+			struct kingdom_declaration *kingdom;
+		};
+	} *subjects;
 };
 
 struct scope_declaration {
@@ -57,7 +74,7 @@ struct scope_declaration {
 	struct expression *value; // can be null
 };
 
-struct class_declaration {
+struct form_declaration {
 	char *name;
 	unsigned nmatter, nfuncs, nmeths, nparents, nessences;
 	char **parents;

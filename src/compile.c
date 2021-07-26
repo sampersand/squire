@@ -272,7 +272,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary);
 static void compile_statements(struct sq_code *code, struct statements *stmts);
 static struct sq_journey *compile_journey(struct journey_declaration *jd, bool is_method);
 
-static void compile_form_declaration(struct sq_code *code, struct class_declaration *fdecl) {
+static void compile_form_declaration(struct sq_code *code, struct form_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
 	declare_global_variable(form->name, sq_value_new(form));
 
@@ -379,10 +379,51 @@ static void compile_form_declaration(struct sq_code *code, struct class_declarat
 }
 
 static void compile_kingdom_declaration(struct sq_code *code, struct kingdom_declaration *kdecl) {
+// struct kingdom_declaration {
+// 	char *name;
+// 	unsigned nsubjects;
+// 	struct {
+// 		enum {
+// 			SQ_PS_K_FORM,
+// 			SQ_PS_K_STATEMENT,
+// 			SQ_PS_K_JOURNEY,
+// 			SQ_PS_K_RENOWNED,
+// 			SQ_PS_K_KINGDOM,
+// 		} kind;
+
+// 		union {
+// 			struct form_declaration *form_decl;	
+// 			struct statement *statement;
+// 			struct journey *journey;
+// 			struct scope_declaration *renowned;
+// 			struct kingdom_declaration *kingdom;
+// 		};
+// 	} *subjects;
+// };
+
+// // lol, todo better hashmaps than linked lists
+// struct sq_kingdom {
+// 	char *name;
+// 	unsigned nsubjects, subject_cap;
+
+// 	struct sq_kingdom_subject {
+// 		char *name;
+// 		sq_value person;
+// 	} *subjects;
+// };
+
+	// struct sq_kingdom *kingdom = xmalloc(sizeof(struct sq_kingdom));
+	// kingdom->name = kdecl->name;
+	// kingdom->nsubjects = kingdom->subject_cap = kdecl->nsubjects;
+	// kingdom->subjects = xmalloc(sizeof_array(struct sq_kingdom_subject, kingdom->nsubjects));
+
+	// declare_global_variable(strdup(kingdom->name), sq_value_new(kingdom));
+
+	// compile_statements(code, kdecl->statements);
+
 	(void) code;
-	(void) kdecl;
-	todo("compile_kingdom_declaration: %s", "");
-	abort();
+	free(kdecl->name);
+	free(kdecl);
 }
 
 static void compile_journey_declaration(struct journey_declaration *jd) {
