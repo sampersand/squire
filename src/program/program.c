@@ -45,12 +45,10 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 		sq_value_free(args[i]);
 }
 
-void sq_program_free(struct sq_program *program) {
+void sq_program_finish(struct sq_program *program) {
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		sq_value_free(program->globals[i]);
 
 	free(program->globals);
 	sq_journey_free(program->main);
-
-	free(program);
 }

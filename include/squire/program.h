@@ -9,9 +9,8 @@ struct sq_program {
 	struct sq_journey *main;
 };
 
-void sq_program_initialize(struct sq_program *program);
-struct sq_program *sq_program_compile(const char *stream);
+void sq_program_compile(struct sq_program *program, const char *stream);
 void sq_program_run(struct sq_program *program, unsigned argc, const char **argv);
-void sq_program_free(struct sq_program *program);
+void sq_program_finish(struct sq_program *program);
 
 #endif /* !SQ_PROGRAM_H */

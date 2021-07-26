@@ -1356,17 +1356,17 @@ static void setup_globals(void) {
 	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Codex")));
 }
 
-struct sq_program *sq_program_compile(const char *stream) {
+void sq_program_compile(struct sq_program *program_, const char *stream) {
 	setup_globals();
 
-	program = xmalloc(sizeof(struct sq_program));
+	program = program_;
 	program->nglobals = 1;
 	program->globals = NULL;
 
 	struct journey_declaration maindecl = {
 		.name = strdup("main"),
 		.npatterns = 1,
-		.patterns =  {
+		.patterns = {
 			{
 				.pargc = 0,
 				.kwargc = 0,
@@ -1382,8 +1382,7 @@ struct sq_program *sq_program_compile(const char *stream) {
 
 	program->nglobals = globals.len;
 	program->globals = xmalloc(sizeof_array(sq_value , globals.len));
+
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		program->globals[i] = globals.ary[i].value;
-
-	return program;
 }

@@ -37,18 +37,18 @@ int main(int argc, const char **argv) {
 		return 1;
 	}
 
-	struct sq_program *program;
+	struct sq_program program;
 
 	if (argv[1][1] == 'e') {
-		program = sq_program_compile(argv[2]);
+		sq_program_compile(&program, argv[2]);
 	} else {
 		char *contents = read_file(argv[2]);
-		program = sq_program_compile(contents);
+		sq_program_compile(&program, contents);
 		free(contents);
 	}
 
-	sq_program_run(program, argc - 3, argv + 3);
-	sq_program_free(program);
+	sq_program_run(&program, argc - 3, argv + 3);
+	sq_program_finish(&program);
 
 	return 0;
 }
