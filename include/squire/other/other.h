@@ -6,6 +6,7 @@
 #include <squire/other/envoy.h>
 #include <squire/other/external.h>
 #include <squire/other/kingdom.h>
+#include <squire/other/fraction.h>
 
 #include <assert.h>
 
@@ -16,7 +17,8 @@ struct sq_other {
 		SQ_OK_SCROLL,
 		SQ_OK_EXTERNAL,
 		SQ_OK_KINGDOM,
-		SQ_OK_ENVOY
+		SQ_OK_ENVOY,
+		SQ_OK_FRACTION,
 	} kind;
 
 	union {
@@ -24,6 +26,7 @@ struct sq_other {
 		struct sq_external external;
 		struct sq_kingdom kingdom;
 		struct sq_envoy envoy;
+		struct sq_fraction fraction;
 	};
 };
 
@@ -50,6 +53,11 @@ static inline struct sq_kingdom *sq_other_as_kingdom(struct sq_other *other) {
 static inline struct sq_envoy *sq_other_as_envoy(struct sq_other *other) {
 	assert(other->kind == SQ_OK_ENVOY);
 	return &other->envoy;
+}
+
+static inline struct sq_fraction *sq_other_as_fraction(struct sq_other *other) {
+	assert(other->kind == SQ_OK_FRACTION);
+	return &other->fraction;
 }
 
 void sq_other_dump(FILE *out, const struct sq_other *other);

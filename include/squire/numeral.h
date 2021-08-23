@@ -1,5 +1,5 @@
-#ifndef sq_numeral_H
-#define sq_numeral_H
+#ifndef SQ_NUMERAL_H
+#define SQ_NUMERAL_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -22,4 +22,4 @@ extern struct sq_text sq_text_zero;
 
 bool sq_numeral_starts(const char *text);
 
-#endif /* !sq_numeral_H */
+#endif /* !SQ_NUMERAL_H */

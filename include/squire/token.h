@@ -3,6 +3,7 @@
 
 #include <squire/value.h>
 #include <squire/text.h>
+#include <squire/other/fraction.h>
 
 enum sq_token_kind {
 	SQ_TK_UNDEFINED = 0,
@@ -38,6 +39,7 @@ enum sq_token_kind {
 
 	SQ_TK_IDENT = 0x60,
 	SQ_TK_NUMERAL,
+	SQ_TK_FRACTION,
 	SQ_TK_TEXT,
 	SQ_TK_LABEL,
 
@@ -82,6 +84,7 @@ struct sq_token {
 	enum sq_token_kind kind;
 	union {
 		sq_numeral numeral;
+		struct sq_fraction fraction;
 		struct sq_text *text;
 		char *identifier;
 	};

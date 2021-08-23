@@ -1,4 +1,5 @@
-#ifndef sq_codex_H
+#ifndef SQ_CODEX_H
+#define SQ_CODEX_H
 
 #include <squire/value.h>
 
@@ -44,4 +45,5 @@ void sq_codex_dump(FILE *out, const struct sq_codex *codex);
 sq_value sq_codex_delete(struct sq_codex *codex, sq_value key);
 sq_value sq_codex_index(struct sq_codex *codex, sq_value key);
 void sq_codex_index_assign(struct sq_codex *codex, sq_value key, sq_value value);
-#endif /* !sq_codex_H */
+
+#endif /* !SQ_CODEX_H */

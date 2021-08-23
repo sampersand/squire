@@ -350,14 +350,17 @@ static struct sq_token next_normal_token(void) {
 		return token.kind = SQ_TK_UNDEFINED, token;
 	}
 
-	if (isdigit(*sq_stream))
+	if (isdigit(*sq_stream)) {
 		return parse_arabic_numeral();
+	}
 
 	if (sq_numeral_starts(sq_stream)) {
 		token.numeral = sq_roman_to_numeral(sq_stream, &sq_stream);
 		if (token.numeral >= 0)
 			return (token.kind = SQ_TK_NUMERAL), token;
 	}
+
+	if (parse_fraction)
 
 	struct sq_text *fraktur;
 	if ((fraktur = parse_fraktur_bareword()) != NULL) {
