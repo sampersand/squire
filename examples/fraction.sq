@@ -1,5 +1,5 @@
+@whereupon $a
 /* Basic */
-# Constructor
 form Fraction {
 	# Fields
 	matter numer, denom;
@@ -70,21 +70,26 @@ form Fraction {
 
 form Fraction {
 	matter numer: Numeral;
-	matter denom: (journey(x) => Numeral ~~ x && x != 0);
+	matter denom: (journey(x) => Numeral ~~ x && x != N);
 
 	# ..
 }
+@nowhere
 
 /* Pattern matching */
 form Fraction {
 	matter numer: Numeral;
-	matter denom: (journey(x) => Numeral ~~ x && x != 0);
+	matter denom: (journey(x) => Numeral ~~ x && x != N);
 
 	change +
 		(rhs: Numeral) => soul + Fraction(rhs, I),
 		(rhs: Fraction) => Fraction(soul.numer*rhs.denom + rhs.numer*soul.denom, soul.denom*rhs.denom);
 
+		/*!*/
 	change to-text
-		(): Text if soul.denom == I => "\(soul.numer)",
-		(): Text =>  "\(soul.numer)/\(soul.denom)";
+		(): Text if !(soul.denom == I) => "\(soul.numer)",                                                             {
+		(): Text => "\(soul.numer)/\(soul.denom)";
 }
+
+f = Fraction(3, 4) 
+proclaim(f)

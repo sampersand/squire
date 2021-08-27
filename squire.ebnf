@@ -1,3 +1,99 @@
+(* First the preprocessor runs. Details on that to come. *)
+
+(* Note that `((FOO)) BAR +` is the same as `FOO {BAR FOO} [FOO]`, and
+ * `((FOO)) BAR *` is the same as `[FOO {BAR FOO} [FOO]]`. *)
+
+(* comments start with '#' and go until end of line, or with a `/*` and go
+ * until the next `*/`. They can be put anywhere except within tokens. *)
+
+(* Overview *)
+program := <statements>
+statements := {<statement>}
+statement
+ 	:= <form-declaration>
+ 	 | <journey-declaration>
+ 	 | <brace-statements>
+ 	 | <identifier> ':' (<expression> | ENDLINE ) (* ie label *)
+ 	 | <expression> ENDLINE (* endline is optional for the last expression on a line *)
+ 	 ;
+brace-statements := '{' <statements> '}' ;
+ENDLINE := '\n' | ';' ;
+
+(* Forms *)
+form-declaration := 'form' <identifier> [<form-parents>] '{' <form-body>'}' ;
+form-parents := ':' (( <expression> )) ',' * ;
+form-body := (( <form-body-statement> )) ';' * ;
+form-body-statement
+	:= 'matter' (( <identifier> [<pattern>] )) ',' +
+	 | 'essence' (( <identifier> [<pattern>] ['=' <expression>] )) ',' +
+	 | 'imitate' <journey-base>
+	 | 'recall' <special-identifier> <journey-base>
+	 | 'change' <special-identifier> <journey-base>
+	 ;
+special-identifier
+	:= <identifier>
+	 | '+' | '-' | '*' | '/' | '%' | '**' | '-@' | '+@' (* `@` is for unary *)
+	 | '<' | '>' | '<= ' | '>=' | '==' | '!=' | '<=>' | ['!' | '!@']
+	 | '[]' | '[]=' | '()'
+	 ;
+
+journey-declaration := 'journey' <identifier> <journey-base> ;
+journey-base := '(' <journey-args> ')' [':' <pattern>] <brace-statements>
+journey-args (* note that a trailing `,` is not necessary.)
+	:= { <identifier> [':' <pattern>] ',' }              (* positional *)
+	   { <identifier> [':' <pattern>] '=' <expression> } (* optional *)
+	   [ '*' [<identifier> | 'ni'] ] (* `ni` means no extra args, nothing means ignore extra. *)
+	   { <identifier> [':' <pattern>] } (* keyword-only.. must come after a `*` ())
+	   [ '**' [<identifier> | 'ni'] ] (* `ni` means no extra kwargs, nothing means ignore extra *)
+	 ;
+
+expression
+	:= <binary-expression>
+	 | <assignment>
+	 | <if>
+	 | <whilst>
+	 | <fork>
+	 | <whence>
+	 | <thence>
+	 | <reward>
+	 | <catapult>
+	 | <besiege>
+	 ;
+
+assignment
+	:= <primary> '.' <identifier> '=' <expression>
+	 | <primary> '[' <expression> ']' '=' <expression>
+	 | <identifier> '=' <expression>
+	 ;
+
+if := 'if' <expression> <brace-statements>
+	   { 'alas' 'if' <expression> <brace-statements> }
+	   [ 'alas' <brace-statements> ]
+	 ;
+whilst := 'whilst' <expression> <brace-statements> [ 'alas' <brace-statements> ]
+fork :=
+	'fork' <expression> '{'
+		{ ('path' <expression> ':')+ <statements> }
+		[ {'path' <expression> ':'} 'alas' ':' <statements> ]
+	'}' ;
+whence := 'whence' <identifier> ;
+thence := 'thence' <identifier> ;
+reward := 'reward' [ <expression> ] ;
+catapult := 'catapult' [ <expression> ] ;
+besiege := 
+	'besiege' <brace-statements>
+	{ 'alas' <identifier> [':' <pattern>] <brace-statements> }
+	{ 'indubitably' <brace-statements> }
+
+(* Order of operations (from loosest to tightest)
+ * ==, !=, <, >, <=, >=, <=>
+ * +, -
+ * *, %, /
+ * **,
+ *)
+
+binary-expression :=
+	<primary> [ <binary-operator> <binary-expression> ] (* note that this follows order of operations. *)
 (* comments start with '#' and go until end of line *)
 program := <stmts>
 stmts := { <item> <endline> } [<item> [<endline>]]

@@ -397,6 +397,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("if",           SQ_TK_IF); // _should_ we have a better one?
 	CHECK_FOR_START_KW("alas",         SQ_TK_ELSE);
 	CHECK_FOR_START_KW("whence",       SQ_TK_COMEFROM);
+	CHECK_FOR_START_KW("thence",       SQ_TK_GOTO);
 	CHECK_FOR_START_KW("whilst",       SQ_TK_WHILE);
 	CHECK_FOR_START_KW("reward",       SQ_TK_RETURN);
 	CHECK_FOR_START_KW("attempt",      SQ_TK_TRY);

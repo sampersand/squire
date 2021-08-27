@@ -1,7 +1,7 @@
 form TextUtils {
 	essence LETTERS_IN_ALPHABET = 26;
 
-	recall is-upper(n) => 'A' <= n && n <= 'Z'; 
+	recall is-upper(n) => 'A' <= n && n <= 'Z';
 	recall is-lower(n) => 'a' <= n && n <= 'z';
 	recall to-lower(n) {
 		fork n {
@@ -14,7 +14,6 @@ form TextUtils {
 		}
 	}
 }
-
 
 
 renowned TextUtils;

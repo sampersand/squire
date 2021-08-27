@@ -12,9 +12,9 @@ whilst yay {
 	fork (guess <=> secret) {
 		path N:
 			proclaim("Perfect! it took you \(guesses) tries")
-			dismount(0)
+			dismount(N)
 
-		path (journey(n) => n < 0):
+		path (journey(n) => n < N):
 			proclaim("too small!")
 
 		alas:

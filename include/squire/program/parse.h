@@ -1,16 +1,16 @@
-#ifndef SQ_PARSE_OLD_H
-#define SQ_PARSE_OLD_H
+#ifndef SQ_PARSE_H
+#define SQ_PARSE_H
 
 #include <squire/journey.h>
 
 struct statements *sq_parse_statements(const char *stream);
-
-struct statements {
+/*
+struct sq_ps_statements {
 	unsigned len;
 	struct statement **stmts;
 };
 
-struct statement {
+struct sq_ps_statement {
 	enum {
 		SQ_PS_SKINGDOM,
 		SQ_PS_SCLASS,
@@ -26,7 +26,6 @@ struct statement {
 		SQ_PS_SWHILE,
 		SQ_PS_SLABEL,
 		SQ_PS_SCOMEFROM,
-		SQ_PS_STHENCE,
 		SQ_PS_SSWITCH,
 
 		SQ_PS_SEXPR,
@@ -43,7 +42,7 @@ struct statement {
 		struct trycatch_statement *tcstmt;
 		struct switch_statement *sw_stmt;
 		struct expression *throwstmt;
-		char *label, *comefrom, *thence;
+		char *label, *comefrom;
 		struct expression *expr;
 	};
 };
@@ -165,13 +164,13 @@ struct expression {
 };
 
 struct function_call {
-	struct variable *func;
+	struct identifier *func;
 	unsigned arglen;
 	struct expression **args;
 };
 
 struct assignment {
-	struct variable *var;
+	struct identifier *var;
 	struct expression *expr;
 };
 
@@ -186,87 +185,194 @@ struct index {
 	struct expression *index;
 };
 
-struct variable {
+struct identifier {
 	char *name;
-	struct variable *field;
+	struct identifier *field;
 	bool is_namespace_access; // currently assigned to, but ignored for namespaces.
 };
+*/
 
-struct bool_expression {
-	enum { SQ_PS_BEQL, SQ_PS_BAND, SQ_PS_BOR } kind;
-	struct eql_expression *lhs;
-	struct bool_expression *rhs; // may be NULL.
-};
-
-struct eql_expression {
-	enum { SQ_PS_ECMP, SQ_PS_EEQL, SQ_PS_ENEQ, SQ_PS_EMATCHES } kind;
-	struct cmp_expression *lhs;
-	struct eql_expression *rhs; // may be NULL.
-};
-
-struct cmp_expression {
-	enum { SQ_PS_CADD, SQ_PS_CLTH, SQ_PS_CLEQ, SQ_PS_CGTH, SQ_PS_CGEQ, SQ_PS_CCMP } kind;
-	struct add_expression *lhs;
-	struct cmp_expression *rhs; // may be NULL.
-};
-
-struct add_expression {
-	enum { SQ_PS_AMUL, SQ_PS_AADD, SQ_PS_ASUB } kind;
-	struct mul_expression *lhs;
-	struct add_expression *rhs; // may be NULL.
-};
-
-struct mul_expression {
-	enum { SQ_PS_MPOW, SQ_PS_MMUL, SQ_PS_MDIV, SQ_PS_MMOD } kind;
-	struct pow_expression *lhs;
-	struct mul_expression *rhs; // may be NULL.
-};
-
-struct pow_expression {
-	enum { SQ_PS_PUNARY, SQ_PS_PPOW } kind;
-	struct unary_expression *lhs;
-	struct pow_expression *rhs; // may be NULL.
-};
-
-struct unary_expression {
-	enum { SQ_PS_UPRIMARY, SQ_PS_UNEG, SQ_PS_UNOT } kind;
-	struct primary *rhs;
-};
-
-struct book {
-	unsigned npages;
-	struct expression **pages;
-};
-
-struct dict {
-	unsigned neles;
-	struct expression **keys, **vals;
-};
-
-struct primary {
+struct sq_ps_assign {
 	enum {
-		SQ_PS_PPAREN,
-		SQ_PS_PLAMBDA,
-		SQ_PS_PNUMERAL,
-		SQ_PS_PTEXT,
-		SQ_PS_PVERACITY,
-		SQ_PS_PNI,
-		SQ_PS_PVARIABLE,
-		SQ_PS_PBOOK,
-		SQ_PS_PCODEX,
-		SQ_PS_PINDEX,
+		SQ_PS_ANORMAL,
+		SQ_PS_AATTR,
+		SQ_PS_AINDEX,
 	} kind;
+
+	struct sq_ps_expression *base; // undefined when `SQ_PS_ANORMAL`.
+	char *variable;
+};
+
+struct sq_ps_if {
+	unsigned count; // there's always at least one---that's the base condition.
+
+	struct sq_ps_if_branch {
+		struct sq_ps_expression *condition;
+		struct sq_ps_statements *body;
+	} *branches;
+
+	struct sq_ps_statements *alas; // is `NULL` if there's no default.
+};
+
+struct sq_ps_whilst {
+	struct sq_ps_expression *condition;
+	struct sq_ps_statements *body;
+	struct sq_ps_expression *alas; // it's run if the condition initially turns out to be false.
+};
+
+struct sq_ps_fork {
+	struct sq_ps_expression *condition;
+	unsigned count;
+
+	struct sq_ps_fork_path {
+		unsigned cond_counts; // how many conditions there are present
+		struct sq_ps_expression **conditions;
+		struct sq_ps_statement *body;
+	} *paths;
+
+	struct sq_ps_statments *alas; // is `NULL` if there's no default.
+};
+
+struct sq_ps_variable_decl {
+	char *name;
+	struct sq_ps_pattern *pattern;
+};
+
+struct sq_ps_besiege {
+	struct sq_ps_statements *body;
+	unsigned branches;
+	struct sq_ps_besiege_branch {
+		char *error_name;
+		struct sq_ps_statements *alas; // `catch`. can be NULL (ie only indubitably is used)
+	};
+	struct sq_ps_statements *indubitably; // `finally`. can be NULL.
+};
+
+struct sq_ps_expression {
+	enum {
+		SQ_PS_ECOMPOUND,
+		SQ_PS_EASSIGN,
+		SQ_PS_EIF,
+		SQ_PS_EWHILST,
+		SQ_PS_EFORK,
+		SQ_PS_EWHENCE,
+		SQ_PS_EREWARD,
+		SQ_PS_ECATAPULT,
+		SQ_PS_EBESIEGE,
+	} kind;
+
 	union {
-		struct expression *expr;
-		struct journey_declaration *lambda;
-		sq_numeral numeral;
-		struct sq_text *text;
-		sq_veracity veracity;
-		struct variable *variable;
-		struct book *book;
-		struct dict *dict;
-		struct index *index;
+		struct sq_ps_compound *compound;
+		struct sq_ps_assign *assign;
+		struct sq_ps_if *if_;
+		struct sq_ps_whilst *whilst;
+		struct sq_ps_fork *fork;
+		char *whence;
+		struct sq_ps_expression *reward; // is `NULL` if there's no return expr (ie default).
+		struct sq_ps_expression *catapult; // is `NULL` if the current expr should be thrown.
+		struct sq_ps_besiege *besiege;
 	};
 };
 
-#endif /* !SQ_PARSE_OLD_H */
+struct sq_ps_fn_call {
+	struct sq_ps_expression *function;
+	unsigned arglen;
+	// todo: keyword arguments.
+	struct sq_ps_expression **args;
+};
+
+struct sq_ps_compound {
+	enum {
+		/* not compound, just a primary. */
+		SQ_PS_CPRIMARY,
+
+		/* unaries */
+		SQ_PS_CNEG = 0x10,
+		SQ_PS_CPOS,
+		SQ_PS_CNOT,
+
+		/* binary */
+		// math
+		SQ_PS_CADD,
+		SQ_PS_CSUB,
+		SQ_PS_CMUL,
+		SQ_PS_CDIV,
+		SQ_PS_CMOD,
+		SQ_PS_CPOW,
+
+		// logic
+		SQ_PS_CEQL,
+		SQ_PS_CNEQ,
+		SQ_PS_CLTH,
+		SQ_PS_CLEQ,
+		SQ_PS_CGTH,
+		SQ_PS_CGEQ,
+		SQ_PS_CCMP,
+
+		// short circuit
+		SQ_PS_CAND,
+		SQ_PS_COR,
+		SQ_PS_CTERNARY,
+
+		// misc
+		SQ_PS_CMATCHES,
+		SQ_PS_CINDEX,
+		SQ_PS_CFN_CALL
+	} kind;
+
+	union {
+		struct sq_ps_compound *args[3];
+		struct sq_ps_fn_call *fncall;
+	};
+};
+
+struct sq_ps_book {
+	unsigned len;
+	struct sq_ps_expression **pages;
+};
+
+struct sq_ps_codex {
+	unsigned len;
+	struct sq_ps_expression **keys, **vals;
+};
+
+struct sq_ps_get_attr {
+	struct sq_ps_expression *expr;
+	char *identifier;
+}
+
+struct sq_ps_primary {
+	enum {
+		SQ_PS_PNUMERAL,
+		SQ_PS_PVERACITY,
+		SQ_PS_PTEXT,
+		SQ_PS_PIDENTIFIER,
+		SQ_PS_PNI,
+
+		SQ_PS_PBOOK,
+		SQ_PS_PCODEX,
+		SQ_PS_PEXPRESSION,
+		SQ_PS_PLAMBDA,
+		SQ_PS_PGET_ATTR,
+	} kind;
+
+	union {
+		// literals
+		sq_numeral numeral;
+		sq_veracity veracity;
+		struct sq_text *text;
+		char *identifier;
+		// `ni` is only done thru `kind`
+
+		// compound
+		struct sq_ps_book *book;
+		struct sq_ps_codex *codex;
+
+		// misc
+		struct sq_ps_expression *expr;
+		struct sq_ps_journey *lambda;
+		struct sq_ps_get_attr *get_attr;
+	};
+};
+
+#endif /* !SQ_PARSE_H */
