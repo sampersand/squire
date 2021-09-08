@@ -1,6 +1,7 @@
 use super::{Form, FormInner};
 use std::sync::Arc;
 use crate::value::journey::UserDefined;
+use std::fmt::{self, Display, Formatter};
 
 pub struct FormBuilder(pub(super) FormInner);
 
@@ -12,6 +13,24 @@ pub enum AlreadyDefinedError {
 	Change(String),
 	Imitate
 }
+
+impl std::error::Error for AlreadyDefinedError {}
+
+impl Display for AlreadyDefinedError {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+		write!(f, "The ")?;
+		match self {
+			Self::Recall(name) => write!(f, "recall '{}'", name)?,
+			Self::Essence(name) => write!(f, "essence '{}'", name)?,
+			Self::Matter(name) => write!(f, "matter '{}'", name)?,
+			Self::Change(name) => write!(f, "change '{}'", name)?,
+			Self::Imitate => write!(f, "imitate")?,
+		}
+
+		write!(f, " has already been declared")
+	}
+}
+
 
 impl FormBuilder {
 	fn form_key_exists(&self, key: &str) -> bool {

@@ -45,19 +45,23 @@ fn main() {
 	setup_tracing();
 	let input = std::env::args().skip(2).next().unwrap_or(DEFAULT.to_string());
 
-	let mut stream = parse::Stream::from_str(&input);
-	let mut tokenizer = parse::Tokenizer::new(&mut stream);
-	let mut parser = parse::Parser::new(&mut tokenizer);
 	let mut compiler = compile::Compiler::default();
-	compiler.compile_with(&mut parser).unwrap();
+	if let Err(err) = compiler.compile(input.chars()) {
+		eprintln!("compiler error: {}", err);
+		std::process::exit(1);
+	}
+
 	let (block, mut vm) = compiler.finish_with_vm();
 
-	block.run(Default::default(), &mut vm).unwrap();
+	if let Err(err) = block.run(Default::default(), &mut vm) {
+		eprintln!("{}", err);
+		std::process::exit(1);
+	}
 }
 
 const DEFAULT: &str = r##"
 
-journey foobar(x: Text) = x + 3;
+journey foobar(x:) = x + 3;
 proclaim(foobar(45));
 @__END__
 journey say-fizzbuzz

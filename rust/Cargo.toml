@@ -1,2 +1,2 @@
 [workspace]
-members = ["squire-compile", "squire-runtime", "squire-main"]
+members = ["squire-compile", "squire-runtime", "squire-bin"]

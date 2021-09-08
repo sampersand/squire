@@ -1,5 +1,5 @@
 [package]
-name = "squire-main"
+name = "squire-bin"
 version = "0.1.0"
 authors = ["Sam Westerman <mail@sampersand.me>"]
 edition = "2018"

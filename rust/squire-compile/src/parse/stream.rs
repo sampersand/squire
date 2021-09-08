@@ -1,5 +1,8 @@
 use std::str::Chars;
 use super::{Error, ErrorKind};
+mod context;
+
+pub use context::Context;
 
 #[derive(Debug, Clone)]
 pub struct Stream<'a, I> {
@@ -62,11 +65,11 @@ impl<'a, I: Iterator<Item=char>> Stream<'a, I> {
 		}
 	}
 
-	pub fn error(&self, error: impl Into<ErrorKind>) -> Error {
+	pub fn error(&self, kind: impl Into<ErrorKind>) -> Error {
 		Error {
 			lineno: self.lineno,
 			file: self.file.map(ToString::to_string),
-			error: error.into()
+			kind: kind.into()
 		}
 	}
 

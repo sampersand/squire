@@ -80,6 +80,16 @@ impl Compiler {
 		Self { globals, ..Self::default() }
 	}
 
+	pub fn compile<I: Iterator<Item=char>>(&mut self, stream: I) -> Result<(), Error> {
+		use crate::parse::{Stream, Tokenizer};
+
+		let mut stream = Stream::new(stream);
+		let mut tokenizer = Tokenizer::new(&mut stream);
+		let mut parser = Parser::new(&mut tokenizer);
+
+		self.compile_with(&mut parser)
+	}
+
 	pub fn compile_with<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<I>) -> Result<(), Error> {
 		while let Some(statement) = crate::ast::Statement::parse(parser)? {
 			statement.compile(self, None)?;
@@ -199,7 +209,7 @@ impl Compiler {
 
 		match (entry, value) {
 			(Entry::Occupied(occupied), Some(_)) if occupied.get().1.is_some()
-				=> Err(Error::GlobalAlreadyDefined(occupied.key().to_string())),
+				=> Err(Error::RenownedAlreadyDefined(occupied.key().to_string())),
 
 			(Entry::Occupied(mut occupied), value) => {
 				occupied.get_mut().1 = value;

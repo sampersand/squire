@@ -85,6 +85,6 @@ impl Compilable for Identifier {
 			return Ok(())
 		}
 
-		Err(CompileError::UnknownIdentifier(self.0))
+		Err(CompileError::UndeclaredIdentifier(self.0))
 	}
 }

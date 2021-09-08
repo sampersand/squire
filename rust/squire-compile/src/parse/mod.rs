@@ -3,7 +3,7 @@ mod stream;
 pub mod token;
 
 pub use error::{Error, ErrorKind, Result};
-pub use stream::Stream;
+pub use stream::{Stream, Context};
 pub use token::{Token, TokenKind, Literal, LiteralKind, Tokenizer};
 
 pub trait Parsable : Sized {

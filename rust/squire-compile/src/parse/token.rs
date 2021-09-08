@@ -240,8 +240,9 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 
 		let fraktur = self.stream.take_while(|chr| is_fraktur(chr) || chr.is_whitespace()).unwrap();
 
-		if self.stream.peek().map_or(false, |chr| chr.is_alphanumeric()) {
-			Err(self.error(ErrorKind::BadFrakturSuffix))
+		let peeked = self.stream.peek();
+		if peeked.map_or(false, |chr| chr.is_alphanumeric()) {
+			Err(self.error(ErrorKind::BadFrakturSuffix(peeked.unwrap())))
 		} else {
 			Ok(Text::new_fraktur(fraktur.trim().to_string()))
 		}
