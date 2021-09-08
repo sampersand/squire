@@ -211,9 +211,9 @@ impl Duplicate for Book {
 }
 
 impl std::iter::FromIterator<Value> for Book {
-    fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
-    	Self(Arc::new(RwLock::new(iter.into_iter().collect())))
-    }
+	fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
+		Self(Arc::new(RwLock::new(iter.into_iter().collect())))
+	}
 }
 
 // impl IntoIterator for Book {
