@@ -2,37 +2,69 @@ use super::GenusDeclaration;
 use crate::ast::{Expression, Statement, Statements};
 use squire_runtime::value::{Value, journey::UserDefined};
 use crate::parse::{Parser, Parsable, Error as ParseError};
-use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
+use crate::parse::token::{Token, TokenKind, Keyword, Symbol, Literal, LiteralKind, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Globals, Error as CompileError};
 use squire_runtime::vm::Opcode;
 
 #[derive(Debug)]
-pub struct Argument {
+pub struct ArgumentPattern {
 	name: String,
 	genus: Option<GenusDeclaration>,
 	default: Option<Expression>
 }
 
 #[derive(Debug)]
+enum SplatKind {
+	Named(String),
+	Ignored, // simply ignore extra arguments
+	None
+}
+
+#[derive(Debug)]
 pub struct Arguments {
-	normal: Vec<Argument>,
-	vararg: Option<String>,
-	varkwarg: Option<String>,
+	positional: Vec<ArgumentPattern>,
+	splat: SplatKind,
+
+	keyword_only: Vec<ArgumentPattern>,
+	splatsplat: SplatKind,
+
 	return_genus: Option<GenusDeclaration>
 }
 
 #[derive(Debug)]
 pub struct Journey {
 	name: String,
-	args: Arguments,
-	body: Statements
-	// patterns: Vec<Pattern>
+	patterns: Vec<Pattern>
 }
 
 #[derive(Debug)]
 struct Pattern {
 	args: Arguments,
+	guard: Option<Expression>,
 	body: Statements
+}
+
+impl Parsable for ArgumentPattern {
+	const TYPE_NAME: &'static str = "<argument pattern>";
+
+	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
+		let name =
+			if let Some(name) = parser.guard_identifier()? {
+				name
+			} else {
+				return Ok(None)
+			};
+
+		let genus = GenusDeclaration::parse(parser)?;
+		let default =
+			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
+				Some(Expression::expect_parse(parser)?)
+			} else {
+				None
+			};
+
+		Ok(Some(Self { name, genus, default }))
+	}
 }
 
 impl Parsable for Arguments {
@@ -44,44 +76,62 @@ impl Parsable for Arguments {
 		}
 
 		let mut arguments = Self {
-			normal: Vec::new(),
-			vararg: None,
-			varkwarg: None,
+			positional: Vec::new(),
+			keyword_only: Vec::new(),
+			splat: SplatKind::None,
+			splatsplat: SplatKind::None,
 			return_genus: None
 		};
 
-		while let Some(name) = parser.guard_identifier()? {
-			arguments.normal.push(Argument {
-				name,
-				genus: GenusDeclaration::parse(parser)?,
-				default: 
-					if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
-						Some(Expression::expect_parse(parser)?)
-					} else {
-						None
-					}
-			});
+		// lol no gotos, silly.
+		'done: loop {
+			// check for positional and default arguments.
+			while let Some(normal) = ArgumentPattern::parse(parser)? {
+				arguments.positional.push(normal);
 
-			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
-				break;
+				if !parser.guard_comma()? {
+					break 'done;
+				}
 			}
-		}
 
-		if parser.guard(TokenKind::Symbol(Symbol::Asterisk))?.is_some() {
-			arguments.vararg = Some(parser.expect_identifier()?);
+			// check for splat argument
+			if parser.guard(TokenKind::Symbol(Symbol::Asterisk))?.is_some() {
+				arguments.splat =
+					match parser.guard([TokenKind::Literal(LiteralKind::Ni), TokenKind::Identifier])? {
+						Some(Token::Literal(Literal::Ni)) => SplatKind::None,
+						Some(Token::Identifier(name)) => SplatKind::Ignored,
+						Some(_) => unreachable!(),
+						None => SplatKind::Ignored, // defaults to empty string
+					};
 
-			if let Token::RightParen(_) = parser.expect([
-				TokenKind::Symbol(Symbol::Comma),
-				TokenKind::RightParen(ParenKind::Round)
-			])? {
-				parser.undo_next_token();
+				if !parser.guard_comma()? {
+					break 'done;
+				}
 			}
-		}
 
-		if parser.guard(TokenKind::Symbol(Symbol::AsteriskAsterisk))?.is_some() {
-			arguments.varkwarg = Some(parser.expect_identifier()?);
+			// check for keyword-only arguments.
+			while let Some(normal) = ArgumentPattern::parse(parser)? {
+				arguments.keyword_only.push(normal);
 
-			parser.guard(TokenKind::Symbol(Symbol::Comma))?;
+				if !parser.guard_comma()? {
+					break 'done;
+				}
+			}
+
+			// check for splat argument
+			if parser.guard(TokenKind::Symbol(Symbol::Asterisk))?.is_some() {
+				arguments.splatsplat =
+					match parser.guard([TokenKind::Literal(LiteralKind::Ni), TokenKind::Identifier])? {
+						Some(Token::Literal(Literal::Ni)) => SplatKind::None,
+						Some(Token::Identifier(name)) => SplatKind::Ignored,
+						Some(_) => unreachable!(),
+						None => SplatKind::Ignored, // defaults to empty string
+					};
+
+				let _ = parser.guard_comma()?;
+			}
+
+			break 'done;
 		}
 
 		parser.expect(TokenKind::RightParen(ParenKind::Round))?;
@@ -105,47 +155,71 @@ impl Parsable for Journey {
 	}
 }
 
+impl Parsable for Pattern {
+	const TYPE_NAME: &'static str = "<pattern>";
+
+	fn parse<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>) -> Result<Option<Self>, ParseError> {
+		let args = 
+			if let Some(args) = Arguments::parse(parser)? {
+				args
+			} else {
+				return Ok(None);
+			};
+
+		let guard =
+			if parser.guard(TokenKind::Keyword(Keyword::If))?.is_some() {
+				Some(Expression::expect_parse(parser)?)
+			} else {
+				None
+			};
+
+		let body = 
+			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
+				vec![Statement::Expression(Expression::expect_parse(parser)?)]
+			} else {
+				Statements::expect_parse(parser)?
+			};
+
+		Ok(Some(Self { args, guard, body }))
+	}
+}
+
 impl Journey {
 	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String) -> Result<Self, ParseError> {
 		let mut patterns = Vec::new();
 
-		loop {
-			let args = Arguments::expect_parse(parser)?;
-			let body =
-				if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
-					vec![Statement::Expression(Expression::expect_parse(parser)?)]
-				} else {
-					Statements::expect_parse(parser)?
-				};
-
-			patterns.push(Pattern { args, body });
+		while let Some(pattern) = Pattern::parse(parser)? {
+			patterns.push(pattern);
 
 			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
 				break;
 			}
-		};
+		}
 
-		let Pattern {args, body} = patterns.pop().unwrap();
+		if patterns.is_empty() {
+			return Err(parser.error("no patterns given"));
+		}
 
-		Ok(Self { name, /*patterns*/args, body })
+		Ok(Self { name, patterns })
 	}
 
 	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<UserDefined, CompileError> {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
-			// for pattern in &mut self.patterns {
-				let pattern = &mut self;
-				pattern.args.normal.insert(0, Argument { name: "soul".into(), genus: None, default: None });
+			for pattern in &mut self.patterns {
+				pattern.args.normal.insert(0, ArgumentPattern { name: "soul".into(), genus: None, default: None });
 
 				if pattern.args.vararg.is_some() || pattern.args.varkwarg.is_some() {
 					todo!();
 				}
-			// }
+			}
 		}
 
 		let mut arg_names = Vec::new();
-		for arg in self.args.normal {
+		let last_pattern = self.patterns.pop().unwrap(); // this is here as a stopgap until we get multiple patterns.
+
+		for arg in last_pattern.args.normal {
 			arg_names.push(arg.name.clone());
 			let local = body_compiler.define_local(arg.name);
 
@@ -159,9 +233,9 @@ impl Journey {
 		}
 
 		let return_target = body_compiler.next_target();
-		self.body.compile(&mut body_compiler, Some(return_target))?;
+		last_pattern.body.compile(&mut body_compiler, Some(return_target))?;
 
-		if let Some(return_genus) = self.args.return_genus {
+		if let Some(return_genus) = last_pattern.args.return_genus {
 			return_genus.check(return_target, &mut body_compiler)?;
 		}
 

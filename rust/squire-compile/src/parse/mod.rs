@@ -124,6 +124,10 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 		}
 	}
 
+	pub fn guard_comma(&mut self) -> Result<bool> {
+		self.guard(TokenKind::Symbol(token::Symbol::Comma)).map(|x| x.is_some())
+	}
+
 	pub fn expect<P: TokenPattern>(&mut self, patterns: P) -> Result<Token> {
 		if let Some(token) = self.guard(patterns)? {
 			return Ok(token)

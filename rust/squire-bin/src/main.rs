@@ -60,9 +60,26 @@ fn main() {
 }
 
 const DEFAULT: &str = r##"
+journey foo(
+	a,
+	b: Bar,
+	c=4,
+	d: Dud = 5,
+	*e,
+	f,
+	g: Goo,
+	h=9,
+	i: Idj = 10,
+	**j
+	): K {
+		reward 9;
+	}
+	
+journey doit
+	(x: Numeral) = x + 3,
+	(x: Text) = "lol";
 
-journey foobar(x:) = x + 3;
-proclaim(foobar(45));
+proclaim(doit(2));
 @__END__
 journey say-fizzbuzz
     (n) if !(n % XV)  = proclaim(𝔉𝔦𝔵𝔵𝔅𝔲𝔵𝔵),
