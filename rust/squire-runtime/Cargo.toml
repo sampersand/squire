@@ -4,8 +4,15 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Sam Westerman <mail@sampersand.me>"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["roman-numeral-tostring", "unicode"]
+
+roman-numeral-tostring = []
+unicode-roman-numerals = []
+unicode = ["unicode-roman-numerals"]
+whence-forks = ["libc"]
 
 [dependencies]
 parking_lot = "0.11"
 tracing = "^0.1.26"
+libc = { version = "0.2", optional = true }

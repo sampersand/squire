@@ -24,7 +24,9 @@ pub struct Arguments {
 #[derive(Debug)]
 pub struct Journey {
 	name: String,
-	patterns: Vec<Pattern>
+	args: Arguments,
+	body: Statements
+	// patterns: Vec<Pattern>
 }
 
 #[derive(Debug)]
@@ -123,22 +125,24 @@ impl Journey {
 			}
 		};
 
-		Ok(Self { name, patterns })
+		let Pattern {args, body} = patterns.pop().unwrap();
+
+		Ok(Self { name, /*patterns*/args, body })
 	}
 
 	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<UserDefined, CompileError> {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
-			for pattern in &mut self.patterns {
+			// for pattern in &mut self.patterns {
+				let pattern = &mut self;
 				pattern.args.normal.insert(0, Argument { name: "soul".into(), genus: None, default: None });
 
 				if pattern.args.vararg.is_some() || pattern.args.varkwarg.is_some() {
 					todo!();
 				}
-			}
+			// }
 		}
-
 
 		let mut arg_names = Vec::new();
 		for arg in self.args.normal {

@@ -8,3 +8,7 @@ edition = "2018"
 [dependencies]
 squire-compile = { path = "../squire-compile" }
 squire-runtime = { path = "../squire-runtime" }
+
+tracing = "0.1.26"
+tracing-subscriber = "0.2"
+tracing-tree = "0.1"
