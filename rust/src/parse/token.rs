@@ -20,6 +20,7 @@ pub enum Keyword {
 	If,
 	Alas,
 	Whence,
+	Thence,
 	Whilst,
 	Reward,
 	Attempt,
@@ -47,6 +48,7 @@ impl Keyword {
 			Self::If => "if",
 			Self::Alas => "alas",
 			Self::Whence => "whence",
+			Self::Thence => "thence",
 			Self::Whilst => "whilst",
 			Self::Reward => "reward",
 			Self::Attempt => "attempt",
@@ -191,6 +193,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 		keyword!(If);
 		keyword!(Alas);
 		keyword!(Whence);
+		keyword!(Thence);
 		keyword!(Whilst);
 		keyword!(Reward);
 		keyword!(Attempt);

@@ -170,6 +170,27 @@ impl StackFrame<'_> {
 		Ok(())
 	}
 
+	fn do_check_for_whence(&mut self) -> Result<()> {
+		// we need `-1` as we check for the opcode pos, not the current pos.
+		if let Some(whences) = self.codeblock.whences_for(self.ip - 1) {
+			#[cfg(feature = "whence-forks")]
+			for whence in whences {
+				unsafe {
+					libc::fork();
+					self.ip = *whence;
+					break;
+				}
+			}
+
+			#[cfg(not(feature="whence-forks"))]
+			{
+				self.ip = whences[0];
+			}
+		}
+
+		Ok(())
+	}
+
 	fn do_call(&mut self) -> Result<()> {
 		let func = self.next_local().clone();
 		let argc = self.next_count();
@@ -402,6 +423,7 @@ impl StackFrame<'_> {
 			Opcode::Jump => self.do_jump(),
 			Opcode::JumpIfFalse => self.do_jump_if_false()?,
 			Opcode::JumpIfTrue => self.do_jump_if_true()?,
+			Opcode::CheckForWhence => self.do_check_for_whence()?,
 			Opcode::Call => self.do_call()?,
 			Opcode::Return => return self.do_return().map(Some),
 			Opcode::ComeFrom => self.do_comefrom()?,

@@ -52,9 +52,47 @@ fn main() {
 //     "#*/);
     // skip 2, bc first one is `-e`....
     let input = std::env::args().skip(2).next().unwrap_or(r##"
-form a {
-        
+i = 0;
+
+whence foo;
+proclaim(i);
+
+if i != 3 {
+	i = i + 1;
+	thence foo;
+	proclaim("b");
+	foo:
 }
+
+proclaim(i);
+
+#if nay { whence foo; }
+
+@__END__
+form Foo {
+	matter a;
+	essence b;
+
+	imitate (c) {
+		renowned Foo;
+		soul.a = c;
+		Foo.b = 4;
+	}
+
+	change d(e) {
+		proclaim("e=");
+		proclaim(e);
+	}
+
+	change to-text() {
+		reward "a" + soul.a;
+	}
+};
+
+f = Foo(34);
+f.d(45);
+proclaim(f);
+proclaim(Foo.b);
 @__END__
 form f { 
     essence x=3;

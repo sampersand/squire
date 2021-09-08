@@ -41,7 +41,7 @@ impl<'a, I: Iterator<Item=char>> Parser<'a, I> {
 
 	#[doc(hidden)]
 	pub fn _hack_is_next_token_colon(&mut self) -> bool {
-		// this owuldn't be necessary if `parser` also kept state
+		// this wouldn't be necessary if `parser` also kept state
 		self.tokenizer._hack_is_next_token_colon()
 	}
 

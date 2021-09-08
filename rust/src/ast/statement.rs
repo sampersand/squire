@@ -25,7 +25,7 @@ pub use scope::{Renowned, Nigh};
 pub use r#if::If;
 pub use whilst::Whilst;
 pub use fork::Fork;
-pub use labels::{Label, ComeFrom};
+pub use labels::{Label, Whence, Thence};
 
 pub type Statements = Vec<Statement>;
 
@@ -45,7 +45,8 @@ pub enum Statement {
 	Whilst(Whilst),
 	Fork(Fork),
 	Label(Label),
-	ComeFrom(ComeFrom),
+	Whence(Whence),
+	Thence(Thence),
 
 	Expression(Expression),
 }
@@ -98,9 +99,10 @@ impl Parsable for Statement {
 		}
 
 		let stmt = try_parse!(
-			Form, Journey,  Attempt, Catapult, Reward,
+			Form, Journey, Attempt, Catapult, Reward,
 			Renowned, Nigh,
-			If, Whilst, Fork, /* Label, ComeFrom,*/
+			If, Whilst, Fork,
+			Label, Whence, Thence,
 			Expression
 		);
 
@@ -138,7 +140,8 @@ impl Compilable for Statement {
 			Self::Whilst(whilst) => whilst.compile(compiler, target),
 			Self::Fork(fork) => fork.compile(compiler, target),
 			Self::Label(label) => label.compile(compiler, target),
-			Self::ComeFrom(comefrom) => comefrom.compile(compiler, target),
+			Self::Whence(whence) => whence.compile(compiler, target),
+			Self::Thence(thence) => thence.compile(compiler, target),
 
 			Self::Expression(expression) => expression.compile(compiler, target),
 		}

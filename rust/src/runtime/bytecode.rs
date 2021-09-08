@@ -21,6 +21,7 @@ pub enum Opcode {
 	Jump,
 	JumpIfFalse,
 	JumpIfTrue,
+	CheckForWhence,
 	
 	// CallFast,
 	// CallComplex,

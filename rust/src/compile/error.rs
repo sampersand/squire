@@ -8,6 +8,7 @@ pub enum Error {
 	UnknownIdentifier(String),
 	InvalidLhsForAssignment,
 	GlobalAlreadyDefined(String),
+	LabelAlreadyDefined(String),
 	FormValueAlreadyDefined { name: String, kind: &'static str },
 	ParentNotAForm(Value),
 	ParentNotDeclared(String),

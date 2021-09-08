@@ -1,5 +1,6 @@
 use crate::runtime::{Bytecode, Vm, Args, Result};
 use crate::value::Value;
+use std::collections::HashMap;
 
 mod stackframe;
 use stackframe::StackFrame;
@@ -9,11 +10,12 @@ pub struct CodeBlock {
 	num_locals: usize,
 	code: Vec<Bytecode>,
 	constants: Vec<Value>,
+	whences: HashMap<usize, Vec<usize>>
 }
 
 impl CodeBlock {
-	pub fn new(num_locals: usize, code: Vec<Bytecode>, constants: Vec<Value>) -> Self {
-		Self { num_locals, code, constants }
+	pub fn new(num_locals: usize, code: Vec<Bytecode>, constants: Vec<Value>, whences: HashMap<usize, Vec<usize>>) -> Self {
+		Self { num_locals, code, constants, whences }
 	}
 
 	pub fn num_locals(&self) -> usize {
@@ -26,6 +28,10 @@ impl CodeBlock {
 
 	pub fn constants(&self) -> &[Value] {
 		&self.constants
+	}
+
+	pub fn whences_for(&self, index: usize) -> Option<&[usize]> {
+		self.whences.get(&index).map(Vec::as_ref)
 	}
 
 	pub fn run(&self, args: Args, vm: &mut Vm) -> Result<Value> {

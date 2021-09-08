@@ -4,7 +4,6 @@ use crate::parse::token::{TokenKind, Keyword};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 use crate::runtime::Opcode;
 
-
 #[derive(Debug)]
 pub struct Attempt {
 	body: Statements,

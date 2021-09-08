@@ -6,14 +6,16 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = ["roman-numeral-tostring", "unicode"]
+default = ["roman-numeral-tostring", "unicode", "whence-forks"]
 
 roman-numeral-tostring = []
 unicode-roman-numerals = []
 unicode = ["unicode-roman-numerals"]
+whence-forks = ["libc"]
 
 [dependencies]
 parking_lot = "0.11"
 tracing = "0.1.26"
-tracing-subscriber = "*"
-tracing-tree = "*"
+tracing-subscriber = "0.2"
+tracing-tree = "0.1"
+libc = { version = "0.2", optional = true }

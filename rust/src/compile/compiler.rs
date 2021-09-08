@@ -8,7 +8,19 @@ use crate::value::Value;
 use crate::parse::{Parsable, Parser};
 
 #[derive(Debug)]
-struct Label {}
+pub struct Label {
+	name: String,
+	kind: RefCell<LabelKind>
+}
+
+#[derive(Debug)]
+pub enum LabelKind {
+	AlreadyDeclared(CodePosition),
+	Predeclared { 
+		thences: Vec<JumpDestination>,
+		whences: Vec<CodePosition>
+	}
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Target(usize);
@@ -32,8 +44,9 @@ pub struct Compiler {
 	globals: Globals,
 	code: Vec<Bytecode>,
 	ntargets: usize,
-	labels: Vec<Label>,
+	labels: HashMap<String, Rc<Label>>,
 	locals: HashMap<String, Target>,
+	whences: HashMap<CodePosition, Vec<CodePosition>>,
 	constants: Vec<Value>,
 }
 
@@ -55,6 +68,7 @@ impl Default for Compiler {
 			code: Default::default(),
 			ntargets: 1, // as `0` is always reserved for temp
 			labels: Default::default(),
+			whences: Default::default(),
 			locals: Default::default(),
 			constants: Default::default(),
 		}
@@ -91,7 +105,13 @@ impl Compiler {
 
 	pub fn finish(self) -> CodeBlock {
 		trace!(?self);
-		CodeBlock::new(self.ntargets, self.code, self.constants)
+		let whences = 
+			self.whences
+				.into_iter()
+				.map(|(x,y)| (x.0, y.into_iter().map(|x| x.0).collect::<Vec<_>>()))
+				.collect();
+
+		CodeBlock::new(self.ntargets, self.code, self.constants, whences)
 	}
 
 	pub fn finish_with_vm(self) -> (CodeBlock, Vm) {
@@ -206,11 +226,20 @@ impl Compiler {
 	pub fn current_pos(&self) -> CodePosition {
 		CodePosition(self.code.len())
 	}
+
+	pub fn get_label(&mut self, name: impl ToString) -> Rc<Label> {
+		self.labels.entry(name.to_string())
+			.or_insert_with(|| Rc::new(Label {
+				name: name.to_string(),
+				kind: LabelKind::Predeclared { whences: Vec::new(), thences: Vec::new() }.into()
+			}))
+			.clone()
+	}
 }
 
 impl JumpDestination {
 	pub fn set_jump_to_current(self, compiler: &mut Compiler) {
-		self.set_jump_to(CodePosition(compiler.code.len()), compiler)
+		self.set_jump_to(compiler.current_pos(), compiler)
 	}
 
 	pub fn set_jump_to(self, pos: CodePosition, compiler: &mut Compiler) {
@@ -220,5 +249,59 @@ impl JumpDestination {
 
 		debug_assert_eq!(compiler.code[self.0], Bytecode::Illegal, "bad byteode at {:?}", self.0);
 		compiler.code[self.0] = Bytecode::Offset(relative);
+	}
+}
+
+impl Label {
+	pub fn declare(&self, compiler: &mut Compiler) -> Result<(), Error> {
+		let pos = compiler.current_pos();
+
+		compiler.opcode(Opcode::CheckForWhence);
+
+		match &*self.kind.borrow() {
+			LabelKind::AlreadyDeclared(_) => return Err(Error::LabelAlreadyDefined(self.name.clone())),
+			LabelKind::Predeclared { thences, whences } => {
+				for thence in thences {
+					thence.set_jump_to(pos, compiler);
+				}
+
+				if !whences.is_empty() {
+					compiler
+						.whences
+						.entry(pos)
+						.or_default()
+						.extend(whences.clone());
+				}
+
+			}
+		}
+
+		*self.kind.borrow_mut() = LabelKind::AlreadyDeclared(pos);
+
+		Ok(())
+	}
+
+	pub fn thence(&self, compiler: &mut Compiler) {
+		compiler.opcode(Opcode::Jump);
+		let jump_dst = compiler.defer_jump();
+
+		match &mut *self.kind.borrow_mut() {
+			LabelKind::AlreadyDeclared(pos) => jump_dst.set_jump_to(*pos, compiler),
+			LabelKind::Predeclared { thences, .. } => thences.push(jump_dst)
+		}
+	}
+
+	pub fn whence(&self, compiler: &mut Compiler) {
+		let current_pos = compiler.current_pos();
+
+		match &mut *self.kind.borrow_mut() {
+			LabelKind::AlreadyDeclared(pos) => 
+				compiler
+					.whences
+					.entry(*pos)
+					.or_default()
+					.push(current_pos),
+			LabelKind::Predeclared { whences, .. } => whences.push(current_pos)
+		}
 	}
 }
