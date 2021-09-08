@@ -24,6 +24,11 @@ pub struct Arguments {
 #[derive(Debug)]
 pub struct Journey {
 	name: String,
+	patterns: Vec<Pattern>
+}
+
+#[derive(Debug)]
+struct Pattern {
 	args: Arguments,
 	body: Statements
 }
@@ -100,28 +105,40 @@ impl Parsable for Journey {
 
 impl Journey {
 	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String) -> Result<Self, ParseError> {
-		let args = Arguments::expect_parse(parser)?;
+		let mut patterns = Vec::new();
 
-		let body =
-			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
-				vec![Statement::Expression(Expression::expect_parse(parser)?)]
-			} else {
-				Statements::expect_parse(parser)?
-			};
+		loop {
+			let args = Arguments::expect_parse(parser)?;
+			let body =
+				if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
+					vec![Statement::Expression(Expression::expect_parse(parser)?)]
+				} else {
+					Statements::expect_parse(parser)?
+				};
 
-		Ok(Self { name, args, body })
+			patterns.push(Pattern { args, body });
+
+			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
+				break;
+			}
+		};
+
+		Ok(Self { name, patterns })
 	}
 
 	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<UserDefined, CompileError> {
 		let mut body_compiler = Compiler::with_globals(globals);
 
 		if is_method {
-			self.args.normal.insert(0, Argument { name: "soul".into(), genus: None, default: None });
+			for pattern in &mut self.patterns {
+				pattern.args.normal.insert(0, Argument { name: "soul".into(), genus: None, default: None });
+
+				if pattern.args.vararg.is_some() || pattern.args.varkwarg.is_some() {
+					todo!();
+				}
+			}
 		}
 
-		if self.args.vararg.is_some() || self.args.varkwarg.is_some() {
-			todo!();
-		}
 
 		let mut arg_names = Vec::new();
 		for arg in self.args.normal {
