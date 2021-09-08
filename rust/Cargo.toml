@@ -1,21 +1,2 @@
-[package]
-name = "squire"
-version = "0.1.0"
-authors = ["Sam Westerman <mail@sampersand.me>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[features]
-default = ["roman-numeral-tostring", "unicode"]
-
-roman-numeral-tostring = []
-unicode-roman-numerals = []
-unicode = ["unicode-roman-numerals"]
-whence-forks = ["libc"]
-
-[dependencies]
-parking_lot = "0.11"
-tracing = "0.1.26"
-tracing-subscriber = "0.2"
-tracing-tree = "0.1"
-libc = { version = "0.2", optional = true }
+[workspace]
+members = ["squire-compile", "squire-runtime", "squire-main"]
