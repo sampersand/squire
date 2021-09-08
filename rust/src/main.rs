@@ -57,8 +57,41 @@ fn main() {
 }
 
 const DEFAULT: &str = r##"
-nigh foo : Numeral = 34;
-proclaim(foo);
+
+journey say-fizzbuzz
+    (n) if !(n % XV)  = proclaim(𝔉𝔦𝔵𝔵𝔅𝔲𝔵𝔵),
+    (n) if !(n % III) = proclaim(𝔉𝔦𝔵𝔵),
+    (n) if !(n % V)   = proclaim(𝔅𝔲𝔵𝔵),
+    (n)               = proclaim(n);
+
+@__END__
+i = 0;
+
+whence foo;
+proclaim("a");
+
+if i != 10 {
+    i = i + 1;
+    thence foo;
+    proclaim("b");
+    foo:
+}
+
+proclaim("c");
+@__END__```
+```
+a
+a
+a
+a
+a
+a
+a
+a
+a
+a
+a
+c```
 // "while loop"
 whence end;
 

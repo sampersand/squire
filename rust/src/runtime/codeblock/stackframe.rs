@@ -173,18 +173,15 @@ impl StackFrame<'_> {
 	fn do_check_for_whence(&mut self) -> Result<()> {
 		// we need `-1` as we check for the opcode pos, not the current pos.
 		if let Some(whences) = self.codeblock.whences_for(self.ip - 1) {
+			self.ip = whences[0];
+
 			#[cfg(feature = "whence-forks")]
-			for whence in whences {
+			for whence in &whences[1..] {
 				unsafe {
 					libc::fork();
 					self.ip = *whence;
 					break;
 				}
-			}
-
-			#[cfg(not(feature="whence-forks"))]
-			{
-				self.ip = whences[0];
 			}
 		}
 
