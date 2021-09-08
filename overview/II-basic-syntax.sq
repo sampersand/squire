@@ -1,4 +1,5 @@
 # Comments in Squire start with a `#` and go to the end of the line.
+N.B. You can also use `N.B. ` to start a comment
 /* You can also use these for block comments */
 
 # Naturally, Squire uses Roman Numerals for numbers.

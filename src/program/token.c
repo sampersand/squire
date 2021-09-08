@@ -80,7 +80,7 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 
 	// strip whitespace
 	while ((c = *sq_stream)) {
-		if (c == '#') {
+		if (c == '#' || !strncmp(sq_stream, "N.B. ", 5)) {
 			do {
 				c = *++sq_stream;
 			} while (c && c != '\n');
