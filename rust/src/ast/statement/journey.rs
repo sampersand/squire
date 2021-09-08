@@ -1,5 +1,5 @@
 use super::GenusDeclaration;
-use crate::ast::{Expression, Statements};
+use crate::ast::{Expression, Statement, Statements};
 use crate::value::{Value, journey::UserDefined};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
@@ -101,7 +101,13 @@ impl Parsable for Journey {
 impl Journey {
 	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String) -> Result<Self, ParseError> {
 		let args = Arguments::expect_parse(parser)?;
-		let body  = Statements::expect_parse(parser)?;
+
+		let body =
+			if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
+				vec![Statement::Expression(Expression::expect_parse(parser)?)]
+			} else {
+				Statements::expect_parse(parser)?
+			};
 
 		Ok(Self { name, args, body })
 	}

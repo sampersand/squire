@@ -58,6 +58,9 @@ fn main() {
 
 const DEFAULT: &str = r##"
 
+journey foobar(x) = x + 3;
+proclaim(foobar(45));
+@__END__
 journey say-fizzbuzz
     (n) if !(n % XV)  = proclaim(𝔉𝔦𝔵𝔵𝔅𝔲𝔵𝔵),
     (n) if !(n % III) = proclaim(𝔉𝔦𝔵𝔵),
