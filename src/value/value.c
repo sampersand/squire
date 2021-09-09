@@ -299,10 +299,10 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		if (index < 0 || AS_TEXT(value)->length <= (unsigned) index)
 			return SQ_NI;
 
-		char *c = xmalloc(sizeof_array(char , 2));
+		char *c = xmalloc(sizeof_array(char, 2));
 		c[0] = AS_STR(value)[index];
 		c[1] = '\0';
-		return sq_value_new(sq_text_new2(c, 2));
+		return sq_value_new(sq_text_new2(c, 1));
 	}
 
 	case SQ_G_BOOK:
