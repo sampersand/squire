@@ -36,6 +36,9 @@ enum sq_interrupt {
 	SQ_INT_FWRITE,
 	SQ_INT_FTELL,
 	SQ_INT_FSEEK,
+
+	// ASCII
+	SQ_INT_ASCII,
 };
 
 

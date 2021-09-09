@@ -259,6 +259,9 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	case SQ_INT_FTELL: return 1;
 	case SQ_INT_FSEEK: return 3;
 
+	// ASCII
+	case SQ_INT_ASCII: return 1;
+
 
 	}
 }
@@ -558,6 +561,19 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		set_next_local(sf, SQ_NI);
 		return;
 
+	case SQ_INT_ASCII:
+		if (sq_value_is_numeral(operands[0])) {
+			char *data = xmalloc(2);
+			data[0] = sq_value_as_numeral(operands[0]) & 0xff;
+			data[1] = '\0';
+			set_next_local(sf, sq_value_new(sq_text_new(data)));
+		} else if (sq_value_is_text(operands[0])) {
+			set_next_local(sf, sq_value_new((sq_numeral) sq_value_as_text(operands[0])->ptr[0]));
+		} else {
+			sq_throw("can only ascii numerals and text, not '%s'", sq_value_typename(operands[0]));
+		}
+
+		return;
 	}
 }
 

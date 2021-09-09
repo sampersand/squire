@@ -926,6 +926,8 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("Scroll_tell", SQ_INT_FTELL, 1);
 	BUILTIN_FN("Scroll_seek", SQ_INT_FSEEK, 3);
 
+	BUILTIN_FN("ascii", SQ_INT_ASCII, 1);
+
 	set_opcode(code, SQ_OC_NOOP);
 	unsigned var = load_variable_class(code, fncall->func, NULL);
 	set_opcode(code, SQ_OC_CALL);
