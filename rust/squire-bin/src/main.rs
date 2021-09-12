@@ -61,7 +61,10 @@ fn main() {
 
 const DEFAULT: &str = r##"
 
-journey foobar(x:) = x + 3;
+journey foobar(x) {
+	x + 3;
+}
+
 proclaim(foobar(45));
 @__END__
 journey say-fizzbuzz

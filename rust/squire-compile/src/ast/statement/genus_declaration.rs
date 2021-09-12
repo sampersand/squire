@@ -22,6 +22,13 @@ impl Parsable for GenusDeclaration {
 	}
 }
 
+impl Compilable for GenusDeclaration {
+	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
+		self.0.compile(compiler, target)
+	}
+}
+
+
 impl GenusDeclaration {
 	pub fn check(self, target: Target, compiler: &mut Compiler) -> Result<(), CompileError> {
 		let genus_target =

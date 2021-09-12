@@ -209,8 +209,10 @@ impl StackFrame<'_> {
 		Ok(self.next_local().clone())
 	}
 
-	fn do_comefrom(&mut self) -> Result<()> {
-		unimplemented!();
+	fn do_check_patterns(&mut self) -> Result<()> {
+		let count = self.next_count();
+		todo!();
+		// Ok(self.next_local().clone())
 	}
 
 	fn do_throw(&mut self) -> Result<()> {
@@ -420,10 +422,12 @@ impl StackFrame<'_> {
 			Opcode::Jump => self.do_jump(),
 			Opcode::JumpIfFalse => self.do_jump_if_false()?,
 			Opcode::JumpIfTrue => self.do_jump_if_true()?,
+
 			Opcode::CheckForWhence => self.do_check_for_whence()?,
 			Opcode::Call => self.do_call()?,
 			Opcode::Return => return self.do_return().map(Some),
-			Opcode::ComeFrom => self.do_comefrom()?,
+			Opcode::CheckPatterns => self.do_check_patterns()?,
+
 			Opcode::Throw => self.do_throw()?,
 			Opcode::Attempt => self.do_attempt()?,
 			Opcode::PopHandler => self.do_pop_handler()?,

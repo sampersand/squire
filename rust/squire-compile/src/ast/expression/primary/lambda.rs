@@ -14,7 +14,7 @@ impl Parsable for Lambda {
 			return Ok(None);
 		}
 
-		Ok(Some(Self(Journey::parse_without_keyword(parser, "<lambda>".to_string())?.into())))
+		Ok(Some(Self(Journey::parse_without_keyword(parser, "<lambda>".to_string(), false)?.into())))
 	}
 }
 

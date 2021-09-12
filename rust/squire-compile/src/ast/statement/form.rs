@@ -54,7 +54,7 @@ impl Form {
 
 	fn parse_recall<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let name = parser.expect_identifier()?;
-		self.functions.push(Journey::parse_without_keyword(parser, name)?);
+		self.functions.push(Journey::parse_without_keyword(parser, name, false)?);
 
 		Ok(())
 	}
@@ -81,14 +81,14 @@ impl Form {
 
 	fn parse_change<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let name = parser.expect_identifier_or_operator()?;
-		Ok(self.changes.push(Journey::parse_without_keyword(parser, name)?))
+		Ok(self.changes.push(Journey::parse_without_keyword(parser, name, true)?))
 	}
 
 	fn parse_imitate<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		if self.imitate.is_some() {
 			Err(parser.error("cannot define two 'imitate's"))
 		} else {
-			self.imitate = Some(Journey::parse_without_keyword(parser, "imitate".to_string())?);
+			self.imitate = Some(Journey::parse_without_keyword(parser, "imitate".to_string(), true)?);
 			Ok(())
 		}
 	}
@@ -180,7 +180,7 @@ impl Compilable for Form {
 		}
 
 		for func in self.functions {
-			builder.add_recall(func.build_journey(globals.clone(), false)?)?;
+			builder.add_recall(func.build_journey(globals.clone())?)?;
 		}
 
 		let mut essence_initializers = Vec::new();
@@ -197,12 +197,12 @@ impl Compilable for Form {
 		}
 
 		for change in self.changes {
-			builder.add_change(change.build_journey(globals.clone(), true)?)?;
+			builder.add_change(change.build_journey(globals.clone())?)?;
 		}
 
 
 		if let Some(imitate) = self.imitate {
-			builder.add_imitate(imitate.build_journey(globals.clone(), true)?)?;
+			builder.add_imitate(imitate.build_journey(globals.clone())?)?;
 		}
 
 		let form = builder.build();

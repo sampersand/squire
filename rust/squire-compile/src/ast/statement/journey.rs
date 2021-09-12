@@ -1,9 +1,10 @@
 use super::GenusDeclaration;
 use crate::ast::{Expression, Statement, Statements};
-use squire_runtime::value::{Value, journey::UserDefined};
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind, Keyword, Symbol, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Globals, Error as CompileError};
+
+use squire_runtime::value::{Value, journey::UserDefined};
 use squire_runtime::vm::Opcode;
 
 #[derive(Debug)]
@@ -24,15 +25,16 @@ pub struct Arguments {
 #[derive(Debug)]
 pub struct Journey {
 	name: String,
-	args: Arguments,
-	body: Statements
-	// patterns: Vec<Pattern>
+	is_method: bool,
+	patterns: Vec<Pattern>
 }
 
 #[derive(Debug)]
 struct Pattern {
 	args: Arguments,
-	body: Statements
+	guard: Option<Expression>,
+	return_genus: Option<GenusDeclaration>,
+	body: Statements,
 }
 
 impl Parsable for Arguments {
@@ -55,11 +57,10 @@ impl Parsable for Arguments {
 				name,
 				genus: GenusDeclaration::parse(parser)?,
 				default: 
-					if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
-						Some(Expression::expect_parse(parser)?)
-					} else {
-						None
-					}
+					parser
+						.guard(TokenKind::Symbol(Symbol::Equal))?
+						.map(|_| Expression::expect_parse(parser))
+						.transpose()?
 			});
 
 			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
@@ -101,12 +102,12 @@ impl Parsable for Journey {
 		}
 
 		let name = parser.expect_identifier()?;
-		Self::parse_without_keyword(parser, name).map(Some)
+		Self::parse_without_keyword(parser, name, true).map(Some)
 	}
 }
 
 impl Journey {
-	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String) -> Result<Self, ParseError> {
+	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String, is_method: bool) -> Result<Self, ParseError> {
 		let mut patterns = Vec::new();
 
 		loop {
@@ -118,65 +119,105 @@ impl Journey {
 					Statements::expect_parse(parser)?
 				};
 
-			patterns.push(Pattern { args, body });
+			patterns.push(Pattern { args, body, guard: None, return_genus: None });
 
 			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
 				break;
 			}
 		};
 
-		let Pattern {args, body} = patterns.pop().unwrap();
+		Ok(Self { name, patterns, is_method })
+	}
+}
 
-		Ok(Self { name, /*patterns*/args, body })
+fn compile_check(
+	args: Arguments,
+	_guard: Option<Expression>,
+	check_target: Target,
+	is_method: bool,
+	compiler: &mut Compiler,
+) -> Result<(), CompileError> {
+	if is_method {
+		compiler.define_local("soul".to_string());
 	}
 
-	pub fn build_journey(mut self, globals: Globals, is_method: bool) -> Result<UserDefined, CompileError> {
-		let mut body_compiler = Compiler::with_globals(globals);
+	for arg in args.normal {
+		let local = compiler.define_local(arg.name.to_string());
 
-		if is_method {
-			// for pattern in &mut self.patterns {
-				let pattern = &mut self;
-				pattern.args.normal.insert(0, Argument { name: "soul".into(), genus: None, default: None });
-
-				if pattern.args.vararg.is_some() || pattern.args.varkwarg.is_some() {
-					todo!();
-				}
-			// }
+		if let Some(genus) = arg.genus {
+			genus.check(local, compiler)?;
 		}
 
-		let mut arg_names = Vec::new();
-		for arg in self.args.normal {
-			arg_names.push(arg.name.clone());
-			let local = body_compiler.define_local(arg.name);
+		if arg.default.is_some() {
+			todo!();
+		}
 
-			if let Some(genus) = arg.genus {
-				genus.check(local, &mut body_compiler)?;
+		compiler.opcode(Opcode::LoadConstant);
+		let t = compiler.get_constant(true.into());
+		compiler.constant(t);
+		compiler.target(check_target);
+	}
+
+	Ok(())
+}
+
+impl Journey {
+	pub fn build_journey(self, globals: Globals) -> Result<UserDefined, CompileError> {
+		let mut compiler = Compiler::with_globals(globals);
+		let mut pattern_bodies = Vec::with_capacity(self.patterns.len());
+
+		let check_target = compiler.temp_target();
+
+		// check for patterns
+		for Pattern { args, guard, return_genus, body } in self.patterns {
+			compile_check(args, guard, check_target, self.is_method, &mut compiler)?;
+
+			compiler.opcode(Opcode::JumpIfTrue);
+			compiler.target(check_target);
+			let body_dst = compiler.defer_jump();
+
+			pattern_bodies.push((body, return_genus, body_dst));
+		}
+
+		// if nothing matches, throw an error.
+		let no_patterns_found = compiler.get_constant("No patterns matched".to_string().into());
+		compiler.opcode(Opcode::Throw);
+		compiler.constant(no_patterns_found);
+
+
+		// setup the genus bodies
+		let return_target = compiler.next_target();
+
+		for (body, return_genus, body_dst) in pattern_bodies {
+			body_dst.set_jump_to_current(&mut compiler);
+			body.compile(&mut compiler, Some(return_target))?;
+
+			// if there's a return type given, check it.
+			if let Some(return_genus) = return_genus {
+				let genus_target = compiler.temp_target();
+
+				return_genus.compile(&mut compiler, Some(genus_target))?;
+
+				compiler.opcode(Opcode::CheckMatches);
+				compiler.target(return_target);
+				compiler.target(genus_target);
 			}
 
-			if arg.default.is_some() {
-				todo!();
-			}
+			compiler.opcode(Opcode::Return);
+			compiler.target(return_target);
 		}
 
-		let return_target = body_compiler.next_target();
-		self.body.compile(&mut body_compiler, Some(return_target))?;
+		#[cfg(feature="debug_assertions")]
+		compiler.opcode(Opcode::Illegal);
 
-		if let Some(return_genus) = self.args.return_genus {
-			return_genus.check(return_target, &mut body_compiler)?;
-		}
-
-		// todo: what if `return_target` is just used for scratch?.
-		body_compiler.opcode(Opcode::Return);
-		body_compiler.target(return_target);
-
-		Ok(squire_runtime::value::journey::UserDefined::new(self.name.clone(), is_method, arg_names, body_compiler.finish()))
+		Ok(UserDefined::new(self.name.clone(), self.is_method, vec!["todo".into()], compiler.finish()))
 	}
 }
 
 impl Compilable for Journey {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
 		let name = self.name.clone();
-		let journey = Value::Journey(self.build_journey(compiler.globals().clone(), false)?.into());
+		let journey = Value::Journey(self.build_journey(compiler.globals().clone())?.into());
 		let global = compiler.define_global(name, Some(journey))?;
 
 		if let Some(target) = target {

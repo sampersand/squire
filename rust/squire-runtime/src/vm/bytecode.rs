@@ -27,7 +27,7 @@ pub enum Opcode {
 	// CallComplex,
 	Call,
 	Return,
-	ComeFrom,
+	CheckPatterns,
 
 	Throw,
 	Attempt,
