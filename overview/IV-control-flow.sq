@@ -30,7 +30,7 @@ fork fav_colour {
 # `path`s can be arbitrary expressions, which will be evaluated and compare
 # against the `fork` expression. This can be used to shorten `if` statements.
 age = XXIII
-fork yay {
+fork yea {
 	path age < XVIII:
 		proclaim("You can't drive the carriage yet!")
 

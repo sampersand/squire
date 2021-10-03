@@ -1,10 +1,21 @@
-journey to-text(guesses) {
-	renowned thresh = N;
-	proclaim(thresh); # => N
-	proclaim(thresh = thresh + I); # => I
-	proclaim(guesses >= thresh); # => yay
-	proclaim(guesses >= (thresh = thresh + I)); # => failure lol
-	dismount(0);
+kingdom BetterRandom {
+	subject file = Scroll('/dev/random', 'r');
+
+	journey rand() {
+		nums = BetterRandom.file.read(II);
+		reward ascii(nums[I])*CCLVI + ascii(nums[II]);
+	}
 }
 
-proclaim(to-text(8));
+proclaim(BetterRandom::rand()) #=> -MMDLIV
+
+#journey to-text(guesses) {
+	#renowned thresh = N;
+	#proclaim(thresh); # => N
+	#proclaim(thresh = thresh + I); # => I
+	#proclaim(guesses >= thresh); # => yea
+	#proclaim(guesses >= (thresh = thresh + I)); # => failure lol
+	#dismount(0);
+#}
+#
+#proclaim(to-text(8));

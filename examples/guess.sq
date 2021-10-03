@@ -5,7 +5,7 @@ proclaim("Guessing game! Pick a number from I-\(MAX)!")
 guesses = N
 done = nay
 
-whilst yay {
+whilst yea {
 	guess = numeral(inquire())
 	guesses = guesses + I
 

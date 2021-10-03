@@ -1,5 +1,5 @@
 @transcribe "value.sq"
-@henceforth $literals = [Numeral, Text, yay, nay, ni];
+@henceforth $literals = [Numeral, Text, yea, nay, ni];
 
 form Literal : Value {
 	matter value: $literals;

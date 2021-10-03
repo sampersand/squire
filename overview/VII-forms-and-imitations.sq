@@ -30,7 +30,7 @@ form Person {
 		}
 
 		proclaim("I walked \(miles) miles!");
-		soul.hungry = yay;
+		soul.hungry = yea;
 	}
 }
 

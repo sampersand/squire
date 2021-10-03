@@ -33,7 +33,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		if (value == SQ_NI)
 			fprintf(out, "Ni()");
 		else if (sq_value_is_veracity(value))
-			fprintf(out, "Veracity(%s)", sq_value_as_veracity(value) ? "yay" : "nay");
+			fprintf(out, "Veracity(%s)", sq_value_as_veracity(value) ? "yea" : "nay");
 		else
 			sq_other_dump(out, AS_OTHER(value));
 
@@ -626,7 +626,7 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 }
 
 struct sq_text *sq_value_to_text(sq_value value) {
-	static struct sq_text yay_string = SQ_TEXT_STATIC("yay");
+	static struct sq_text yea_string = SQ_TEXT_STATIC("yea");
 	static struct sq_text nay_string = SQ_TEXT_STATIC("nay");
 	static struct sq_text ni_string = SQ_TEXT_STATIC("ni");
 
@@ -637,7 +637,7 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		else if (value == SQ_NI)
 			return &ni_string;
 		else
-			return value == SQ_YAY ? &yay_string : &nay_string;
+			return value == SQ_YAY ? &yea_string : &nay_string;
 
 	case SQ_G_NUMERAL:
 		return sq_numeral_to_text(AS_NUMBER(value));

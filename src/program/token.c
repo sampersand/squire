@@ -406,7 +406,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("path",         SQ_TK_CASE);
 	CHECK_FOR_START_KW("kingdom",      SQ_TK_KINGDOM);
 
-	CHECK_FOR_START_KW("yay",          SQ_TK_YAY);
+	CHECK_FOR_START_KW("yea",          SQ_TK_YAY);
 	CHECK_FOR_START_KW("nay",          SQ_TK_NAY);
 	CHECK_FOR_START_KW("ni",           SQ_TK_NI);
 

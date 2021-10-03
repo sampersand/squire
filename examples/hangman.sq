@@ -33,7 +33,7 @@ form Hangman {
 		if !soul.guesses[letter] {
 			reward nay
 		} alas {
-			reward soul.guesses[letter] = yay
+			reward soul.guesses[letter] = yea
 		}
 	}
 

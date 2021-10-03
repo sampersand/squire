@@ -18,7 +18,7 @@ proclaim("2+4=\(roman(2 + 4))"); #=> 2+4=VI
 
 # Mr Boole was not alive in the middle ages. As such, we do not have "Booleans,"
 # but instead have Veracity---the truthiness of something.
-truth = yay;
+truth = yea;
 falsehood = nay;
 proclaim("is truth false? \(truth == falsehood)"); #=> is truth false? nay
 
