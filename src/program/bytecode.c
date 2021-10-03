@@ -55,6 +55,9 @@ const char *sq_opcode_repr(enum sq_opcode opcode) {
 	case SQ_OC_TRYCATCH: return "SQ_OC_TRYCATCH";
 	case SQ_OC_THROW: return "SQ_OC_THROW";
 	case SQ_OC_POPTRYCATCH: return "SQ_OC_POPTRYCATCH";
+#ifndef SQ_NMOON_JOKE
+	case SQ_OC_WERE_JMP: return "SQ_OC_WERE_JMP";
+#endif /* !SQ_NMOON_JOKE */
 	
 	case SQ_OC_NOT: return "SQ_OC_NOT";
 	case SQ_OC_NEG: return "SQ_OC_NEG";

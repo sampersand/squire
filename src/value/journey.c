@@ -51,7 +51,6 @@ struct sq_stackframe {
 	sq_value *locals;
 };
 
-
 static sq_value run_stackframe(struct sq_stackframe *stackframe);
 
 static int assign_positional_arguments(
@@ -189,6 +188,26 @@ sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
 // 	for (; i < stackframe->pattern->nlocals; ++i)
 // 		stackframe->locals[i] = SQ_NI;
 // }
+
+#ifndef SQ_NMOON_JOKE
+
+#include <time.h>
+extern double moon_phase2(int year,int month,int day, double hour);
+
+bool sq_moon_joke_does_were_flip() {
+	time_t t = time(NULL);
+	struct tm *time = localtime(&t);
+
+	double mf = moon_phase2(
+		time->tm_year + 1900,
+		time->tm_mon + 1,
+		time->tm_mday,
+		time->tm_hour
+	);
+
+	return (0.99 - mf) < 0 && !(rand() % 100);
+}
+#endif /* !SQ_NMOON_JOKE */
 
 static inline union sq_bytecode next_bytecode(struct sq_stackframe *sf) {
 	return sf->pattern->code.bytecode[sf->ip++];
@@ -582,6 +601,9 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_MOV:
 		case SQ_OC_JMP_TRUE:
 		case SQ_OC_JMP_FALSE:
+#ifndef SQ_NMOON_JOKE
+		case SQ_OC_WERE_JMP:
+#endif /* SQ_NMOON_JOKE */
 		case SQ_OC_NOT:
 		case SQ_OC_NEG:
 		case SQ_OC_CALL:
@@ -655,11 +677,21 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			sf->ip = next_index(sf);
 			continue;
 
-		case SQ_OC_JMP_TRUE:
 		case SQ_OC_JMP_FALSE:
+		case SQ_OC_JMP_TRUE:
+#ifndef SQ_NMOON_JOKE
+		case SQ_OC_WERE_JMP:
+#endif /* SQ_NMOON_JOKE */
 			index = next_index(sf);
+			bool should_jump =
+				sq_value_to_veracity(operands[0]) == (opcode == SQ_OC_JMP_TRUE);
 
-			if (sq_value_to_veracity(operands[0]) == (opcode == SQ_OC_JMP_TRUE))
+#ifndef SQ_NMOON_JOKE
+			if (opcode == SQ_OC_WERE_JMP && sq_moon_joke_does_were_flip())
+				should_jump = !should_jump;
+#endif /* SQ_NMOON_JOKE */
+
+			if (should_jump)
 				sf->ip = index;
 
 			continue;

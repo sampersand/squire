@@ -13,8 +13,11 @@ objects+=$(patsubst $(SRCDIR)/other/%.c,$(OBJDIR)/other/%.o,$(wildcard $(SRCDIR)
 objects+=$(patsubst $(SRCDIR)/other/io/%.c,$(OBJDIR)/other/io/%.o,$(wildcard $(SRCDIR)/other/io/*.c))
 
 CFLAGS+=-F$(SRCDIR) -Iinclude
-
 CFLAGS+=-DSQ_NUMERAL_TO_ROMAN
+
+ifndef JOKE
+CFLAGS+=-DSQ_NMOON_JOKE
+endif
 
 ifdef DEBUG
 CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG

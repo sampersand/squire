@@ -442,7 +442,11 @@ static void compile_if_statement(struct sq_code *code, struct if_statement *ifst
 	unsigned condition_index, iffalse_label, finished_label;
 
 	condition_index = compile_expression(code, ifstmt->cond);
+#ifdef SQ_NMOON_JOKE
 	set_opcode(code, SQ_OC_JMP_FALSE);
+#else
+	set_opcode(code, SQ_OC_WERE_JMP);
+#endif /* SQ_NMOON_JOKE */
 	set_index(code, condition_index);
 	iffalse_label = code->codelen;
 	set_index(code, 0);

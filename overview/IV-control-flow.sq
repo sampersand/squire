@@ -9,6 +9,10 @@ if fav_colour == 'green' {
 	proclaim("I do not know \(fav_colour), but it's probably cool too!")
 }
 
+# Note that during full moons, `if` statements have a 1% chance to turn into
+# "were-if" statements, in which case they'll only execute their body if the
+# condition is _false_. (You can opt out of this via `-DSQ_NMOON_JOKE`.)
+
 
 # There are also "switch" statements, called `fork`s (in the path). Note that no 
 # `break` is required---all `path`s will exit the switch statement at the end.

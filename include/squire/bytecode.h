@@ -57,6 +57,9 @@ enum sq_opcode {
 	SQ_OC_TRYCATCH      = 0x26, // [POS,ERR] Go when `catapult`s occur, set `ERR`
 	SQ_OC_THROW         = 0x27, // [IDX] Throws an exception
 	SQ_OC_POPTRYCATCH   = 0x29, // [] Removes a `catch` block from the stack.
+#ifndef SQ_NMOON_JOKE
+	SQ_OC_WERE_JMP      = 0x2A, // same as JMP_FALSE, but 1% chance not to on full moon
+#endif /* !SQ_MOON_JOKE */
 
 	SQ_OC_NOT           = 0x40, // [A,DST] DST <- !A
 	SQ_OC_NEG           = 0x41, // [A,DST] DST <- -A` (ie unary minus)
