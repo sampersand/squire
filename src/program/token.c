@@ -301,7 +301,7 @@ static struct sq_token parse_identifier(void) {
 			++sq_stream;
 			token.identifier[len++] = '_';
 		} else if (*sq_stream == ' ') {
-			while (*++sq_stream == ' ');
+			while (*++sq_stream == ' ' || sq_stream[-1] == '\t');
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
 		} else break;

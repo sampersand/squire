@@ -1,6 +1,7 @@
 #include <squire/other/other.h>
 #include <squire/text.h>
 #include <squire/exception.h>
+#include <squire/journey.h>
 
 #include <stdlib.h>
 
@@ -8,6 +9,10 @@ void sq_other_dump(FILE *out, const struct sq_other *other) {
 	switch (other->kind) {
 	case SQ_OK_SCROLL:
 		sq_scroll_dump(out, sq_other_as_scroll((struct sq_other *) other));
+		break;
+
+	case SQ_OK_BUILTIN_JOURNEY:
+		sq_builtin_journey_dump(out, sq_other_as_builtin_journey((struct sq_other *) other));
 		break;
 
 	case SQ_OK_EXTERNAL:
@@ -31,6 +36,10 @@ void sq_other_deallocate(struct sq_other *other) {
 		sq_scroll_deallocate(sq_other_as_scroll(other));
 		break;
 
+	case SQ_OK_BUILTIN_JOURNEY:
+		sq_builtin_journey_deallocate(sq_other_as_builtin_journey(other));
+		break;
+
 	case SQ_OK_EXTERNAL:
 		sq_external_deallocate(sq_other_as_external(other));
 		break;
@@ -52,6 +61,9 @@ const char *sq_other_typename(const struct sq_other *other) {
 	case SQ_OK_SCROLL:
 		return "Scroll";
 
+	case SQ_OK_BUILTIN_JOURNEY:
+		return "BuiltinJourney";
+
 	case SQ_OK_EXTERNAL:
 		return sq_external_typename(sq_other_as_external((struct sq_other *) other));
 
@@ -60,6 +72,7 @@ const char *sq_other_typename(const struct sq_other *other) {
 
 	case SQ_OK_ENVOY:
 		return "Envoy";
+
 	}
 }
 
@@ -79,6 +92,7 @@ sq_value sq_other_genus(const struct sq_other *other) {
 		return sq_value_new(&KIND_KINGDOM);
 
 	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
 		return sq_value_new(&KIND_ENVOY);
 	}
 }
@@ -95,6 +109,7 @@ struct sq_text *sq_other_to_text(const struct sq_other *other) {
 		return sq_text_new(strdup(sq_other_as_kingdom((struct sq_other *) other)->name));
 
 	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
 		todo("SQ_OK_ENVOY to text");
 	}
 }
@@ -111,6 +126,7 @@ sq_numeral sq_other_to_numeral(const struct sq_other *other) {
 
 	case SQ_OK_SCROLL:
 	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
 		sq_throw("cannot convert '%s' to a numeral", sq_other_typename(other));
 	}
 }
@@ -123,6 +139,7 @@ sq_veracity sq_other_to_veracity(const struct sq_other *other) {
 	case SQ_OK_SCROLL:
 	case SQ_OK_KINGDOM:
 	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
 		sq_throw("cannot get veracity of '%s'", sq_other_typename(other));
 	}
 }
@@ -139,6 +156,7 @@ sq_value sq_other_get_attr(const struct sq_other *other, const char *attr) {
 		return sq_kingdom_get_attr(sq_other_as_kingdom((struct sq_other *) other), attr);
 
 	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
 		return sq_envoy_get_attr(sq_other_as_envoy((struct sq_other *) other), attr);
 	}
 }
@@ -155,6 +173,7 @@ bool sq_other_set_attr(struct sq_other *other, const char *attr, sq_value value)
 		return sq_envoy_set_attr(sq_other_as_envoy(other), attr, value);
 
 	case SQ_OK_SCROLL:
+	case SQ_OK_BUILTIN_JOURNEY:
 		return false;
 	}
 }
@@ -168,7 +187,18 @@ bool sq_other_matches(const struct sq_other *formlike, sq_value to_check) {
 	case SQ_OK_SCROLL:
 	case SQ_OK_KINGDOM:
 	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
 		return sq_value_eql(sq_value_new((struct sq_other *) formlike), to_check);
+	}
+}
+
+sq_value sq_other_call(struct sq_other *tocall, struct sq_args args) {
+	switch (tocall->kind) {
+	case SQ_OK_BUILTIN_JOURNEY:
+		return sq_builtin_journey_call(&tocall->builtin_journey, args);
+
+	default:
+		return SQ_UNDEFINED;
 	}
 }
 

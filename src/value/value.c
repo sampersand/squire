@@ -136,6 +136,8 @@ void sq_value_free(sq_value value) {
 }
 
 const char *sq_value_typename(sq_value value) {
+	assert(value != SQ_UNDEFINED);
+
 	switch (SQ_VTAG(value)) {
 	case SQ_G_OTHER:
 		if (sq_value_is_other(value))
@@ -596,6 +598,8 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 
 
 sq_value sq_value_call(sq_value tocall, struct sq_args args) {
+	assert(tocall != SQ_UNDEFINED);
+
 	switch (sq_value_genus_tag(tocall)) {
 	case SQ_G_FORM:
 		return sq_value_new(sq_form_imitate(sq_value_as_form(tocall), args));
@@ -605,6 +609,16 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 
 	case SQ_G_IMITATION:
 		todo("call imitation"); 
+
+	case SQ_G_OTHER:
+		if (sq_value_is_other(tocall)) {
+			sq_value result = sq_other_call(AS_OTHER(tocall), args);
+
+			if (result != SQ_UNDEFINED)
+				return result;
+		}
+
+		// else fallthrough
 
 	default:
 		sq_throw("cannot call '%s'.", TYPENAME(tocall));
@@ -836,7 +850,7 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 
 	case SQ_G_OTHER:
 		if (sq_value_is_other(soul))
-			return sq_other_get_attr(AS_OTHER(soul), attr);
+			result = sq_other_get_attr(AS_OTHER(soul), attr);
 		// else, fallthrough
 
 	case SQ_G_NUMERAL:

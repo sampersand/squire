@@ -24,7 +24,8 @@ void sq_book_dump(FILE *out, const struct sq_book *book) {
 	fprintf(out, "Book(");
 
 	for (size_t i = 0; i < book->length; ++i) {
-		if (i) fprintf(out, ", ");
+		if (i)
+			fprintf(out, ", ");
 
 		sq_value_dump(book->pages[i]);
 	}

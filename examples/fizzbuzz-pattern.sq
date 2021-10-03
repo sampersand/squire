@@ -4,8 +4,6 @@ journey msg-for
 	(n) if !(n % V)   => 'Buzz',
 	(n)               => arabic(n);
 
-/*!*/
-
 journey fizzbuzz(max=C) {
 	i = I
 	whilst i <= max {

@@ -918,6 +918,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("roman",     SQ_INT_ROMAN, 1);
 	BUILTIN_FN("arabic",    SQ_INT_ARABIC, 1);
 
+	BUILTIN_FN("Scroll", SQ_INT_FOPEN, 2); // just so you can do `Scroll(...)`
 	BUILTIN_FN("Scroll_open", SQ_INT_FOPEN, 2);
 	BUILTIN_FN("Scroll_close", SQ_INT_FCLOSE, 1);
 	BUILTIN_FN("Scroll_read", SQ_INT_FREAD, 2);

@@ -86,7 +86,7 @@ form Fraction {
 		(rhs: Fraction) => Fraction(soul.numer*rhs.denom + rhs.numer*soul.denom, soul.denom*rhs.denom);
 
 	change to-text
-		(): Text if (soul.denom != I) => "\(soul.numer)",
+		(): Text if (soul.denom == I) => "\(soul.numer)",
 		(): Text => "\(soul.numer)/\(soul.denom)";
 }
 

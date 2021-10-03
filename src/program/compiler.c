@@ -171,7 +171,7 @@ unsigned sq_compiler_variable_declare(struct sq_compiler *compiler, char *name) 
 	unsigned variable_index = compiler->variables.len++;
 	unsigned local_index = sq_compiler_next_local(compiler);
 
-	LOG("locals[%d]: %s (variables[%d])\n", locals_index, name, variable_index);
+	LOG("locals[%d]: %s (variables[%d])\n", local_index, name, variable_index);
 
 	compiler->variables.ary[variable_index].name = name;
 	compiler->variables.ary[variable_index].index = local_index;
