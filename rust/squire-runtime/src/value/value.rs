@@ -43,7 +43,8 @@ impl Debug for Value {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Ni => Debug::fmt(&Ni, f),
-			Self::Veracity(veracity) => Debug::fmt(&veracity, f),
+			Self::Veracity(true) => write!(f, "Veracity(yea)"),
+			Self::Veracity(false) => write!(f, "Veracity(nay)"),
 			Self::Numeral(numeral) => Debug::fmt(&numeral, f),
 			Self::Text(text) => Debug::fmt(&text, f),
 
@@ -115,7 +116,7 @@ impl Matches for Value {
 			Self::Veracity(veracity) => veracity.matches(rhs, vm),
 			Self::Numeral(numeral) => numeral.matches(rhs, vm),
 			Self::Text(text) => text.matches(rhs, vm),
-			Self::Book(book) => dbg!(book).matches(rhs, vm),
+			Self::Book(book) => book.matches(rhs, vm),
 			Self::Codex(codex) => codex.matches(rhs, vm),
 			Self::Form(form) => form.matches(rhs, vm),
 			Self::Imitation(imitation) => imitation.matches(rhs, vm),

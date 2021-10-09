@@ -134,6 +134,10 @@ impl Compiler {
 		self.code.push(bytecode);
 	}
 
+	pub fn illegal(&mut self) {
+		self.bytecode(Bytecode::Illegal);
+	}
+
 	pub fn opcode(&mut self, opcode: Opcode) {
 		self.bytecode(Bytecode::Opcode(opcode));
 	}
@@ -165,7 +169,7 @@ impl Compiler {
 	}
 
 	pub fn defer_jump(&mut self) -> JumpDestination {
-		self.bytecode(Bytecode::Illegal);
+		self.illegal();
 
 		JumpDestination(self.code.len() - 1)
 	}

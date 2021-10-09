@@ -136,7 +136,6 @@ impl StackFrame<'_> {
 	fn do_check_matches(&mut self) -> Result<()> {
 		let ([target, genus], vm) = self.next_locals_and_vm();
 
-		println!("{:?} {:?}", target, genus);
 		if genus.matches(target, vm)? {
 			Ok(())
 		} else {
@@ -199,7 +198,6 @@ impl StackFrame<'_> {
 		}
 
 		let args = crate::vm::Args::new(&args);
-
 		let result = func.call(args, self.vm)?;
 
 		self.set_result(result);

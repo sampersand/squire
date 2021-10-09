@@ -38,7 +38,7 @@ impl CodeBlock {
 		assert!(self.num_locals >= args._as_slice().len(), "not enough locals to store arguments!");
 
 		let mut locals = Vec::with_capacity(self.num_locals + 1);
-		locals.push(Value::Ni);
+		locals.push(Value::Ni); // this is for the "scratch" target
 		locals.extend(args._as_slice().iter().cloned());
 
 		while locals.len() < self.num_locals {

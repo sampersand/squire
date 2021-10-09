@@ -102,7 +102,7 @@ impl Parsable for Journey {
 		}
 
 		let name = parser.expect_identifier()?;
-		Self::parse_without_keyword(parser, name, true).map(Some)
+		Self::parse_without_keyword(parser, name, false).map(Some)
 	}
 }
 
@@ -207,8 +207,8 @@ impl Journey {
 			compiler.target(return_target);
 		}
 
-		#[cfg(feature="debug_assertions")]
-		compiler.opcode(Opcode::Illegal);
+		#[cfg(debug_assertions)]
+		compiler.illegal();
 
 		Ok(UserDefined::new(self.name.clone(), self.is_method, vec!["todo".into()], compiler.finish()))
 	}
