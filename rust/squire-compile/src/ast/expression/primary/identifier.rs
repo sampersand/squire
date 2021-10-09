@@ -1,7 +1,9 @@
 use crate::ast::Expression;
 use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{Token, TokenKind};
+use crate::ast::expression::binary_operator;
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
+use squire_runtime::vm::Opcode;
 
 #[derive(Debug)]
 pub struct Identifier(String);
@@ -19,15 +21,44 @@ impl Parsable for Identifier {
 }
 
 impl Identifier {
-	pub fn compile_assignment(
+	fn compile_compound_assignment(
 		self,
-		op: Option<crate::ast::expression::binary_operator::Math>,
+		op: binary_operator::Math,
 		rhs: Box<Expression>,
 		compiler: &mut Compiler,
 		target: Option<Target>
 	) -> Result<(), CompileError> {
-		use squire_runtime::vm::Opcode;
-		if op.is_some() { todo!(); }
+		// compile the RHS.
+		let rhs_target = target.unwrap_or_else(|| compiler.next_target());
+		rhs.compile(compiler, Some(rhs_target))?;
+
+		let lhs_target = compiler.get_local(&self.0).unwrap_or_else(|| compiler.next_target());
+		Self(self.0.clone()).compile(compiler, Some(lhs_target))?;
+
+		compiler.opcode(op.opcode());
+		compiler.target(lhs_target);
+		compiler.target(rhs_target);
+		compiler.target(lhs_target);
+
+		if let Some((global, _)) = compiler.get_global(&self.0) {
+			compiler.opcode(Opcode::StoreGlobal);
+			compiler.global(global);
+			compiler.target(lhs_target);
+		}
+
+		Ok(())
+	}
+
+	pub fn compile_assignment(
+		self,
+		op: Option<binary_operator::Math>,
+		rhs: Box<Expression>,
+		compiler: &mut Compiler,
+		target: Option<Target>
+	) -> Result<(), CompileError> {
+		if let Some(op) = op {
+			return self.compile_compound_assignment(op, rhs, compiler, target);
+		}
 
 		if let Some((global, _)) = compiler.get_global(&self.0) {
 			let rhs_target = target.unwrap_or_else(|| compiler.next_target());
@@ -55,8 +86,6 @@ impl Identifier {
 
 impl Compilable for Identifier {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		use squire_runtime::vm::Opcode;
-
 		if let Some(local) = compiler.get_local(&self.0) {
 			match target {
 				Some(target) if target != local => {

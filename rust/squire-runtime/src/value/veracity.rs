@@ -7,7 +7,7 @@ pub type Veracity = bool;
 impl Dump for Veracity {
 	fn dump(&self, to: &mut String, _: &mut Vm) -> Result<(), RuntimeError> {
 		if *self {
-			to.push_str("yay");
+			to.push_str("yea");
 		} else {
 			to.push_str("nay");
 		}

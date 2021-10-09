@@ -1,4 +1,4 @@
-use crate::ast::expression::{Expression, Primary};
+use crate::ast::expression::{binary_operator, Expression, Primary};
 use crate::parse::{Error as ParseError, Parser};
 use crate::parse::token::{TokenKind, Symbol};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
@@ -23,15 +23,55 @@ impl GetAttr {
 
 		Ok(Ok(Self { from: Box::new(from), attribute }))
 	}
+}
 
-	pub fn compile_assignment(
+impl GetAttr {
+	fn compile_compound_assignment(
 		self,
-		op: Option<crate::ast::expression::binary_operator::Math>,
+		op: binary_operator::Math,
 		rhs: Box<Expression>,
 		compiler: &mut Compiler,
 		target: Option<Target>
 	) -> Result<(), CompileError> {
-		if op.is_some() { todo!(); }
+		let from_target = compiler.next_target();
+		self.from.compile(compiler, Some(from_target))?;
+
+		// this can probably be combiend with `GetAttr::compile`
+		let lhs_target = compiler.next_target();
+		let attribute_index = compiler.get_constant(self.attribute.into());
+
+		compiler.opcode(Opcode::GetAttribute);
+		compiler.target(from_target);
+		compiler.constant(attribute_index);
+		compiler.target(lhs_target);
+
+		// compile the RHS.
+		let rhs_target = target.unwrap_or_else(|| compiler.next_target());
+		rhs.compile(compiler, Some(rhs_target))?;
+
+		compiler.opcode(op.opcode());
+		compiler.target(lhs_target);
+		compiler.target(rhs_target);
+		compiler.target(rhs_target);
+
+		compiler.opcode(Opcode::SetAttribute);
+		compiler.target(from_target);
+		compiler.constant(attribute_index);
+		compiler.target(rhs_target);
+
+		Ok(())
+	}
+
+	pub fn compile_assignment(
+		self,
+		op: Option<binary_operator::Math>,
+		rhs: Box<Expression>,
+		compiler: &mut Compiler,
+		target: Option<Target>
+	) -> Result<(), CompileError> {
+		if let Some(op) = op {
+			return self.compile_compound_assignment(op, rhs, compiler, target);
+		}
 
 		let lhs_target = target.unwrap_or_else(|| compiler.next_target());
 		self.from.compile(compiler, Some(lhs_target))?;

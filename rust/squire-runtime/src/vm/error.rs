@@ -24,7 +24,6 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-
 impl From<NumeralParseError> for Error {
 	#[inline]
 	fn from(error: NumeralParseError) -> Self {
@@ -35,7 +34,7 @@ impl From<NumeralParseError> for Error {
 impl Display for Error {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::OperationNotSupported { kind, func } => write!(f, "cannot call '{:?}' with a {:?}", func, kind),
+			Self::OperationNotSupported { kind, func } => write!(f, "cannot call {:?} with {:?}", func, kind),
 			Self::InvalidOperand { kind, func } => write!(f, "value {:?} was invalid for {:?}", kind, func),
 			Self::ValueError(string) => write!(f, "{}", string),
 			Self::DivisionByZero => write!(f, "divided by zero"),

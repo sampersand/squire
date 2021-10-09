@@ -3,6 +3,7 @@ use crate::parse::{Parser, Parsable, Error as ParseError};
 use crate::parse::token::{TokenKind, ParenKind};
 use crate::compile::{Compiler, Compilable, Target, Error as CompileError};
 use squire_runtime::vm::Opcode;
+use crate::ast::expression::binary_operator;
 
 #[derive(Debug)]
 pub struct Index {
@@ -26,14 +27,45 @@ impl Index {
 		Ok(Ok(Self { into: Box::new(into), key: Box::new(key) }))
 	}
 
-	pub fn compile_assignment(
+	fn compile_compound_assignment(
 		self,
-		op: Option<crate::ast::expression::binary_operator::Math>,
+		op: binary_operator::Math,
 		rhs: Box<Expression>,
 		compiler: &mut Compiler,
 		target: Option<Target>
 	) -> Result<(), CompileError> {
-		if op.is_some() { todo!(); }
+		let into_target = compiler.next_target();
+		let key_target = compiler.next_target();
+		let dst_target = compiler.next_target();
+		self._compile(compiler, into_target, key_target, dst_target)?;
+
+		// compile the RHS.
+		let rhs_target = target.unwrap_or_else(|| compiler.next_target());
+		rhs.compile(compiler, Some(rhs_target))?;
+
+		compiler.opcode(op.opcode());
+		compiler.target(dst_target);
+		compiler.target(rhs_target);
+		compiler.target(rhs_target);
+
+		compiler.opcode(Opcode::IndexAssign);
+		compiler.target(into_target);
+		compiler.target(key_target);
+		compiler.target(rhs_target);
+
+		Ok(())
+	}
+
+	pub fn compile_assignment(
+		self,
+		op: Option<binary_operator::Math>,
+		rhs: Box<Expression>,
+		compiler: &mut Compiler,
+		target: Option<Target>
+	) -> Result<(), CompileError> {
+		if let Some(op) = op {
+			return self.compile_compound_assignment(op, rhs, compiler, target);
+		}
 
 		let into_target = compiler.next_target();
 		let key_target = compiler.next_target();
@@ -50,29 +82,31 @@ impl Index {
 
 		Ok(())
 	}
+
+	fn _compile(
+		self,
+		compiler: &mut Compiler,
+		into_target: Target,
+		key_target: Target,
+		target: Target
+	) -> Result<(), CompileError> {
+		self.into.compile(compiler, Some(into_target))?;
+		self.key.compile(compiler, Some(key_target))?;
+
+		compiler.opcode(Opcode::Index);
+		compiler.target(into_target);
+		compiler.target(key_target);
+		compiler.target(target);
+
+		Ok(())
+	}
 }
 
 impl Compilable for Index {
 	fn compile(self, compiler: &mut Compiler, target: Option<Target>) -> Result<(), CompileError> {
-		let target =
-			if let Some(target) = target {
-				target
-			} else {
-				self.into.compile(compiler, None)?;
-				self.key.compile(compiler, None)?;
-				return Ok(());
-			};
+		let key_target = compiler.next_target();
+		let target = target.unwrap_or_else(|| compiler.next_target());
 
-		let key_index = compiler.next_target();
-
-		self.into.compile(compiler, Some(target))?;
-		self.key.compile(compiler, Some(key_index))?;
-
-		compiler.opcode(Opcode::Index);
-		compiler.target(target);
-		compiler.target(key_index);
-		compiler.target(target);
-
-		Ok(())
+		self._compile(compiler, target, key_target, target)
 	}
 }

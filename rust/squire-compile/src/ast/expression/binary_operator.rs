@@ -157,6 +157,19 @@ fn compile_assignment(op: Option<Math>, lhs: Box<Expression>, rhs: Box<Expressio
 	}
 }
 
+impl Math {
+	pub fn opcode(self) -> Opcode {
+		match self {
+			Math::Add => Opcode::Add,
+			Math::Sub => Opcode::Subtract,
+			Math::Mul => Opcode::Multiply,
+			Math::Div => Opcode::Divide,
+			Math::Mod => Opcode::Modulo,
+			Math::Pow => Opcode::Power,
+		}
+	}
+}
+
 // TODO: make this take Option<Target>
 fn compile_math(op: Math, lhs: Box<Expression>, rhs: Box<Expression>, compiler: &mut Compiler, target: Target)
 	-> Result<(), CompileError>
@@ -165,15 +178,7 @@ fn compile_math(op: Math, lhs: Box<Expression>, rhs: Box<Expression>, compiler: 
 	lhs.compile(compiler, Some(target))?;
 	rhs.compile(compiler, Some(rhs_target))?;
 
-	match op {
-		Math::Add => compiler.opcode(Opcode::Add),
-		Math::Sub => compiler.opcode(Opcode::Subtract),
-		Math::Mul => compiler.opcode(Opcode::Multiply),
-		Math::Div => compiler.opcode(Opcode::Divide),
-		Math::Mod => compiler.opcode(Opcode::Modulo),
-		Math::Pow => compiler.opcode(Opcode::Power),
-	}
-
+	compiler.opcode(op.opcode());
 	compiler.target(target);
 	compiler.target(rhs_target);
 	compiler.target(target);

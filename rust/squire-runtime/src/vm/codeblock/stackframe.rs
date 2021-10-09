@@ -136,6 +136,7 @@ impl StackFrame<'_> {
 	fn do_check_matches(&mut self) -> Result<()> {
 		let ([target, genus], vm) = self.next_locals_and_vm();
 
+		println!("{:?} {:?}", target, genus);
 		if genus.matches(target, vm)? {
 			Ok(())
 		} else {
@@ -210,7 +211,8 @@ impl StackFrame<'_> {
 	}
 
 	fn do_check_patterns(&mut self) -> Result<()> {
-		let count = self.next_count();
+		let _count = self.next_count();
+		println!("{:?}", self);
 		todo!();
 		// Ok(self.next_local().clone())
 	}

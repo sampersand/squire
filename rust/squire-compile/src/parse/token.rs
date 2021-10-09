@@ -156,7 +156,7 @@ impl<'a, I> Tokenizer<'a, I> {
 }
 
 impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
-	pub const TRUE: &'static str            = "yay";
+	pub const TRUE: &'static str            = "yea";
 	pub const FALSE: &'static str           = "nay";
 	pub const NULL: &'static str            = "ni";
 
