@@ -230,6 +230,10 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 	}
 
 	fn parse_numeral(&mut self) -> Option<Result<Token>> {
+		if self.stream.peek() == Some('_') {
+			return None;
+		}
+
 		self.parse_roman_numeral()
 			.or_else(|| self.parse_arabic_numeral())
 			.map(|val| val.map(Literal::Numeral).map(Token::Literal))

@@ -59,7 +59,6 @@ impl Compilable for Attempt {
 			statement.compile(compiler, target)?;
 		}
 
-
 		end_of_handler.set_jump_to_current(compiler);
 
 		Ok(())
