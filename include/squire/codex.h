@@ -30,6 +30,7 @@ static inline struct sq_codex *sq_codex_clone(struct sq_codex *codex) {
 void sq_codex_deallocate(struct sq_codex *codex);
 
 static inline void sq_codex_free(struct sq_codex *codex) {
+	if(1)return;
 	assert(codex->refcount);
 
 	if (!--codex->refcount)

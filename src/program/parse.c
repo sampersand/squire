@@ -183,11 +183,12 @@ static struct dict *parse_codex() {
 	return dict;
 }
 
-static struct journey_declaration *parse_journey_declaration(bool, bool);
+static struct journey_declaration *parse_journey_declaration(bool, bool, bool);
 static struct primary *parse_primary() {
 	struct primary primary;
+	int kind;
 
-	switch (take().kind) {
+	switch (kind = take().kind) {
 	case SQ_TK_LPAREN:
 		primary.kind = SQ_PS_PPAREN;
 		primary.expr = parse_expression();
@@ -242,10 +243,10 @@ static struct primary *parse_primary() {
 		}
 		break;
 	}
-	case SQ_TK_FUNC: {
-		untake();
+	case SQ_TK_FUNC:
+	case SQ_TK_LAMBDA: {
 		primary.kind = SQ_PS_PLAMBDA;
-		primary.lambda = parse_journey_declaration(true, false);
+		primary.lambda = parse_journey_declaration(false, false, kind == SQ_TK_FUNC);
 		break;
 	}
 	default:
@@ -642,7 +643,7 @@ static struct form_declaration *parse_form_declaration() {
 		case SQ_TK_METHOD:
 		case SQ_TK_CLASSFN:
 		case SQ_TK_CONSTRUCTOR: {
-			struct journey_declaration *fn = parse_journey_declaration(false, 1);
+			struct journey_declaration *fn = parse_journey_declaration(false, 1, true);
 			if (tkn.kind == SQ_TK_CONSTRUCTOR) {
 				if (fdecl->constructor != NULL)
 					die("cannot have two constructors.");
@@ -883,7 +884,7 @@ done_with_arguments:
 	die("no body given for function");
 }
 
-static struct journey_declaration *parse_journey_declaration(bool guard, bool is_method) {
+static struct journey_declaration *parse_journey_declaration(bool guard, bool is_method, bool multiple_patterns) {
 	if (guard)
 		GUARD(SQ_TK_FUNC);
 
@@ -904,6 +905,8 @@ static struct journey_declaration *parse_journey_declaration(bool guard, bool is
 			die("too many patterns encountered");
 
 		parse_journey_pattern(is_method, &jd->patterns[jd->npatterns++]);
+
+		if (!multiple_patterns) return jd;
 	} while (take().kind == SQ_TK_COMMA);
 	untake(); // to undo the last take.
 
@@ -1060,7 +1063,7 @@ static struct statement *parse_statement() {
 	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
 	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;
 	else if ((stmt.cdecl = parse_form_declaration())) stmt.kind = SQ_PS_SCLASS;
-	else if ((stmt.jdecl = parse_journey_declaration(true, false))) stmt.kind = SQ_PS_SJOURNEY;
+	else if ((stmt.jdecl = parse_journey_declaration(true, false, true))) stmt.kind = SQ_PS_SJOURNEY;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
 	else if ((stmt.sw_stmt = parse_switch_statement())) stmt.kind = SQ_PS_SSWITCH;
 	else if ((stmt.wstmt = parse_while_statement())) stmt.kind = SQ_PS_SWHILE;

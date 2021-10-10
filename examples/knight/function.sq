@@ -1,0 +1,18 @@
+@transcribe "value.sq"
+
+form Function : Value {
+	matter func: Journey;
+	matter args: Book;
+
+	change run(): Value { tmp = soul.func; reward tmp(soul.args) };
+
+	essence FUNCTIONS: Codex = {
+		'R': \() => gamble(),
+		'P': \() => inquire(),
+		
+	};
+}
+
+x = Function.FUNCTIONS['R'];
+
+dump(x.arity);

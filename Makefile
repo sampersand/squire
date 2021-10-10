@@ -15,24 +15,26 @@ objects+=$(patsubst $(SRCDIR)/other/io/%.c,$(OBJDIR)/other/io/%.o,$(wildcard $(S
 CFLAGS+=-F$(SRCDIR) -Iinclude
 CFLAGS+=-DSQ_NUMERAL_TO_ROMAN
 
-ifndef JOKE
-CFLAGS+=-DSQ_NMOON_JOKE
-endif
-
 ifdef DEBUG
 CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
 else
 	CFLAGS+=-O2
 	ifdef OPTIMIZED
-		CFLAGS+= -flto -march=native -DNDEBUG
+		NJOKE=1
+		CFLAGS+=-flto -march=native -DNDEBUG
 	endif
+endif
+
+ifdef NJOKE
+CFLAGS+=-DSQ_NMOON_JOKE
 endif
 
 ifdef COMPUTED_GOTOS
 CFLAGS+=-DKN_COMPUTED_GOTOS -Wno-gnu-label-as-value -Wno-gnu-designator
 endif
 
-CFLAGS+=$(CEXTRA) $(EFLAGS)
+CFLAGS+=$(CEXTRA)
+CFLAGS+=$(EFLAGS)
 .PHONY: all optimized clean shared
 
 all: $(exe)

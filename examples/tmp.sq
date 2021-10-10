@@ -1,21 +1,27 @@
-kingdom BetterRandom {
-	subject file = Scroll('/dev/random', 'r');
+form Variable {
+	matter name;
+	matter value;
+	essence declared: Codex = {};
 
-	journey rand() {
-		nums = BetterRandom.file.read(II);
-		reward ascii(nums[I])*CCLVI + ascii(nums[II]);
+	imitate(name) {
+		soul.name = name;
 	}
+
+	recall fetch
+		(name) if (ni != (var = soul.declared[name])) => var,
+		(name) => soul.declared[name] = Variable(name);
+
+	change run
+		(foo) if soul.value == ni { catapult "undefined variable '{soul.name}'" },
+		(foo) => soul.value;
+
+	change assign(value) => soul.value = value;
 }
 
-proclaim(BetterRandom::rand()) #=> -MMDLIV
 
-#journey to-text(guesses) {
-	#renowned thresh = N;
-	#proclaim(thresh); # => N
-	#proclaim(thresh = thresh + I); # => I
-	#proclaim(guesses >= thresh); # => yea
-	#proclaim(guesses >= (thresh = thresh + I)); # => failure lol
-	#dismount(0);
-#}
-#
-#proclaim(to-text(8));
+journey foo
+	() if nay => 34,
+	() => 12;
+
+dump(foo());
+dump(Variable.fetch(""));

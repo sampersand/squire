@@ -104,13 +104,17 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 		}
 
 
-		if (*sq_stream == '\\') {
-			++sq_stream;
+		// if (*sq_stream == '\\') {
+		// 	++sq_stream;
 
-			if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash)
-				die("unexpected '\\' on its own.");
-			continue;
-		}
+		// 	if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash) {
+		// 		--sq_stream;
+		// 		--sq_stream;
+		// 		continue;
+		// 		// die("unexpected '\\' on its own.");
+		// 	}
+		// 	continue;
+		// }
 
 		if (!isspace(c) || (!strip_newline && c == '\n'))
 			break;
@@ -404,6 +408,8 @@ static struct sq_token next_normal_token(void) {
 	// substance?
 	// essence is static  variable
 
+	if (*sq_stream == '\\')
+		return ++sq_stream, token.kind = SQ_TK_LAMBDA, token;
 	CHECK_FOR_START_KW("journey",      SQ_TK_FUNC);
 	CHECK_FOR_START_KW("renowned",     SQ_TK_GLOBAL);
 	CHECK_FOR_START_KW("nigh",         SQ_TK_LOCAL);

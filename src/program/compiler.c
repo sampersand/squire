@@ -25,7 +25,7 @@ void sq_compiler_set_opcode(struct sq_compiler *compiler, enum sq_opcode opcode)
 }
 
 void sq_compiler_set_index(struct sq_compiler *compiler, unsigned index) {
-	LOG("bytecode[%d].index=%s\n", compiler->code.len, index);
+	LOG("bytecode[%d].index=%d\n", compiler->code.len, index);
 
 	extend_bytecode_cap(compiler);
 
@@ -41,7 +41,7 @@ void sq_compiler_set_interrupt(struct sq_compiler *compiler, enum sq_interrupt i
 }
 
 void sq_compiler_set_count(struct sq_compiler *compiler, unsigned count) {
-	LOG("bytecode[%d].count=%s\n", compiler->code.len, count);
+	LOG("bytecode[%d].count=%d\n", compiler->code.len, count);
 
 	extend_bytecode_cap(compiler);
 

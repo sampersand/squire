@@ -43,6 +43,7 @@ void sq_codex_dump(FILE *out, const struct sq_codex *codex) {
 void sq_codex_deallocate(struct sq_codex *codex) {
 	assert(!codex->refcount);
 
+	// double frees suck
 	for (unsigned i = 0; i < codex->length; ++i) {
 		sq_value_free(codex->pages[i].key);
 		sq_value_free(codex->pages[i].value);

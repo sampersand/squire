@@ -848,6 +848,12 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 			result = sq_book_index2(sq_value_as_book(soul), -1);
 		break;
 
+	case SQ_G_JOURNEY:
+		// this should probably be more sophisticated, eg the arity of the nth pattern
+		if (!strcmp(attr, "arity"))
+			result = sq_value_new((sq_numeral) sq_value_as_journey(soul)->patterns[0].pargc);
+		break;
+
 	case SQ_G_OTHER:
 		if (sq_value_is_other(soul))
 			result = sq_other_get_attr(AS_OTHER(soul), attr);
@@ -855,7 +861,6 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 
 	case SQ_G_NUMERAL:
 	case SQ_G_TEXT:
-	case SQ_G_JOURNEY:
 	case SQ_G_CODEX:
 		break;
 	}

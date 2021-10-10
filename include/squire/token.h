@@ -14,6 +14,7 @@ enum sq_token_kind {
 	SQ_TK_CLASSFN,
 	SQ_TK_CONSTRUCTOR,
 	SQ_TK_FUNC,
+	SQ_TK_LAMBDA,
 
 	SQ_TK_GLOBAL = 0x20,
 	SQ_TK_LOCAL,
