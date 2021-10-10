@@ -130,36 +130,6 @@ impl Journey {
 	}
 }
 
-fn compile_check(
-	args: Arguments,
-	_guard: Option<Expression>,
-	check_target: Target,
-	is_method: bool,
-	compiler: &mut Compiler,
-) -> Result<(), CompileError> {
-	if is_method {
-		compiler.define_local("soul".to_string());
-	}
-
-	for arg in args.normal {
-		let local = compiler.define_local(arg.name.to_string());
-
-		if let Some(genus) = arg.genus {
-			genus.check(local, compiler)?;
-		}
-
-		if arg.default.is_some() {
-			todo!();
-		}
-
-		compiler.opcode(Opcode::LoadConstant);
-		let t = compiler.get_constant(true.into());
-		compiler.constant(t);
-		compiler.target(check_target);
-	}
-
-	Ok(())
-}
 
 impl Journey {
 	pub fn build_journey(self, globals: Globals) -> Result<UserDefined, CompileError> {
@@ -168,21 +138,54 @@ impl Journey {
 
 		let check_target = compiler.temp_target();
 
+		if self.is_method {
+			compiler.define_local("soul".to_string());
+		}
+
 		// check for patterns
 		for Pattern { args, guard, return_genus, body } in self.patterns {
-			compile_check(args, guard, check_target, self.is_method, &mut compiler)?;
+			let mut jumps = Vec::new();
 
-			compiler.opcode(Opcode::JumpIfTrue);
-			compiler.target(check_target);
-			let body_dst = compiler.defer_jump();
+			for arg in args.normal {
+				let local = compiler.define_local(arg.name.to_string());
 
-			pattern_bodies.push((body, return_genus, body_dst));
+				if let Some(genus) = arg.genus {
+					genus.check(local, check_target, &mut compiler)?;
+					compiler.opcode(Opcode::JumpIfFalse);
+					compiler.target(check_target);
+					jumps.push(compiler.defer_jump());
+				}
+
+				if arg.default.is_some() {
+					todo!();
+				}
+			}
+
+			if let Some(guard) = guard {
+				let guard_target = compiler.next_target();
+				guard.compile(&mut compiler, Some(guard_target))?;
+
+				compiler.opcode(Opcode::JumpIfFalse);
+				compiler.target(guard_target);
+				jumps.push(compiler.defer_jump());
+			}
+
+			compiler.opcode(Opcode::Jump);
+			let jump_dst = compiler.defer_jump();
+			pattern_bodies.push((body, return_genus, jump_dst));
+
+			for target in jumps {
+				target.set_jump_to_current(&mut compiler);
+			}
 		}
 
 		// if nothing matches, throw an error.
 		let no_patterns_found = compiler.get_constant("No patterns matched".to_string().into());
-		compiler.opcode(Opcode::Throw);
+		compiler.opcode(Opcode::LoadConstant);
 		compiler.constant(no_patterns_found);
+		compiler.target(Compiler::SCRATCH_TARGET);
+		compiler.opcode(Opcode::Throw);
+		compiler.target(Compiler::SCRATCH_TARGET);
 
 
 		// setup the genus bodies
@@ -193,6 +196,7 @@ impl Journey {
 			body.compile(&mut compiler, Some(return_target))?;
 
 			// if there's a return type given, check it.
+			// ^^ note this doesn't actually check for early returns.
 			if let Some(return_genus) = return_genus {
 				let genus_target = compiler.temp_target();
 

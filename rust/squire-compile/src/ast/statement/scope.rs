@@ -75,7 +75,7 @@ impl Compilable for Renowned {
 
 			// todo: somehow declare globality? idk.
 			if let Some(genus) = self.genus {
-				genus.check(target, compiler)?;
+				genus._check(target, compiler)?;
 			}
 		}
 
@@ -92,7 +92,7 @@ impl Compilable for Nigh {
 		}
 
 		if let Some(genus) = self.genus {
-			genus.check(local_target, compiler)?;
+			genus._check(local_target, compiler)?;
 		}
 
 		if let Some(target) = target {

@@ -30,7 +30,24 @@ impl Compilable for GenusDeclaration {
 
 
 impl GenusDeclaration {
-	pub fn check(self, target: Target, compiler: &mut Compiler) -> Result<(), CompileError> {
+	pub fn check(self, local: Target, target: Target, compiler: &mut Compiler) -> Result<(), CompileError> {
+		let genus_target =
+			if target == Compiler::SCRATCH_TARGET {
+				compiler.next_target()
+			} else {
+				Compiler::SCRATCH_TARGET
+			};
+
+		self.0.compile(compiler, Some(genus_target))?;
+		compiler.opcode(Opcode::Matches);
+		compiler.target(local);
+		compiler.target(genus_target);
+		compiler.target(target);
+
+		Ok(())
+	}
+
+	pub fn _check(self, target: Target, compiler: &mut Compiler) -> Result<(), CompileError> {
 		let genus_target =
 			if target == Compiler::SCRATCH_TARGET {
 				compiler.next_target()
