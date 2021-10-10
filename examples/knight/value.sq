@@ -1,5 +1,48 @@
+@transcribe "assert.sq"
+
+
 form Value {
-	change to-text(): Text => text(soul.run());
-	change to-numeral(): Numeral => numeral(soul.run())
-	change to-veracity(): Veracity => numeral(soul.run())
+	change to-text(): Text => text(soul._run_value());
+	change to-numeral(): Numeral => numeral(soul._run_value());
+	change to-veracity(): Veracity => veracity(soul._run_value());
+
+	change _run_value(): [Numeral, Text, yea, nay, ni] {
+		ran = soul.run(); # syntax is too dumb to allow `soul.run().value`...
+		reward ran.value;
+	}
 }
+
+form Literal : Value {
+	matter value: [Numeral, Text, yea, nay, ni];
+	change run(): Value => soul;
+}
+
+form Function : Value {
+	matter func: Journey;
+	matter args: Book;
+
+	change run(): Value { tmp = soul.func; reward tmp(soul.args); } # parser is bad...
+}
+
+form Variable : Value {
+	matter name: Text;
+	matter value: [Value, ni];
+	essence declared: Codex = {};
+
+	imitate(name: Text) {
+		$assert(Variable.declared[name] != ni);
+		soul.name = name
+	}
+
+	recall fetch
+		(name: Text): Variable if (ni != (var = soul.declared[name])) => var,
+		(name: Text): Variable => soul.declared[name] = Variable(name);
+
+	change run
+		(foo) if soul.value == ni { catapult "undefined variable '\(soul.name)'" },
+		(foo): Value => soul.value;
+
+	change assign(value: Value) => soul.value = value;
+}
+
+proclaim(34)

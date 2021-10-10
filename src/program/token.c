@@ -163,6 +163,7 @@ static struct sq_token next_normal_token(void);
 #define MAX_INTERPOLATIONS 256
 static struct { int stage; unsigned depth; char quote; } interpolations[MAX_INTERPOLATIONS];
 static unsigned interpolation_length;
+static bool _interpolate_is_curly_brace;
 
 static struct sq_token next_interpolation_token(void) {
 	struct sq_token token;
@@ -187,11 +188,17 @@ static struct sq_token next_interpolation_token(void) {
 
 	token = next_normal_token();
 
-	if (token.kind == SQ_TK_LPAREN) {
+	if ((token.kind == SQ_TK_LPAREN && !_interpolate_is_curly_brace)
+			|| (_interpolate_is_curly_brace && token.kind == SQ_TK_LBRACE)
+	) {
+		token.kind = SQ_TK_LPAREN;
 		++interpolations[interpolation_length].depth;
-	} else if (token.kind == SQ_TK_RPAREN) {
+	} else if ((token.kind == SQ_TK_RPAREN && !_interpolate_is_curly_brace)
+		|| (_interpolate_is_curly_brace && token.kind == SQ_TK_RBRACE)
+	) {
 		if (!--interpolations[interpolation_length].depth)
 			interpolations[interpolation_length].stage = -1;
+		token.kind = SQ_TK_RPAREN;
 	}
 
 	return token;
@@ -214,6 +221,11 @@ static struct sq_token parse_text(void) {
 		if (!c)
 			die("unterminated quote encountered");
 
+		if (c == '{') {
+			_interpolate_is_curly_brace = true;
+			goto interpolate;
+		}
+
 		if (c != '\\') {
 			dst[length++] = c;
 			continue;
@@ -224,6 +236,7 @@ static struct sq_token parse_text(void) {
 				case '\\':
 				case '\'':
 				case '\"':
+				case '{':
 					break;
 				default:
 					dst[length++] = '\\';
@@ -243,6 +256,7 @@ static struct sq_token parse_text(void) {
 			goto top;
 
 		case '(':
+		interpolate:
 			if (MAX_INTERPOLATIONS < interpolation_length)
 				die("too many interpolations");
 
