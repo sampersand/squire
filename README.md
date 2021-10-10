@@ -13,7 +13,7 @@ Possible additions:
 	- [ ] `foreach`
 	- [ ] `evaluate`
 - [ ] pattern matching
-- [ ] varidict functions and keyword parameters
+- [ ] varidic functions and keyword parameters
 - [ ] modules
 - [x] dictionaries
 - [x] interpolation
