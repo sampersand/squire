@@ -59,7 +59,8 @@ static struct sq_text *parse_fraktur_bareword(void) {
 			continue;
 		}
 
-		if (isspace(*sq_stream)) {
+		// note the rhs of the `++` will always be true.
+		if (isspace(*sq_stream) || (*sq_stream == '\\' && ++sq_stream)) {
 			fraktur[len++] = *(sq_stream++);
 			continue;
 		}

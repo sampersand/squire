@@ -29,7 +29,7 @@ form Person {
 			catapult "I'm too hungry to walk";
 		}
 
-		proclaim("I walked \(miles) miles!");
+		proclaim("I walked {miles} miles!");
 		soul.hungry = yea;
 	}
 }
@@ -39,7 +39,7 @@ sam.walk(XII); #=> I walked XII miles!
 attempt {
 	sam.walk(I)
 } alas err {
-	proclaim("I can't walk: \(err)"); #=> I can't walk: I'm too hungry to walk
+	proclaim("I can't walk: {err}"); #=> I can't walk: I'm too hungry to walk
 }
 
 
@@ -76,7 +76,7 @@ form Monarch {
 			reward soul.name;
 		}
 
-		title = "\(soul.name) the \(regnal)";
+		title = "{soul.name} the {regnal}";
 
 		if XI <= (regnal % C) && (regnal % C) <= XIII {
 		english_sucks:
@@ -100,10 +100,10 @@ form Monarch {
 	}
 }
 
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
-proclaim("Hear ye, hear ye, behold: \(Monarch(𝔖𝔞𝔪))");
+proclaim("Hear ye, hear ye, behold: {Monarch(𝔖𝔞𝔪)}");
+proclaim("Hear ye, hear ye, behold: {Monarch(𝔖𝔞𝔪)}");
+proclaim("Hear ye, hear ye, behold: {Monarch(𝔖𝔞𝔪)}");
+proclaim("Hear ye, hear ye, behold: {Monarch(𝔖𝔞𝔪)}");
 # Hear ye, hear ye, behold: Sam
 # Hear ye, hear ye, behold: Sam the IInd
 # Hear ye, hear ye, behold: Sam the IIIrd
@@ -127,7 +127,7 @@ form Fraction {
 	}
 
 	# Conversion operators.
-	change to_text() { "\(soul.numer)/\(soul.denom)" }
+	change to_text() { "{soul.numer}/{soul.denom}" }
 	change to_numeral() { soul.numer / soul.denom }
 	change to_veracity() { !soul.numer }
 

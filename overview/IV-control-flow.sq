@@ -4,9 +4,9 @@ fav_colour = 'blue'
 if fav_colour == 'green' {
 	proclaim("Huzzah, you like green!")
 } alas if fav_colour == 'red' || fav_colour == 'yellow' {
-	proclaim("\(fav_colour)'s also pretty cool")
+	proclaim("{fav_colour}'s also pretty cool")
 } alas {
-	proclaim("I do not know \(fav_colour), but it's probably cool too!")
+	proclaim("I do not know {fav_colour}, but it's probably cool too!")
 }
 
 # Note that during full moons, `if` statements have a 1% chance to turn into
@@ -23,11 +23,11 @@ fork fav_colour {
 
 	path 'red':
 	path 'yellow':
-		proclaim("\(fav_colour)'s also pretty cool")
+		proclaim("{fav_colour}'s also pretty cool")
 
 	# `alas` is used for the default case. It is optional.
 	alas:
-		proclaim("I do not know \(fav_colour), but it's probably cool too!")
+		proclaim("I do not know {fav_colour}, but it's probably cool too!")
 }
 
 
@@ -55,7 +55,7 @@ fork yea {
 # future todo?).
 n = I
 whilst n < V {
-	proclaim("n=\(n)");
+	proclaim("n={n}");
 	n = n + I
 }
 
@@ -68,7 +68,7 @@ attempt {
 		catapult "uh oh, n is less than twenty!"
 	}
 } alas error {
-	proclaim("A problem occurred: \(error)")
+	proclaim("A problem occurred: {error}")
 	# => A problem occurred: uh oh, n is less than twenty!
 }
 
@@ -78,7 +78,7 @@ i = I
 whilst i < V {
 	j = I
 	whilst j < V {
-		proclaim("j=\(j), i=\(i)")
+		proclaim("j={j}, i={i}")
 		j = j + I;
 		
 		if j + i == VII {
@@ -94,7 +94,7 @@ catapult "the `inner` label will be encountered first."
 # whenever the label `inner` is encountered, control flow actually jumps here
 # and resumes. The `catapult` following the `inner` is never run.
 whence inner
-proclaim("(whence'd) j=\(j), i=\(i)")
+proclaim("(whence'd) j={j}, i={i}")
 # => (whence'd) j=V, i=II
 
 

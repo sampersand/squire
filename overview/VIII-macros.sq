@@ -28,9 +28,9 @@
 	>>;
 
 @henceforth $increment_and_print($variable, $amount) =
-	proclaim("\($variable) + \($amount) = \($variable = $variable + $amount)");
+	proclaim("{$variable} + {$amount} = {$variable = $variable + $amount}");
 
-proclaim("A cool language is \($language)."); # => A cool language is Squire.
+proclaim("A cool language is {$language}."); # => A cool language is Squire.
 x=III
 $increment_and_print(x, IV); #=> III + IV = VII
 $count_to_three
@@ -40,13 +40,13 @@ $count_to_three
 
 # Note that there's a special macro variable `$__COUNTER__`, which will be
 # incremented each time it's used.
-proclaim("$__COUNTER__ = \($__COUNTER__)"); # => $__COUNTER__ = N
-proclaim("$__COUNTER__ = \($__COUNTER__)"); # => $__COUNTER__ = I
-proclaim("$__COUNTER__ = \($__COUNTER__)"); # => $__COUNTER__ = II
+proclaim("$__COUNTER__ = {$__COUNTER__}"); # => $__COUNTER__ = N
+proclaim("$__COUNTER__ = {$__COUNTER__}"); # => $__COUNTER__ = I
+proclaim("$__COUNTER__ = {$__COUNTER__}"); # => $__COUNTER__ = II
 
 # You can also use `<< ... >>`  within macro invocations to escape `,`s:
 @henceforth $call_journey_and_proclaim($journey, $arg) =
-	proclaim("the result is \($journey($arg))");
+	proclaim("the result is {$journey($arg)}");
 
 journey multiply(x, y) { x * y }
 $call_journey_and_proclaim(multiply, <<III, IV>>) #=> the result is XII
@@ -68,7 +68,7 @@ $call_journey_and_proclaim(multiply, <<III, IV>>) #=> the result is XII
 # You can use this in conjunction with macros to make things like assertions:
 @henceforth $assert1($cond, $msg) =
 	@whereupon $DEBUG
-		if !($cond) { catapult "assertion failed: \($msg)"}
+		if !($cond) { catapult "assertion failed: {$msg}"}
 	@nowhere;
 
 @henceforth $DEBUG = 1;
@@ -76,14 +76,14 @@ $call_journey_and_proclaim(multiply, <<III, IV>>) #=> the result is XII
 	# Note: the c version doesn't like this code, even though it's (supposed) to
 	# be valid Squire. todo: fix that lol
 	/* @whereupon $DEBUG */
-		if !($cond) { catapult "assertion failed: \($msg)" };
+		if !($cond) { catapult "assertion failed: {$msg}" };
 	/* @nowhere */ ;
 
 $assert1(nay, "!"); # nothing happens
 attempt {
 	$assert2(nay, "somethin bad happened");
 } alas err {
-	proclaim("oops: \(err)"); #=> oops: somethin bad happened
+	proclaim("oops: {err}"); #=> oops: somethin bad happened
 }
 
 

@@ -5,7 +5,7 @@
 # Books in Squire are created with the familiar `[..]` syntax. Unlike most other
 # languages, Squire us `1`-index based (*cough*, sorry, `I`-index based.)
 languages = [𝔖𝔮𝔲𝔦𝔯𝔢, ℜ𝔲𝔰𝔱, ℭ]
-proclaim("I like \(languages)") #=> I like [Squire, Rust, C]
+proclaim("I like {languages}") #=> I like [Squire, Rust, C]
 
 # Fetching a page which doesn't exist in the book will yield `ni`.
 proclaim(languages[V]) #=>ni
@@ -19,7 +19,7 @@ proclaim(languages) #=> [Squire, Rust, C, ni, Knight]
 proclaim(languages[-I]) #=> Knight
 
 # The amount of pages in a book can be retrieved via `length`:
-proclaim("There are \(languages.length) languages.") #=> There are V languages.
+proclaim("There are {languages.length} languages.") #=> There are V languages.
 
 # Lastly, you can insert or delete elements via `insert` and `delete`.
 # Note that these will eventually become member functions on books:
@@ -32,20 +32,20 @@ proclaim(languages) #=> [Quest, Squire, Rust, C, Knight]
 # Codices are Squire's dictionaries/hashmaps/hashes/maps/whatever you want to
 # call them. 
 prices = { 𝔪𝔢𝔞𝔡: III, 𝔞𝔩𝔢: IV, 𝔡𝔦𝔫𝔫𝔢𝔯: X }
-proclaim("The prices at my tavern are: \(prices).")
+proclaim("The prices at my tavern are: {prices}.")
 #=> The prices at my tavern are: {mead: III, ale: IV, dinner: X}.
 
 # Uh oh, our shipment of mead is late! Better jack up the prices
 prices[𝔪𝔢𝔞𝔡] = VII
-proclaim("Mead now costs \(prices[𝔪𝔢𝔞𝔡]) coins") #=> Mead now cost VII coins.
+proclaim("Mead now costs {prices[𝔪𝔢𝔞𝔡]} coins") #=> Mead now cost VII coins.
 
 # Like books, accessing nonexistent elements returns `ni`:
-proclaim("Mutton costs \(prices[𝔪𝔲𝔱𝔱𝔬𝔫]).") #=> Mutton costs ni.
+proclaim("Mutton costs {prices[𝔪𝔲𝔱𝔱𝔬𝔫]}.") #=> Mutton costs ni.
 
 # Like books, the amount of entries in a codex can be retrieved via `length`:
-proclaim("There are \(prices.length) items.") #=> There are III items.
+proclaim("There are {prices.length} items.") #=> There are III items.
 
 # Alas, we've run out of mead. Let's take it off the menu.
 delete(prices, 𝔪𝔢𝔞𝔡)
-proclaim("The prices at my tavern are now: \(prices).")
+proclaim("The prices at my tavern are now: {prices}.")
 #=> The prices at my tavern are now: {dinner: X, ale: IV}.

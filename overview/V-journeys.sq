@@ -1,6 +1,6 @@
 # Instead of functions, squire has `journey`s!
 journey salutations(whom) {
-	proclaim("Salutations, \(whom)!");
+	proclaim("Salutations, {whom}!");
 }
 salutations("Terra"); #=> Salutations, Terra!
 
@@ -12,7 +12,7 @@ journey factorial(num) {
 
 	reward num * factorial(num - I)
 }
-proclaim("V! = \(factorial(V))"); #=> V! = CXX
+proclaim("V! = {factorial(V)}"); #=> V! = CXX
 
 # Squire also supports implicit returns:
 journey factorial2(num) {
@@ -22,7 +22,7 @@ journey factorial2(num) {
 		num * factorial2(num - I)
 	}
 }
-proclaim("VI! = \(factorial(VI))"); #=> VI! = DCCXX
+proclaim("VI! = {factorial(VI)}"); #=> VI! = DCCXX
 
 
 # Squire also supports lambdas:
@@ -39,7 +39,8 @@ journey map(book, func) {
 }
 book=[I, II, III]
 doubled=map(book, journey(x) { x * II });
-proclaim("\(book) becomes \(doubled)") #=>[I, II, III] becomes [II, IV, VI]
+# doubled=map(book, \(x) = x * II); # you can also do this syntax
+proclaim("{book} becomes {doubled}") #=>[I, II, III] becomes [II, IV, VI]
 
 
 # All undeclared variables are locally scoped to the journey they're within.
@@ -54,12 +55,12 @@ journey foo() {
 	b = V
 	c = VI
 	d = VII
-	"a=\(a) b=\(b) c=\(c) d=\(d)"
+	"a={a} b={b} c={c} d={d}"
 }
 
-proclaim("[Spot I]   a=\(a) b=\(b) c=\(c) d=\(d)")
-proclaim("[Spot II]  \(foo())");
-proclaim("[Spot III] a=\(a) b=\(b) c=\(c) d=\(d)")
+proclaim("[Spot I]   a={a} b={b} c={c} d={d}")
+proclaim("[Spot II]  {foo()}");
+proclaim("[Spot III] a={a} b={b} c={c} d={d}")
 #=> [Spot I]   a=I b=I c=II d=III
 #=> [Spot II]  a=IV b=V c=VI d=VII
 #=> [Spot III] a=I b=V c=II d=III
@@ -69,7 +70,7 @@ proclaim("[Spot III] a=\(a) b=\(b) c=\(c) d=\(d)")
 # However, if you want to use a journey before it's declared, you must mark it
 # as a `renowned` variable.
 journey j1(x) {
-	proclaim("j1: \(x)");
+	proclaim("j1: {x}");
 
 	if x < III {
 		renowned j2
@@ -78,7 +79,7 @@ journey j1(x) {
 }
 
 journey j2(x) {
-	proclaim("j2: \(x)")
+	proclaim("j2: {x}")
 	if x < III {
 		j1(x)
 	}
