@@ -160,11 +160,17 @@ proclaim("3");
 Squire will actually execute all the `whence`s by simply `fork`ing for every `whence` statement but the last one. So the output of the above program would be either `233` or `323`, depending on how the OS scheduled the two processes.
 
 ## Macros
-Yes, we have macros.
+Yes, we have macros. (TODO)
+
+
 # Actually useful things
+TODO
 ## Pattern Matching
+TODO
 ## `path`'s body
+TODO
 ## Typing
+TODO
 
 # FAQs
 ## Why?
