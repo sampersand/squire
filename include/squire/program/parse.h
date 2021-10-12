@@ -240,11 +240,11 @@ struct sq_ps_variable_decl {
 
 struct sq_ps_besiege {
 	struct sq_ps_statements *body;
-	unsigned branches;
+	unsigned nbranches;
 	struct sq_ps_besiege_branch {
 		char *error_name;
 		struct sq_ps_statements *alas; // `catch`. can be NULL (ie only indubitably is used)
-	};
+	} *branches;
 	struct sq_ps_statements *indubitably; // `finally`. can be NULL.
 };
 
@@ -339,7 +339,7 @@ struct sq_ps_codex {
 struct sq_ps_get_attr {
 	struct sq_ps_expression *expr;
 	char *identifier;
-}
+};
 
 struct sq_ps_primary {
 	enum {

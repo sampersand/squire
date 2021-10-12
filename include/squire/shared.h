@@ -13,6 +13,9 @@
 #define SQ_NONNULL SQ_ATTR(nonnull)
 #define sizeof_array(kind, length) (sizeof(kind) * (length))
 
+#define SQ_UNLIKELY(x) (x)
+#define SQ_LIKELY(x) (x)
+
 #include <squire/exception.h>
 
 #define die sq_throw

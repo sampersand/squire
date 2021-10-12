@@ -1,18 +1,73 @@
 @transcribe "value.sq"
+@transcribe "literal.sq"
 
 form Function : Value {
 	matter func: Journey;
 	matter args: Book;
 
-	change run(): Value { tmp = soul.func; reward tmp(soul.args) };
+	change run(): Value {
+		func = soul.func;
+
+		fork func.arity {
+			path N:   reward func()
+			path I:   reward func(args[I])
+			path II:  reward func(args[I], args[II])
+			path III: reward func(args[I], args[II], args[III])
+			path IV:  reward func(args[I], args[II], args[III], args[IV])
+		}
+	};
 
 	essence FUNCTIONS: Codex = {
 		'R': \() => gamble(),
 		'P': \() => inquire(),
-		
-	};
+
+		'E': \(arg) => eval(text(arg)),
+		'B': \(block) => block,
+		'C': \(block) { tmp = block.run(); reward tmp.run() },
+		'`': \(cmd) => hex(cmd),
+		'Q': \(code) => dismount(code),
+		'!': \(val) => Literal(!val),
+		'L': \(val) { tmp = text(val); reward Literal(val.length) },
+		'D': \(val) => dump(val),
+		'O': \(val) {
+			v = text(val);
+			if v.recto == '\\' {
+				proclaimn(substr(v, I, v.length - I));
+			} alas {
+				proclaim(v)
+			}
+			reward Literal(ni);
+		},
+		'A': \(val) { ran = val.run(); reward ascii(ran.value) },
+
+		'+': \(l, r) => Literal(l.run() + r.run()),
+		'-': \(l, r) => Literal(l.run() - r.run()),
+		'*': \(l, r) => Literal(l.run() * r.run()),
+		'/': \(l, r) {
+			l = l.run()
+			if l {
+				reward Literal(l.value / r.)		
+			}
+		}
+	}
 }
 
-x = Function.FUNCTIONS['R'];
+	4.3.1 [`+`](#431-unchanged-coerce)  
+	4.3.2 [`-`](#432--unchanged-number)  
+	4.3.3 [`*`](#433-unchanged-coerce)  
+	4.3.4 [`/`](#434-unchanged-number)  
+	4.3.5 [`%`](#435-unchanged-number)  
+	4.3.6 [`^`](#436-unchanged-number)  
+	4.3.7 [`<`](#437-unchanged-coerce)  
+	4.3.8 [`>`](#438-unchanged-coerce)  
+	4.3.9 [`?`](#439-unchanged-unchanged)  
+	4.3.10 [`&`](#4311-unchanged-unevaluated)  
+	4.3.11 [`|`](#4310-unchanged-unevaluated)  
+	4.3.12 [`;`](#4312-unchanged-unchanged)  
+	4.3.13 [`=`](#4313-unevaluated-unchanged)  
+	4.3.14 [`WHILE`](#4314-whileunevaluated-unevaluated)
 
-dump(x.arity);
+		GET
+		IF
+
+		SET

@@ -1,122 +1,185 @@
-struct sq_compiler *compiler;
+#include <squire/program/parse.h>
+#include <squire/program/compiler.h>
+#include <squire/program/compile.h>
+#include <squire/shared.h>
 
-#define set_opcode(opcode) sq_compiler_set_opcode(compiler, set_opcode)
-#define set_index(index) sq_compiler_set_index(compiler, set_index)
-#define set_interrupt(interrupt) sq_compiler_set_interrupt(compiler, set_interrupt)
-#define set_count(count) sq_compiler_set_count(compiler, set_count)
-#define next_local() sq_compiler_next_local(compiler)
+#define SET_OPCODE(opcode) sq_compiler_set_opcode(compiler, opcode)
+#define SET_TARGET(index) sq_compiler_set_index(compiler, index)
+#define SET_CODEPOS(index) sq_compiler_set_index(compiler, index)
+#define SET_INTERRUPT(interrupt) sq_compiler_set_interrupt(compiler, interrupt)
+#define SET_COUNT(count) sq_compiler_set_count(compiler, count)
+#define NEXT_TARGET() sq_compiler_next_local(compiler)
+#define CODE_POS() sq_compiler_codepos(compiler)
 
-// static unsigned compile_primary(struct primary *primary) {
-	// unsigned result;
+#define DEFER_JUMP() sq_compiler_defer_jump(compiler)
+#define SET_JUMP_DST(lbl, dst) sq_compiler_set_jmp_dst(compiler, lbl, dst)
 
-	// switch (primary->kind) {
-	// case SQ_PS_
-	// }
-// static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
-// 	unsigned result;
+void sq_compile_book(struct sq_compiler *compiler, struct sq_ps_book *book, sq_target target) {
+	sq_target page_targets[book->len];
 
-// 	switch (primary->kind) {
-// 	case SQ_PS_PPAREN:
-// 		result = compile_expression(code, primary->expr);
-// 		break;
+	for (unsigned i = 0; i < book->len; ++i)
+		sq_compile_expression(compiler, book->pages[i], page_targets[i] = NEXT_TARGET());
 
-// 	case SQ_PS_PBOOK:
-// 		result = compile_book(code, primary->book);
-// 		break;
+	SET_OPCODE(SQ_OC_INT);
+	SET_INTERRUPT(SQ_INT_BOOK_NEW);
+	SET_COUNT(book->len);
 
-// 	case SQ_PS_PCODEX:
-// 		result = compile_codex(code, primary->dict);
-// 		break;
+	for (unsigned i = 0; i < book->len; ++i)
+		SET_TARGET(page_targets[i]);
 
-// 	case SQ_PS_PINDEX:
-// 		result = compile_index(code, primary->index);
-// 		break;
+	SET_TARGET(target);
+}
 
-// 	case SQ_PS_PLAMBDA: {
-// 		struct sq_journey *func = compile_journey(primary->lambda, false);
-// 		free(primary->lambda);
+void sq_compile_codex(struct sq_compiler *compiler, struct sq_ps_codex *codex, sq_target target) {
+	sq_target key_targets[codex->len];
+	sq_target val_targets[codex->len];
 
-// 		result = load_constant(code, sq_value_new(func));
-// 		break;
-// 	}
+	for (unsigned i = 0; i < codex->len; ++i) {
+		sq_compile_expression(compiler, codex->keys[i], key_targets[i] = NEXT_TARGET());
+		sq_compile_expression(compiler, codex->vals[i], val_targets[i] = NEXT_TARGET());
+	}
 
-// 	case SQ_PS_PNUMERAL:
-// 		result = load_constant(code, sq_value_new(primary->numeral));
-// 		break;
+	SET_OPCODE(SQ_OC_INT);
+	SET_INTERRUPT(SQ_INT_CODEX_NEW);
+	SET_COUNT(codex->len);
 
-// 	case SQ_PS_PTEXT:
-// 		result = load_constant(code, sq_value_new(primary->text));
-// 		break;
+	for (unsigned i = 0; i < codex->len; ++i) {
+		SET_TARGET(key_targets[i]);
+		SET_TARGET(val_targets[i]);
+	}
 
-// 	case SQ_PS_PVERACITY:
-// 		result = load_constant(code, sq_value_new(primary->veracity));
-// 		break;
+	SET_TARGET(target);
+}
 
-// 	case SQ_PS_PNI:
-// 		result = load_constant(code, SQ_NI);
-// 		break;
+void sq_compile_if(struct sq_compiler *, struct sq_ps_if *, sq_target);
 
-// 	case SQ_PS_PVARIABLE:
-// 		result = load_variable_class(code, primary->variable, NULL);
-// 		break;
+/*
+loop_begin:
+	target = <whilst->condition>
+	if (!target) goto end;
+	<whilst->body>
+	goto loop_begin;
+end:
+*/
+void sq_compile_whilst(struct sq_compiler *compiler, struct sq_ps_whilst *whilst, sq_target target) {
+	unsigned begin_label, jump_to_end;
 
-// 	default:
-// 		bug("unknown primary class '%d'", primary->kind);
-// 	}
+	if (whilst->alas)
+		todo("alas in whilst");
 
-// 	free(primary);
-// 	return result;
-// }
+	begin_label = CODE_POS();
+	sq_compile_expression(compiler, whilst->condition, target);
+	SET_OPCODE(SQ_OC_JMP_FALSE);
+	SET_TARGET(target);
+	jump_to_end = DEFER_JUMP();
 
-// }
+	sq_compile_statements(compiler, whilst->body, target);
+	SET_OPCODE(SQ_OC_JMP);
+	SET_CODEPOS(begin_label);
 
-// int sq_compiler_constant_lookup(struct sq_compiler *compiler, sq_value constant);
-// unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value constant);
-// unsigned sq_compiler_constant_new(struct sq_compiler *compiler, sq_value constant);
-// unsigned sq_compiler_constant_load(struct sq_compiler *compiler, sq_value constant);
+	SET_JUMP_DST(jump_to_end, CODE_POS());
+	// do i free `whilst` here?
+}
 
-// int sq_compiler_global_lookup(struct sq_globals *globals, const char *name);
-// unsigned sq_compiler_global_declare(struct sq_globals *globals, char *name, sq_value value);
-// unsigned sq_compiler_global_new(struct sq_globals *globals, char *name, sq_value value);
+void sq_compile_return(struct sq_compiler *compiler, struct sq_ps_expression *expr) {
+	sq_target return_target;
 
-// int sq_compiler_variable_lookup(struct sq_compiler *compiler, const char *name);
-// unsigned sq_compiler_variable_declare(struct sq_compiler *compiler, char *name);
-// unsigned sq_compiler_variable_new(struct sq_compiler *compiler, char *name);
+	if (!expr) {
+		 return_target = sq_compiler_constant_load(compiler, SQ_NI);
+	} else {
+		sq_compile_expression(compiler, expr, return_target = SQ_SCRATCH_TARGET);
+	}
 
-// #define SQ_COMPILER_IS_GLOBAL(x) ((x) < 0)
-// #define SQ_COMPILER_GLOBAL_INDEX(x) (~(x))
+	SET_OPCODE(SQ_OC_RETURN);
+	SET_TARGET(return_target);
+}
 
-// int sq_compiler_identifier_lookup(struct sq_compiler *compiler, char *name);
-// unsigned sq_compiler_identifier_load(struct sq_compiler *compiler, char *name);
+void sq_compile_expression(struct sq_compiler *compiler, struct sq_ps_expression *expr, sq_target target) {
+	(void) compiler;
+	(void) expr;
+	(void) target;
+}
 
-// static unsigned genus_load(struct sq_code *code, unsigned local) {
-// 	set_opcode(code, SQ_OC_MOV)
-// }
+void sq_compile_statements(struct sq_compiler *compiler, struct sq_ps_statements *stmts, sq_target target) {
+	(void) compiler;
+	(void) stmts;
+	(void) target;
+}
+/*
+void sq_compile_fork(struct sq_compiler *compiler, struct sq_ps_fork *fork, sq_target target) {
+	sq_target condition_target = NEXT_TARGET();
+	sq_compile_expression(compiler, fork->condition, condition_target);
 
-// static unsigned load_variable_class(struct sq_code *code, struct variable *var, int *parent) {
-// 	int p;
-// 	if (parent == NULL) parent = &p;
+	unsigned jump_to_body_indices[fork->count];
 
-// 	unsigned index = load_identifier(code, var->name);
+	for (unsigned i = 0; i < fork->len; ++i) {
+		unsigned case_index = compile_expression(code, sw->cases[i].expr);
+		set_opcode(code, SQ_OC_MATCHES);
+		set_index(code, case_index);
+		set_index(code, condition_index);
+		set_index(code, case_index); // overwrite the case with the destination
 
-// 	if (var->field == NULL) {
-// 		free(var);
-// 		*parent = -1;
-// 		return index;
-// 	}
+		set_opcode(code, SQ_OC_JMP_TRUE);
+		set_index(code, case_index);
+		jump_to_body_indices[i] = code->codelen;
+		set_index(code, 65530);
+	}
+}
 
-// 	set_opcode(code, SQ_OC_MOV);
-// 	set_index(code, *parent = index);
-// 	set_index(code, index = next_local(code));
+static void compile_switch_statement(struct sq_code *code, struct switch_statement *sw) {
+	unsigned condition_index = compile_expression(code, sw->cond);
+	unsigned jump_to_body_indices[sw->ncases];
 
-// 	while ((var = var->field)) {
-// 		set_opcode(code, SQ_OC_ILOAD);
-// 		set_index(code, *parent = index);
-// 		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->name)))));
-// 		set_index(code, index = next_local(code));
-// 	}
+	for (unsigned i = 0; i < sw->ncases; ++i) {
+		unsigned case_index = compile_expression(code, sw->cases[i].expr);
+		set_opcode(code, SQ_OC_MATCHES);
+		set_index(code, case_index);
+		set_index(code, condition_index);
+		set_index(code, case_index); // overwrite the case with the destination
 
-// 	free(var);
+		set_opcode(code, SQ_OC_JMP_TRUE);
+		set_index(code, case_index);
+		jump_to_body_indices[i] = code->codelen;
+		set_index(code, 65530);
+	}
 
-// 	return index;
-// }
+	int jump_to_end_indices[sw->ncases + 1];
+
+	if (sw->alas)
+		compile_statements(code, sw->alas);
+
+	set_opcode(code, SQ_OC_JMP);
+	jump_to_end_indices[sw->ncases] = code->codelen;
+	set_index(code, 65531);
+
+	unsigned amnt_of_blank = 0;
+	for (unsigned i = 0; i < sw->ncases; ++i) {
+		if (sw->cases[i].body == NULL) {
+			amnt_of_blank++;
+			jump_to_end_indices[i] = -1;
+			continue;
+		}
+
+		for (unsigned j = 0; j < amnt_of_blank; ++j)
+			jump_to_body_indices[i - j - 1] = code->codelen;
+		amnt_of_blank = 0;
+		set_target_to_codelen(code, jump_to_body_indices[i]);
+		jump_to_body_indices[i] = code->codelen;
+		compile_statements(code, sw->cases[i].body);
+		set_opcode(code, SQ_OC_JMP);
+		jump_to_end_indices[i] = code->codelen;
+		set_index(code, 65532);
+	}
+
+	for (unsigned j = 0; j < amnt_of_blank; ++j)
+		jump_to_body_indices[sw->ncases - j - 1] = code->codelen;
+
+	for (unsigned i = 0; i <= sw->ncases; ++i) {
+		if (0 <= jump_to_end_indices[i])
+			set_target_to_codelen(code, jump_to_end_indices[i]);
+	}
+
+	free(sw->cases);
+	free(sw);
+}
+*/

@@ -296,7 +296,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 
 		if (!index--) sq_throw("cannot index by N.");
 		if (index < 0)
-			index += AS_TEXT(value)->length;
+			index += AS_TEXT(value)->length + 1;
 
 		if (index < 0 || AS_TEXT(value)->length <= (unsigned) index)
 			return SQ_NI;
@@ -859,8 +859,14 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 			result = sq_other_get_attr(AS_OTHER(soul), attr);
 		// else, fallthrough
 
-	case SQ_G_NUMERAL:
 	case SQ_G_TEXT:
+		if (!strcmp(attr, "verso"))
+			result = sq_value_index(soul, sq_value_new((sq_numeral) 1));
+		else if (!strcmp(attr, "recto"))
+			result = sq_value_index(soul, sq_value_new((sq_numeral) -1));
+		break;
+
+	case SQ_G_NUMERAL:
 	case SQ_G_CODEX:
 		break;
 	}

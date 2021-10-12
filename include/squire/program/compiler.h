@@ -8,6 +8,8 @@
 # define SQ_COMPILER_MAX_COMEFROMS 16
 #endif /* !SQ_COMPILER_MAX_COMEFROMS */
 
+typedef unsigned sq_target;
+
 struct sq_compiler {
 	struct sq_globals {
 		unsigned len, cap;
@@ -52,11 +54,31 @@ void sq_compiler_set_index(struct sq_compiler *compiler, unsigned index);
 void sq_compiler_set_interrupt(struct sq_compiler *compiler, enum sq_interrupt interrupt);
 void sq_compiler_set_count(struct sq_compiler *compiler, unsigned count);
 
-static inline unsigned sq_compiler_next_local(struct sq_compiler *compiler) {
+static inline sq_target sq_compiler_next_local(struct sq_compiler *compiler) {
 	return ++compiler->nlocals;
 }
 
 #define SQ_COMPILER_NOT_FOUND (-1)
+
+static inline unsigned sq_compiler_codepos(const struct sq_compiler *compiler) {
+	return compiler->code.len;
+}
+
+static inline unsigned sq_compiler_defer_jump(struct sq_compiler *compiler) {
+	sq_compiler_set_opcode(compiler, SQ_OC_UNDEFINED);
+	return compiler->code.len - 1;
+}
+
+static inline void sq_compiler_set_jmp_dst(
+	struct sq_compiler *compiler,
+	unsigned codepos,
+	unsigned dst
+) {
+	assert(codepos <= compiler->code.len);
+	assert(dst <= compiler->code.len);
+
+	compiler->code.ary[codepos].index = dst;
+}
 
 int sq_compiler_constant_lookup(struct sq_compiler *compiler, sq_value constant);
 unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value constant);
