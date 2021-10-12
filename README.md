@@ -171,11 +171,11 @@ Yes, we have macros.
 Why not? 
 
 ## No seriously, why?
-I originally was working on a language called [Quest](https://github.com/sampersand/quest). I had just written a very simple programming language _within_ Quest (the precursor to [Knight](https://github.com/knight-lang/knight-lang)), and I wanted to write something a bit more complex. I finished a rough sketch of syntax, but never ended up finishing it.
+Well, I originally was working on a language called [Quest](https://github.com/sampersand/quest). I had just written a very simple programming language _within_ Quest (the precursor to [Knight](https://github.com/knight-lang/knight-lang)), and I wanted to write something a bit more complex. I finished a rough sketch of syntax, but never ended up finishing it.
 
 Fast forward a few years, when I wanted to write a programming language that's a bit more complex than Knight, but not as complex as Quest. The original Squire looked very much like Go or JavaScript, as it was meant to simply be another toy language. But then it hit me: I could make this a parody, and have it be medieval themed (like the naming scheme of my projects). And thus, Squire was born.
 
-## Why is <code snippet> so poorly written?
+## Why is &lt;code snippet&gt; so poorly written?
 When I first was writing Squire, I never intended for it to become anything. In fact, I purposefully wrote it late at night when I was tired/watching TV, and _never_ went back to fix anything. Only much later did I start taking the project a bit more seriously and began writing cleaner code. So the bad code you'll see is from those early stages (most notably the tokenizer, parser, and compiler.)
 
 # Possible additions:
