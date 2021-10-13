@@ -92,7 +92,7 @@ Squire supports the basic concepts of true and false. However, since Mr. Boole w
 The word `ni` is used for null, and is a nod to the skit "Monte Python and the Holy Grail."
 
 ## Fraktur Bare word literals
-Squire supports bare words---that is, strings that don't require quotes around them. Now, normally this is a _terrible_ idea, as there's no way to determine if a word is a variable or a string just by looking at it. Squire solves this problem by requiring all bare words to use [Fraktur Unicode characters](https://en.wikipedia.org/wiki/Fraktur#Fraktur_in_Unicode) exclusively. Note that the bare words can also contain spaces in them, and all leading and trailing whitespace will be trimmed.
+Squire supports bare words—that is, strings that don't require quotes around them. Now, normally this is a _terrible_ idea, as there's no way to determine if a word is a variable or a string just by looking at it. Squire solves this problem by requiring all bare words to use [Fraktur Unicode characters](https://en.wikipedia.org/wiki/Fraktur#Fraktur_in_Unicode) exclusively. Note that the bare words can also contain spaces in them, and all leading and trailing whitespace will be trimmed.
 
 ```
 proclaim(ℌ𝔢𝔩𝔩𝔬 𝔴𝔬𝔯𝔩𝔡) # => Hello world
@@ -196,7 +196,7 @@ Well, I originally was working on a language called [Quest](https://github.com/s
 Fast forward a few years, when I wanted to write a programming language that's a bit more complex than Knight, but not as complex as Quest. The original Squire looked very much like Go or JavaScript, as it was meant to simply be another toy language. But then it hit me: I could make this a parody, and have it be medieval themed (like the naming scheme of my projects). And thus, Squire was born.
 
 ## Why is &lt;code snippet&gt; so poorly written?
-When I first was writing Squire, I never intended for it to become anything. In fact, I purposefully wrote it late at night when I was tired/watching TV, and _never_ went back to fix anything. Only much later did I start taking the project a bit more seriously and began writing cleaner code. So the bad code you'll see is from those early stages (most notably the tokenizer, parser, and compiler.)
+When I first was writing Squire, I never intended for it to become anything. In fact, I purposefully wrote it late at night when I was tired/watching TV, and _never_ went back to fix anything. Only much later did I start taking the project a bit more seriously and began writing cleaner code. So the bad code you'll see is from those early stages (most notably the tokenizer, parser, and compiler).
 
 # Possible additions:
 
