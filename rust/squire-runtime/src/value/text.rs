@@ -238,8 +238,20 @@ impl Compare for Text {
 
 impl GetIndex for Text {
 	fn get_index(&self, key: &Value, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		let _ = (key, vm);
-		unimplemented!();
+		let mut index = key.convert_to::<Numeral>(vm)?.get();
+
+		let len = self.len() as i64;
+		if index == 0 {
+			Err(RuntimeError::OutOfBounds)
+		} else if (-len..len).contains(&index) {
+			if index < 0 {
+				index += len + 1;
+			}
+
+			Ok(self.as_str().chars().nth(index as usize - 1).unwrap().to_string().into())
+		} else {
+			Ok(Value::Ni)
+		}
 	}
 }
 
