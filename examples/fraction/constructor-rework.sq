@@ -1,0 +1,45 @@
+# Basic fraction, except it has types.
+form Fraction {
+	matter numer: Numeral;
+	matter denom: \(x) => Numeral ~~ x && x != N; # `denom` is a nonzero numeral
+
+	# now the constructor isn't even needed anymore.
+
+	change +(rhs: [Fraction, Numeral]): Fraction {
+		if !(Fraction ~~ rhs) {
+			rhs = Fraction(numeral(rhs), I);
+		}
+
+		reward Fraction(soul.numer*rhs.denom + rhs.numer*soul.denom, soul.denom*rhs.denom)
+	}
+
+	change to-text(): Text {
+		if denom == I {
+			reward "{soul.numer}"
+		} alas {
+			reward "{soul.numer}/{soul.denom}"
+		}
+	}
+}
+
+
+frac = Fraction(III, V)
+proclaim(frac + V); #=> XXVIII/V
+
+attempt {
+	Fraction(III, N)
+} alas err {
+	proclaim(err) # => no patterns match
+}
+
+attempt {
+	Fraction("III", V);
+} alas err {
+	proclaim(err) # => no patterns match
+}
+
+attempt {
+	proclaim(frac + yea);
+} alas err {
+	proclaim(err) # => no patterns match
+}

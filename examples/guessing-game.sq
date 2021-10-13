@@ -1,0 +1,24 @@
+MAX = (ARGV[I]) || C # lol parser needs some TL&C
+secret = gamble() % MAX
+proclaim("Guessing game! Pick a number from I-{MAX}!")
+
+guesses = N
+
+whilst yea {
+	guess = numeral(inquire())
+	guesses = guesses + I
+
+	# Fork statements don't fallthrough like other languages do.
+	fork guess <=> secret {
+		path N:
+			proclaim("Perfect! it took you {guesses} tries");
+			dismount(N) # exit with status code 0
+
+		path -I:
+			proclaim("too small!");
+
+		path I:
+			proclaim("too large!");
+	}
+}
+

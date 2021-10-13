@@ -252,8 +252,12 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 
 sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
-	case SQ_G_NUMERAL:
-		return AS_NUMBER(lhs) - sq_value_to_numeral(rhs);
+	case SQ_G_NUMERAL: {
+		sq_numeral lhs = AS_NUMBER(lhs);
+		sq_numeral rhs = sq_value_to_numeral(rhs);
+
+		return lhs < rhs ? -1 : lhs == rhs ? 0 : 1;
+	}
 
 	case SQ_G_TEXT:
 		// todo: free text

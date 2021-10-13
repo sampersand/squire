@@ -1,5 +1,5 @@
 # An exampe of a scroll form---exists until we get an actual scroll form.
-form Scroll {
+form Scroll1 {
 	matter file;
 	matter _size: [Numeral, ni]
 
@@ -27,7 +27,7 @@ form Scroll {
 	}
 }
 
-s = Scroll("examples/scroll-form.sq", "r");
+s = Scroll1("../examples-old/scroll-form.sq", "r");
 
 proclaim(s.size());
 proclaim(s.read(1));

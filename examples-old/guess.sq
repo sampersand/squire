@@ -1,0 +1,24 @@
+MAX = (ARGV[I]) || C
+secret = gamble() % MAX
+proclaim("Guessing game! Pick a number from I-{MAX}!")
+
+guesses = N
+done = nay
+
+whilst yea {
+	guess = numeral(inquire())
+	guesses = guesses + I
+
+	fork guess <=> secret {
+		path N:
+			proclaim("Perfect! it took you \(guesses) tries");
+			dismount(N)
+
+		path \(n) => n < N:
+			proclaim("too small!");
+
+		alas:
+			proclaim("too large!");
+	}
+}
+

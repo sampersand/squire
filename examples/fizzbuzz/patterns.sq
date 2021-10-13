@@ -1,0 +1,16 @@
+# Pattern matching
+journey msg-for
+	(n) if !(n % XV)  => 𝔉𝔦𝔷𝔷𝔅𝔲𝔷𝔷,
+	(n) if !(n % III) => 𝔉𝔦𝔷𝔷,
+	(n) if !(n % V)   => 𝔅𝔲𝔷𝔷,
+	(n)               => arabic(n);
+
+journey fizzbuzz(max=C) {
+	i = N
+	whilst i < max {
+		proclaim(msg-for(i = i + I))
+	}
+}
+
+fizzbuzz();
+

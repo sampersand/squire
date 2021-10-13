@@ -1,0 +1,45 @@
+# Basic Fraction without anything fancy.
+
+form Fraction {
+	# Fields
+	matter numer, denom;
+
+	# Constructor
+	imitate(numer, denom) {
+		if !denom {
+			catapult "cannot make a fraction with a 0 denom"
+		}
+
+		soul.numer = numer;
+		soul.denom = denom
+	}
+
+	# Operator `+` overloading
+	change +(rhs) {
+		# if the rhs is not a fraction, make it one.
+		if !(Fraction ~~ rhs) {
+			rhs = Fraction(numeral(rhs), I);
+		}
+
+		reward Fraction(soul.numer*rhs.denom + rhs.numer*soul.denom, soul.denom*rhs.denom)
+	}
+
+	# Conversion to text.
+	change to-text() {
+		if denom == I {
+			reward "{soul.numer}"
+		} alas {
+			reward "{soul.numer}/{soul.denom}"
+		}
+	}
+}
+
+
+frac = Fraction(III, V)
+proclaim(frac + V); #=> XXVIII/V
+
+attempt {
+	Fraction(III, N)
+} alas err {
+	proclaim(err) # => cannot make a fraction with a zero denom
+}

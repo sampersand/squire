@@ -1,0 +1,36 @@
+# Full-blown pattern matching!
+form Fraction {
+	matter numer: Numeral;
+	matter denom: \(x) => Numeral ~~ x && x != N;
+
+	# Now we change what function to use based on what kind rhs is.
+	change +
+		(rhs: Numeral) => soul + Fraction(rhs, I),
+		(rhs: Fraction) => Fraction(soul.numer*rhs.denom + rhs.numer*soul.denom, soul.denom*rhs.denom);
+
+	# No need for the ugly `if` statement anymore.
+	change to-text
+		(): Text if soul.denom == I => "{soul.numer}",
+		(): Text => "{soul.numer}/{soul.denom}";
+}
+
+frac = Fraction(III, V)
+proclaim(frac + V); #=> XXVIII/V
+
+attempt {
+	Fraction(III, N)
+} alas err {
+	proclaim(err) # => no patterns match
+}
+
+attempt {
+	Fraction("III", V)
+} alas err {
+	proclaim(err) # => no patterns match
+}
+
+attempt {
+	Fraction(III, V) + yea
+} alas err {
+	proclaim(err) # => no patterns match
+}

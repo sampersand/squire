@@ -1,0 +1,14 @@
+# Macros and `fork`
+@henceforth $divides($numer) = (\(n) => !(n % $numer));
+
+i = I;
+whilst i <= C {
+	fork i {
+		path $divides(XV):  proclaim(𝔉𝔦𝔷𝔷𝔅𝔲𝔷𝔷)
+		path $divides(III): proclaim(𝔉𝔦𝔷𝔷)
+		path $divides(V):   proclaim(𝔅𝔲𝔷𝔷)
+		alas:               proclaim(i)
+	}
+
+	i = i + I;
+}

@@ -1,0 +1,29 @@
+
+
+
+/* Constructor rework */
+
+form Fraction {
+	matter numer: Numeral;
+	matter denom: (journey(x) => Numeral ~~ x && x != N);
+
+	# ..
+}
+@nowhere
+
+/* Pattern matching */
+form Fraction {
+	matter numer: Numeral;
+	matter denom: (journey(x) => Numeral ~~ x && x != N);
+
+	change +
+		(rhs: Numeral) => soul + Fraction(rhs, I),
+		(rhs: Fraction) => Fraction(soul.numer*rhs.denom + rhs.numer*soul.denom, soul.denom*rhs.denom);
+
+	change to-text
+		(): Text if (soul.denom == I) => "\(soul.numer)",
+		(): Text => "\(soul.numer)/\(soul.denom)";
+}
+
+f = Fraction(IV, VI) 
+proclaim(f)
