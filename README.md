@@ -1,5 +1,5 @@
 # Squire
-Hear ye hear ye! Thou are commandeth to partake in the most novel of programming parlances in this era: Squire. It doth contain a truly awful cohort of subliminal mechanisms for your writing pleasure.
+Hear ye hear ye! Thou art commandeth to partake in the most novel of programming parlances in this era: Squire. It doth contain a truly awful cohort of subliminal mechanisms for thy writing pleasure.
 
 Squire's a medieval-themed programming language that's meant to parody most mainstream programming languages. While it does definitely contain its fair share of fun quirks, it's first and foremost meant to be a fully-fledged language, completely oblivious to its own ridiculousness.
 
@@ -160,8 +160,22 @@ proclaim("3");
 Squire will actually execute all the `whence`s by simply `fork`ing for every `whence` statement but the last one. So the output of the above program would be either `233` or `323`, depending on how the OS scheduled the two processes.
 
 ## Macros
-Yes, we have macros. (TODO)
+Yes, we have macros. And yes, Squire is a runtime language. There's not a ton of them (currently), but more will eventually be implemented:
+```
+@transcribe "foo.sq" # copy-paste `foo.sq` in right here
 
+@henceforth $bar = baz; # kinda like `#define bar baz` in C
+@henceforth $quux($a, $b) = $a + $b; # kinda like `#define quux(a,b) a + b` in C
+proclaim($quux(IV, VI)) # => X
+
+@whereupon $bar # if the macro `$bar` is defined, do this
+	proclaim(":-)"); # => :-)
+@alas
+	proclaim(":-(");
+@nowhere;
+```
+
+Eventually, we'll add stuff like concatenating identifiers, iterations, etc. But that'll come later.
 
 # Actually useful things
 TODO
