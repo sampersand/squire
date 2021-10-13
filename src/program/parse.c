@@ -94,7 +94,7 @@ static struct field_access *parse_field_access(struct primary *primary) {
 	return faccess;
 }
 
-static struct function_call *parse_func_call(struct variable *func) {
+static struct function_call *parse_func_call(struct primary *primary) {
 	struct expression *args[SQ_JOURNEY_MAX_ARGC];
 	unsigned arg_count = 0;
 
@@ -113,7 +113,7 @@ static struct function_call *parse_func_call(struct variable *func) {
 	}
 
 	struct function_call *fncall = xmalloc(sizeof(struct function_call));
-	fncall->func = func;
+	fncall->func = primary;
 	fncall->args = memdup(args, sizeof_array(struct expression *, arg_count));
 
 	fncall->arglen = arg_count;
@@ -245,19 +245,9 @@ static struct primary *parse_primary() {
 		primary.kind = SQ_PS_PNI;
 		break;
 	case SQ_TK_IDENT: {
-		untake();
 		struct variable *var = parse_variable();
-
-		if (take().kind == SQ_TK_LPAREN) {
-			primary.kind = SQ_PS_PPAREN;
-			primary.expr = xmalloc(sizeof(struct expression));
-			primary.expr->kind = SQ_PS_EFNCALL;
-			primary.expr->fncall = parse_func_call(var);
-		} else {
-			untake();
-			primary.kind = SQ_PS_PVARIABLE;
-			primary.variable = var;
-		}
+		primary.kind = SQ_PS_PVARIABLE;
+		primary.variable = parse_variable;
 		break;
 	}
 	case SQ_TK_FUNC:
@@ -271,14 +261,27 @@ static struct primary *parse_primary() {
 		return NULL;
 	}
 
-
 	struct primary *primary_ptr = memdup(&primary, sizeof(struct primary));
+
+spaghetti_code:
+
+	if (take(), untake(), last.kind == SQ_TK_LPAREN) {
+		struct primary *pptr = xmalloc(sizeof(struct primary));
+		pptr->kind = SQ_PS_PPAREN;
+		pptr->expr = xmalloc(sizeof(struct expression));
+		pptr->expr->kind = SQ_PS_EFNCALL;
+		pptr->expr->fncall = parse_func_call(primary_ptr);
+		primary_ptr = pptr;
+		goto spaghetti_code;
+	}
+
 	struct field_access *faccess = parse_field_access(primary_ptr);
 
 	if (faccess != NULL) {
 		primary_ptr = xmalloc(sizeof(struct primary));
 		primary_ptr->kind = SQ_PS_PFIELD_ACCESS;
 		primary_ptr->faccess = faccess;
+		goto spaghetti_code;
 	}
 
 	return primary_ptr;

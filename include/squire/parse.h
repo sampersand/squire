@@ -165,7 +165,7 @@ struct expression {
 };
 
 struct function_call {
-	struct variable *func;
+	struct primary *func;
 	unsigned arglen;
 	struct expression **args;
 };

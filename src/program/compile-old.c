@@ -893,10 +893,17 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expression(code, fncall->args[i]);
 
-	if (fncall->func->field != NULL) {
+	if (fncall->func->kind == SQ_PS_PFIELD_ACCESS ||
+		(fncall->func->kind == SQ_PS_PVARIABLE && fncall->func->variable->field)) {
 		set_opcode(code, SQ_OC_NOOP);
 		int dst;
-		unsigned var = load_variable_class(code, fncall->func, &dst);
+		unsigned var;
+
+		if (fncall->func->kind == SQ_PS_PVARIABLE)
+			var = load_variable_class(code, fncall->func->variable, &dst);
+		else
+			var = compile_primary(code, fncall->func), dst = next_local(code);
+
 		set_opcode(code, SQ_OC_CALL);
 		set_index(code, var);
 		set_count(code, fncall->arglen + 1);
@@ -905,7 +912,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	}
 
 #define BUILTIN_FN(name_, int_, argc_) \
-	if (!strcmp(fncall->func->name, name_)) { \
+	if (!strcmp(fncall->func->variable->name, name_)) { \
 		if (fncall->arglen != argc_) \
 			die("exactly %d arg(s) are required for '%s'", argc_, name_); \
 		set_opcode(code, SQ_OC_INT); \
@@ -949,7 +956,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	BUILTIN_FN("ascii", SQ_INT_ASCII, 1);
 
 	set_opcode(code, SQ_OC_NOOP);
-	unsigned var = load_variable_class(code, fncall->func, NULL);
+	unsigned var = load_variable_class(code, fncall->func->variable, NULL);
 	set_opcode(code, SQ_OC_CALL);
 	set_index(code, var);
 	set_index(code, fncall->arglen);
