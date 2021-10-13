@@ -77,6 +77,23 @@ static struct variable *parse_variable(void) {
 	return var;
 }
 
+static struct field_access *parse_field_access(struct primary *primary) {
+	if (take().kind != SQ_TK_DOT && last.kind != SQ_TK_COLONCOLON) {
+		untake();
+		return NULL;
+	}
+
+	struct field_access *faccess = xmalloc(sizeof(struct field_access));
+	faccess->is_namespace_access = (last.kind == SQ_TK_COLONCOLON);
+	faccess->primary = primary;
+
+	if (!(faccess->name = token_to_identifier(take())))
+		die("expected an identifier after field access name");
+
+
+	return faccess;
+}
+
 static struct function_call *parse_func_call(struct variable *func) {
 	struct expression *args[SQ_JOURNEY_MAX_ARGC];
 	unsigned arg_count = 0;
@@ -254,7 +271,17 @@ static struct primary *parse_primary() {
 		return NULL;
 	}
 
-	return memdup(&primary, sizeof(struct primary));
+
+	struct primary *primary_ptr = memdup(&primary, sizeof(struct primary));
+	struct field_access *faccess = parse_field_access(primary_ptr);
+
+	if (faccess != NULL) {
+		primary_ptr = xmalloc(sizeof(struct primary));
+		primary_ptr->kind = SQ_PS_PFIELD_ACCESS;
+		primary_ptr->faccess = faccess;
+	}
+
+	return primary_ptr;
 }
 
 static struct unary_expression *parse_unary_expression() {

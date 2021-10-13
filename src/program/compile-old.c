@@ -619,6 +619,17 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 	return index;
 }
 
+static unsigned compile_field_access(struct sq_code *code, struct field_access *faccess) {
+	unsigned into = compile_primary(code, faccess->primary);
+
+	set_opcode(code, SQ_OC_ILOAD);
+	set_index(code, into);
+	set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(faccess->name)))));
+	set_index(code, into);
+	return into;
+}
+
+
 static unsigned compile_index(struct sq_code *code, struct index *index) {
 	unsigned into = compile_primary(code, index->into);
 	unsigned idx = compile_expression(code, index->index);
@@ -677,6 +688,10 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 
 	case SQ_PS_PVARIABLE:
 		result = load_variable_class(code, primary->variable, NULL);
+		break;
+
+	case SQ_PS_PFIELD_ACCESS:
+		result = compile_field_access(code, primary->faccess);
 		break;
 
 	default:

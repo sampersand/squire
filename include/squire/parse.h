@@ -189,7 +189,13 @@ struct index {
 struct variable {
 	char *name;
 	struct variable *field;
-	bool is_namespace_access; // currently assigned to, but ignored for namespaces.
+	bool is_namespace_access; // currently assigned to, but ignored.
+};
+
+struct field_access {
+	struct primary *primary;
+	char *name;
+	bool is_namespace_access; // currently assigned to, but ignored.
 };
 
 struct bool_expression {
@@ -252,6 +258,7 @@ struct primary {
 		SQ_PS_PVERACITY,
 		SQ_PS_PNI,
 		SQ_PS_PVARIABLE,
+		SQ_PS_PFIELD_ACCESS,
 		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
 		SQ_PS_PINDEX,
@@ -263,6 +270,7 @@ struct primary {
 		struct sq_text *text;
 		sq_veracity veracity;
 		struct variable *variable;
+		struct field_access *faccess;
 		struct book *book;
 		struct dict *dict;
 		struct index *index;
