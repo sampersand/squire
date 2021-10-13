@@ -246,7 +246,7 @@ impl GetIndex for Text {
 impl GetAttr for Text {
 	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
 		match attr {
-			"count" => Ok(Numeral::new(self.len() as i64).into()),
+			"length" | "count" => Ok(Numeral::new(self.len() as i64).into()),
 			other => Err(RuntimeError::UnknownAttribute(other.to_string()))
 		}
 	}
