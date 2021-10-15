@@ -102,18 +102,23 @@ impl Parsable for Journey {
 		}
 
 		let name = parser.expect_identifier()?;
-		Self::parse_without_keyword(parser, name, false).map(Some)
+		Self::parse_without_keyword(parser, Some(name), false, true).map(Some)
 	}
 }
 
 impl Journey {
-	pub fn parse_without_keyword<I: Iterator<Item=char>>(parser: &mut Parser<'_, I>, name: String, is_method: bool) -> Result<Self, ParseError> {
+	pub fn parse_without_keyword<I: Iterator<Item=char>>(
+		parser: &mut Parser<'_, I>,
+		name: Option<String>,
+		is_method: bool,
+		include_patterns: bool
+	) -> Result<Self, ParseError> {
 		let mut patterns = Vec::new();
 
 		loop {
 			let args = Arguments::expect_parse(parser)?;
 			let body =
-				if parser.guard(TokenKind::Symbol(Symbol::Equal))?.is_some() {
+				if parser.guard(TokenKind::Symbol(Symbol::Arrow))?.is_some() {
 					vec![Statement::Expression(Expression::expect_parse(parser)?)]
 				} else {
 					Statements::expect_parse(parser)?
@@ -121,12 +126,16 @@ impl Journey {
 
 			patterns.push(Pattern { args, body, guard: None, return_genus: None });
 
-			if parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
+			if !include_patterns || parser.guard(TokenKind::Symbol(Symbol::Comma))?.is_none() {
 				break;
 			}
 		};
 
-		Ok(Self { name, patterns, is_method })
+		Ok(Self {
+			name: name.unwrap_or_else(|| "<lambda>".to_string()),
+			patterns,
+			is_method
+		})
 	}
 }
 
@@ -140,6 +149,12 @@ impl Journey {
 
 		if self.is_method {
 			compiler.define_local("soul".to_string());
+		}
+
+		for Pattern { ref args, .. } in self.patterns.iter() {
+			for arg in args.normal.iter() {
+				compiler.define_local(arg.name.to_string());
+			}
 		}
 
 		// check for patterns

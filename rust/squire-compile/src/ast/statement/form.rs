@@ -54,7 +54,7 @@ impl Form {
 
 	fn parse_recall<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let name = parser.expect_identifier()?;
-		self.functions.push(Journey::parse_without_keyword(parser, name, false)?);
+		self.functions.push(Journey::parse_without_keyword(parser, Some(name), false, true)?);
 
 		Ok(())
 	}
@@ -81,14 +81,14 @@ impl Form {
 
 	fn parse_change<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		let name = parser.expect_identifier_or_operator()?;
-		Ok(self.changes.push(Journey::parse_without_keyword(parser, name, true)?))
+		Ok(self.changes.push(Journey::parse_without_keyword(parser, Some(name), true, true)?))
 	}
 
 	fn parse_imitate<I: Iterator<Item=char>>(&mut self, parser: &mut Parser<'_, I>) -> Result<(), ParseError> {
 		if self.imitate.is_some() {
 			Err(parser.error("cannot define two 'imitate's"))
 		} else {
-			self.imitate = Some(Journey::parse_without_keyword(parser, "imitate".to_string(), true)?);
+			self.imitate = Some(Journey::parse_without_keyword(parser, Some("imitate".to_string()), true, true)?);
 			Ok(())
 		}
 	}

@@ -12,7 +12,7 @@ pub enum Math {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Logic {
-	Eql, Neq, Lth, Leq, Gth, Geq, Cmp
+	Eql, Neq, Lth, Leq, Gth, Geq, Cmp, Matches
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -86,6 +86,7 @@ impl BinaryOperator {
 				Some(Token::Symbol(Symbol::GreaterThan)) => Operator::Logic(Logic::Gth),
 				Some(Token::Symbol(Symbol::GreaterThanOrEqual)) => Operator::Logic(Logic::Geq),
 				Some(Token::Symbol(Symbol::Compare)) => Operator::Logic(Logic::Cmp),
+				Some(Token::Symbol(Symbol::Matches)) => Operator::Logic(Logic::Matches),
 
 				Some(Token::Symbol(Symbol::Plus)) => Operator::Math(Math::Add),
 				Some(Token::Symbol(Symbol::Hyphen)) => Operator::Math(Math::Sub),
@@ -201,6 +202,7 @@ fn compile_logic(op: Logic, lhs: Box<Expression>, rhs: Box<Expression>, compiler
 		Logic::Gth => compiler.opcode(Opcode::GreaterThan),
 		Logic::Geq => compiler.opcode(Opcode::GreaterThanOrEqual),
 		Logic::Cmp => compiler.opcode(Opcode::Compare),
+		Logic::Matches => compiler.opcode(Opcode::Matches),
 	}
 
 	compiler.target(target);

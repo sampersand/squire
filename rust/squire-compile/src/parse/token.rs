@@ -83,6 +83,7 @@ pub enum Symbol {
 	GreaterThan,
 	GreaterThanOrEqual,
 	Compare,
+	Matches,
 
 	Plus,
 	PlusEqual,
@@ -100,7 +101,9 @@ pub enum Symbol {
 	Exclamation,
 	AndAnd,
 	OrOr,
-	Pipe
+	Pipe,
+	Arrow,
+	BackSlash
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -513,8 +516,14 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 			',' => Token::Symbol(Symbol::Comma),
 			':' => Token::Symbol(Symbol::Colon),
 			'.' => Token::Symbol(Symbol::Dot),
-			'=' => if_equals!(EqualEqual, Equal),
+			'=' => 
+				if self.stream.take_prefix(">") {
+					Token::Symbol(Symbol::Arrow)
+				} else {
+					if_equals!(EqualEqual, Equal)
+				},
 			'!' => if_equals!(NotEqual, Exclamation),
+			'~' if self.stream.take_prefix("~") => Token::Symbol(Symbol::Matches),
 			'<' => 
 				if self.stream.take_prefix("=>") {
 					Token::Symbol(Symbol::Compare)
@@ -539,6 +548,7 @@ impl<I: Iterator<Item=char>> Tokenizer<'_, I> {
 				} else {
 					Token::Symbol(Symbol::Pipe)
 				},
+			'\\' => Token::Symbol(Symbol::BackSlash),
 			other => return Some(Err(self.error(ErrorKind::UnknownTokenStart(other))))
 		}))
 	}
@@ -552,11 +562,15 @@ impl<I: Iterator<Item=char>> Iterator for Tokenizer<'_, I> {
 			self.put_back = false;
 			self.last.clone().map(Ok)
 		} else {
-			Some(self.next_from_stream()?.map(|value| { 
+			let token = Some(self.next_from_stream()?.map(|value| { 
 				self.last = Some(value.clone());
 				value
-			}))
+			}));
+
+			trace!(?token, "next token parsed");
+			token
 		}
+
 	// if let Some(macro_) = self.macros.last_mut() {
 		// macro_.next().map(Ok).or_else(|| self.next())
 	// } else {
