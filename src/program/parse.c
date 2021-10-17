@@ -579,10 +579,19 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		// return parse_expression_inner(expr);
 	}
 
+	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
+		struct variable_old *var = xmalloc(sizeof(struct variable_old));
+		var->name = prim->variable;
+		var->field = NULL;
+		prim->kind = SQ_PS_PVARIABLE_OLD;
+		prim->variable_old = var;
+	}
+
 	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE_OLD) {
 		expr->kind = SQ_PS_EASSIGN;
 		expr->asgn = parse_assignment(prim->variable_old);
 	}
+
 
 	return expr;
 }

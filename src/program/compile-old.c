@@ -712,17 +712,6 @@ assign_arguments:
 	unsigned result;
 	set_index(code, result = next_local(code));
 	return result;
-/*
-	if (fncall->func->field != NULL) {
-		set_opcode(code, SQ_OC_NOOP);
-		int dst;
-		unsigned var = load_variable_class(code, fncall->func, &dst);
-		set_opcode(code, SQ_OC_CALL);
-		set_index(code, var);
-		set_count(code, fncall->arglen + 1);
-		set_index(code, dst);
-		goto arguments;
-	}*/
 }
 
 static unsigned compile_field_access(struct sq_code *code, struct field_access *faccess) {
