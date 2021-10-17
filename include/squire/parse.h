@@ -128,6 +128,7 @@ struct switch_statement {
 	struct case_statement {
 		struct expression *expr;
 		struct statements *body;
+		bool fallthru;
 	} *cases;
 	unsigned ncases;
 };

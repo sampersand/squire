@@ -424,6 +424,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("attempt",      SQ_TK_TRY);
 	CHECK_FOR_START_KW("catapult",     SQ_TK_THROW);
 	CHECK_FOR_START_KW("fork",         SQ_TK_SWITCH);
+	CHECK_FOR_START_KW("rejoin",       SQ_TK_REJOIN);
 	CHECK_FOR_START_KW("path",         SQ_TK_CASE);
 	CHECK_FOR_START_KW("kingdom",      SQ_TK_KINGDOM);
 

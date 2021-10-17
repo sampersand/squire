@@ -556,13 +556,20 @@ static void compile_switch_statement(struct sq_code *code, struct switch_stateme
 
 		for (unsigned j = 0; j < amnt_of_blank; ++j)
 			jump_to_body_indices[i - j - 1] = code->codelen;
+
 		amnt_of_blank = 0;
 		set_target_to_codelen(code, jump_to_body_indices[i]);
 		jump_to_body_indices[i] = code->codelen;
+
 		compile_statements(code, sw->cases[i].body);
-		set_opcode(code, SQ_OC_JMP);
-		jump_to_end_indices[i] = code->codelen;
-		set_index(code, 65532);
+
+		if (sw->cases[i].fallthru) {
+			jump_to_end_indices[i] = -1;
+		} else {
+			set_opcode(code, SQ_OC_JMP);
+			jump_to_end_indices[i] = code->codelen;
+			set_index(code, -1);
+		}
 	}
 
 	for (unsigned j = 0; j < amnt_of_blank; ++j)

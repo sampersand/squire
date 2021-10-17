@@ -1061,6 +1061,14 @@ static struct switch_statement *parse_switch_statement() {
 				sw_stmt->cases[sw_stmt->ncases].body = NULL;
 			}
 
+			if (take().kind == SQ_TK_REJOIN) {
+				EXPECT(SQ_TK_ENDL, "expected ';' after rejoin");
+				sw_stmt->cases[sw_stmt->ncases].fallthru = true;
+			} else {
+				untake();
+				sw_stmt->cases[sw_stmt->ncases].fallthru = false;
+			}
+
 			sw_stmt->ncases++;
 			break;
 		case SQ_TK_RBRACE:
