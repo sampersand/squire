@@ -2,6 +2,7 @@
 #define SQ_BYTECODE_H
 
 enum sq_interrupt {
+	SQ_INT_UNDEFINED    = 0x00,
 	SQ_INT_TONUMERAL    = 0x01, // [A,DST] DST <- A.to_numeral()
 	SQ_INT_TOTEXT       = 0x02, // [A,DST] DST <- A.to_text()
 	SQ_INT_TOVERACITY   = 0x03, // [A,DST] DST <- A.to_veracity()

@@ -165,7 +165,7 @@ struct expression {
 };
 
 struct function_call_old {
-	struct variable *func;
+	struct variable_old *func;
 	unsigned arglen;
 	struct expression **args;
 };
@@ -183,7 +183,7 @@ struct function_call {
 };
 
 struct assignment {
-	struct variable *var;
+	struct variable_old *var;
 	struct expression *expr;
 };
 
@@ -198,9 +198,9 @@ struct index {
 	struct expression *index;
 };
 
-struct variable {
+struct variable_old {
 	char *name;
-	struct variable *field;
+	struct variable_old *field;
 	bool is_namespace_access; // currently assigned to, but ignored for namespaces.
 };
 
@@ -263,6 +263,7 @@ struct primary {
 		SQ_PS_PTEXT,
 		SQ_PS_PVERACITY,
 		SQ_PS_PNI,
+		SQ_PS_PVARIABLE_OLD,
 		SQ_PS_PVARIABLE,
 		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
@@ -277,7 +278,8 @@ struct primary {
 		sq_numeral numeral;
 		struct sq_text *text;
 		sq_veracity veracity;
-		struct variable *variable;
+		struct variable_old *variable_old;
+		char *variable;
 		struct book *book;
 		struct dict *dict;
 

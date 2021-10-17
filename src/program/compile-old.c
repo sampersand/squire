@@ -240,7 +240,7 @@ static unsigned load_identifier(struct sq_code *code, const char *name) {
 	return index;
 }
 
-static unsigned load_variable_class(struct sq_code *code, struct variable *var, int *parent) {
+static unsigned load_variable_class(struct sq_code *code, struct variable_old *var, int *parent) {
 	int p;
 	if (parent == NULL) parent = &p;
 
@@ -622,6 +622,112 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 
 
 static unsigned compile_function_call(struct sq_code *code, struct function_call *fncall) {
+	unsigned soul;
+	enum sq_interrupt interrupt = SQ_INT_UNDEFINED;
+
+#define CHECK_FOR_BUILTIN(name_, interrupt_, argc_) \
+		if (!strcmp(name_, fncall->soul->variable)) { \
+			if (argc_ != fncall->argc) \
+				die("argc mismatch for '%s' (expected %d, got %d)", name_, argc_, fncall->argc); \
+			interrupt = interrupt_; \
+			goto compile_arguments; \
+		}
+
+	if (!fncall->field && fncall->soul->kind == SQ_PS_PVARIABLE) {
+		CHECK_FOR_BUILTIN("proclaim",  SQ_INT_PRINTLN, 1);
+		CHECK_FOR_BUILTIN("proclaimn", SQ_INT_PRINT, 1);
+		CHECK_FOR_BUILTIN("dump",      SQ_INT_DUMP, 1); // not changing this, it's used for internal debugging.
+		CHECK_FOR_BUILTIN("inquire",   SQ_INT_PROMPT, 0);
+		CHECK_FOR_BUILTIN("dismount",  SQ_INT_EXIT, 1);
+		CHECK_FOR_BUILTIN("hex",       SQ_INT_SYSTEM, 1); // this doesn't feel right... `pray`? but that's too strong.
+
+		CHECK_FOR_BUILTIN("tally",     SQ_INT_TONUMERAL, 1);
+		CHECK_FOR_BUILTIN("numeral",   SQ_INT_TONUMERAL, 1);
+		CHECK_FOR_BUILTIN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
+		CHECK_FOR_BUILTIN("veracity",  SQ_INT_TOVERACITY, 1);
+		CHECK_FOR_BUILTIN("book",      SQ_INT_TOBOOK, 1);
+		CHECK_FOR_BUILTIN("codex",     SQ_INT_TOCODEX, 1);
+		CHECK_FOR_BUILTIN("genus",     SQ_INT_KINDOF, 1);
+
+		CHECK_FOR_BUILTIN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
+		CHECK_FOR_BUILTIN("substr",    SQ_INT_SUBSTR, 3);
+		CHECK_FOR_BUILTIN("insert",    SQ_INT_ARRAY_INSERT, 3);
+		CHECK_FOR_BUILTIN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
+
+		CHECK_FOR_BUILTIN("gamble",    SQ_INT_RANDOM, 0);
+		CHECK_FOR_BUILTIN("roman",     SQ_INT_ROMAN, 1);
+		CHECK_FOR_BUILTIN("arabic",    SQ_INT_ARABIC, 1);
+
+		CHECK_FOR_BUILTIN("Scroll", SQ_INT_FOPEN, 2); // just so you can do `Scroll(...)`
+		CHECK_FOR_BUILTIN("Scroll_open", SQ_INT_FOPEN, 2);
+		CHECK_FOR_BUILTIN("Scroll_close", SQ_INT_FCLOSE, 1);
+		CHECK_FOR_BUILTIN("Scroll_read", SQ_INT_FREAD, 2);
+		CHECK_FOR_BUILTIN("Scroll_readall", SQ_INT_FREADALL, 1);
+		CHECK_FOR_BUILTIN("Scroll_write", SQ_INT_FWRITE, 2);
+		CHECK_FOR_BUILTIN("Scroll_tell", SQ_INT_FTELL, 1);
+		CHECK_FOR_BUILTIN("Scroll_seek", SQ_INT_FSEEK, 3);
+
+		CHECK_FOR_BUILTIN("ascii", SQ_INT_ASCII, 1);
+	}
+
+	soul = compile_primary(code, fncall->soul);
+
+compile_arguments:;
+
+	unsigned args[fncall->argc];
+
+	for (unsigned i = 0; i < fncall->argc; ++i)
+		args[i] = compile_expression(code, fncall->args[i]);
+
+	if (interrupt != SQ_INT_UNDEFINED) {
+		set_opcode(code, SQ_OC_INT);
+		set_interrupt(code, interrupt);
+		goto assign_arguments;
+	}
+
+	if (fncall->field != NULL) {
+		die("todo: call with field");
+	} else {
+		set_opcode(code, SQ_OC_CALL);
+		set_index(code, soul);
+		set_index(code, fncall->argc);
+	}
+
+assign_arguments:
+
+	for (unsigned i = 0; i < fncall->argc; ++i)
+		set_index(code, args[i]);
+
+	unsigned result;
+	set_index(code, result = next_local(code));
+	return result;
+/*
+	if (fncall->func->field != NULL) {
+		set_opcode(code, SQ_OC_NOOP);
+		int dst;
+		unsigned var = load_variable_class(code, fncall->func, &dst);
+		set_opcode(code, SQ_OC_CALL);
+		set_index(code, var);
+		set_count(code, fncall->arglen + 1);
+		set_index(code, dst);
+		goto arguments;
+	}
+
+	set_opcode(code, SQ_OC_NOOP);
+	unsigned var = load_variable_class(code, fncall->func, NULL);
+	set_opcode(code, SQ_OC_CALL);
+	set_index(code, var);
+	set_index(code, fncall->arglen);
+
+arguments:
+	for (unsigned i = 0; i < fncall->arglen; ++i)
+		set_index(code, args[i]);
+
+	unsigned result;
+
+	set_index(code, result = next_local(code));
+	return result;
+*/
 	(void) code;
 	(void) fncall;
 	return -1;
@@ -690,8 +796,12 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		result = load_constant(code, SQ_NI);
 		break;
 
+	case SQ_PS_PVARIABLE_OLD:
+		result = load_variable_class(code, primary->variable_old, NULL);
+		break;
+
 	case SQ_PS_PVARIABLE:
-		result = load_variable_class(code, primary->variable, NULL);
+		result = load_identifier(code, primary->variable);
 		break;
 
 	case SQ_PS_PFNCALL:
@@ -1001,7 +1111,7 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 
 	case SQ_PS_EASSIGN: {
 		index = compile_expression(code, expr->asgn->expr);
-		struct variable *var = expr->asgn->var;
+		struct variable_old *var = expr->asgn->var;
 		variable = lookup_identifier(code, var->name);
 
 		if (!var->field) {

@@ -61,8 +61,8 @@ static char *token_to_identifier(struct sq_token token) {
 	}
 
 }
-static struct variable *parse_variable(void) {
-	struct variable *var = xmalloc(sizeof(struct variable));
+static struct variable_old *parse_variable(void) {
+	struct variable_old *var = xmalloc(sizeof(struct variable_old));
 
 	if (!(var->name = token_to_identifier(take())))
 		return untake(), free(var), NULL;
@@ -77,7 +77,7 @@ static struct variable *parse_variable(void) {
 	return var;
 }
 
-static struct function_call_old *parse_func_call_old(struct variable *func) {
+static struct function_call_old *parse_func_call_old(struct variable_old *func) {
 	struct expression *args[SQ_JOURNEY_MAX_ARGC];
 	unsigned arg_count = 0;
 
@@ -252,7 +252,7 @@ static struct primary *parse_primary() {
 		break;
 	case SQ_TK_IDENT: {
 		untake();
-		struct variable *var = parse_variable();
+		struct variable_old *var = parse_variable();
 
 		if (take().kind == SQ_TK_LPAREN) {
 			primary.kind = SQ_PS_PPAREN;
@@ -261,8 +261,13 @@ static struct primary *parse_primary() {
 			primary.expr->fncall = parse_func_call_old(var);
 		} else {
 			untake();
-			primary.kind = SQ_PS_PVARIABLE;
-			primary.variable = var;
+			if (!var->field) {
+				primary.kind = SQ_PS_PVARIABLE;
+				primary.variable = var->name;
+			} else {
+				primary.kind = SQ_PS_PVARIABLE_OLD;
+				primary.variable_old = var;
+			}
 		}
 		break;
 	}
@@ -502,7 +507,7 @@ static struct bool_expression *parse_bool_expression() {
 	return memdup(&eql, sizeof(struct bool_expression));
 }
 
-static struct assignment *parse_assignment(struct variable *var) {
+static struct assignment *parse_assignment(struct variable_old *var) {
 	GUARD(SQ_TK_ASSIGN);
 
 	struct assignment *asgn = xmalloc(sizeof(struct assignment));
@@ -566,7 +571,7 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		// return parse_expression_inner(expr);
 	}
 
-	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
+	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE_OLD) {
 		expr->kind = SQ_PS_EASSIGN;
 		expr->asgn = parse_assignment(prim->variable);
 	}
@@ -574,7 +579,7 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	return expr;
 }
 
-static struct variable *parse_variable(void);
+static struct variable_old *parse_variable(void);
 static struct statements *parse_brace_statements(char *);
 
 #define MAX_KINGDOMS 255
@@ -589,7 +594,7 @@ struct kingdom_declaration *parse_kingdom_declaration() {
 		die("too many nested kingdoms");
 
 	// this is terrible
-	struct variable *var = parse_variable();
+	struct variable_old *var = parse_variable();
 	struct kingdom_declaration *kingdom = xmalloc(sizeof(struct kingdom_declaration));
 	kingdom->name = var->name;
 	bool is_first = true;
