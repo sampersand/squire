@@ -155,7 +155,7 @@ struct expression {
 	} kind;
 
 	union {
-		struct function_call *fncall;
+		struct function_call_old *fncall;
 		struct assignment *asgn;
 		struct index_assign *ary_asgn;
 		struct bool_expression *math;
@@ -163,7 +163,7 @@ struct expression {
 	};
 };
 
-struct function_call {
+struct function_call_old {
 	struct identifier *func;
 	unsigned arglen;
 	struct expression **args;

@@ -77,7 +77,7 @@ static struct variable *parse_variable(void) {
 	return var;
 }
 
-static struct function_call *parse_func_call(struct variable *func) {
+static struct function_call_old *parse_func_call_old(struct variable *func) {
 	struct expression *args[SQ_JOURNEY_MAX_ARGC];
 	unsigned arg_count = 0;
 
@@ -95,7 +95,7 @@ static struct function_call *parse_func_call(struct variable *func) {
 		}
 	}
 
-	struct function_call *fncall = xmalloc(sizeof(struct function_call));
+	struct function_call_old *fncall = xmalloc(sizeof(struct function_call_old));
 	fncall->func = func;
 	fncall->args = memdup(args, sizeof_array(struct expression *, arg_count));
 
@@ -104,15 +104,38 @@ static struct function_call *parse_func_call(struct variable *func) {
 	return fncall;
 }
 
-static struct index *parse_index(struct primary *primary) {
-	GUARD(SQ_TK_LBRACKET);
+static void parse_func_call(struct function_call *fncall) {
+	struct expression *args[SQ_JOURNEY_MAX_ARGC];
+	fncall->argc = 0;
 
-	struct index *index = xmalloc(sizeof(struct index));
-	index->into = primary;
-	if (!(index->index = parse_expression())) die("Cant compile index");
-	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
-	return index;
+	while (take().kind != SQ_TK_RPAREN && fncall->argc <= SQ_JOURNEY_MAX_ARGC) {
+		if (last.kind == SQ_TK_UNDEFINED)
+			die("missing rparen for fn call");
+
+		untake();
+
+		if (!(args[fncall->argc++] = parse_expression()))
+			die("invalid argument #%d found in function call", fncall->argc-1);
+
+		if (take().kind != SQ_TK_COMMA) {
+			if (last.kind != SQ_TK_RPAREN)
+				die("missing rparen for fn call");
+			break;
+		}
+	}
+
+	fncall->args = memdup(args, sizeof_array(struct expression *, fncall->argc));
 }
+
+// static struct index *parse_index(struct primary *primary) {
+// 	GUARD(SQ_TK_LBRACKET);
+
+// 	struct index *index = xmalloc(sizeof(struct index));
+// 	index->into = primary;
+// 	if (!(index->index = parse_expression())) die("Cant compile index");
+// 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
+// 	return index;
+// }
 
 static struct book *parse_book() {
 	unsigned len = 0, cap = 8;
@@ -235,7 +258,7 @@ static struct primary *parse_primary() {
 			primary.kind = SQ_PS_PPAREN;
 			primary.expr = xmalloc(sizeof(struct expression));
 			primary.expr->kind = SQ_PS_EFNCALL;
-			primary.expr->fncall = parse_func_call(var);
+			primary.expr->fncall = parse_func_call_old(var);
 		} else {
 			untake();
 			primary.kind = SQ_PS_PVARIABLE;
@@ -254,7 +277,39 @@ static struct primary *parse_primary() {
 		return NULL;
 	}
 
-	return memdup(&primary, sizeof(struct primary));
+	struct primary *prim_ptr;
+
+reparse_primary:
+	prim_ptr = memdup(&primary, sizeof(struct primary));
+
+	switch (take().kind) {
+	case SQ_TK_LPAREN:
+		primary.kind = SQ_PS_PFNCALL;
+		primary.fncall.soul = prim_ptr;
+		primary.fncall.field = NULL;
+		parse_func_call(&primary.fncall);
+		goto reparse_primary;
+
+	case SQ_TK_LBRACKET:
+		primary.kind = SQ_PS_PINDEX;
+		primary.index.into = prim_ptr;
+		if (!(primary.index.index = parse_expression()))
+			die("Cant parse index expression");
+		EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
+		goto reparse_primary;
+
+	case SQ_TK_DOT:
+		primary.kind = SQ_PS_PFACCESS;
+		primary.faccess.soul = prim_ptr;
+		EXPECT(SQ_TK_IDENT, "expected an identifier after '.' for field access");
+		primary.faccess.field = last.identifier;
+		goto reparse_primary;
+
+	default:
+		untake();
+	}
+
+	return prim_ptr;
 }
 
 static struct unary_expression *parse_unary_expression() {
@@ -506,9 +561,9 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->lhs->rhs;
 
 	if (last.kind == SQ_TK_LBRACKET) {
-		expr->kind = SQ_PS_EINDEX;
-		expr->index = parse_index(prim);
-		return parse_expression_inner(expr);
+		// expr->kind = SQ_PS_EINDEX;
+		// expr->index = parse_index(prim);
+		// return parse_expression_inner(expr);
 	}
 
 	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {

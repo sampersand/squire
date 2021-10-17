@@ -156,7 +156,7 @@ struct expression {
 	} kind;
 
 	union {
-		struct function_call *fncall;
+		struct function_call_old *fncall;
 		struct assignment *asgn;
 		struct index_assign *ary_asgn;
 		struct bool_expression *math;
@@ -164,9 +164,21 @@ struct expression {
 	};
 };
 
-struct function_call {
+struct function_call_old {
 	struct variable *func;
 	unsigned arglen;
+	struct expression **args;
+};
+
+struct field_access {
+	struct primary *soul;
+	char *field;
+};
+
+struct function_call {
+	struct primary *soul;
+	char *field; // is NULL when is a journey
+	unsigned argc;
 	struct expression **args;
 };
 
@@ -254,6 +266,9 @@ struct primary {
 		SQ_PS_PVARIABLE,
 		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
+
+		SQ_PS_PFNCALL,
+		SQ_PS_PFACCESS,
 		SQ_PS_PINDEX,
 	} kind;
 	union {
@@ -265,7 +280,10 @@ struct primary {
 		struct variable *variable;
 		struct book *book;
 		struct dict *dict;
-		struct index *index;
+
+		struct function_call fncall;
+		struct field_access faccess;
+		struct index index;
 	};
 };
 

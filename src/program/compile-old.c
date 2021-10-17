@@ -619,6 +619,25 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 	return index;
 }
 
+
+
+static unsigned compile_function_call(struct sq_code *code, struct function_call *fncall) {
+	(void) code;
+	(void) fncall;
+	return -1;
+}
+
+static unsigned compile_field_access(struct sq_code *code, struct field_access *faccess) {
+	unsigned soul = compile_primary(code, faccess->soul);
+
+	set_opcode(code, SQ_OC_ILOAD);
+	set_index(code, soul);
+	set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(faccess->field)))));
+	set_index(code, soul);
+
+	return soul;
+}
+
 static unsigned compile_index(struct sq_code *code, struct index *index) {
 	unsigned into = compile_primary(code, index->into);
 	unsigned idx = compile_expression(code, index->index);
@@ -647,10 +666,6 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		result = compile_codex(code, primary->dict);
 		break;
 
-	case SQ_PS_PINDEX:
-		result = compile_index(code, primary->index);
-		break;
-
 	case SQ_PS_PLAMBDA: {
 		struct sq_journey *func = compile_journey(primary->lambda, false);
 		free(primary->lambda);
@@ -677,6 +692,18 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 
 	case SQ_PS_PVARIABLE:
 		result = load_variable_class(code, primary->variable, NULL);
+		break;
+
+	case SQ_PS_PFNCALL:
+		result = compile_function_call(code, &primary->fncall);
+		break;
+
+	case SQ_PS_PFACCESS:
+		result = compile_field_access(code, &primary->faccess);
+		break;
+
+	case SQ_PS_PINDEX:
+		result = compile_index(code, &primary->index);
 		break;
 
 	default:
@@ -872,7 +899,7 @@ done:
 	return target;
 }
 
-static unsigned compile_function_call(struct sq_code *code, struct function_call *fncall) {
+static unsigned compile_function_call_old(struct sq_code *code, struct function_call_old *fncall) {
 	unsigned args[fncall->arglen];
 
 	for (unsigned i = 0; i < fncall->arglen; ++i)
@@ -956,7 +983,7 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 
 	switch (expr->kind) {
 	case SQ_PS_EFNCALL:
-		return compile_function_call(code, expr->fncall);
+		return compile_function_call_old(code, expr->fncall);
 
 	case SQ_PS_EARRAY_ASSIGN: {
 		
@@ -1117,6 +1144,7 @@ static void compile_label_statement(struct sq_code *code, char *label) {
 }
 
 static void compile_comefrom_statement(struct sq_code *code, char *label, bool thence) {
+	(void) thence;
 	unsigned i, j;
 	struct label *lbl;
 
