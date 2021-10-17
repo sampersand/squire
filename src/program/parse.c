@@ -290,8 +290,16 @@ reparse_primary:
 	switch (take().kind) {
 	case SQ_TK_LPAREN:
 		primary.kind = SQ_PS_PFNCALL;
-		primary.fncall.soul = prim_ptr;
-		primary.fncall.field = NULL;
+
+		if (prim_ptr->kind == SQ_PS_PFACCESS) {
+			primary.fncall.soul = prim_ptr->faccess.soul;
+			primary.fncall.field = prim_ptr->faccess.field;
+			free(prim_ptr);
+		} else {
+			primary.fncall.soul = prim_ptr;
+			primary.fncall.field = NULL;
+		}
+
 		parse_func_call(&primary.fncall);
 		goto reparse_primary;
 
@@ -573,7 +581,7 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 
 	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE_OLD) {
 		expr->kind = SQ_PS_EASSIGN;
-		expr->asgn = parse_assignment(prim->variable);
+		expr->asgn = parse_assignment(prim->variable_old);
 	}
 
 	return expr;

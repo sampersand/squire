@@ -686,7 +686,18 @@ compile_arguments:;
 	}
 
 	if (fncall->field != NULL) {
-		die("todo: call with field");
+		unsigned target;
+		set_opcode(code, SQ_OC_NOOP);
+
+		set_opcode(code, SQ_OC_ILOAD);
+		set_index(code, soul);
+		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(fncall->field)))));
+		set_index(code, target = next_local(code));
+
+		set_opcode(code, SQ_OC_CALL);
+		set_index(code, target);
+		set_count(code, fncall->argc + 1);
+		set_index(code, soul);
 	} else {
 		set_opcode(code, SQ_OC_CALL);
 		set_index(code, soul);
@@ -711,37 +722,18 @@ assign_arguments:
 		set_count(code, fncall->arglen + 1);
 		set_index(code, dst);
 		goto arguments;
-	}
-
-	set_opcode(code, SQ_OC_NOOP);
-	unsigned var = load_variable_class(code, fncall->func, NULL);
-	set_opcode(code, SQ_OC_CALL);
-	set_index(code, var);
-	set_index(code, fncall->arglen);
-
-arguments:
-	for (unsigned i = 0; i < fncall->arglen; ++i)
-		set_index(code, args[i]);
-
-	unsigned result;
-
-	set_index(code, result = next_local(code));
-	return result;
-*/
-	(void) code;
-	(void) fncall;
-	return -1;
+	}*/
 }
 
 static unsigned compile_field_access(struct sq_code *code, struct field_access *faccess) {
-	unsigned soul = compile_primary(code, faccess->soul);
+	unsigned soul = compile_primary(code, faccess->soul), target;
 
 	set_opcode(code, SQ_OC_ILOAD);
 	set_index(code, soul);
 	set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(faccess->field)))));
-	set_index(code, soul);
+	set_index(code, target = next_local(code));
 
-	return soul;
+	return target;
 }
 
 static unsigned compile_index(struct sq_code *code, struct index *index) {

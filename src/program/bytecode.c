@@ -1,4 +1,5 @@
 #include <squire/bytecode.h>
+#include <squire/shared.h>
 
 const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 	switch (interrupt) {
@@ -36,6 +37,7 @@ const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 	case SQ_INT_FTELL: return "SQ_INT_FTELL";
 	case SQ_INT_FSEEK: return "SQ_INT_FSEEK";
 	case SQ_INT_ASCII: return "SQ_INT_ASCII";
+	case SQ_INT_UNDEFINED: bug("undefined encountered");
 	}
 }
 

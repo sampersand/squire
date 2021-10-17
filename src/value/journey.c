@@ -280,8 +280,7 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 
 	// ASCII
 	case SQ_INT_ASCII: return 1;
-
-
+	case SQ_INT_UNDEFINED: bug("undefined encountered");
 	}
 }
 
@@ -593,6 +592,9 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		}
 
 		return;
+
+	case SQ_INT_UNDEFINED:
+		bug("undefined encountered");
 	}
 }
 
