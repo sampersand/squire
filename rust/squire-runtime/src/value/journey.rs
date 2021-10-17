@@ -10,7 +10,7 @@ mod user_defined;
 pub use arguments::Arguments;
 pub use builtin::Builtin;
 pub use bound::Bound;
-pub use user_defined::UserDefined;
+pub use user_defined::{UserDefined, UserDefinedPattern};
 
 #[derive(Debug, Clone)]
 pub enum Journey {

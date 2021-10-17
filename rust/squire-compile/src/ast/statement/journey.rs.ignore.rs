@@ -142,60 +142,78 @@ impl Journey {
 
 
 impl Pattern {
-	fn build_pattern(self, is_method: bool, globals: Globals) -> Result<UserDefinedPattern, CompileError> {
+	fn build_pattern(self, is_method: bool, globalS: Globals) -> Result<UserDefinedPattern, CompileError> {
+		
+	}
+}
+// #[derive(Debug)]
+// struct Pattern {
+// 	args: Arguments,
+// 	guard: Option<Expression>,
+// 	return_genus: Option<GenusDeclaration>,
+// 	body: Statements,
+// }
+impl Journey {
+	pub fn build_journey(self, globals: Globals) -> Result<UserDefined, CompileError> {
 		let mut compiler = Compiler::with_globals(globals);
+		let mut pattern_bodies = Vec::with_capacity(self.patterns.len());
+
+		let check_target = compiler.temp_target();
 
 		if self.is_method {
 			compiler.define_local("soul".to_string());
 		}
 
-		// todo!()
+		for Pattern { ref args, .. } in self.patterns.iter() {
+			for arg in args.normal.iter() {
+				compiler.define_local(arg.name.to_string());
+			}
+		}
 
 		// check for patterns
-		// for Pattern { args, guard, return_genus, body } in self.patterns {
-		// 	let mut jumps = Vec::new();
+		for Pattern { args, guard, return_genus, body } in self.patterns {
+			let mut jumps = Vec::new();
 
-		// 	for arg in args.normal {
-		// 		let local = compiler.define_local(arg.name.to_string());
+			for arg in args.normal {
+				let local = compiler.define_local(arg.name.to_string());
 
-		// 		if let Some(genus) = arg.genus {
-		// 			genus.check(local, check_target, &mut compiler)?;
-		// 			compiler.opcode(Opcode::JumpIfFalse);
-		// 			compiler.target(check_target);
-		// 			jumps.push(compiler.defer_jump());
-		// 		}
+				if let Some(genus) = arg.genus {
+					genus.check(local, check_target, &mut compiler)?;
+					compiler.opcode(Opcode::JumpIfFalse);
+					compiler.target(check_target);
+					jumps.push(compiler.defer_jump());
+				}
 
-		// 		if arg.default.is_some() {
-		// 			todo!();
-		// 		}
-		// 	}
+				if arg.default.is_some() {
+					todo!();
+				}
+			}
 
-		// 	if let Some(guard) = guard {
-		// 		let guard_target = compiler.next_target();
-		// 		guard.compile(&mut compiler, Some(guard_target))?;
+			if let Some(guard) = guard {
+				let guard_target = compiler.next_target();
+				guard.compile(&mut compiler, Some(guard_target))?;
 
-		// 		compiler.opcode(Opcode::JumpIfFalse);
-		// 		compiler.target(guard_target);
-		// 		jumps.push(compiler.defer_jump());
-		// 	}
+				compiler.opcode(Opcode::JumpIfFalse);
+				compiler.target(guard_target);
+				jumps.push(compiler.defer_jump());
+			}
 
-		// 	compiler.opcode(Opcode::Jump);
-		// 	let jump_dst = compiler.defer_jump();
-		// 	pattern_bodies.push((body, return_genus, jump_dst));
+			compiler.opcode(Opcode::Jump);
+			let jump_dst = compiler.defer_jump();
+			pattern_bodies.push((body, return_genus, jump_dst));
 
-		// 	for target in jumps {
-		// 		target.set_jump_to_current(&mut compiler);
-		// 	}
-		// }
-/*
+			for target in jumps {
+				target.set_jump_to_current(&mut compiler);
+			}
+		}
 
-		// // if nothing matches, throw an error.
-		// let no_patterns_found = compiler.get_constant("No patterns matched".to_string().into());
-		// compiler.opcode(Opcode::LoadConstant);
-		// compiler.constant(no_patterns_found);
-		// compiler.target(Compiler::SCRATCH_TARGET);
-		// compiler.opcode(Opcode::Throw);
-		// compiler.target(Compiler::SCRATCH_TARGET);
+		// if nothing matches, throw an error.
+		let no_patterns_found = compiler.get_constant("No patterns matched".to_string().into());
+		compiler.opcode(Opcode::LoadConstant);
+		compiler.constant(no_patterns_found);
+		compiler.target(Compiler::SCRATCH_TARGET);
+		compiler.opcode(Opcode::Throw);
+		compiler.target(Compiler::SCRATCH_TARGET);
 
 
 		// setup the genus bodies
@@ -225,25 +243,7 @@ impl Pattern {
 		compiler.illegal();
 
 // vec!["todo".into()], compiler.finish()
-*/
-	}
-}
-// #[derive(Debug)]
-// struct Pattern {
-// 	args: Arguments,
-// 	guard: Option<Expression>,
-// 	return_genus: Option<GenusDeclaration>,
-// 	body: Statements,
-// }
-impl Journey {
-	pub fn build_journey(self, globals: Globals) -> Result<UserDefined, CompileError> {
-		let mut patterns = Vec::with_capacity(self.patterns.len());
-
-		for pattern in self.patterns {
-			patterns.push(pattern.build_pattern(self.is_method)?);
-		}
-
-		Ok(UserDefined::new(self.name, self.is_method, patterns))
+		Ok(UserDefined::new(self.name.clone(), self.is_method, patterns))
 	}
 }
 

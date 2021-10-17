@@ -12,9 +12,14 @@ pub struct UserDefined(Arc<UserDefinedInner>);
 struct UserDefinedInner {
 	name: String,
 	is_method: bool,
-	args: Vec<String>,
+	patterns: Vec<UserDefinedPattern>
+}
+
+#[derive(Debug)]
+pub struct UserDefinedPattern {
+	args: Vec<String>, // todo: make this allow for defaults and stuff
+	vec
 	codeblock: CodeBlock
-	// ...?
 }
 
 impl Debug for UserDefined {
@@ -26,8 +31,7 @@ impl Debug for UserDefined {
 		f.debug_struct("UserDefined")
 			.field("name", &self.name())
 			.field("is_method", &self.0.is_method)
-			.field("args", &self.0.args)
-			.field("codeblock", &self.0.codeblock)
+			.field("pattterns", &self.0.patterns)
 			.finish()
 	}
 }
@@ -46,8 +50,8 @@ impl Hash for UserDefined {
 }
 
 impl UserDefined {
-	pub fn new(name: String, is_method: bool, args: Vec<String>, codeblock: CodeBlock) -> Self {
-		Self(Arc::new(UserDefinedInner { name, is_method, args, codeblock }))
+	pub fn new(name: String, is_method: bool, patterns: Vec<UserDefinedPattern>) -> Self {
+		Self(Arc::new(UserDefinedInner { name, is_method, patterns }))
 	}
 
 	pub fn name(&self) -> &str {
@@ -82,13 +86,15 @@ impl IsEqual for UserDefined {
 
 impl Call for UserDefined {
 	fn call(&self, args: Args, vm: &mut Vm) -> Result<Value, RuntimeError> {
-		if args._as_slice().len() == self.0.args.len() {
-			return self.0.codeblock.run(args, vm)
+		for pattern in self.0.patterns.iter() {
+			if pattern.args.len() == args._as_slice().len() {
+				return pattern.codeblock.run(args, vm)
+			}
 		}
 
 		Err(RuntimeError::ArgumentCountError {
 			given: args._as_slice().len(),
-			expected: self.0.args.len()
+			expected: 0 // todo: ??
 		})
 	}
 }
@@ -97,7 +103,7 @@ impl GetAttr for UserDefined {
 	fn get_attr(&self, attr: &str, _: &mut Vm) -> Result<Value, RuntimeError> {
 		match attr {
 			"name" => Ok(self.0.name.clone().into()),
-			"args" => Ok(self.0.args.iter().cloned().map(Value::from).collect::<Vec<_>>().into()),
+			// "args" => Ok(self.0.args.iter().cloned().map(Value::from).collect::<Vec<_>>().into()),
 			// "is_method" (?)
 			_ => Err(RuntimeError::UnknownAttribute(attr.to_string()))
 		}
