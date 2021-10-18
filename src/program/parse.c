@@ -532,7 +532,6 @@ static struct index_assign *parse_index_assign(struct index *aidx) {
 
 	ary_asgn->into = aidx->into;
 	ary_asgn->index = aidx->index;
-	free(aidx);
 
 	if (!(ary_asgn->value = parse_expression()))
 		die("cannot parse value for ary assignment");
@@ -556,12 +555,6 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	take();
 	untake();
 
-	if (expr->kind == SQ_PS_EINDEX && last.kind == SQ_TK_ASSIGN) {
-		expr->kind = SQ_PS_EARRAY_ASSIGN;
-		expr->ary_asgn = parse_index_assign(expr->index);
-		return expr;
-	}
-
 	if (expr->math->kind != SQ_PS_BEQL
 		|| expr->math->lhs->kind != SQ_PS_ECMP
 		|| expr->math->lhs->lhs->kind != SQ_PS_CADD
@@ -572,6 +565,12 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	) return expr;
 
 	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->lhs->rhs;
+
+	if (prim->kind == SQ_PS_PINDEX && last.kind == SQ_TK_ASSIGN) {
+		expr->kind = SQ_PS_EARRAY_ASSIGN;
+		expr->ary_asgn = parse_index_assign(&prim->index);
+		return expr;
+	}
 
 	if (last.kind == SQ_TK_LBRACKET) {
 		// expr->kind = SQ_PS_EINDEX;

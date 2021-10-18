@@ -153,7 +153,6 @@ struct expression {
 		SQ_PS_EASSIGN,
 		SQ_PS_EARRAY_ASSIGN,
 		SQ_PS_EMATH,
-		SQ_PS_EINDEX,
 	} kind;
 
 	union {
@@ -161,7 +160,6 @@ struct expression {
 		struct assignment *asgn;
 		struct index_assign *ary_asgn;
 		struct bool_expression *math;
-		struct index *index;
 	};
 };
 
