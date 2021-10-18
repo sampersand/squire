@@ -52,7 +52,7 @@ static char *token_to_identifier(struct sq_token token) {
 	case SQ_TK_SUB: return strdup("-");
 	case SQ_TK_NEG: return strdup("-@");
 	case SQ_TK_MUL: return strdup("*");
-	case SQ_TK_POW: return strdup("**");
+	case SQ_TK_POW: return strdup("^");
 	case SQ_TK_DIV: return strdup("/");
 	case SQ_TK_MOD: return strdup("%");
 	case SQ_TK_INDEX: return strdup("[]");

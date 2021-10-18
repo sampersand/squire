@@ -586,7 +586,7 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 	}
 
 	case SQ_G_IMITATION: {
-		struct sq_journey *pow = sq_imitation_lookup_change(AS_IMITATION(lhs), "**");
+		struct sq_journey *pow = sq_imitation_lookup_change(AS_IMITATION(lhs), "^");
 		sq_value args[2] = { lhs, rhs };
 
 		if (pow != NULL)

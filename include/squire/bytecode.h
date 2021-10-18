@@ -76,7 +76,7 @@ enum sq_opcode {
 	SQ_OC_MUL           = 0x4B, // [A,B,DST] DST <- A * B
 	SQ_OC_DIV           = 0x4C, // [A,B,DST] DST <- A / B
 	SQ_OC_MOD           = 0x4D, // [A,B,DST] DST <- A % B
-	SQ_OC_POW           = 0x4E, // [A,B,DST] DST <- A ** B
+	SQ_OC_POW           = 0x4E, // [A,B,DST] DST <- A ^ B
 	SQ_OC_INDEX         = 0x4F, // [A,B,DST] DST <- A[B]
 	SQ_OC_INDEX_ASSIGN  = 0x50, // [A,B,C] Performs `A[B]=C`; no destination.
 	SQ_OC_MATCHES       = 0x51, // [A,B,DST] DST <- A.matches(B)
