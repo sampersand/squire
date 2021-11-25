@@ -31,8 +31,8 @@ struct sq_other {
 };
 
 static inline enum sq_other_kind sq_other_kindof(const struct sq_other *other) {
-	assert(((char) other & 7) <= SQ_OK_ENVOY);
-	return (enum sq_other_kind) ((char) other & 7);
+	assert(((char) (size_t) other & 7) <= SQ_OK_ENVOY);
+	return (enum sq_other_kind) ((char) (size_t) other & 7);
 }
 
 static inline struct sq_scroll *sq_other_as_scroll(struct sq_other *other) {

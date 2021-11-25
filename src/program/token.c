@@ -77,6 +77,7 @@ static struct sq_text *parse_fraktur_bareword(void) {
 
 
 static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_slash) {
+	(void) ignore_slash;
 	char c;
 
 	// strip whitespace
