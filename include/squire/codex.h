@@ -1,4 +1,5 @@
-#ifndef sq_codex_H
+#ifndef SQ_CODEX_H
+#define SQ_CODEX_H
 
 #include <squire/value.h>
 
