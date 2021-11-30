@@ -1,5 +1,4 @@
 #ifndef SQ_BOOK_H
-
 #define SQ_BOOK_H
 
 #include <squire/value.h>
