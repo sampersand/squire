@@ -1,5 +1,5 @@
-#ifndef sq_numeral_H
-#define sq_numeral_H
+#ifndef SQ_NUMERAL_H
+#define SQ_NUMERAL_H
 
 #include <inttypes.h>
 #include <stdbool.h>
