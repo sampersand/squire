@@ -1,0 +1,127 @@
+@transcribe "value.sq"
+@transcribe "literal.sq"
+
+form Function : Value {
+	matter func: Journey;
+	matter args: Book;
+
+	change run
+		() if soul.func.arity == N   => (soul.func)(),
+		() if soul.func.arity == I   => (soul.func)(soul.args[I]),
+		() if soul.func.arity == II  => (soul.func)(soul.args[I], soul.args[II]),
+		() if soul.func.arity == III => (soul.func)(soul.args[I], soul.args[II], soul.args[III]),
+		() if soul.func.arity == IV  => (soul.func)(soul.args[I], soul.args[II], soul.args[III], soul.args[IV])
+
+	essence FUNCTIONS: Codex = {
+		'R': \() => Literal(gamble()),
+		'P': \() => Literal(inquire()),
+
+		'E': \(arg) => dismount(1),
+		'B': \(block) => block,
+		'C': \(block) => block.run().run(),
+		'`': \(cmd) => Literal(hex(cmd)),
+		'Q': \(code) => dismount(code),
+		'!': \(val) => Literal(!val),
+		'L': \(str) => Literal(length(str.to-text())),
+		'D': \(val) { dump(val = val.run()); reward val },
+		'O': \(val) {
+			dismount(1)
+		},
+		'A': \(cmd) => dismount(1),
+		'~': \(num) => Literal(-tally(num)),
+
+		'+': \(lhs, rhs) {
+			abort(0)
+		},
+
+		'+': \(l, r) => dismount(1),
+		'-': \(l, r) => dismount(1),
+		'*': \(l, r) => dismount(1),
+		'/': \(l, r) => dismount(1),
+		'%': \(l, r) => dismount(1),
+		'^': \(l, r) => dismount(1),
+		'<': \(l, r) => dismount(1),
+		'>': \(l, r) => dismount(1),
+		'?': \(l, r) => dismount(1),
+		'&': \(l, r) => dismount(1),
+		'|': \(l, r) => dismount(1),
+		';': \(l, r) => dismount(1),
+		'=': \(l, r) => dismount(1),
+		'W': \(l, r) => dismount(1),
+
+		'I': \(c, ift, iff) => dismount(1),
+		'G': \(str, start, len) => dismount(1),
+
+		'S': \(str, start, len, repl) => dismount(1),
+	}
+}
+
+f = Function(Function.FUNCTIONS['R'], []);
+dump(f.run());
+
+
+# 
+# @henceforth $chain($l, $r) = (\(l, r) => l.r)($l, $r);
+# 	essence FUNCTIONS: Codex = {
+# 		'R': \() => gamble(),
+# 		'P': \() => inquire(),
+# 
+# 		'E': \(arg) => eval(text(arg)),
+# 		'B': \(block) => block,
+# 		'C': \(block) { tmp = block.run(); reward tmp.run() },
+# 		'`': \(cmd) => hex(cmd),
+# 		'Q': \(code) => dismount(code),
+# 		'!': \(val) => Literal(!val),
+# 		'L': \(val) { tmp = text(val); reward Literal(val.length) },
+# 		'D': \(val) => dump(val),
+# 		'O': \(val) {
+# 			v = text(val);
+# 			if v.recto == '\\' {
+# 				proclaimn(substr(v, I, v.length - I));
+# 			} alas {
+# 				proclaim(v)
+# 			}
+# 			reward Literal(ni);
+# 		},
+# 		'A': \(val) => ascii(val._run_value()),
+# 
+# @henceforth $lambda-fork($body) =
+# 	\(l, r) { tmp = l._run_value(); fork tmp $body }
+# 
+# 		'+': $lambda-fork() { '+' }
+# 		'+': $normal-mathop(+),
+# 		'-': $normal-mathop(-),
+# 		'*': $normal-mathop(*),
+# 		'^': $normal-mathop(^),
+# 		'?': $normal-mathop(==),
+# 		'<': $normal-mathop(<),
+# 		'>': $normal-mathop(>),
+# 
+# 		'/': \(l, r) {
+# 			l = l.run()
+# 			if l {
+# 				reward Literal(l.value / r.)		
+# 			}
+# 		}
+# 	}
+# }
+# 
+# 	4.3.1 [`+`](#431-unchanged-coerce)  
+# 	4.3.2 [`-`](#432--unchanged-number)  
+# 	4.3.3 [`*`](#433-unchanged-coerce)  
+# 	4.3.4 [`/`](#434-unchanged-number)  
+# 	4.3.5 [`%`](#435-unchanged-number)  
+# 	4.3.6 [`^`](#436-unchanged-number)  
+# 	4.3.7 [`<`](#437-unchanged-coerce)  
+# 	4.3.8 [`>`](#438-unchanged-coerce)  
+# 	4.3.9 [`?`](#439-unchanged-unchanged)  
+# 	4.3.10 [`&`](#4311-unchanged-unevaluated)  
+# 	4.3.11 [`|`](#4310-unchanged-unevaluated)  
+# 	4.3.12 [`;`](#4312-unchanged-unchanged)  
+# 	4.3.13 [`=`](#4313-unevaluated-unchanged)  
+# 	4.3.14 [`WHILE`](#4314-whileunevaluated-unevaluated)
+# 
+# 		GET
+# 		IF
+# 
+# 		SET

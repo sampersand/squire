@@ -1,0 +1,5 @@
+form Value {
+	change to-text(): Text => text(soul.run().value);
+	change to-numeral(): Numeral => numeral(soul.run().value);
+	change to-veracity(): Veracity => veracity(soul.run().value);
+}

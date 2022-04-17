@@ -3,9 +3,8 @@
 #proclaim($chain("A", a))
 tmp = journey(x){reward x}
 proclaim(tmp=tmp ; tmp));
-#proclaim();
+#proclaim(	);
 
-@__END__
 @transcribe "value.sq"
 @transcribe "literal.sq"
 

@@ -33,17 +33,17 @@ form-body-statement
 special-identifier
 	:= <identifier>
 	 | '+' | '-' | '*' | '/' | '%' | '**' | '-@' | '+@' (* `@` is for unary *)
-	 | '<' | '>' | '<= ' | '>=' | '==' | '!=' | '<=>' | ['!' | '!@']
+	 | '<' | '>' | '<=' | '>=' | '==' | '!=' | '<=>' | ['!' | '!@']
 	 | '[]' | '[]=' | '()'
 	 ;
 
 journey-declaration := 'journey' <identifier> <journey-base> ;
 journey-base := '(' <journey-args> ')' [':' <pattern>] <brace-statements>
-journey-args (* note that a trailing `,` is not necessary.)
+journey-args (* note that a trailing `,` is not necessary. *)
 	:= { <identifier> [':' <pattern>] ',' }              (* positional *)
 	   { <identifier> [':' <pattern>] '=' <expression> } (* optional *)
 	   [ '*' [<identifier> | 'ni'] ] (* `ni` means no extra args, nothing means ignore extra. *)
-	   { <identifier> [':' <pattern>] } (* keyword-only.. must come after a `*` ())
+	   { <identifier> [':' <pattern>] } (* keyword-only.. must come after a `*` *)
 	   [ '**' [<identifier> | 'ni'] ] (* `ni` means no extra kwargs, nothing means ignore extra *)
 	 ;
 

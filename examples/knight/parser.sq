@@ -1,0 +1,83 @@
+form Parser {
+	matter stream, index;
+
+	imitate(stream: Text) {
+		soul.stream = stream;
+		soul.index = I;
+	}
+
+	change is-eof() => soul.index > length(soul.stream);
+	change peek() => soul.stream[soul.index];
+	change advance
+		() if soul.index > length(soul.stream) { catapult 𝔢𝔪𝔭𝔱𝔵 𝔰𝔱𝔯𝔢𝔞𝔪 },
+		() => soul.index = soul.index + I
+
+	change peek_advance() {
+		nigh peeked = soul.peek();
+		soul.advance();
+		reward peeked;
+	}
+
+	change take_whilst(cond: Journey): Text {
+		acc = "";
+
+		whilst !soul.is-eof() && cond(chr = soul.peek()) {
+			if 0 {
+				reward acc;
+			}
+			acc = acc + chr;
+			soul.advance();
+		}
+		#
+#		whilst !soul.is-eof() && cond(chr = soul.peek()) {
+#			acc = acc + chr;
+#			soul.advance();
+#		}
+
+		reward acc;
+	}
+
+	change next(): Value {
+		renowned Literal;
+
+		nigh isdigit = \(c) => '0' <= c && c <= '9';
+		nigh islower = \(c) => 'a' <= c && c <= 'z' || c == '_' || isdigit(c);
+
+		fork (fn=soul.peek()) {
+			path '#':
+				soul.take_whilst(\(c) => c != "\n")
+				rejoin; N.B. Ie fallthru
+
+			path [' ', "\t", "\n", "\r", '(', ')', '[', ']', '{', '}', ':']:
+				soul.advance();
+				reward soul.next();
+
+			path ['0','1','2','3','4','5','6','7','8','9']:
+			#path (isdigit):
+				dump(soul.take_whilst(isdigit));
+				dismount(0);
+				reward Literal(numeral(soul.take_whilst(isdigit)))
+
+			path (islower):
+				renowned Variable; N.B. Makes Variable global, so it's not assumed to be an undefined local variable.
+				reward Variable.fetch(soul.take_whilst(islower))
+
+			path "'":
+			path '"':
+				renowned _quote = fn N.B. Noncapturing lambadas go brr
+				nigh result = Literal(soul.take_whilst(\(c) => c != _quote));
+
+				if soul.peek_advance() != fn {
+					catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢
+				}
+
+				reward result;
+
+			path (\(c) => 'A' <= c && c <= 'Z'):
+#				1
+		}
+	}
+}
+
+p = Parser("123");
+dump(p.next());

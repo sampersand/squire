@@ -1,0 +1,38 @@
+# import these files.
+@transcribe "assert.sq"
+@transcribe "value.sq"
+
+# The form (ie class) `Variable` is a `Value`
+form Variable : Value {
+	# It has a field `name` that's a `Text`.
+	matter name: Text;
+
+	# It has a field `value` that's either a `Value` or `ni` (ie null).
+	matter value: [Value, ni];
+
+	# It has a static field `declared`, which is a `Codex` (ie dictionary/hashmap).
+	# the field is initialized to an empty codex.
+	essence declared: Codex = {};
+
+	# The constructor for a Variable simply takes a `name`
+	imitate(name: Text) => soul.name = name;
+
+	# It has a static function called `fetch` which has two branches
+	recall fetch
+		# The first branch will only match if `soul.declared[name]` is not `ni`. ie, if a variable
+		# `name` already exists within the `declared` static field. Here `soul` refers to the `Variable`
+		(name: Text) if ni != (var = soul.declared[name]) => var,
+		# If the first branch fails, then we simply assign a new variable, and return it.
+		(name: Text) => soul.declared[name] = Variable(name);
+
+	# We have a member function called `run`, which takes also has two branches.
+	# both branches take no arguments
+	change run
+		# if we haven't assign to our `value` yet, ~~throw~~ *ahem* _catapult_ an exception.
+		() if soul.value == ni { catapult "undefined variable '{soul.name}'" },
+		# otherwise, we'll be returning the `soul.value
+		(): Value => soul.value;
+
+	# member function called `assign` that simply assigns to our `soul.value`.
+	change assign(value: Value) => soul.value = value;
+}

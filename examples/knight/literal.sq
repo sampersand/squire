@@ -1,0 +1,7 @@
+@transcribe "value.sq"
+
+form Literal : Value {
+	matter value: [Numeral, Text, yea, nay, ni];
+
+	change run(): Value => soul;
+}

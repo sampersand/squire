@@ -562,7 +562,7 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		|| expr->math->lhs->lhs->lhs->lhs->kind != SQ_PS_MPOW
 		|| expr->math->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_PUNARY
 		|| expr->math->lhs->lhs->lhs->lhs->lhs->lhs->kind != SQ_PS_UPRIMARY
-	) return expr;
+	) goto end; // it's cursed enough, why not throw a `goto` in anyways
 
 	struct primary *prim = expr->math->lhs->lhs->lhs->lhs->lhs->lhs->rhs;
 
@@ -591,6 +591,7 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		expr->asgn = parse_assignment(prim->variable_old);
 	}
 
+end:
 
 	return expr;
 }

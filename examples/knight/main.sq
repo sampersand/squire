@@ -1,0 +1,9 @@
+# import these files.
+@transcribe 'variable.sq'
+
+v = Variable.fetch("A")
+dump(v)
+
+v2 = Variable.fetch("A")
+v.assign(Variable.fetch("B"))
+dump(v2)

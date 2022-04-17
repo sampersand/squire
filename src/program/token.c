@@ -77,7 +77,7 @@ static struct sq_text *parse_fraktur_bareword(void) {
 
 
 static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_slash) {
-	(void) ignore_slash;
+	(void) ignore_slash; // todo: i forgot why i used this
 	char c;
 
 	// strip whitespace
@@ -194,6 +194,7 @@ static struct sq_token next_interpolation_token(void) {
 
 	token = next_normal_token();
 
+	// yeah, i think ahead.
 	if ((token.kind == SQ_TK_LPAREN && !_interpolate_is_curly_brace)
 			|| (_interpolate_is_curly_brace && token.kind == SQ_TK_LBRACE)
 	) {
@@ -348,6 +349,7 @@ struct sq_token next_non_macro_token() {
 	return interpolation_length ? next_interpolation_token() : next_normal_token();
 }
 
+// scope creep go brr
 struct sq_token sq_next_token() {
 	struct sq_token token = next_macro_token();
 

@@ -10,7 +10,7 @@ form Fraction {
 
 	# No need for the ugly `if` statement anymore.
 	change to-text
-		(): Text if soul.denom == I => "{soul.numer}",
+		(): Text if (soul.denom == I) => "{soul.numer}",
 		(): Text => "{soul.numer}/{soul.denom}";
 }
 
