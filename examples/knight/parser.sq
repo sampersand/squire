@@ -1,3 +1,5 @@
+renowned Value;
+
 form Parser {
 	matter stream, index;
 
@@ -19,31 +21,31 @@ form Parser {
 	}
 
 	change take_whilst(cond: Journey): Text {
-		acc = "";
+		nigh acc = "";
+		nigh chr;
 
 		whilst !soul.is-eof() && cond(chr = soul.peek()) {
-			if 0 {
-				reward acc;
-			}
 			acc = acc + chr;
 			soul.advance();
 		}
-		#
-#		whilst !soul.is-eof() && cond(chr = soul.peek()) {
-#			acc = acc + chr;
-#			soul.advance();
-#		}
 
 		reward acc;
 	}
 
 	change next(): Value {
 		renowned Literal;
+		renowned Variable;
+		renowned Function;
 
-		nigh isdigit = \(c) => '0' <= c && c <= '9';
-		nigh islower = \(c) => 'a' <= c && c <= 'z' || c == '_' || isdigit(c);
+		N.B. These are actually defined in the global scope.
+		journey isdigit(c) => '0' <= c && c <= '9';
+		journey islower(c) => 𝔞 <= c && c <= 𝔷 || c == '_' || isdigit(c);
+		journey isupper(c) => 𝔄 <= c && c <= ℨ || c == '_';
 
-		fork (fn=soul.peek()) {
+		nigh chr;
+		nigh func;
+
+		fork (chr=soul.peek()) {
 			path '#':
 				soul.take_whilst(\(c) => c != "\n")
 				rejoin; N.B. Ie fallthru
@@ -52,32 +54,37 @@ form Parser {
 				soul.advance();
 				reward soul.next();
 
-			path ['0','1','2','3','4','5','6','7','8','9']:
-			#path (isdigit):
-				dump(soul.take_whilst(isdigit));
-				dismount(0);
+			path (isdigit):
 				reward Literal(numeral(soul.take_whilst(isdigit)))
 
 			path (islower):
-				renowned Variable; N.B. Makes Variable global, so it's not assumed to be an undefined local variable.
 				reward Variable.fetch(soul.take_whilst(islower))
 
 			path "'":
 			path '"':
-				renowned _quote = fn N.B. Noncapturing lambadas go brr
+				renowned _quote = chr N.B. Noncapturing lambadas go brr
 				nigh result = Literal(soul.take_whilst(\(c) => c != _quote));
 
-				if soul.peek_advance() != fn {
+				if soul.peek_advance() != chr {
 					catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢
 				}
 
 				reward result;
 
-			path (\(c) => 'A' <= c && c <= 'Z'):
-#				1
+			path (isupper):
+				soul.take_whilst(isupper);
+				fork chr {
+					path 𝔗: reward Literal(yea)
+					path 𝔉: reward Literal(nay)
+					path 𝔑: reward Literal(ni)
+				}
+				rejoin;
+			alas:
+				dump(chr);
+				if ni == (func=Function.lookup(chr)) {
+					catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + chr;
+				}
+				dump(Function.lookup(chr));
 		}
 	}
 }
-
-p = Parser("123");
-dump(p.next());

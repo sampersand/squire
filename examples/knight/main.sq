@@ -1,9 +1,16 @@
-# import these files.
-@transcribe 'variable.sq'
+# # import these files.
+# @transcribe 'variable.sq'
+# 
+# v = Variable.fetch("A")
+# dump(v)
+# 
+# v2 = Variable.fetch("A")
+# v.assign(Variable.fetch("B"))
+# dump(v2)
 
-v = Variable.fetch("A")
-dump(v)
+@transcribe 'parser.sq'
+@transcribe 'literal.sq'
+@transcribe 'function.sq'
 
-v2 = Variable.fetch("A")
-v.assign(Variable.fetch("B"))
-dump(v2)
+p = Parser("#hello\n  $");
+dump(p.next());

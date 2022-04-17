@@ -612,6 +612,7 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_GSTORE:
 		case SQ_OC_ILOAD:
 		case SQ_OC_RETURN:
+		case SQ_OC_THROW:
 			return 1;
 
 		case SQ_OC_EQL:

@@ -12,6 +12,8 @@ form Function : Value {
 		() if soul.func.arity == III => (soul.func)(soul.args[I], soul.args[II], soul.args[III]),
 		() if soul.func.arity == IV  => (soul.func)(soul.args[I], soul.args[II], soul.args[III], soul.args[IV])
 
+	recall lookup(chr) => Function.FUNCTIONS[chr];
+
 	essence FUNCTIONS: Codex = {
 		'R': \() => Literal(gamble()),
 		'P': \() => Literal(inquire()),
@@ -55,9 +57,6 @@ form Function : Value {
 		'S': \(str, start, len, repl) => dismount(1),
 	}
 }
-
-f = Function(Function.FUNCTIONS['R'], []);
-dump(f.run());
 
 
 # 

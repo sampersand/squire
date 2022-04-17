@@ -1102,7 +1102,7 @@ static struct return_statement *parse_return_statement() {
 static struct expression *parse_throw_statement() {
 	GUARD(SQ_TK_THROW);
 	struct expression *expression = parse_expression();
-	if (!expression) die("expected expression after 'hark'");
+	if (!expression) die("expected expression after 'catapult'");
 	return expression;
 }
 
