@@ -66,7 +66,7 @@ form Parser {
 				nigh result = Literal(soul.take_whilst(\(c) => c != _quote));
 
 				if soul.peek_advance() != chr {
-					catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢
+					catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢;
 				}
 
 				reward result;
@@ -78,13 +78,24 @@ form Parser {
 					path 𝔉: reward Literal(nay)
 					path 𝔑: reward Literal(ni)
 				}
-				rejoin;
+				foo:
 			alas:
-				dump(chr);
-				if ni == (func=Function.lookup(chr)) {
+				soul.advance();
+				whence foo;
+
+				if ni == (func=Function.FUNCTIONS[chr]) {
 					catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + chr;
 				}
-				dump(Function.lookup(chr));
+
+				nigh args = [];
+				nigh i = I;
+
+				whilst i <= func.arity {
+					insert(args, i, soul.next());
+					i = i + I;
+				}
+
+				reward Function(func, args);
 		}
 	}
 }

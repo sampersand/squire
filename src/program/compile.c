@@ -54,13 +54,6 @@ struct sq_code {
 	if (code->cap == code->len) \
 		code->pos = xrealloc(code->pos, sizeof_array(type , code->cap*=2));
 
-#ifdef SQ_LOG
-#define LOG(...) printf(__VA_ARGS__)
-#else
-#define LOG(...) ((void) 0)
-#endif
-
-
 static void extend_bytecode_cap(struct sq_code *code) {
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
 }

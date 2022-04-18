@@ -210,7 +210,9 @@ bool sq_moon_joke_does_were_flip() {
 #endif /* !SQ_NMOON_JOKE */
 
 static inline union sq_bytecode next_bytecode(struct sq_stackframe *sf) {
-	return sf->pattern->code.bytecode[sf->ip++];
+	union sq_bytecode bc = sf->pattern->code.bytecode[sf->ip++];
+	LOG("runtime[%d]=%u\n", sf->ip-1, bc.index);
+	return bc;
 }
 
 static inline unsigned next_index(struct sq_stackframe *sf) {
@@ -700,11 +702,12 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		case SQ_OC_COMEFROM: {
-			int i;
-			int amnt = (int) next_index(sf);
+			int i, amnt = (int) next_index(sf);
 			for (i = 0; i < amnt - 1; ++i)
 				if (!fork()) break;
-			sf->ip += i;
+				else (void) next_index(sf);
+
+			sf->ip = next_index(sf);
 			continue;
 			// todo: this should probably be fixed.
 		}
@@ -878,9 +881,11 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			assert(sq_value_as_form(operands[0])->matter[index].genus == SQ_UNDEFINED);
 			sq_value_as_form(operands[0])->matter[index].genus = sq_value_clone(operands[1]);
 			continue;
+
+		default:
+			bug("unknown opcode: %d", opcode);
 		}
 
-		bug("unknown opcode: %d", opcode);
 	}
 
 	return SQ_NI;

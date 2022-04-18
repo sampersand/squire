@@ -2,13 +2,6 @@
 #include <squire/shared.h>
 #include <string.h>
 
-#ifdef SQ_LOG
-# define LOG printf
-#else
-# define LOG(...) ((void) 0)
-#endif
-
-
 static void extend_bytecode_cap(struct sq_compiler *compiler) {
 	if (compiler->code.len >= compiler->code.cap) {
 		compiler->code.cap *= 2;

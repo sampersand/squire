@@ -12,5 +12,5 @@
 @transcribe 'literal.sq'
 @transcribe 'function.sq'
 
-p = Parser("#hello\n  $");
+p = Parser("O 1");
 dump(p.next());

@@ -24,7 +24,14 @@
 	fprintf(stderr, "bug at " __FILE__ ":%s:%d: ", __func__, __LINE__),\
 	fprintf(stderr, __VA_ARGS__),\
 	fputc('\n', stderr),\
+	fflush(stderr),\
 	abort())
+
+#ifdef SQ_LOG
+#define LOG printf
+#else
+#define LOG(...) ((void) 0)
+#endif
 
 void *xcalloc(size_t count, size_t size) SQ_ATTR(malloc);
 void *xmalloc(size_t size) SQ_ATTR(malloc);
