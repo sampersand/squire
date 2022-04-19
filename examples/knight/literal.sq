@@ -1,7 +1,47 @@
 @transcribe "value.sq"
 
 form Literal : Value {
-	matter value: [Numeral, Text, yea, nay, ni];
+	matter value: [Numeral, Text, yea, nay, ni]
 
 	change run(): Value => soul;
+
+	change to-text(): Text {
+		fork soul.value {
+			path ni: reward "null"
+			path yea: reward "true"
+			path nay: reward "false"
+			path Numeral: reward arabic(soul.value)
+			path Text: reward soul.value
+		}
+	}
+	change to-numeral(): Numeral => numeral(soul.value)
+	change to-veracity(): Veracity => veracity(soul.value)
+
+	change +
+		(rhs) if Numeral ~~ soul.value => Literal(soul.value + tally(rhs)),
+		(rhs) if Text ~~ soul.value => Literal(soul.value + text(rhs));
+	@henceforth $literalop($op) = change $op(rhs) => Literal((soul.value) $op (tally(rhs)));
+	$literalop(-)
+	$literalop(*)
+	$literalop(/)
+	$literalop(%)
+	$literalop(^)
+	@nevermore $literalop
+
+	change <=>
+		(rhs) if Numeral ~~ soul.value => soul.value <=> tally(rhs),
+		(rhs) if Text ~~ soul.value => soul.value <=> text(rhs),
+		(rhs) if Veracity ~~ soul.value => tally(soul.value) <=> tally(veracity(rhs));
+
+	change ==(rhs) => soul.value == rhs.value
+
+	change dump() {
+		fork soul.value {
+			path ni: proclaim("Null()")
+			path yea:  proclaim("Boolean(true)")
+			path nay: proclaim("Boolean(false)")
+			path Numeral: proclaim("Number({soul})")
+			path Text: proclaim("Text({soul.value})")
+		}
+	}
 }

@@ -39,5 +39,6 @@ void *xrealloc(void *ptr, size_t size);
 void *memdup(void *ptr, size_t size);
 
 void sq_memory_error(char *msg, ...) SQ_ATTR(cold,noreturn);
+char *read_file(const char *filename);
 
 #endif /* !SQ_SHARED_H */

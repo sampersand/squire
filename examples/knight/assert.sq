@@ -1,6 +1,0 @@
-@henceforth $assert($cond) = <<
-	if !($cond) {
-		proclaim("assertion failed");
-		dismount(1)
-	}
-	>>;

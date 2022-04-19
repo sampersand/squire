@@ -702,14 +702,13 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		case SQ_OC_COMEFROM: {
-			int i, amnt = (int) next_index(sf);
-			for (i = 0; i < amnt - 1; ++i)
+			int amnt = next_index(sf);
+			for (int i = 0; i < amnt - 1; ++i)
 				if (!fork()) break;
-				else (void) next_index(sf);
+				else next_index(sf);
 
 			sf->ip = next_index(sf);
 			continue;
-			// todo: this should probably be fixed.
 		}
 
 		case SQ_OC_CALL: {

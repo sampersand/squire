@@ -1,16 +1,27 @@
-# # import these files.
-# @transcribe 'variable.sq'
-# 
-# v = Variable.fetch("A")
-# dump(v)
-# 
-# v2 = Variable.fetch("A")
-# v.assign(Variable.fetch("B"))
-# dump(v2)
-
+#!../../bin/squire -f
+@transcribe 'shared.sq'
 @transcribe 'parser.sq'
 @transcribe 'literal.sq'
 @transcribe 'function.sq'
+@transcribe 'variable.sq'
 
-p = Parser("O 1");
-dump(p.next());
+@henceforth $die($msg) = << proclaim($msg); dismount(1); >>;
+
+fork ARGV[I] {
+	path '-e':
+		contents = ARGV[II]
+
+	path '-f':
+		# scrolls aren't yet OOP
+		scroll = Scroll_open(ARGV[II], 𝔯);
+		contents = Scroll_read(scroll, ni);
+		Scroll_close(scroll);
+	alas:
+		$die("usage: ./main.sq (-e 'expression' | -f 'filename')");
+}
+
+attempt {
+	Parser(contents).next().run();
+} alas err {
+	$die("unable to run program: {err}")
+}

@@ -71,6 +71,9 @@ void sq_scroll_close(struct sq_scroll *scroll) {
 }
 
 struct sq_text *sq_scroll_read(struct sq_scroll *scroll, size_t length) {
+	if (length == 0)
+		return sq_scroll_read_all(scroll);
+
 	struct sq_text *text = sq_text_allocate(length);
 	unsigned nread;
 	size_t position = 0;
@@ -88,12 +91,7 @@ struct sq_text *sq_scroll_read(struct sq_scroll *scroll, size_t length) {
 }
 
 struct sq_text *sq_scroll_read_all(struct sq_scroll *scroll) {
-#ifdef __GNUC__
-#else
-#error todo: read entire scroll to a string on another system
-#endif
-	(void) scroll;
-	die("todo: sq_scroll_read_all");
+	return sq_text_new(read_file(scroll->filename));
 }
 
 void sq_scroll_write(struct sq_scroll *scroll, const char *ptr, size_t length) {

@@ -41,7 +41,7 @@ static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
 	return value & SQ_VMASK_BITS;
 }
 
-#define SQ_YAY SQ_VMASK((1 << SQ_VSHIFT), SQ_G_OTHER)
+#define SQ_YEA SQ_VMASK((1 << SQ_VSHIFT), SQ_G_OTHER)
 #define SQ_NAY SQ_VMASK((2 << SQ_VSHIFT), SQ_G_OTHER)
 #define SQ_NI SQ_VMASK((0 << SQ_VSHIFT), SQ_G_OTHER)
 #define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_G_OTHER)
@@ -63,7 +63,7 @@ static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
 // #define sq_value_is(x, kind) (SQ_VTAG(x) == SQ_TAG(kind))
 // #define sq_value_as(x, kind) (assert(sq_value_is(x, kind), _Generic(kind, \
 // 	sq_numeral: (x) >> SQ_VSHIFT, \
-// 	bool: (x) == SQ_YAY, \
+// 	bool: (x) == SQ_YEA, \
 // 	struct sq_text *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_form *: (kind) SQ_VUNMASK(x), \
 // 	struct sq_imitation *: (kind) SQ_VUNMASK(x), \
@@ -92,7 +92,7 @@ static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
 }
 
 static inline sq_value sq_value_new_veracity(sq_veracity veracity) {
-	return veracity ? SQ_YAY : SQ_NAY;
+	return veracity ? SQ_YEA : SQ_NAY;
 }
 
 static inline sq_value sq_value_new_text(struct sq_text *text) {
@@ -140,7 +140,7 @@ static inline bool sq_value_is_numeral(sq_value value) {
 }
 
 static inline bool sq_value_is_veracity(sq_value value) {
-	return value == SQ_YAY || value == SQ_NAY;
+	return value == SQ_YEA || value == SQ_NAY;
 }
 
 static inline bool sq_value_is_text(sq_value value) {
@@ -178,7 +178,7 @@ static inline sq_numeral sq_value_as_numeral(sq_value value) {
 
 static inline bool sq_value_as_veracity(sq_value value) {
 	assert(sq_value_is_veracity(value));
-	return value == SQ_YAY;
+	return value == SQ_YEA;
 }
 
 static inline struct sq_text *sq_value_as_text(sq_value value) {

@@ -54,15 +54,15 @@ form Parser {
 				soul.advance();
 				reward soul.next();
 
-			path (isdigit):
+			path isdigit:
 				reward Literal(numeral(soul.take_whilst(isdigit)))
 
-			path (islower):
+			path islower:
 				reward Variable.fetch(soul.take_whilst(islower))
 
-			path "'":
-			path '"':
+			path ["'", '"']:
 				renowned _quote = chr N.B. Noncapturing lambadas go brr
+				soul.advance()
 				nigh result = Literal(soul.take_whilst(\(c) => c != _quote));
 
 				if soul.peek_advance() != chr {
@@ -71,17 +71,18 @@ form Parser {
 
 				reward result;
 
-			path (isupper):
+			path isupper:
 				soul.take_whilst(isupper);
 				fork chr {
 					path 𝔗: reward Literal(yea)
 					path 𝔉: reward Literal(nay)
 					path 𝔑: reward Literal(ni)
 				}
-				foo:
+
+			done:
 			alas:
 				soul.advance();
-				whence foo;
+				whence done;
 
 				if ni == (func=Function.FUNCTIONS[chr]) {
 					catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + chr;

@@ -241,7 +241,7 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 		sq_value args[2] = { lhs, rhs };
 
 		if (eql != NULL)
-			return sq_journey_run_deprecated(eql, 2, args);
+			return sq_value_to_veracity(sq_journey_run_deprecated(eql, 2, args));
 		// fallthrough
 	}
 
@@ -263,8 +263,14 @@ sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 		// todo: free text
 		return strcmp(AS_STR(lhs), sq_value_to_text(rhs)->ptr);
 
-	case SQ_G_IMITATION:
-		todo("cmp imitation");
+	case SQ_G_IMITATION: {
+		struct sq_journey *cmp = sq_imitation_lookup_change(AS_IMITATION(lhs), "<=>");
+		sq_value args[2] = { lhs, rhs };
+
+		if (cmp != NULL)
+			return sq_value_to_numeral(sq_journey_run_deprecated(cmp, 2, args));
+		// fallthrough
+	}
 
 	default:
 		die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
@@ -581,7 +587,7 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
-		if (!rnum) die("cannot modulo by N");
+		if (!rnum) return sq_value_new((sq_numeral) 1);
 		return sq_value_new((sq_numeral) pow(AS_NUMBER(lhs), rnum));
 	}
 
@@ -641,7 +647,7 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		else if (value == SQ_NI)
 			return &ni_string;
 		else
-			return value == SQ_YAY ? &yea_string : &nay_string;
+			return value == SQ_YEA ? &yea_string : &nay_string;
 
 	case SQ_G_NUMERAL:
 		return sq_numeral_to_text(AS_NUMBER(value));
@@ -685,7 +691,7 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 		if (sq_value_is_other(value))
 			return sq_other_to_numeral(AS_OTHER(value));
 		else
-			return value == SQ_YAY ? 1 : 0;
+			return value == SQ_YEA ? 1 : 0;
 
 	case SQ_G_NUMERAL:
 		return AS_NUMBER(value);
@@ -727,7 +733,7 @@ bool sq_value_to_veracity(sq_value value) {
 		if (sq_value_is_other(value))
 			return sq_other_to_veracity(AS_OTHER(value));
 		else
-			return value == SQ_YAY;
+			return value == SQ_YEA;
 
 	case SQ_G_NUMERAL:
 		return AS_NUMBER(value);

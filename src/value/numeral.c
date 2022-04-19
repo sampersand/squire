@@ -37,16 +37,13 @@ static void convert(unsigned numeral, char one, char five, char ten, char **out)
 }
 
 
-#ifdef SQ_NUMERAL_TO_ARABIC
-struct sq_text sq_text_zero = SQ_TEXT_STATIC("0"); 
-#else
-struct sq_text sq_text_zero = SQ_TEXT_STATIC("N"); 
-#endif /* SQ_NUMERAL_TO_ARABIC */
+struct sq_text sq_text_zero_numeral = SQ_TEXT_STATIC("N");
+struct sq_text sq_text_zero_arabic = SQ_TEXT_STATIC("0");
 
 // lol this is so bad.
 struct sq_text *sq_numeral_to_roman(sq_numeral numeral) {
 	if (!numeral)
-		return &sq_text_zero;
+		return &sq_text_zero_numeral;
 
 	struct sq_text *buf = sq_text_allocate(40); // todo: find an actual max size lol
 	char *ret = buf->ptr;
@@ -82,7 +79,7 @@ struct sq_text *sq_numeral_to_roman(sq_numeral numeral) {
 // note that this returns an owned text.
 struct sq_text *sq_numeral_to_arabic(sq_numeral numeral) {
 	if (!numeral)
-		return &sq_text_zero;
+		return &sq_text_zero_arabic;
 
 	struct sq_text *buf = sq_text_allocate(40);
 	snprintf(buf->ptr, 40, "%"PRId64, numeral);

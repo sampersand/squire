@@ -250,6 +250,22 @@ static struct primary *parse_primary() {
 	case SQ_TK_NI:
 		primary.kind = SQ_PS_PNI;
 		break;
+	case SQ_TK_LABEL: {
+		untake();
+		last.kind = SQ_TK_IDENT;
+		struct variable_old *var = xmalloc(sizeof(struct variable_old));
+
+		if (!(var->name = token_to_identifier(take())))
+			return untake(), free(var), NULL;
+		var->field = NULL;
+		primary.kind = SQ_PS_PVARIABLE;
+		primary.variable = var->name;
+		free(var);
+		untake();
+		last.kind = SQ_TK_COLON;
+		break;
+	}
+
 	case SQ_TK_IDENT: {
 		untake();
 		struct variable_old *var = parse_variable();
@@ -539,18 +555,6 @@ static struct index_assign *parse_index_assign(struct index *aidx) {
 	return ary_asgn;
 }
 
-static struct expression *parse_expression_inner(struct expression *);
-
-static struct expression *parse_expression() {
-	struct expression expr;
-	expr.kind = SQ_PS_EMATH;
-
-	if (!(expr.math = parse_bool_expression()))
-		return NULL;
-
-	return parse_expression_inner(memdup(&expr, sizeof(struct expression)));
-}
-
 static struct expression *parse_expression_inner(struct expression *expr) {
 	take();
 	untake();
@@ -594,6 +598,16 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 end:
 
 	return expr;
+}
+
+static struct expression *parse_expression() {
+	struct expression expr;
+	expr.kind = SQ_PS_EMATH;
+
+	if (!(expr.math = parse_bool_expression()))
+		return NULL;
+
+	return parse_expression_inner(memdup(&expr, sizeof(struct expression)));
 }
 
 static struct variable_old *parse_variable(void);
@@ -1034,7 +1048,6 @@ static struct switch_statement *parse_switch_statement() {
 	EXPECT(SQ_TK_LBRACE, "expected a '{' after fork condition");
 
 	while (true) {
-		bool wasnt_label = true;
 		switch (take().kind) {
 		case SQ_TK_ELSE:
 			EXPECT(SQ_TK_COLON, "expected a ':' after alas");
@@ -1042,18 +1055,13 @@ static struct switch_statement *parse_switch_statement() {
 			sw_stmt->alas = parse_statements();
 			break;
 
-		case SQ_TK_LABEL:
-			last.kind = SQ_TK_IDENT;
-			wasnt_label = false;
-			// fallthrough
-
 		case SQ_TK_CASE:
 			if (sw_stmt->ncases == capacity)
 				sw_stmt->cases = xrealloc(sw_stmt->cases, sizeof_array(struct case_statement, capacity *= 2));
 
-			sw_stmt->cases[sw_stmt->ncases].expr = parse_expression();
+			if (!(sw_stmt->cases[sw_stmt->ncases].expr = parse_expression()))
+				die("unable to parse condition for case");
 
-			if (wasnt_label)
 				EXPECT(SQ_TK_COLON, "expected a ':' after path description");
 
 			if (!(sw_stmt->cases[sw_stmt->ncases].body = parse_statements())->len) {
@@ -1071,6 +1079,7 @@ static struct switch_statement *parse_switch_statement() {
 
 			sw_stmt->ncases++;
 			break;
+
 		case SQ_TK_RBRACE:
 			return sw_stmt;
 
