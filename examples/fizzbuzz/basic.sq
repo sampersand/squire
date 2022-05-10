@@ -6,7 +6,7 @@ whilst i <= C {
 	mod-five = i % V
 
 	if mod-three && mod-five {
-		proclaim(i)
+		proclaim(arabic(i))
 	} alas if mod-three {
 		proclaim('Fizz')
 	} alas if mod-five {

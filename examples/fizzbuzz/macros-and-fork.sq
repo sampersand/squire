@@ -7,7 +7,7 @@ whilst i <= C {
 		path $divides(XV):  proclaim(𝔉𝔦𝔷𝔷𝔅𝔲𝔷𝔷)
 		path $divides(III): proclaim(𝔉𝔦𝔷𝔷)
 		path $divides(V):   proclaim(𝔅𝔲𝔷𝔷)
-		alas:               proclaim(i)
+		alas:               proclaim(arabic(i))
 	}
 
 	i = i + I;
