@@ -53,7 +53,6 @@ void sq_memory_error(char *fmt, ...) {
 	abort();
 }
 
-
 char *read_file(const char *filename) {
 	FILE *file = fopen(filename, "r");
 

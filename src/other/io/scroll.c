@@ -14,10 +14,12 @@ static struct sq_kingdom scroll_kingdom = {
 };
 struct sq_kingdom *sq_scroll_kingdom = &scroll_kingdom;
 
-static sq_value write_journey, write_func(struct sq_args args);
-static sq_value read_journey, read_func(struct sq_args args);
-static sq_value seek_journey, seek_func(struct sq_args args);
-static sq_value close_journey, close_func(struct sq_args args);
+static sq_value write_journey, write_func(struct sq_args);
+static sq_value read_journey, read_func(struct sq_args);
+static sq_value readall_journey, readall_func(struct sq_args);
+static sq_value seek_journey, seek_func(struct sq_args);
+static sq_value close_journey, close_func(struct sq_args);
+static sq_value tell_journey, tell_func(struct sq_args);
 
 void sq_scroll_init(struct sq_scroll *scroll, const char *filename, const char *mode) {
 	if (!(scroll->file = fopen(filename, mode)))
@@ -37,8 +39,10 @@ void sq_scroll_init(struct sq_scroll *scroll, const char *filename, const char *
 
 	NEW_JOURNEY(write, 2);
 	NEW_JOURNEY(read, 2);
+	NEW_JOURNEY(readall, 2);
 	NEW_JOURNEY(seek, 3);
 	NEW_JOURNEY(close, 1);
+	NEW_JOURNEY(tell, 1);
 }
 
 void sq_scroll_dump(FILE *out, const struct sq_scroll *scroll) {
@@ -61,6 +65,9 @@ sq_value sq_scroll_get_attr(const struct sq_scroll *scroll, const char *attr) {
 	if (!strcmp(attr, "write")) return write_journey;
 	if (!strcmp(attr, "read")) return read_journey;
 	if (!strcmp(attr, "seek")) return seek_journey;
+	if (!strcmp(attr, "tell")) return tell_journey;
+	if (!strcmp(attr, "close")) return close_journey;
+	if (!strcmp(attr, "readall")) return readall_journey;
 
 	return SQ_UNDEFINED;
 }
@@ -114,8 +121,7 @@ void sq_scroll_seek(struct sq_scroll *scroll, long offset, int whence) {
 }
 
 static sq_value write_func(struct sq_args args) {
-	assert(args.pargc == 2);
-	assert(args.kwargc == 0);
+	sq_journey_assert_arglen(args, 2, 0);
 
 	struct sq_scroll *scroll = sq_other_as_scroll(sq_value_as_other(args.pargv[0]));
 	struct sq_text *text = sq_value_to_text(args.pargv[1]);
@@ -125,8 +131,7 @@ static sq_value write_func(struct sq_args args) {
 }
 
 static sq_value read_func(struct sq_args args) {
-	assert(args.pargc == 2);
-	assert(args.kwargc == 0);
+	sq_journey_assert_arglen(args, 2, 0);
 
 	struct sq_scroll *scroll = sq_other_as_scroll(sq_value_as_other(args.pargv[0]));
 	sq_value arg = args.pargv[1];
@@ -161,9 +166,21 @@ static sq_value read_func(struct sq_args args) {
 	}
 }
 
+static sq_value readall_func(struct sq_args args) {
+	sq_journey_assert_arglen(args, 1, 0);
+
+	sq_value pargv2[2] = { args.pargv[0], SQ_NI };
+
+	return read_func((struct sq_args) { 
+		.pargc = 2,
+		.kwargc = 0,
+		.pargv = pargv2
+	});
+}
+
+
 static sq_value seek_func(struct sq_args args) {
-	assert(args.pargc == 3);
-	assert(args.kwargc == 0);
+	sq_journey_assert_arglen(args, 3, 0);
 
 	struct sq_scroll *scroll = sq_other_as_scroll(sq_value_as_other(args.pargv[0]));
 	sq_numeral offset = sq_value_to_numeral(args.pargv[1]);
@@ -174,11 +191,19 @@ static sq_value seek_func(struct sq_args args) {
 }
 
 static sq_value close_func(struct sq_args args) {
-	assert(args.pargc == 1);
-	assert(args.kwargc == 0);
+	sq_journey_assert_arglen(args, 1, 0);
 
 	struct sq_scroll *scroll = sq_other_as_scroll(sq_value_as_other(args.pargv[0]));
 
 	sq_scroll_close(scroll);
+	return SQ_NI;
+}
+
+static sq_value tell_func(struct sq_args args) {
+	sq_journey_assert_arglen(args, 3, 0);
+
+	struct sq_scroll *scroll = sq_other_as_scroll(sq_value_as_other(args.pargv[0]));
+
+	sq_scroll_seek(scroll, sq_value_to_numeral(args.pargv[1]), sq_value_to_numeral(args.pargv[2]));
 	return SQ_NI;
 }

@@ -30,12 +30,6 @@ const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 	case SQ_INT_ROMAN: return "SQ_INT_ROMAN";
 
 	case SQ_INT_FOPEN: return "SQ_INT_FOPEN";
-	case SQ_INT_FCLOSE: return "SQ_INT_FCLOSE";
-	case SQ_INT_FREAD: return "SQ_INT_FREAD";
-	case SQ_INT_FREADALL: return "SQ_INT_FREADALL";
-	case SQ_INT_FWRITE: return "SQ_INT_FWRITE";
-	case SQ_INT_FTELL: return "SQ_INT_FTELL";
-	case SQ_INT_FSEEK: return "SQ_INT_FSEEK";
 	case SQ_INT_ASCII: return "SQ_INT_ASCII";
 	case SQ_INT_UNDEFINED: bug("undefined encountered");
 	}

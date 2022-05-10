@@ -273,12 +273,6 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 
 	// temporary hacks until we get kingdoms working.
 	case SQ_INT_FOPEN: return 2;
-	case SQ_INT_FCLOSE: return 1;
-	case SQ_INT_FREAD: return 2;
-	case SQ_INT_FREADALL: return 1;
-	case SQ_INT_FWRITE: return 2;
-	case SQ_INT_FTELL: return 1;
-	case SQ_INT_FSEEK: return 3;
 
 	// ASCII
 	case SQ_INT_ASCII: return 1;
@@ -533,53 +527,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		set_next_local(sf, sq_value_new(other));
 		return;
 	}
-
-	case SQ_INT_FCLOSE:
-		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
-			sq_throw("can only close scrolls, not '%s'", sq_value_typename(operands[0]));
-		sq_scroll_close(sq_other_as_scroll(other));
-		set_next_local(sf, SQ_NI);
-		return;
-
-	case SQ_INT_FREAD:
-		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
-			sq_throw("can only read scrolls, not '%s'", sq_value_typename(operands[0]));
-
-		set_next_local(sf, sq_value_new(sq_scroll_read(sq_other_as_scroll(other), sq_value_to_numeral(operands[1]))));
-		return;
-
-	case SQ_INT_FREADALL:
-		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
-			sq_throw("can only read scrolls, not '%s'", sq_value_typename(operands[0]));
-
-		set_next_local(sf, sq_value_new(sq_scroll_read_all(sq_other_as_scroll(other))));
-		return;
-
-	case SQ_INT_FWRITE:
-		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
-			sq_throw("can only write scrolls, not '%s'", sq_value_typename(operands[0]));
-
-		text = sq_value_to_text(operands[1]);
-		sq_scroll_write(sq_other_as_scroll(other), text->ptr, text->length);
-		sq_text_free(text);
-
-		set_next_local(sf, SQ_NI);
-		return;
-
-	case SQ_INT_FTELL:
-		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
-			sq_throw("can only tell scrolls, not '%s'", sq_value_typename(operands[0]));
-
-		set_next_local(sf, sq_value_new((sq_numeral) sq_scroll_tell(sq_other_as_scroll(other))));
-		return;
-
-	case SQ_INT_FSEEK:
-		if (!sq_value_is_other(operands[0]) || (other = sq_value_as_other(operands[0]))->kind != SQ_OK_SCROLL)
-			sq_throw("can only seek scrolls, not '%s'", sq_value_typename(operands[0]));
-
-		sq_scroll_seek(sq_other_as_scroll(other), sq_value_to_numeral(operands[1]), sq_value_to_numeral(operands[2]));
-		set_next_local(sf, SQ_NI);
-		return;
 
 	case SQ_INT_ASCII:
 		if (sq_value_is_numeral(operands[0])) {

@@ -19,7 +19,12 @@ struct {
 	} *ary;
 } globals;
 
-#define MAX_COMEFROMS 16
+#ifndef MAX_COMEFROMS
+# define MAX_COMEFROMS 16
+#endif
+#ifndef MAX_THENCES
+# define MAX_THENCES 16
+#endif 
 
 struct sq_code {
 	unsigned codecap, codelen;
@@ -31,7 +36,8 @@ struct sq_code {
 		unsigned cap, len;
 		struct label {
 			char *name;
-			int *length, indices[MAX_COMEFROMS];
+			int start, *length, indices[MAX_COMEFROMS];
+			int *thence_length, thences[MAX_THENCES];
 		} *ary;
 	} labels;
 
@@ -657,17 +663,10 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		CHECK_FOR_BUILTIN("gamble",    SQ_INT_RANDOM, 0);
 		CHECK_FOR_BUILTIN("roman",     SQ_INT_ROMAN, 1);
 		CHECK_FOR_BUILTIN("arabic",    SQ_INT_ARABIC, 1);
-
-		CHECK_FOR_BUILTIN("Scroll", SQ_INT_FOPEN, 2); // just so you can do `Scroll(...)`
-		CHECK_FOR_BUILTIN("Scroll_open", SQ_INT_FOPEN, 2);
-		CHECK_FOR_BUILTIN("Scroll_close", SQ_INT_FCLOSE, 1);
-		CHECK_FOR_BUILTIN("Scroll_read", SQ_INT_FREAD, 2);
-		CHECK_FOR_BUILTIN("Scroll_readall", SQ_INT_FREADALL, 1);
-		CHECK_FOR_BUILTIN("Scroll_write", SQ_INT_FWRITE, 2);
-		CHECK_FOR_BUILTIN("Scroll_tell", SQ_INT_FTELL, 1);
-		CHECK_FOR_BUILTIN("Scroll_seek", SQ_INT_FSEEK, 3);
-
 		CHECK_FOR_BUILTIN("ascii", SQ_INT_ASCII, 1);
+
+		// TODO: remove scroll as a builtin
+		CHECK_FOR_BUILTIN("Scroll", SQ_INT_FOPEN, 2); // just so you can do `Scroll(...)`
 	}
 
 	soul = compile_primary(code, fncall->soul);
@@ -1040,14 +1039,6 @@ static unsigned compile_function_call_old(struct sq_code *code, struct function_
 	BUILTIN_FN("arabic",    SQ_INT_ARABIC, 1);
 
 	BUILTIN_FN("Scroll", SQ_INT_FOPEN, 2); // just so you can do `Scroll(...)`
-	BUILTIN_FN("Scroll_open", SQ_INT_FOPEN, 2);
-	BUILTIN_FN("Scroll_close", SQ_INT_FCLOSE, 1);
-	BUILTIN_FN("Scroll_read", SQ_INT_FREAD, 2);
-	BUILTIN_FN("Scroll_readall", SQ_INT_FREADALL, 1);
-	BUILTIN_FN("Scroll_write", SQ_INT_FWRITE, 2);
-	BUILTIN_FN("Scroll_tell", SQ_INT_FTELL, 1);
-	BUILTIN_FN("Scroll_seek", SQ_INT_FSEEK, 3);
-
 	BUILTIN_FN("ascii", SQ_INT_ASCII, 1);
 
 	set_opcode(code, SQ_OC_NOOP);
@@ -1175,6 +1166,7 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 	if (len == code->labels.cap)
 		code->labels.ary = xrealloc(code->labels.ary, sizeof_array(struct label, code->labels.cap *= 2));
 
+	code->labels.ary[len].start = code->codelen;
 	code->labels.ary[len].name = label;
 	if (in_mem) {
 		set_opcode(code, SQ_OC_COMEFROM);
@@ -1230,8 +1222,7 @@ static void compile_label_statement(struct sq_code *code, char *label) {
 	create_label_statement(code, label, true);
 }
 
-static void compile_comefrom_statement(struct sq_code *code, char *label, bool thence) {
-	(void) thence;
+static void compile_comefrom_statement(struct sq_code *code, char *label) {
 	unsigned i, j;
 	struct label *lbl;
 
@@ -1271,6 +1262,66 @@ already_exists:
 	lbl->length[length] = code->codelen;
 }
 
+// TODO: this doesnt actually work
+static void compile_thence_statement(struct sq_code *code, char *label) {
+	unsigned i, j;
+	struct label *lbl;
+
+	// check to see if the label statement exists.
+	for (i = 0; i < code->labels.len; ++i) {
+		lbl = &code->labels.ary[i];
+		if (!strcmp(lbl->name, label)) {
+			// if the label already exists, make it go here.
+			free(label);
+			if (lbl->thence_length != NULL) goto already_exists;
+
+			for (j = 0; j < MAX_THENCES; ++j)
+				if (lbl->thences[j] == -1)
+					goto set_existing;
+
+			die("max amount of 'whence's encountered.");
+		}
+	}
+
+	j = 0;
+
+	// it doesn't, create it.
+	create_label_statement(code, label, false);
+
+set_existing:
+
+	code->labels.ary[i].thences[j] = code->codelen;
+	return;
+
+already_exists:
+
+	if (*lbl->length == MAX_THENCES) die("max amount of 'thences's encountered.");
+// 	set_opcode(code, SQ_OC_JMP);
+// 	set_index(code, code->labels.ary[i].start + MAX_THENCES + 2);
+
+	unsigned length = ++*lbl->thence_length;
+	lbl->thence_length[length] = code->codelen;
+
+// 	unsigned i;
+
+// 	// check to see if the label statement exists.
+// 	for (i = 0; i < code->labels.len; ++i)
+// 		if (!strcmp(code->labels.ary[i].name, label)) {
+// 			free(label); 
+// 			goto set_existing;
+// 		}
+
+// 	// it doesn't, create it.
+// 	create_label_statement(code, label, false);
+// 	start = 2;
+
+// set_existing:
+	
+// 	set_opcode(code, SQ_OC_JMP);
+// 	set_index(code, code->labels.ary[i].start + MAX_COMEFROMS + 2);
+}
+
+
 static void compile_trycatch_statement(struct sq_code *code, struct trycatch_statement *tc) {
 	unsigned *catchblock, *noerror, exception;
 
@@ -1309,8 +1360,8 @@ static void compile_statement(struct sq_code *code, struct statement *stmt) {
 	case SQ_PS_SIF: compile_if_statement(code, stmt->ifstmt); break;
 	case SQ_PS_SWHILE: compile_while_statement(code, stmt->wstmt); break;
 	case SQ_PS_SLABEL: compile_label_statement(code, stmt->label); break;
-	case SQ_PS_SCOMEFROM: compile_comefrom_statement(code, stmt->comefrom, false); break;
-	case SQ_PS_STHENCE: compile_comefrom_statement(code, stmt->thence, true); break;
+	case SQ_PS_SCOMEFROM: compile_comefrom_statement(code, stmt->comefrom); break;
+	case SQ_PS_STHENCE: compile_thence_statement(code, stmt->thence); break;
 	case SQ_PS_SRETURN: compile_return_statement(code, stmt->rstmt); break;
 	case SQ_PS_STRYCATCH: compile_trycatch_statement(code, stmt->tcstmt); break;
 	case SQ_PS_STHROW: compile_throw_statement(code, stmt->throwstmt); break;
