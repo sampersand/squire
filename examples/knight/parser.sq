@@ -1,0 +1,81 @@
+form Parser {
+	matter stream: Text;
+
+	change peek() => soul.stream[I];
+
+	change advance
+		() if !soul.stream { catapult 𝔢𝔪𝔭𝔱𝔵 𝔰𝔱𝔯𝔢𝔞𝔪 },
+		() => soul.stream = substr(soul.stream, II, length(soul.stream));
+
+	change peek_advance() {
+		nigh peeked = soul.peek();
+		soul.advance();
+		reward peeked;
+	}
+
+	change take_whilst(cond: Journey): Text {
+		nigh acc = "";
+		nigh chr;
+		whilst cond(chr = soul.peek() || '') {
+			acc = acc + chr;
+			soul.advance();
+		}
+		reward acc;
+	}
+
+	essence isdigit = \(c) => '0' <= c && c <= '9';
+	essence iswhitespace = \(c) => [' ', "\t", "\n", "\r", '(', ')', '[', ']', '{', '}', ':'] ~~ c;
+	essence islower = \(c) => ('a' <= c && c <= 'z') || c == '_';
+	essence isupper = \(c) => 'A' <= c && c <= 'Z';
+
+	change next(): Value {
+		renowned Literal;
+		renowned Variable;
+
+		fork soul.peek() {
+		path '#':
+			soul.take_whilst(\(c) => c != "\n")
+			rejoin;
+
+		path (Parser::iswhitespace):
+			soul.advance();
+			reward soul.next();
+
+		path (Parser::isdigit):
+			reward Literal(numeral(soul.take_whilst(Parser::isdigit)))
+
+		path (Parser::islower):
+			reward Variable(soul.take_whilst(\(c) => (Parser::islower)(c) || (Parser::isdigit)(c)));
+
+		path (Parser::isupper):
+			reward Variable(soul.take_whilst(\(c) => (Parser::islower)(c) || (Parser::isdigit)(c)));
+
+		path '\'':
+		path '\"':
+			# noncapturing lambdas go brr
+			renowned quote = soul.peek_advance();
+			nigh result = Literal(soul.take_whilst(\(c) => c != quote));
+
+			if soul.peek_advance() != quote {
+				catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢
+			}
+
+			reward result;
+
+		alas:
+			catapult "unknown token start '{chr}'";
+		}
+	}
+}
+
+
+form Literal {
+	matter value;
+}
+
+form Variable {
+	matter value;
+}
+
+p = Parser("a3");
+dump(p.next());

@@ -311,7 +311,7 @@ static struct sq_token parse_identifier(void) {
 		if (len == cap)
 			token.identifier = xrealloc(token.identifier, cap *= 2);
 
-		if (isupper(*sq_stream) && len && !isupper(token.identifier[0])) {
+		if (isupper(*sq_stream) && len && !isupper(token.identifier[0]) && token.identifier[0] != '_') {
 			token.identifier[len++] = '_';
 			token.identifier[len++] = *sq_stream++ - 'A' + 'a';
 		} else if (isalnum(*sq_stream) || *sq_stream == '_') {

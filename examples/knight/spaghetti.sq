@@ -1,0 +1,11 @@
+form Value {
+
+}
+
+form Variable {
+	change run
+		() if soul.value == ni { catapult "undefined variable '{soul.name}'" },
+		() => soul.value;
+
+	change assign(value: Value) => soul.value = value;
+}

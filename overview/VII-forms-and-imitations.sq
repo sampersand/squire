@@ -146,7 +146,7 @@ form Fraction {
 	change -@() { Fraction(-soul.numer, soul.denom) }
 
 	# There's overloads for almost everything:
-	# `+`, `-`, `*`, `/`, `%`, `**` -- what you expect.
+	# `+`, `-`, `*`, `/`, `%`, `^` -- what you expect.
 	# `to_{text,numeral,veracity,book,codex}` -- conversion to builtin types.
 	# `()` - define what it means to call an imitation.
 	# `[]` - indexing

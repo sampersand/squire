@@ -1,0 +1,43 @@
+form Tile {
+	matter num: Numeral;
+
+	change to-text() => text(soul.num);
+}
+
+form Board {
+	matter dim;
+	matter ary;
+
+	imitate(dim: Numeral) {
+		soul.dim = dim;
+		soul.ary = [];
+
+		nigh i = I;
+		whilst i <= dim {
+			soul.ary[i] = [];
+
+			nigh j = I;
+			whilst j <= dim {
+				soul.ary[i][j] = (i - 1) * dim + j;
+				j = j + I;
+			}
+
+			i = i + I;
+		}
+
+		delete(soul.ary[dim], dim);
+	}
+
+	change to-text() {
+		nigh res = "";
+		nigh i = I;
+		whilst i < res {
+			
+		}
+	}
+}
+
+board = Board(4);
+dump(board);
+
+proclaim(Tile(34).to-text())

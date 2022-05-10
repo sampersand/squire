@@ -1,0 +1,77 @@
+@henceforth $for($init, $cond, $incr, $body) = <<
+	$init;
+	whilst $cond {
+		$body;
+		$incr;
+	}
+>>;
+
+@henceforth $foreach($var, $ary, $body) = <<
+	@henceforth $__incr = $concat(__incr, $__COUNTER__);
+	@henceforth $__ary = $concat(__ary, $__COUNTER__);
+
+	nigh $__incr = I; 
+	nigh $__ary = $ary;
+	whilst $__incr < $__ary.length {
+		nigh $var = $__ary[$__incr];
+		$body;
+		$__incr = $__incr + I;
+	}
+>>;
+
+@henceforth $foreach($var, $ary, $body) =
+	$for(
+		<<
+			nigh __incr = I;
+			nigh __ary = $ary;
+		>>,
+		__incr < __ary.length,
+		__incr = __incr + I,
+		<<
+			nigh $var = __ary[__incr];
+			$body
+		>>
+	);
+
+
+form HangMan {
+	matter incorrect: Book;
+	matter letters: Book;
+
+	imitate(word: Text) {
+		soul.incorrect = [];
+		soul.letters = [];
+	}
+
+	change hangman-text() {
+		nigh result = " .--.\n |  ";
+		nigh tries = soul.incorrect.length;
+
+		if I <= tries { result = result + "o"; }
+		result = result + "\n | ";
+		if III <= tries { result = result + "/|"; }
+		alas if II <= tries { result = result + " |"; }
+		if IV <= tries { result = result + "\\"; }
+		result = result + "\n | ";
+		if V <= tries { result = result + "/"; }
+		result = result + " ";
+		if VI <= tries { result = result + "\\"; }
+		result = result + "\n-+-----\n";
+
+		reward result;
+	}
+
+	change to-text() {
+		nigh result = soul.hangman-text();
+
+		$foreach(ele, soul.incorrect, <<
+			result = result + text(ele) + ' ';
+		>>);
+
+		reward result + "\n" + soul.letters;
+	}
+}
+
+
+x = HangMan("Hello world");
+proclaim(x);

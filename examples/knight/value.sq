@@ -1,0 +1,5 @@
+form Value {
+	change to-text(): Text => text(soul._run_value());
+	change to-numeral(): Numeral => numeral(soul._run_value());
+	change to-veracity(): Veracity => veracity(soul._run_value());
+}

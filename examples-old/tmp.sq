@@ -1,3 +1,30 @@
+i = N;
+x = N;
+
+whilst i < M {
+	i = i + I;
+
+	if yea {
+		x = x + I;
+	}
+}
+
+proclaim(arabic(x));
+
+@__END__
+attempt {
+	catapult "uh oh"
+} alas err {
+	proclaim(err)
+}
+
+if yea {
+	proclaim(XV)
+} alas {
+	proclaim(nay)
+}
+
+@__END__
 form Variable {
 	matter name;
 	matter value;

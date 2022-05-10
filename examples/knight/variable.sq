@@ -1,0 +1,24 @@
+@transcribe "value.sq"
+@transcribe "assert.sq"
+
+form Variable : Value {
+	matter name: Text;
+	matter value: [Value, ni];
+
+	essence declared: Codex = {};
+
+	imitate(name: Text) {
+		$assert(Variable.declared[name] == ni);
+		soul.name = name;
+	}
+
+	recall fetch
+		(name: Text) if ni != (var = soul.declared[name]) => var,
+		(name: Text) => soul.declared[name] = Variable(name);
+
+	change run
+		() if soul.value == ni { catapult "undefined variable '{soul.name}'" },
+		(): Value => soul.value;
+
+	change assign(value: Value) => soul.value = value;
+}
