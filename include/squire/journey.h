@@ -4,6 +4,7 @@
 #include <squire/value.h>
 #include <squire/bytecode.h>
 #include <squire/program.h>
+#include <squire/shared.h>
 
 #include <assert.h>
 
@@ -63,6 +64,12 @@ static inline void sq_journey_free(struct sq_journey *journey) {
 }
 
 sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args);
+
+static inline void sq_journey_assert_arglen(struct sq_args args, unsigned pargc, unsigned kwargc) {
+	if (args.pargc != pargc || args.kwargc != kwargc)
+		sq_throw("Argument mismatch: given (pos=%d, kw=%d) expected (pos=%d,kw=%d)",
+			pargc, kwargc, args.pargc, args.kwargc);
+}
 
 static inline sq_value sq_journey_run_deprecated(const struct sq_journey *journey, unsigned argc, sq_value *argv) {
 	struct sq_args args = { .pargc = argc, .pargv = argv};

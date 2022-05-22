@@ -12,10 +12,9 @@ fork ARGV[I] {
 		contents = ARGV[II]
 
 	path '-f':
-		# scrolls aren't yet OOP
-		scroll = Scroll_open(ARGV[II], 𝔯);
-		contents = Scroll_read(scroll, ni);
-		Scroll_close(scroll);
+		scroll = Scroll(ARGV[II], 𝔯);
+		contents = scroll.read(ni);
+		scroll.close();
 	alas:
 		$die("usage: ./main.sq (-e 'expression' | -f 'filename')");
 }

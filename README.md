@@ -119,7 +119,7 @@ foo-bar baz
 The only caveat to this is if the variable starts with a capital letter, this automatic replacement is not performed. 
 
 ## Indentation only with tabs
-As monarchs sometimes decreed arbitrary edicts that were then blatantly enforced, Squire also has an (somewhat) arbitrary edict: You _may not_ use spaces when indenting your program. Attempting to use spaces for indentation will greet you with a lovely compile-time error of `THOU SHALT NOT INDENT WITH SPACES!`.
+As monarchs sometimes decreed arbitrary edicts that were then strictly enforced, Squire also has an (somewhat) arbitrary edict: You _may not_ use spaces when indenting your program. Attempting to use spaces for indentation will greet you with a lovely compile-time error of `THOU SHALT NOT INDENT WITH SPACES!`.
 
 You don't _have_ to use tabs for indentation—you can always use the tried-and-true tested mechanism of `;` for spacing:
 ```squire

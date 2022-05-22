@@ -1145,6 +1145,15 @@ static char *parse_comefrom_declaration() {
 	return last.identifier;
 }
 
+static char *parse_thence_declaration() {
+	GUARD(SQ_TK_THENCE);
+
+	if (take().kind != SQ_TK_IDENT)
+		die("expecting an identifier");
+
+	return last.identifier;
+}
+
 static struct statement *parse_statement() {
 	struct statement stmt;
 
@@ -1156,6 +1165,7 @@ static struct statement *parse_statement() {
 	else if ((stmt.ldecl = parse_local_declaration())) stmt.kind = SQ_PS_SLOCAL;
 	else if ((stmt.label = parse_label_declaration())) stmt.kind = SQ_PS_SLABEL;
 	else if ((stmt.comefrom = parse_comefrom_declaration())) stmt.kind = SQ_PS_SCOMEFROM;
+	else if ((stmt.thence = parse_thence_declaration())) stmt.kind = SQ_PS_STHENCE;
 	else if ((stmt.cdecl = parse_form_declaration())) stmt.kind = SQ_PS_SCLASS;
 	else if ((stmt.jdecl = parse_journey_declaration(true, false, true))) stmt.kind = SQ_PS_SJOURNEY;
 	else if ((stmt.ifstmt = parse_if_statement())) stmt.kind = SQ_PS_SIF;
