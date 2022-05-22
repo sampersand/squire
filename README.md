@@ -118,6 +118,32 @@ foo-bar baz
 
 The only caveat to this is if the variable starts with a capital letter, this automatic replacement is not performed. 
 
+## Indentation only with tabs
+As monarchs sometimes decreed arbitrary edicts that were then blatantly enforced, Squire also has an (somewhat) arbitrary edict: You _may not_ use spaces when indenting your program. Attempting to use spaces for indentation will greet you with a lovely compile-time error of `THOU SHALT NOT INDENT WITH SPACES!`.
+
+You don't _have_ to use tabs for indentation—you can always use the tried-and-true tested mechanism of `;` for spacing:
+```squire
+# Basic fizzbuzz, nothing fancy.
+
+i = I
+whilst i <= C {
+;;;mod-three = i % III
+;;;mod-five = i % V
+
+;;;if mod-three && mod-five {
+;;;;;;proclaim(i)
+;;;} alas if mod-three {
+;;;;;;proclaim('Fizz')
+;;;} alas if mod-five {
+;;;;;;proclaim('Buzz')
+;;;} alas {
+;;;;;;proclaim('FizzBuzz')
+;;;}
+
+;;;i = i + I
+}
+```
+
 ## Were-`if`s
 What programming language based on the medieval ages would be complete without some form of monsters? In Squire, instead of having werewolfs, we have were-`if`s: On full moons (and only on full moons), `if` statements have a 1% chance of executing their body if the condition is _false_. That is this may be executed on a full moon:
 ```squire

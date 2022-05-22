@@ -13,7 +13,6 @@ static void parse_macro_statement(char *);
 static bool parse_macro_identifier(char *);
 
 static size_t fraktur_length(const char *stream, size_t *index) {
-
 	static const char *const FRAKTUR[26 * 2] = {
 		// A	B	C	D	E	F	G	H	I
 		  "𝔄", "𝔅", "ℭ", "𝔇", "𝔈", "𝔉", "𝔊", "ℌ", "ℑ",
@@ -75,22 +74,18 @@ static struct sq_text *parse_fraktur_bareword(void) {
 	return sq_text_new2(fraktur, len);
 }
 
-
-static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_slash) {
+static bool strip_whitespace_maybe_ignore_slash(bool ignore_slash) <%
 	(void) ignore_slash; // todo: i forgot why i used this
 	char c;
+	bool had_a_newline = false;
 
 	// strip whitespace
 	while ((c = *sq_stream)) {
-		if (c == '#' || !strncmp(sq_stream, "N.B. ", 5)) {
+		if (c == '#' || !strncmp(sq_stream, "N.B. ", 5)) { // single line
 			do {
 				c = *++sq_stream;
 			} while (c && c != '\n');
-			if (c == '\n') ++sq_stream;
-			continue;
-		}
-
-		if (c == '/' && sq_stream[1] == '*') {
+		} else if (c == '/' && sq_stream[1] == '*') { // multiline
 			sq_stream += 2;
 
 			while (true) {
@@ -101,33 +96,34 @@ static void strip_whitespace_maybe_ignore_slash(bool strip_newline, bool ignore_
 
 				if (!*sq_stream++) die("unterminated block comment");
 			}
+		}
+#if 0
+		else if (*sq_stream == '\\') { // i forget why this is here
+			++sq_stream;
 
+			if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash) {
+				sq_stream -= 2;
+				continue;
+				// die("unexpected '\\' on its own.");
+			}
 			continue;
 		}
-
-
-		// if (*sq_stream == '\\') {
-		// 	++sq_stream;
-
-		// 	if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash) {
-		// 		--sq_stream;
-		// 		--sq_stream;
-		// 		continue;
-		// 		// die("unexpected '\\' on its own.");
-		// 	}
-		// 	continue;
-		// }
-
-		if (!isspace(c) || (!strip_newline && c == '\n'))
-			break;
-
-		while (isspace(c) && (strip_newline ? true : c != '\n'))
-			c = *++sq_stream;
+#endif
+		else if (!isspace(c)) break; // nonspace = exit out
+		else for (; isspace(c); c = *++sq_stream) { // space
+			// note that this implementation won't throw an exception on spaces on the first line.
+			// but oh well whatever.
+			if (c == '\n') had_a_newline = true;
+			else if (c == ' ' && had_a_newline)
+				die("THOU SHALT NOT INDENT WITH SPACES!");
+		}
 	}
-}
 
-static void strip_whitespace(bool strip_newline) {
-	strip_whitespace_maybe_ignore_slash(strip_newline, false);
+	return had_a_newline;
+%>
+
+static bool strip_whitespace(void) {
+	return strip_whitespace_maybe_ignore_slash(false);
 }
 
 #define CHECK_FOR_START(str, tkn) \
@@ -363,8 +359,7 @@ static struct sq_token next_normal_token(void) {
 
 	if (put_back_quote) return parse_text();
 
-	strip_whitespace(false);
-	CHECK_FOR_START("\n", SQ_TK_SOFT_ENDL);
+	if (strip_whitespace()) return token.kind = SQ_TK_SOFT_ENDL, token;
 
 	//printf("<<%s>>\n", sq_stream);
 	if (!*sq_stream || !strncmp(sq_stream, "@__END__", 8)) {

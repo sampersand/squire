@@ -146,13 +146,13 @@ static void parse_henceforth_function(struct macro_variable *var) {
 
 	char c;
 	while (true) {
-		strip_whitespace(true);
+		strip_whitespace();
 		if ((c = *sq_stream++) == ')') break;
 		if (c != '$') die("expected '$' or ')'");
 		if (arglen == MAX_ARGLEN) die("too many arguments");
 
 		args[arglen++] = parse_identifier().identifier;
-		strip_whitespace(true);
+		strip_whitespace();
 		if (*sq_stream == ',') ++sq_stream;
 	}
 
@@ -166,7 +166,7 @@ static void parse_henceforth_function(struct macro_variable *var) {
 }
 
 static char *parse_macro_identifier_name(void) {
-	strip_whitespace(true);
+	strip_whitespace();
 
 	if (*sq_stream++ != '$')
 		die("expected a macro identifier");
@@ -231,7 +231,7 @@ static void parse_whereupon(void) {
 	struct sq_token token, *tokens = xmalloc(sizeof_array(struct sq_token, cap));
 
 	while (true) {
-		strip_whitespace_maybe_ignore_slash(true, true);
+		strip_whitespace_maybe_ignore_slash(true);
 
 		if (*sq_stream == '@') {
 			//exit(0);
@@ -247,7 +247,7 @@ static void parse_whereupon(void) {
 
 		// lol we'll take `@nowhere` within strings and comments....
 		if (!is_defined) {
-			// strip_whitespace(true);
+			// strip_whitespace();
 			++sq_stream;
 			continue;
 		}
@@ -295,7 +295,7 @@ static bool should_compile(char *filename) {
 #endif
 
 static void parse_transcribe(void) {
-	strip_whitespace(true);
+	strip_whitespace();
 	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
 	char *filename = parse_text().text->ptr; // lol memfree?
 
