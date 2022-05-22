@@ -133,11 +133,11 @@ whilst i <= C {
 ;;;if mod-three && mod-five {
 ;;;;;;proclaim(i)
 ;;;} alas if mod-three {
-;;;;;;proclaim('Fizz')
+;;;;;;proclaim(𝔉𝔦𝔷𝔷)
 ;;;} alas if mod-five {
-;;;;;;proclaim('Buzz')
+;;;;;;proclaim(𝔅𝔲𝔷𝔷)
 ;;;} alas {
-;;;;;;proclaim('FizzBuzz')
+;;;;;;proclaim(𝔉𝔦𝔷𝔷𝔅𝔲𝔷𝔷)
 ;;;}
 
 ;;;i = i + I
