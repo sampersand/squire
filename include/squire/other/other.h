@@ -7,6 +7,7 @@
 #include <squire/other/external.h>
 #include <squire/other/kingdom.h>
 #include <squire/other/builtin_journey.h>
+#include <squire/other/citation.h>
 
 #include <assert.h>
 
@@ -18,7 +19,8 @@ struct sq_other {
 		SQ_OK_BUILTIN_JOURNEY,
 		SQ_OK_EXTERNAL,
 		SQ_OK_KINGDOM,
-		SQ_OK_ENVOY
+		SQ_OK_ENVOY,
+		SQ_OK_CITATION
 	} kind;
 
 	union {
@@ -27,11 +29,12 @@ struct sq_other {
 		struct sq_external external;
 		struct sq_kingdom kingdom;
 		struct sq_envoy envoy;
+		sq_citation citation;
 	};
 };
 
 static inline enum sq_other_kind sq_other_kindof(const struct sq_other *other) {
-	assert(((char) (size_t) other & 7) <= SQ_OK_ENVOY);
+	assert(((char) (size_t) other & 7) <= SQ_OK_CITATION);
 	return (enum sq_other_kind) ((char) (size_t) other & 7);
 }
 
@@ -58,6 +61,11 @@ static inline struct sq_kingdom *sq_other_as_kingdom(struct sq_other *other) {
 static inline struct sq_envoy *sq_other_as_envoy(struct sq_other *other) {
 	assert(other->kind == SQ_OK_ENVOY);
 	return &other->envoy;
+}
+
+static inline sq_citation sq_other_as_citation(struct sq_other *other) {
+	assert(other->kind == SQ_OK_CITATION);
+	return other->citation;
 }
 
 void sq_other_dump(FILE *out, const struct sq_other *other);

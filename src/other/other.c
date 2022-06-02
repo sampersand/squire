@@ -26,6 +26,10 @@ void sq_other_dump(FILE *out, const struct sq_other *other) {
 	case SQ_OK_ENVOY:
 		sq_envoy_dump(out, sq_other_as_envoy((struct sq_other *) other));
 		break;
+
+	case SQ_OK_CITATION:
+		sq_citation_dump(out, sq_other_as_citation((struct sq_other *) other));
+		break;
 	}
 }
 
@@ -51,6 +55,9 @@ void sq_other_deallocate(struct sq_other *other) {
 	case SQ_OK_ENVOY:
 		sq_envoy_deallocate(sq_other_as_envoy(other));
 		break;
+
+	case SQ_OK_CITATION:
+		break;
 	}
 
 	free(other);
@@ -73,6 +80,8 @@ const char *sq_other_typename(const struct sq_other *other) {
 	case SQ_OK_ENVOY:
 		return "Envoy";
 
+	case SQ_OK_CITATION:
+		return "Citation";
 	}
 }
 
@@ -80,6 +89,8 @@ sq_value sq_other_genus(const struct sq_other *other) {
 	static struct sq_text KIND_SCROLL = SQ_TEXT_STATIC("Scroll");
 	static struct sq_text KIND_KINGDOM = SQ_TEXT_STATIC("Kingdom");
 	static struct sq_text KIND_ENVOY = SQ_TEXT_STATIC("Envoy");
+	static struct sq_text KIND_BUILTIN_JOURNEY = SQ_TEXT_STATIC("BuiltinJourney");
+	static struct sq_text KIND_CITATION = SQ_TEXT_STATIC("Citation");
 
 	switch (other->kind) {
 	case SQ_OK_SCROLL:
@@ -92,8 +103,13 @@ sq_value sq_other_genus(const struct sq_other *other) {
 		return sq_value_new(&KIND_KINGDOM);
 
 	case SQ_OK_ENVOY:
-	case SQ_OK_BUILTIN_JOURNEY:
 		return sq_value_new(&KIND_ENVOY);
+
+	case SQ_OK_BUILTIN_JOURNEY:
+		return sq_value_new(&KIND_BUILTIN_JOURNEY);
+
+	case SQ_OK_CITATION:
+		return sq_value_new(&KIND_CITATION);
 	}
 }
 
@@ -110,7 +126,8 @@ struct sq_text *sq_other_to_text(const struct sq_other *other) {
 
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
-		todo("SQ_OK_ENVOY to text");
+	case SQ_OK_CITATION:
+		todo("others to text");
 	}
 }
 
@@ -124,6 +141,9 @@ sq_numeral sq_other_to_numeral(const struct sq_other *other) {
 			return 1; // Samperland's #1 LOL.
 		// else fallthrough
 
+	case SQ_OK_CITATION:
+		return (sq_numeral) sq_other_as_citation((struct sq_other *) other);
+
 	case SQ_OK_SCROLL:
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
@@ -135,6 +155,9 @@ sq_veracity sq_other_to_veracity(const struct sq_other *other) {
 	switch (other->kind) {
 	case SQ_OK_EXTERNAL:
 		return sq_external_to_veracity(sq_other_as_external((struct sq_other *) other));
+
+	case SQ_OK_CITATION:
+		return sq_other_as_citation((struct sq_other *) other);
 
 	case SQ_OK_SCROLL:
 	case SQ_OK_KINGDOM:
@@ -157,6 +180,7 @@ sq_value sq_other_get_attr(const struct sq_other *other, const char *attr) {
 
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
+	case SQ_OK_CITATION:
 		return sq_envoy_get_attr(sq_other_as_envoy((struct sq_other *) other), attr);
 	}
 }
@@ -174,6 +198,7 @@ bool sq_other_set_attr(struct sq_other *other, const char *attr, sq_value value)
 
 	case SQ_OK_SCROLL:
 	case SQ_OK_BUILTIN_JOURNEY:
+	case SQ_OK_CITATION:
 		return false;
 	}
 }
@@ -188,6 +213,7 @@ bool sq_other_matches(const struct sq_other *formlike, sq_value to_check) {
 	case SQ_OK_KINGDOM:
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
+	case SQ_OK_CITATION:
 		return sq_value_eql(sq_value_new((struct sq_other *) formlike), to_check);
 	}
 }
