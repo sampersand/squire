@@ -382,7 +382,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		struct sq_text *result = sq_text_allocate(AS_TEXT(lhs)->length + rstr->length);
 
 		memcpy(result->ptr, AS_STR(lhs), AS_TEXT(lhs)->length);
-		memcpy(result->ptr + AS_TEXT(lhs)->length, rstr->ptr, AS_TEXT(rhs)->length + 1);
+		memcpy(result->ptr + AS_TEXT(lhs)->length, rstr->ptr, rstr->length + 1);
 
 		// sq_text_free(rstr);
 		// if (free_lhs) sq_value_free(lhs);

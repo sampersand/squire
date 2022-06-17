@@ -303,7 +303,7 @@ static void parse_transcribe(void) {
 
 	errno = 0;
 	FILE *file = fopen(filename, "rb");
-	if (errno) perror("cannot open file"), exit(1);
+	if (errno) fprintf(stderr, "cannot open file '%s': %s", filename, strerror(errno)), exit(1);
 
 	fseek(file, 0, SEEK_END);
 	size_t file_size = ftell(file);

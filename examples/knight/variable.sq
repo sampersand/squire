@@ -1,5 +1,4 @@
 # import these files.
-@transcribe "shared.sq"
 @transcribe "value.sq"
 
 # The form (ie class) `Variable` is a `Value`

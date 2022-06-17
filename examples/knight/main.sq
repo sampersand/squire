@@ -1,5 +1,4 @@
 #!../../bin/squire -f
-@transcribe 'shared.sq'
 @transcribe 'parser.sq'
 @transcribe 'literal.sq'
 @transcribe 'function.sq'

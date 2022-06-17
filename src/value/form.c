@@ -1,5 +1,6 @@
 #include <squire/form.h>
 #include <squire/shared.h>
+#include <squire/value.h>
 
 #include <string.h>
 #include <assert.h>
