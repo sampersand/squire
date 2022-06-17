@@ -205,7 +205,7 @@ bool sq_moon_joke_does_were_flip() {
 		time->tm_hour
 	);
 
-	return (0.80 - mf) < 0 && !(rand() % 100);
+	return (0.90 - mf) < 0 && !(rand() % 100);
 }
 #endif /* !SQ_NMOON_JOKE */
 
