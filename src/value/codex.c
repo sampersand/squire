@@ -117,7 +117,7 @@ sq_value sq_codex_delete(struct sq_codex *codex, sq_value key) {
 		return page->value;
 	}
 
-	return SQ_NI;
+	return result;
 }
 
 sq_value sq_codex_index(struct sq_codex *codex, sq_value key) {
@@ -132,14 +132,18 @@ sq_value sq_codex_index(struct sq_codex *codex, sq_value key) {
 void sq_codex_index_assign(struct sq_codex *codex, sq_value key, sq_value value) {
 	struct sq_codex_page *page = sq_codex_fetch_page(codex, key);
 
-	if (!page) {
+	if (page) {
+		sq_value_free(page->value);
+	} else {
 		// `+1` in case it starts out with 0 length
-		if (codex->capacity == codex->length)
-			codex->pages = xrealloc(codex->pages, sizeof_array(struct sq_codex_page, codex->capacity = codex->capacity * 2 + 1));
+		if (codex->capacity == codex->length) {
+			codex->pages = xrealloc(
+				codex->pages,
+				sizeof_array(struct sq_codex_page, codex->capacity = codex->capacity * 2 + 1)
+			);
+		}
 		page = &codex->pages[codex->length++];
 		page->key = key;
-	} else {
-		sq_value_free(page->value);
 	}
 
 	page->value = value;

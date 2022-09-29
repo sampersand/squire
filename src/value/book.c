@@ -53,7 +53,6 @@ size_t sq_book_fix_index(const struct sq_book *book, ssize_t index) {
 	if (index < 0)
 		sq_throw("index '-%zu' out of bounds!", (size_t) index);
 
-
 	return index;
 }
 
