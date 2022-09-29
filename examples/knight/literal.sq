@@ -16,7 +16,7 @@ journey join(book, sep) {
 }
 
 form Literal : Value {
-	matter value: [Numeral, Text, Book, yea, nay, ni]
+	matter value: Numeral | Text | Book | yea | nay | ni;
 
 	change run(): Value => soul;
 
@@ -59,11 +59,17 @@ form Literal : Value {
 
 	change dump() {
 		fork soul.value {
-			path ni: proclaim("Null()")
-			path yea:  proclaim("Boolean(true)")
-			path nay: proclaim("Boolean(false)")
-			path Numeral: proclaim("Number({soul})")
-			path Text: proclaim("Text({soul.value})")
+			path yea:
+			path nay:
+			path Numeral:
+				proclaimn(soul)
+
+			path ni:
+				proclaimn("null")
+
+			path Text:
+				# FIXME
+				proclaimn("Text({soul.value})")
 		}
 	}
 }

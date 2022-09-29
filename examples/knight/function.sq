@@ -5,12 +5,15 @@ form Function : Value {
 	matter func: Journey;
 	matter args: Book;
 
-	change run
-		() if soul.func.arity == N   => (soul.func)(),
-		() if soul.func.arity == I   => (soul.func)(soul.args[I]),
-		() if soul.func.arity == II  => (soul.func)(soul.args[I], soul.args[II]),
-		() if soul.func.arity == III => (soul.func)(soul.args[I], soul.args[II], soul.args[III]),
-		() if soul.func.arity == IV  => (soul.func)(soul.args[I], soul.args[II], soul.args[III], soul.args[IV])
+	change run() {
+		fork soul.func.arity {
+		path N:   reward (soul.func)(),
+		path I:   reward (soul.func)(soul.args[I]),
+		path II:  reward (soul.func)(soul.args[I], soul.args[II]),
+		path III: reward (soul.func)(soul.args[I], soul.args[II], soul.args[III]),
+		path IV:  reward (soul.func)(soul.args[I], soul.args[II], soul.args[III], soul.args[IV])
+		}
+	}
 
 	essence FUNCTIONS: Codex = {
 		'R': \() => Literal(gamble()),

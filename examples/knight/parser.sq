@@ -64,7 +64,8 @@ form Parser {
 			path islower:
 				reward Variable.fetch(soul.take_whilst(islower))
 
-			path ["'", '"']:
+			path "'"
+			path '"':
 				renowned _quote = chr N.B. Noncapturing lambadas go brr
 				soul.advance()
 				nigh result = Literal(soul.take_whilst(\(c) => c != _quote));

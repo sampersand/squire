@@ -7,7 +7,7 @@ form Variable : Value {
 	matter name: Text;
 
 	# It has a field `value` that's either a `Value` or `ni` (ie null).
-	matter value: [Value, ni];
+	matter value: Value | ni;
 
 	# It has a static field `declared`, which is a `Codex` (ie dictionary/hashmap).
 	# the field is initialized to an empty codex.
@@ -20,9 +20,9 @@ form Variable : Value {
 	recall fetch
 		# The first branch will only match if `soul.declared[name]` is not `ni`. ie, if a variable
 		# `name` already exists within the `declared` static field. Here `soul` refers to the `Variable`
-		(name: Text) if ni != (var = soul.declared[name]) => var,
+		(name: Text): Variable if ni != (var = soul.declared[name]) => var,
 		# If the first branch fails, then we simply assign a new variable, and return it.
-		(name: Text) => soul.declared[name] = Variable(name);
+		(name: Text): Variable => soul.declared[name] = Variable(name);
 
 	# We have a member function called `run`, which takes also has two branches.
 	# both branches take no arguments
