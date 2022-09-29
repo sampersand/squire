@@ -30,6 +30,10 @@ void sq_other_dump(FILE *out, const struct sq_other *other) {
 	case SQ_OK_CITATION:
 		sq_citation_dump(out, sq_other_as_citation((struct sq_other *) other));
 		break;
+
+	case SQ_OK_PAT_HELPER:
+		sq_pattern_helper_dump(out, sq_other_as_pattern_helper((struct sq_other *) other));
+		break;
 	}
 }
 
@@ -58,6 +62,10 @@ void sq_other_deallocate(struct sq_other *other) {
 
 	case SQ_OK_CITATION:
 		break;
+
+	case SQ_OK_PAT_HELPER:
+		sq_pattern_helper_deallocate(sq_other_as_pattern_helper(other));
+		break;
 	}
 
 	free(other);
@@ -82,6 +90,9 @@ const char *sq_other_typename(const struct sq_other *other) {
 
 	case SQ_OK_CITATION:
 		return "Citation";
+
+	case SQ_OK_PAT_HELPER:
+		return "PatternHelper";
 	}
 }
 
@@ -91,6 +102,7 @@ sq_value sq_other_genus(const struct sq_other *other) {
 	static struct sq_text KIND_ENVOY = SQ_TEXT_STATIC("Envoy");
 	static struct sq_text KIND_BUILTIN_JOURNEY = SQ_TEXT_STATIC("BuiltinJourney");
 	static struct sq_text KIND_CITATION = SQ_TEXT_STATIC("Citation");
+	static struct sq_text KIND_PATTERN_HELPER = SQ_TEXT_STATIC("PatternHelper");
 
 	switch (other->kind) {
 	case SQ_OK_SCROLL:
@@ -110,6 +122,9 @@ sq_value sq_other_genus(const struct sq_other *other) {
 
 	case SQ_OK_CITATION:
 		return sq_value_new(&KIND_CITATION);
+
+	case SQ_OK_PAT_HELPER:
+		return sq_value_new(&KIND_PATTERN_HELPER);
 	}
 }
 
@@ -127,6 +142,7 @@ struct sq_text *sq_other_to_text(const struct sq_other *other) {
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
 	case SQ_OK_CITATION:
+	case SQ_OK_PAT_HELPER:
 		todo("others to text");
 	}
 }
@@ -147,6 +163,7 @@ sq_numeral sq_other_to_numeral(const struct sq_other *other) {
 	case SQ_OK_SCROLL:
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
+	case SQ_OK_PAT_HELPER:
 		sq_throw("cannot convert '%s' to a numeral", sq_other_typename(other));
 	}
 }
@@ -163,6 +180,7 @@ sq_veracity sq_other_to_veracity(const struct sq_other *other) {
 	case SQ_OK_KINGDOM:
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
+	case SQ_OK_PAT_HELPER:
 		sq_throw("cannot get veracity of '%s'", sq_other_typename(other));
 	}
 }
@@ -179,9 +197,12 @@ sq_value sq_other_get_attr(const struct sq_other *other, const char *attr) {
 		return sq_kingdom_get_attr(sq_other_as_kingdom((struct sq_other *) other), attr);
 
 	case SQ_OK_ENVOY:
+		return sq_envoy_get_attr(sq_other_as_envoy((struct sq_other *) other), attr);
+
 	case SQ_OK_BUILTIN_JOURNEY:
 	case SQ_OK_CITATION:
-		return sq_envoy_get_attr(sq_other_as_envoy((struct sq_other *) other), attr);
+	case SQ_OK_PAT_HELPER:
+		return SQ_UNDEFINED;
 	}
 }
 
@@ -199,6 +220,7 @@ bool sq_other_set_attr(struct sq_other *other, const char *attr, sq_value value)
 	case SQ_OK_SCROLL:
 	case SQ_OK_BUILTIN_JOURNEY:
 	case SQ_OK_CITATION:
+	case SQ_OK_PAT_HELPER:
 		return false;
 	}
 }
@@ -215,6 +237,9 @@ bool sq_other_matches(const struct sq_other *formlike, sq_value to_check) {
 	case SQ_OK_BUILTIN_JOURNEY:
 	case SQ_OK_CITATION:
 		return sq_value_eql(sq_value_new((struct sq_other *) formlike), to_check);
+
+	case SQ_OK_PAT_HELPER:
+		return sq_pattern_helper_matches(sq_other_as_pattern_helper((struct sq_other *) formlike), to_check);
 	}
 }
 

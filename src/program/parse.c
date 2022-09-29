@@ -354,6 +354,9 @@ static struct unary_expression *parse_unary_expression() {
 	case SQ_TK_NOT:
 		unary.kind = SQ_PS_UNOT;
 		break;
+	case SQ_TK_PAT_NOT:
+		unary.kind = SQ_PS_UPAT_NOT;
+		break;
 	case SQ_TK_NEG:
 	case SQ_TK_SUB:
 		unary.kind = SQ_PS_UNEG;
@@ -498,6 +501,12 @@ static struct eql_expression *parse_eql_expression() {
 	case SQ_TK_MATCHES:
 		eql.kind = SQ_PS_EMATCHES;
 		break;
+	case SQ_TK_PAT_AND:
+		eql.kind = SQ_PS_EAND_PAT;
+		break;
+	case SQ_TK_PAT_OR:
+		eql.kind = SQ_PS_EOR_PAT;
+		break;
 	default:
 		eql.kind = SQ_PS_ECMP;
 		untake();
@@ -518,20 +527,14 @@ static struct bool_expression *parse_bool_expression() {
 		return NULL;
 
 	switch (take().kind) {
-	case SQ_TK_AND:
-		eql.kind = SQ_PS_BAND;
-		break;
-	case SQ_TK_OR:
-		eql.kind = SQ_PS_BOR;
-		break;
-	default:
-		eql.kind = SQ_PS_BEQL;
-		untake();
+	case SQ_TK_AND: eql.kind = SQ_PS_BAND; break;
+	case SQ_TK_OR:  eql.kind = SQ_PS_BOR; break;
+	default: eql.kind = SQ_PS_BEQL; untake();
 	}
 
 	if (eql.kind != SQ_PS_BEQL) {
 		if (!(eql.rhs = parse_bool_expression()))
-			die("missing right-hand side for veracity-like operation");
+			die("missing right-hand side for bool-like operation");
 	}
 
 	return memdup(&eql, sizeof(struct bool_expression));
@@ -1201,6 +1204,7 @@ static struct statements *parse_statements() {
 			endl = true;
 		untake(); // as the while statement broke it.
 	}
+	(void) endl;
 
 	while (take().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL) {
 		// do nothing

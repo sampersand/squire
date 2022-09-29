@@ -586,6 +586,7 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_ILOAD:
 		case SQ_OC_RETURN:
 		case SQ_OC_THROW:
+		case SQ_OC_PAT_NOT:
 			return 1;
 
 		case SQ_OC_EQL:
@@ -602,6 +603,8 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_MOD:
 		case SQ_OC_POW:
 		case SQ_OC_MATCHES:
+		case SQ_OC_PAT_AND:
+		case SQ_OC_PAT_OR:
 		case SQ_OC_INDEX:
 		case SQ_OC_ISTORE:
 		case SQ_OC_FEGENUS_STORE:
@@ -803,6 +806,25 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_MATCHES:
 			set_next_local(sf, sq_value_new(sq_value_matches(operands[0], operands[1])));
 			continue;
+
+		case SQ_OC_PAT_NOT:
+		case SQ_OC_PAT_OR:
+		case SQ_OC_PAT_AND: {
+			struct sq_other *helper = xmalloc(sizeof(struct sq_other));
+			helper->refcount = 1;
+			helper->kind = SQ_OK_PAT_HELPER;
+			helper->helper.left = sq_value_clone(operands[0]);
+
+			if (opcode == SQ_OC_PAT_NOT)
+				helper->helper.kind = SQ_PH_NOT;
+			else {
+				helper->helper.right = sq_value_clone(operands[1]);
+				helper->helper.kind = opcode == SQ_OC_PAT_AND ? SQ_PH_AND : SQ_PH_OR;
+			}
+
+			set_next_local(sf, sq_value_new(helper));
+			continue;
+		}
 
 	/*** Interpreter Stuff ***/
 		case SQ_OC_CLOAD:

@@ -210,7 +210,7 @@ struct bool_expression {
 };
 
 struct eql_expression {
-	enum { SQ_PS_ECMP, SQ_PS_EEQL, SQ_PS_ENEQ, SQ_PS_EMATCHES } kind;
+	enum { SQ_PS_ECMP, SQ_PS_EEQL, SQ_PS_ENEQ, SQ_PS_EMATCHES, SQ_PS_EAND_PAT, SQ_PS_EOR_PAT } kind;
 	struct cmp_expression *lhs;
 	struct eql_expression *rhs; // may be NULL.
 };
@@ -240,7 +240,7 @@ struct pow_expression {
 };
 
 struct unary_expression {
-	enum { SQ_PS_UPRIMARY, SQ_PS_UNEG, SQ_PS_UNOT } kind;
+	enum { SQ_PS_UPRIMARY, SQ_PS_UNEG, SQ_PS_UNOT, SQ_PS_UPAT_NOT } kind;
 	struct primary *rhs;
 };
 

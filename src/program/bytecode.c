@@ -77,6 +77,9 @@ const char *sq_opcode_repr(enum sq_opcode opcode) {
 	case SQ_OC_INDEX: return "SQ_OC_INDEX";
 	case SQ_OC_INDEX_ASSIGN: return "SQ_OC_INDEX_ASSIGN";
 	case SQ_OC_MATCHES: return "SQ_OC_MATCHES";
+	case SQ_OC_PAT_AND: return "SQ_OC_PAT_AND";
+	case SQ_OC_PAT_OR: return "SQ_OC_PAT_OR";
+	case SQ_OC_PAT_NOT: return "SQ_OC_PAT_NOT";
 	
 	case SQ_OC_CLOAD: return "SQ_OC_CLOAD";
 	case SQ_OC_GLOAD: return "SQ_OC_GLOAD";

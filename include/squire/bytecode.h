@@ -57,8 +57,8 @@ enum sq_opcode {
 #ifndef SQ_NMOON_JOKE
 	SQ_OC_WERE_JMP      = 0x2A, // same as JMP_FALSE, but 1% chance not to on full moon
 #endif /* !SQ_MOON_JOKE */
-
 	SQ_OC_CITE          = 0x2B, // [A,DST] DST <- &A
+
 	SQ_OC_NOT           = 0x40, // [A,DST] DST <- !A
 	SQ_OC_NEG           = 0x41, // [A,DST] DST <- -A` (ie unary minus)
 	SQ_OC_EQL           = 0x42, // [A,B,DST] DST <- A == B
@@ -77,6 +77,9 @@ enum sq_opcode {
 	SQ_OC_INDEX         = 0x4F, // [A,B,DST] DST <- A[B]
 	SQ_OC_INDEX_ASSIGN  = 0x50, // [A,B,C] Performs `A[B]=C`; no destination.
 	SQ_OC_MATCHES       = 0x51, // [A,B,DST] DST <- A.matches(B)
+	SQ_OC_PAT_AND       = 0x52, // [A,B,DST] DST <- A & B
+	SQ_OC_PAT_OR        = 0x53, // [A,B,DST] DST <- A | B
+	SQ_OC_PAT_NOT       = 0x54, // [A,DST] DST <- ~A
 
 	SQ_OC_CLOAD         = 0x60, // [CNST,DST] DST <- constant `CNST`
 	SQ_OC_GLOAD         = 0x61, // [GLBL,DST] DST <- global `GLBL`

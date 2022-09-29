@@ -474,8 +474,11 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("/", SQ_TK_DIV);
 	CHECK_FOR_START("%", SQ_TK_MOD);
 	CHECK_FOR_START("!", SQ_TK_NOT);
+	CHECK_FOR_START("~", SQ_TK_PAT_NOT);
 	CHECK_FOR_START("&&", SQ_TK_AND);
 	CHECK_FOR_START("||", SQ_TK_OR);
+	CHECK_FOR_START("&", SQ_TK_PAT_AND);
+	CHECK_FOR_START("|", SQ_TK_PAT_OR);
 	CHECK_FOR_START("=", SQ_TK_ASSIGN);
 
 	die("unknown token start '%c'", *sq_stream);
@@ -519,6 +522,9 @@ void sq_token_dump(const struct sq_token *token) {
 	case SQ_TK_DIV: printf("Operator(/)"); break;
 	case SQ_TK_MOD: printf("Operator(%%)"); break;
 	case SQ_TK_NOT: printf("Operator(!)"); break;
+	case SQ_TK_PAT_NOT: printf("Operator(~)"); break;
+	case SQ_TK_PAT_AND: printf("Operator(&)"); break;
+	case SQ_TK_PAT_OR: printf("Operator(|)"); break;
 	case SQ_TK_AND: printf("Operator(&&)"); break;
 	case SQ_TK_OR: printf("Operator(||)"); break;
 	case SQ_TK_ASSIGN: printf("Operator(=)"); break;

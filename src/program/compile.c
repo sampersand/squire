@@ -824,6 +824,8 @@ static unsigned compile_unary(struct sq_code *code, struct unary_expression *una
 	switch (unary->kind) {
 	case SQ_PS_UNEG: set_opcode(code, SQ_OC_NEG); break;
 	case SQ_PS_UNOT: set_opcode(code, SQ_OC_NOT); break;
+	case SQ_PS_UPAT_NOT: set_opcode(code, SQ_OC_PAT_NOT); break;
+
 	case SQ_PS_UPRIMARY: result = rhs; goto done;
 	default: bug("unknown unary kind '%d'", unary->kind);
 	}
@@ -950,6 +952,8 @@ static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
 	case SQ_PS_EEQL: set_opcode(code, SQ_OC_EQL); break;
 	case SQ_PS_ENEQ: set_opcode(code, SQ_OC_NEQ); break;
 	case SQ_PS_EMATCHES: set_opcode(code, SQ_OC_MATCHES); break;
+	case SQ_PS_EAND_PAT: set_opcode(code, SQ_OC_PAT_AND); break;
+	case SQ_PS_EOR_PAT: set_opcode(code, SQ_OC_PAT_OR); break;
 	case SQ_PS_ECMP: result = lhs; goto done;
 	default: bug("unknown eql kind '%d'", eql->kind);
 	}
@@ -976,7 +980,6 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 	set_opcode(code, SQ_OC_MOV);
 	set_index(code, tmp);
 	set_index(code, target = next_local(code));
-
 
 	switch (bool_->kind) {
 	case SQ_PS_BAND: set_opcode(code, SQ_OC_JMP_FALSE); break;
