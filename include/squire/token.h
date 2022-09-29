@@ -102,6 +102,21 @@ struct sq_token {
 	};
 };
 
+/** So this caused a really hard-to-debug bug. Let's take this example definition:
+ * 
+ * form Foo {
+ * 	matter bar;
+ * 	change baz(): Text if soul.bar == I => "is 1", () => "not 1";
+ * }
+ * 
+ * When executing `Foo(II).baz()`, it should return `"not 1"` but instead it returns `"is 1"`. After
+ * digging around a bit, I realized it's because `Text if soul` is being parsed as an identifier (
+ * because of squire's whitespace identifiers). So, the `if` isn't being parsed, and thus the return
+ * type is the result of the expression `Text_if_soul.bar == I`. (But, because (as of the bug), we
+ * don't execute the return value, this bug went undetected.) So, the hacky solution is to in _just_
+ * the return value type position, forbid `<space>if` in identifier names.
+ */
+extern bool _sq_do_not_allow_space_if_in_identifiers;
 extern const char *sq_stream;
 struct sq_token sq_next_token(void);
 void sq_token_dump(const struct sq_token *token);

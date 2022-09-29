@@ -971,8 +971,10 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 done_with_arguments:
 
 	if (take().kind == SQ_TK_COLON)  {
+		_sq_do_not_allow_space_if_in_identifiers = true;
 		if (!(jp->return_genus = parse_expression_no_assignment()))
 			die("unable to parse return genus");
+		_sq_do_not_allow_space_if_in_identifiers = false;
 	} else {
 		untake();
 	}

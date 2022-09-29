@@ -298,6 +298,7 @@ done:
 	return token;
 }
 
+bool _sq_do_not_allow_space_if_in_identifiers;
 static struct sq_token parse_identifier(void) {
 	struct sq_token token;
 	token.kind = SQ_TK_IDENT;
@@ -317,7 +318,8 @@ static struct sq_token parse_identifier(void) {
 		} else if (*sq_stream == '-' && (isalpha(sq_stream[1]) || sq_stream[1] == '_')) {
 			++sq_stream;
 			token.identifier[len++] = '_';
-		} else if (*sq_stream == ' ' && strncmp(sq_stream, " N.B. ", 6)) {
+		} else if (*sq_stream == ' ' && strncmp(sq_stream, " N.B. ", 6) && (
+			_sq_do_not_allow_space_if_in_identifiers && strncmp(sq_stream, " if", 3))) {
 			while (*++sq_stream == ' ' || sq_stream[-1] == '\t');
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
