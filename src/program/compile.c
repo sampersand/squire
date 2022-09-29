@@ -547,20 +547,22 @@ static void compile_switch_statement(struct sq_code *code, struct switch_stateme
 
 	unsigned amnt_of_blank = 0;
 	for (unsigned i = 0; i < sw->ncases; ++i) {
-		if (sw->cases[i].body == NULL) {
+		// `i != sw->ncases - 1` is in case the last statement does nothing.
+		if (sw->cases[i].body == NULL && i != sw->ncases - 1) {
 			amnt_of_blank++;
 			jump_to_end_indices[i] = -1;
 			continue;
 		}
 
 		for (unsigned j = 0; j < amnt_of_blank; ++j)
-			jump_to_body_indices[i - j - 1] = code->codelen;
+			set_target_to_codelen(code, jump_to_body_indices[i - j - 1]);
 
 		amnt_of_blank = 0;
 		set_target_to_codelen(code, jump_to_body_indices[i]);
 		jump_to_body_indices[i] = code->codelen;
 
-		compile_statements(code, sw->cases[i].body);
+		if (sw->cases[i].body)
+			compile_statements(code, sw->cases[i].body);
 
 		if (sw->cases[i].fallthru) {
 			jump_to_end_indices[i] = -1;
@@ -657,6 +659,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 
 		CHECK_FOR_BUILTIN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 		CHECK_FOR_BUILTIN("substr",    SQ_INT_SUBSTR, 3);
+		CHECK_FOR_BUILTIN("slice",     SQ_INT_SUBSTR, 3);
 		CHECK_FOR_BUILTIN("insert",    SQ_INT_ARRAY_INSERT, 3);
 		CHECK_FOR_BUILTIN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
 
@@ -1031,6 +1034,7 @@ static unsigned compile_function_call_old(struct sq_code *code, struct function_
 
 	BUILTIN_FN("length",    SQ_INT_LENGTH, 1); // `fathoms` ? furlong
 	BUILTIN_FN("substr",    SQ_INT_SUBSTR, 3);
+	BUILTIN_FN("slice",     SQ_INT_SUBSTR, 3);
 	BUILTIN_FN("insert",    SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
 

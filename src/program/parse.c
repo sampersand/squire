@@ -596,7 +596,7 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 	}
 
 end:
-
+	// free_expression(expr);
 	return expr;
 }
 

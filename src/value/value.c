@@ -16,6 +16,7 @@
 #define AS_NUMBER sq_value_as_numeral
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
+#define AS_VERACITY sq_value_as_veracity
 #define AS_JOURNEY sq_value_as_function
 #define AS_BOOK sq_value_as_book
 #define AS_CODEX sq_value_as_codex
@@ -33,7 +34,7 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		if (value == SQ_NI)
 			fprintf(out, "Ni()");
 		else if (sq_value_is_veracity(value))
-			fprintf(out, "Veracity(%s)", sq_value_as_veracity(value) ? "yea" : "nay");
+			fprintf(out, "Veracity(%s)", AS_VERACITY(value) ? "yea" : "nay");
 		else
 			sq_other_dump(out, AS_OTHER(value));
 
@@ -754,7 +755,7 @@ bool sq_value_to_veracity(sq_value value) {
 			sq_value veracity = sq_journey_run_deprecated(to_veracity, 1, &value);
 			if (!sq_value_is_veracity(veracity))
 				die("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
-			return sq_value_as_veracity(veracity);
+			return AS_VERACITY(veracity);
 		}
 		// else fallthrough
 	}

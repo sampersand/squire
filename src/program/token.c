@@ -404,7 +404,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("recall",       SQ_TK_CLASSFN);
 	CHECK_FOR_START_KW("imitate",      SQ_TK_CONSTRUCTOR);
 	CHECK_FOR_START_KW("essence",      SQ_TK_ESSENCE);
-	CHECK_FOR_START_KW("see",          SQ_TK_SEE);
+	CHECK_FOR_START_KW("cite",         SQ_TK_SEE);
 	// substance?
 	// essence is static  variable
 

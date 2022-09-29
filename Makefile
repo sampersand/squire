@@ -14,14 +14,11 @@ objects+=$(patsubst $(SRCDIR)/other/io/%.c,$(OBJDIR)/other/io/%.o,$(wildcard $(S
 
 CFLAGS+=-F$(SRCDIR) -Iinclude
 
-ifdef DEBUG
-CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
-else
-	CFLAGS+=-O2
-	ifdef OPTIMIZED
-		NJOKE=1
-		CFLAGS+=-flto -march=native -DNDEBUG
-	endif
+ifeq ($(MAKECMDGOALS),debug)
+	CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
+	NJOKE=1
+else ifeq ($(MAKECMDGOALS),optimized)
+	CFLAGS+=-flto -march=native -DNDEBUG
 endif
 
 ifdef NJOKE
@@ -36,6 +33,8 @@ CFLAGS+=$(CEXTRA)
 CFLAGS+=$(EFLAGS)
 .PHONY: all optimized clean shared
 
+debug: $(exe)
+optimized: $(exe)
 all: $(exe)
 shared: $(dyn)
 

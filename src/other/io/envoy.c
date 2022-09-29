@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <dlfcn.h>
-#include <ffi/ffi.h>
+// #include <ffi/ffi.h>
 
 void sq_envoy_initialize(struct sq_envoy *envoy, const char *filename) {
 	if (!(envoy->dyllib = dlopen(filename, 0)))
