@@ -295,7 +295,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 
 //			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->matter[i].name))));
 
-			unsigned kind = compile_primary(code, fdecl->matter[i].genus);
+			unsigned kind = compile_expression(code, fdecl->matter[i].genus);
 			set_opcode(code, SQ_OC_FMGENUS_STORE);
 			set_index(code, global);
 			set_index(code, kind);
@@ -339,7 +339,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->essences[i].name))));
 
 			if (fdecl->essences[i].genus != NULL) {
-				index = compile_primary(code, fdecl->essences[i].genus);
+				index = compile_expression(code, fdecl->essences[i].genus);
 				set_opcode(code, SQ_OC_FEGENUS_STORE);
 				set_index(code, global);
 				set_index(code, index);
@@ -1445,7 +1445,7 @@ static void compile_journey_pattern(
 			pattern->pargv[i].genus_start = -1;
 		} else {
 			pattern->pargv[i].genus_start = code.codelen;
-			unsigned dst = compile_primary(&code, jp->pargv[i].genus);
+			unsigned dst = compile_expression(&code, jp->pargv[i].genus);
 			set_opcode(&code, SQ_OC_RETURN);
 			set_index(&code, dst);
 		}

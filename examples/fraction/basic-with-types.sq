@@ -12,7 +12,7 @@ form Fraction {
 	}
 
 	# The rhs can only be a fraction or a numeral---other things will throw an error
-	change +(rhs: [Fraction, Numeral]): Fraction {
+	change +(rhs: Fraction | Numeral): Fraction {
 		if !(Fraction ~~ rhs) {
 			rhs = Fraction(numeral(rhs), I);
 		}

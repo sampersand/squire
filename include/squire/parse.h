@@ -72,6 +72,7 @@ struct kingdom_declaration {
 
 struct scope_declaration {
 	char *name;
+	struct expression *genus; // can be null
 	struct expression *value; // can be null
 };
 
@@ -84,19 +85,19 @@ struct form_declaration {
 
 	struct matter_declaration {
 		char *name;
-		struct primary *genus; // may be NULL
+		struct expression *genus; // may be NULL
 	} *matter;
 
 	struct essence_declaration {
 		char *name;
 		struct expression *value;
-		struct primary *genus; // may be NULL
+		struct expression *genus; // may be NULL
 	} *essences;
 };
 
 struct journey_argument {
 	char *name;
-	struct primary *genus; // may be NULL
+	struct expression *genus; // may be NULL
 	struct expression *default_; // may be NULL.
 };
 
@@ -109,7 +110,7 @@ struct journey_declaration {
 		struct journey_argument pargv[SQ_JOURNEY_MAX_ARGC], kwargv[SQ_JOURNEY_MAX_ARGC];
 
 		char *splat, *splatsplat; // both maybe NULL
-		struct primary *return_genus; // may be NULL
+		struct expression *return_genus; // may be NULL
 		struct statements *body;
 		struct expression *condition; // may be NULL
 	} patterns[SQ_JOURNEY_MAX_PATTERNS];

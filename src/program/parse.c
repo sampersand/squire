@@ -38,6 +38,7 @@ static struct sq_token take() {
 #define GUARD(kind_) EXPECTED(kind_, untake(); return NULL)
 
 static struct expression *parse_expression(void);
+static struct expression *parse_expression_no_assignment(void);
 
 static char *token_to_identifier(struct sq_token token) {
 	switch (token.kind) {
@@ -564,7 +565,7 @@ static struct index_assign *parse_index_assign(struct index *aidx) {
 	return ary_asgn;
 }
 
-static struct expression *parse_expression_inner(struct expression *expr) {
+static struct expression *parse_expression_inner(bool include_assignment, struct expression *expr) {
 	take();
 	untake();
 
@@ -591,17 +592,19 @@ static struct expression *parse_expression_inner(struct expression *expr) {
 		// return parse_expression_inner(expr);
 	}
 
-	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
-		struct variable_old *var = xmalloc(sizeof(struct variable_old));
-		var->name = prim->variable;
-		var->field = NULL;
-		prim->kind = SQ_PS_PVARIABLE_OLD;
-		prim->variable_old = var;
-	}
+	if (include_assignment) {
+		if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
+			struct variable_old *var = xmalloc(sizeof(struct variable_old));
+			var->name = prim->variable;
+			var->field = NULL;
+			prim->kind = SQ_PS_PVARIABLE_OLD;
+			prim->variable_old = var;
+		}
 
-	if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE_OLD) {
-		expr->kind = SQ_PS_EASSIGN;
-		expr->asgn = parse_assignment(prim->variable_old);
+		if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE_OLD) {
+			expr->kind = SQ_PS_EASSIGN;
+			expr->asgn = parse_assignment(prim->variable_old);
+		}
 	}
 
 end:
@@ -616,7 +619,17 @@ static struct expression *parse_expression() {
 	if (!(expr.math = parse_bool_expression()))
 		return NULL;
 
-	return parse_expression_inner(memdup(&expr, sizeof(struct expression)));
+	return parse_expression_inner(true, memdup(&expr, sizeof(struct expression)));
+}
+
+static struct expression *parse_expression_no_assignment() {
+	struct expression expr;
+	expr.kind = SQ_PS_EMATH;
+
+	if (!(expr.math = parse_bool_expression()))
+		return NULL;
+
+	return parse_expression_inner(false, memdup(&expr, sizeof(struct expression)));
 }
 
 static struct variable_old *parse_variable(void);
@@ -677,8 +690,12 @@ static struct scope_declaration *parse_local_declaration() {
 	GUARD(SQ_TK_LOCAL);
 	struct scope_declaration *local = xmalloc(sizeof(struct scope_declaration));
 
-	EXPECT(SQ_TK_IDENT, "expected an identifier after 'nigh'");
+	if (take().kind != SQ_TK_IDENT && last.kind != SQ_TK_LABEL)
+		die("expected an identifier after 'nigh'");
+
 	local->name = last.identifier;
+	local->genus = last.kind != SQ_TK_LABEL ? NULL : parse_expression_no_assignment();
+
 	if (take().kind == SQ_TK_ASSIGN) {
 		local->value = parse_expression();
 	} else {
@@ -771,7 +788,7 @@ static struct form_declaration *parse_form_declaration() {
 				fdecl->essences[fdecl->nessences++].name = last.identifier;
 				fdecl->essences[fdecl->nessences - 1].value = NULL;
 				fdecl->essences[fdecl->nessences - 1].genus =
-					(last.kind == SQ_TK_IDENT) ? NULL : parse_primary();
+					(last.kind == SQ_TK_IDENT) ? NULL : parse_expression_no_assignment();
 
 				if (take().kind == SQ_TK_COMMA)
 					continue;
@@ -803,7 +820,7 @@ static struct form_declaration *parse_form_declaration() {
 
 				fdecl->matter[fdecl->nmatter].name = last.identifier;
 				fdecl->matter[fdecl->nmatter].genus =
-					(last.kind == SQ_TK_IDENT) ? NULL : parse_primary();
+					(last.kind == SQ_TK_IDENT) ? NULL : parse_expression_no_assignment();
 				++fdecl->nmatter;
 
 				if (take().kind != SQ_TK_COMMA) {
@@ -918,7 +935,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			current->name = last.identifier;
 
 			// if we were a label (ie had a colon after it), parse a genus.
-			if (last.kind == SQ_TK_LABEL && !(current->genus = parse_primary()))
+			if (last.kind == SQ_TK_LABEL && !(current->genus = parse_expression_no_assignment()))
 				die("missing genus for argument '%s'", current->name);
 
 			// if the next symbol's an `=`, then parse the default value.
@@ -954,7 +971,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 done_with_arguments:
 
 	if (take().kind == SQ_TK_COLON)  {
-		if (!(jp->return_genus = parse_primary()))
+		if (!(jp->return_genus = parse_expression_no_assignment()))
 			die("unable to parse return genus");
 	} else {
 		untake();

@@ -5,7 +5,7 @@ journey msg-for
 	(n) if !(n % V)   => 𝔅𝔲𝔷𝔷,
 	(n)               => arabic(n);
 
-journey fizzbuzz(max=C) {
+journey fizzbuzz(max = C) {
 	i = N
 	whilst i < max {
 		proclaim(msg-for(i = i + I))

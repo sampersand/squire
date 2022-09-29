@@ -1,11 +1,11 @@
 # Basic fraction, except it has types.
 form Fraction {
 	matter numer: Numeral;
-	matter denom: \(x) => Numeral ~~ x && x != N; # `denom` is a nonzero numeral
+	matter denom: Numeral & ~N; # `denom` is a nonzero numeral
 
 	# now the constructor isn't even needed anymore.
 
-	change +(rhs: [Fraction, Numeral]): Fraction {
+	change +(rhs: Fraction | Numeral): Fraction {
 		if !(Fraction ~~ rhs) {
 			rhs = Fraction(numeral(rhs), I);
 		}

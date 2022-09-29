@@ -1,7 +1,7 @@
 # Full-blown pattern matching!
 form Fraction {
 	matter numer: Numeral;
-	matter denom: \(x) => Numeral ~~ x && x != N;
+	matter denom: Numeral & ~N; # `denom` is a nonzero numeral
 
 	# Now we change what function to use based on what kind rhs is.
 	change +
