@@ -1,32 +1,54 @@
 @transcribe "value.sq"
 
+journey join(book, sep) {
+	nigh acc = ""
+	nigh i = I
+
+	whilst i <= book.length {
+		if i != I {
+			acc = acc + "\n"
+		}
+		acc = acc + book[i].to-text()
+		i = i + I
+	}
+
+	reward acc
+}
+
 form Literal : Value {
-	matter value: [Numeral, Text, yea, nay, ni]
+	matter value: [Numeral, Text, Book, yea, nay, ni]
 
 	change run(): Value => soul;
 
 	change to-text(): Text {
 		fork soul.value {
-			path ni: reward "null"
+			path ni: reward ""
 			path yea: reward "true"
 			path nay: reward "false"
 			path Numeral: reward arabic(soul.value)
 			path Text: reward soul.value
+			path Book: reward join(soul.value, "\n")
 		}
 	}
 	change to-numeral(): Numeral => numeral(soul.value)
 	change to-veracity(): Veracity => veracity(soul.value)
+	change to-book(): Book {
+		#veracity(soul.value)
+		dismount("oops");
+	}
 
 	change +
 		(rhs) if Numeral ~~ soul.value => Literal(soul.value + tally(rhs)),
 		(rhs) if Text ~~ soul.value => Literal(soul.value + text(rhs));
+		(rhs) if Book ~~ soul.value => Literal(soul.value + book(rhs));
+
 	@henceforth $literalop($op) = change $op(rhs) => Literal((soul.value) $op (tally(rhs)));
 	$literalop(-)
 	$literalop(*)
 	$literalop(/)
 	$literalop(%)
 	$literalop(^)
-	@nevermore $literalop
+	@nevermore $literalop # undefines it
 
 	change <=>
 		(rhs) if Numeral ~~ soul.value => soul.value <=> tally(rhs),

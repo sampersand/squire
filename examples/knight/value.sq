@@ -2,4 +2,6 @@ form Value {
 	change to-text(): Text => text(soul.run());
 	change to-numeral(): Numeral => numeral(soul.run());
 	change to-veracity(): Veracity => veracity(soul.run());
+	change to-book(): Book => book(soul.run());
 }
+

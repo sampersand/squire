@@ -6,6 +6,10 @@
 
 @henceforth $die($msg) = << proclaim($msg); dismount(1); >>;
 
+Parser("D & 3 4").next().run()
+
+dismount(0);
+
 fork ARGV[I] {
 	path '-e':
 		contents = ARGV[II]

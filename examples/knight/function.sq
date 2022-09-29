@@ -23,6 +23,8 @@ form Function : Value {
 		'Q': \(code) => dismount(code),
 		'!': \(val) => Literal(!val),
 		'L': \(str) => Literal(length(str.to-text())),
+		'A': \(val) => Literal(ascii(val.run().value)),
+		'~': \(num) => Literal(-tally(num)),
 		'D': \(val) { (val = val.run()).dump(); reward val },
 		'O': \(val) {
 			val = text(val);
@@ -35,8 +37,10 @@ form Function : Value {
 			}
 			reward Literal(ni)
 		},
-		'A': \(val) => Literal(ascii(val.run().value)),
-		'~': \(num) => Literal(-tally(num)),
+		',': \(val) => Literal([val.run()]),
+		'[': \(val) => val.run().head(),
+		']': \(val) => val.run().tail(),
+
 		'+': \(l, r) => l.run() + r,
 		'-': \(l, r) => l.run() - r,
 		'*': \(l, r) => l.run() * r,
@@ -47,8 +51,8 @@ form Function : Value {
 			r = tally(r)
 			reward Literal(l ^ r)
 		},
-		'<': \(l, r) => Literal(l.run()  < r),
-		'>': \(l, r) => Literal(l.run()  > r),
+		'<': \(l, r) => Literal(l.run() < r),
+		'>': \(l, r) => Literal(l.run() > r),
 		'?': \(l, r) => Literal(l.run() == r.run()),
 		'&': \(l, r) {
 			if l=l.run() { reward r.run() }

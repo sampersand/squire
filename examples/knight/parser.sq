@@ -41,19 +41,20 @@ form Parser {
 		journey isdigit(c) => '0' <= c && c <= '9';
 		journey islower(c) => (𝔞 <= c && c <= 𝔷) || c == '_' || isdigit(c);
 		journey isupper(c) => (𝔄 <= c && c <= ℨ) || c == '_';
+		journey isspace(c) => [' ', "\t", "\n", "\r", '(', ')', ':'] ~~ c;
 
 		nigh chr;
 		nigh func;
 
-
 		fork (chr = soul.peek()) {
 			path ni:
 				catapult 𝔢𝔫𝔡 𝔬𝔣 𝔰𝔱𝔯𝔢𝔞𝔪 𝔢𝔫𝔠𝔬𝔲𝔫𝔱𝔢𝔯𝔢𝔡;
+
 			path '#':
 				soul.take_whilst(\(c) => c != "\n")
 				rejoin; N.B. Ie fallthru
 
-			path [' ', "\t", "\n", "\r", '(', ')', '[', ']', '\{', '}', ':']:
+			path isspace:
 				soul.advance();
 				reward soul.next();
 
@@ -63,8 +64,6 @@ form Parser {
 			path islower:
 				reward Variable.fetch(soul.take_whilst(islower))
 
-			#path '"':
-			#path "'": <-- todo, fix this bug
 			path ["'", '"']:
 				renowned _quote = chr N.B. Noncapturing lambadas go brr
 				soul.advance()
@@ -76,6 +75,10 @@ form Parser {
 
 				reward result;
 
+			path '@':
+				soul.advance();
+				reward Literal([]);
+
 			path isupper:
 				soul.take_whilst(isupper);
 				fork chr {
@@ -83,12 +86,10 @@ form Parser {
 					path 𝔉: reward Literal(nay)
 					path 𝔑: reward Literal(ni)
 				}
-
 			done:
 			alas:
 				soul.advance();
 				whence done;
-				chr = ni;
 
 				if ni == (func=Function.FUNCTIONS[chr]) {
 					catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + chr;
@@ -106,3 +107,4 @@ form Parser {
 		}
 	}
 }
+

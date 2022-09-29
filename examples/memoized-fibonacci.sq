@@ -1,2 +1,20 @@
 renowned _fibonacci_memo = {}
 
+journey foo(x={0:0}) {
+	x[0] = x[0] + 1;
+	proclaim(x);
+}
+
+foo();
+foo();
+
+fork 1 {
+	path 1:
+	path 2:
+	path 123:
+	path 4:
+	proclaim(1);
+	alas: proclaim(2);
+}
+
+proclaim(3);

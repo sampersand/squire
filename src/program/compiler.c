@@ -2,6 +2,8 @@
 #include <squire/shared.h>
 #include <string.h>
 
+// NOTE: this is an experiment. the actual code for compiling is in `compile.c`
+
 static void extend_bytecode_cap(struct sq_compiler *compiler) {
 	if (compiler->code.len >= compiler->code.cap) {
 		compiler->code.cap *= 2;
