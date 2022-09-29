@@ -17,6 +17,8 @@ enum sq_interrupt {
 	SQ_INT_SYSTEM       = 0x14, // [CMD,DST] DST <- stdout of running `cmd`.
 	SQ_INT_EXIT         = 0x15, // [CODE] Exits with the given code.
 	SQ_INT_RANDOM       = 0x16, // [DST] DST <- random numeral
+	SQ_INT_PTR_GET      = 0x17, // [A,DST] DST <- *A
+	SQ_INT_PTR_SET      = 0x18, // [A,B,DST] DST <- *A = B
 
 	SQ_INT_SUBSTR       = 0x20, // [A,B,C,DST] DST <- A[B..B+C]
 	SQ_INT_LENGTH       = 0x21, // [A,DST] DST <- length A: book/codex/text
@@ -56,6 +58,7 @@ enum sq_opcode {
 	SQ_OC_WERE_JMP      = 0x2A, // same as JMP_FALSE, but 1% chance not to on full moon
 #endif /* !SQ_MOON_JOKE */
 
+	SQ_OC_CITE          = 0x2B, // [A,DST] DST <- &A
 	SQ_OC_NOT           = 0x40, // [A,DST] DST <- !A
 	SQ_OC_NEG           = 0x41, // [A,DST] DST <- -A` (ie unary minus)
 	SQ_OC_EQL           = 0x42, // [A,B,DST] DST <- A == B

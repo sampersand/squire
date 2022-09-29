@@ -255,6 +255,7 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	case SQ_INT_LENGTH:
 	case SQ_INT_ARABIC:
 	case SQ_INT_ROMAN:
+	case SQ_INT_PTR_GET:
 		return 1;
 	case SQ_INT_PROMPT:
 	case SQ_INT_RANDOM:
@@ -265,6 +266,7 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 		return 3;
 
 	case SQ_INT_ARRAY_DELETE:
+	case SQ_INT_PTR_SET:
 		return 2;
 
 	case SQ_INT_CODEX_NEW:
@@ -422,6 +424,28 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		// TODO: better random numbers
 		set_next_local(sf, sq_value_new((sq_numeral) rand()));
 		return;
+
+	// [A,DST] DST <- *A
+	case SQ_INT_PTR_GET: {
+		struct sq_other *other;
+		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
+			sq_throw("can only read citations");
+
+		set_next_local(sf, sq_value_clone(*other->citation));
+		return;
+	}
+
+
+	// [A,B,DST] DST <- *A = B
+	case SQ_INT_PTR_SET: {
+		struct sq_other *other;
+		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
+			sq_throw("can only addend citations");
+
+		sq_value_free(*other->citation);
+		set_next_local(sf, sq_value_clone(*other->citation = sq_value_clone(operands[1])));
+		return;
+	}
 
 
 	// [A,B,C,DST] DST <- A[B..B+C]
@@ -587,6 +611,7 @@ static unsigned normal_operands(enum sq_opcode opcode) {
 		case SQ_OC_INDEX_ASSIGN:
 			return 3;
 
+		case SQ_OC_CITE:
 		default:
 			return 0;
 	}
@@ -693,6 +718,16 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			exception = SQ_NI;
 			sf->ip = catch_index;
 			continue;
+		}
+
+	/** Misc **/
+		case SQ_OC_CITE: {
+			struct sq_other *ptr = xmalloc(sizeof(struct sq_other));
+			ptr->refcount = 1;
+			ptr->kind = SQ_OK_CITATION;
+			ptr->citation = next_local(sf);
+			set_next_local(sf, sq_value_new(ptr));
+			break;
 		}
 
 	/** Logic **/

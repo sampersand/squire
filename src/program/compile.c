@@ -666,7 +666,9 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 		CHECK_FOR_BUILTIN("gamble",    SQ_INT_RANDOM, 0);
 		CHECK_FOR_BUILTIN("roman",     SQ_INT_ROMAN, 1);
 		CHECK_FOR_BUILTIN("arabic",    SQ_INT_ARABIC, 1);
-		CHECK_FOR_BUILTIN("ascii", SQ_INT_ASCII, 1);
+		CHECK_FOR_BUILTIN("ascii",     SQ_INT_ASCII, 1);
+		CHECK_FOR_BUILTIN("read",      SQ_INT_PTR_GET, 1);
+		CHECK_FOR_BUILTIN("addend",    SQ_INT_PTR_SET, 2); // technically not a word; derived from `addenda`
 
 		// TODO: remove scroll as a builtin
 		CHECK_FOR_BUILTIN("Scroll", SQ_INT_FOPEN, 2); // just so you can do `Scroll(...)`
@@ -797,6 +799,13 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 
 	case SQ_PS_PINDEX:
 		result = compile_index(code, &primary->index);
+		break;
+
+	case SQ_PS_PCITE:
+		result = compile_expression(code, primary->expr);
+		set_opcode(code, SQ_OC_CITE);
+		set_index(code, result);
+		set_index(code, result = next_local(code));
 		break;
 
 	default:
@@ -1038,6 +1047,8 @@ static unsigned compile_function_call_old(struct sq_code *code, struct function_
 	BUILTIN_FN("insert",    SQ_INT_ARRAY_INSERT, 3);
 	BUILTIN_FN("delete",    SQ_INT_ARRAY_DELETE, 2); // `slay`?
 
+	BUILTIN_FN("read",      SQ_INT_PTR_GET, 1);
+	BUILTIN_FN("addend",    SQ_INT_PTR_SET, 2);
 	BUILTIN_FN("gamble",    SQ_INT_RANDOM, 0);
 	BUILTIN_FN("roman",     SQ_INT_ROMAN, 1);
 	BUILTIN_FN("arabic",    SQ_INT_ARABIC, 1);

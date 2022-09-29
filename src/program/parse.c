@@ -217,6 +217,12 @@ static struct primary *parse_primary() {
 		primary.expr = parse_expression();
 		EXPECT(SQ_TK_RPAREN, "expected a ')' at end of paren expr");
 		break;
+
+	case SQ_TK_CITE:
+		primary.kind = SQ_PS_PCITE;
+		primary.expr = parse_expression();
+		break;
+		
 	case SQ_TK_INDEX:
 		primary.kind = SQ_PS_PBOOK;
 		primary.book = xmalloc(sizeof(struct book));

@@ -18,6 +18,9 @@ const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 	case SQ_INT_EXIT: return "SQ_INT_EXIT";
 	case SQ_INT_RANDOM: return "SQ_INT_RANDOM";
 
+	case SQ_INT_PTR_GET: return "SQ_INT_PTR_GET";
+	case SQ_INT_PTR_SET: return "SQ_INT_PTR_SET";
+
 	case SQ_INT_SUBSTR: return "SQ_INT_SUBSTR";
 	case SQ_INT_LENGTH: return "SQ_INT_LENGTH";
 
@@ -55,6 +58,7 @@ const char *sq_opcode_repr(enum sq_opcode opcode) {
 	case SQ_OC_WERE_JMP: return "SQ_OC_WERE_JMP";
 #endif /* !SQ_NMOON_JOKE */
 	
+	case SQ_OC_CITE: return "SQ_OC_CITE";
 	case SQ_OC_NOT: return "SQ_OC_NOT";
 	case SQ_OC_NEG: return "SQ_OC_NEG";
 	case SQ_OC_EQL: return "SQ_OC_EQL";

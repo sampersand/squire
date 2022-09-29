@@ -79,7 +79,7 @@ enum sq_token_kind {
 	SQ_TK_MOD_ASSIGN,
 	SQ_TK_POW_ASSIGN,
 
-	SQ_TK_SEE,
+	SQ_TK_CITE,
 	SQ_TK_NOT,
 	SQ_TK_NEG,
 	SQ_TK_AND,

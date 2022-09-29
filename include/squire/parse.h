@@ -266,7 +266,7 @@ struct primary {
 		SQ_PS_PVARIABLE,
 		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
-		SQ_PS_PSEE,
+		SQ_PS_PCITE,
 
 		SQ_PS_PFNCALL,
 		SQ_PS_PFACCESS,
