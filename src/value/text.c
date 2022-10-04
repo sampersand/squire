@@ -49,3 +49,41 @@ void sq_text_dealloc(struct sq_text *text) {
 	free(text->ptr);
 	free(text);
 }
+
+static char num2hex(char c) {
+	return c + (c <= 9 ? '0' : 'A' - 10);
+}
+
+void sq_text_dump(FILE *out, const struct sq_text *text) {
+	fputc('"', out);
+
+	for (unsigned i = 0; i < text->length; ++i) {
+		unsigned char c = text->ptr[i];
+
+		switch (c) {
+		case '\n': fputs("\\n", out); break;
+		case '\t': fputs("\\t", out); break;
+		case '\f': fputs("\\f", out); break;
+		case '\v': fputs("\\v", out); break;
+		case '\r': fputs("\\r", out); break;
+
+		case '\\':
+		case '\"':
+			fputc('\\', out);
+
+			if (0) {
+		default:
+				if (c < ' ' || '~' < c) {
+					fputs("\\x", out);
+					fputc(num2hex(c >> 4), out);
+					fputc(num2hex(c & 0xf), out);
+					break;
+				}
+			}
+
+			fputc(c, out);
+		}
+	}
+
+	fputc('"', out);
+}

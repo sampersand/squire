@@ -46,6 +46,6 @@ static inline void sq_text_free(struct sq_text *text) {
 }
 
 void sq_text_combine(const struct sq_text *lhs, const struct sq_text *rhs);
-void sq_text_sprintf_repr(const struct sq_text *text, char **out, unsigned *len, unsigned *cap, unsigned *pos);
+void sq_text_dump(FILE *out, const struct sq_text *text);
 
 #endif /* !SQ_STRING_H */

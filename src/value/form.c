@@ -132,20 +132,20 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 
 	for (unsigned i = 0; i < form->nmatter; ++i) {
 		if (i != 0)
-			putc(',', out);
+			fputc(',', out);
 
 		fprintf(out, " %s", form->matter[i].name);
 		if (form->matter[i].genus != SQ_UNDEFINED) {
 			fprintf(out, " (");
-			sq_value_dump_to(out, form->matter[i].genus);
-			putc(')', out);
+			sq_value_dump(out, form->matter[i].genus);
+			fputc(')', out);
 		}
 	}
 
 	if (!form->nmatter)
 		fprintf(out, " <none>");
 
-	putc(')', out);
+	fputc(')', out);
 }
 
 struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) {
@@ -273,11 +273,11 @@ void sq_imitation_dump(FILE *out, const struct sq_imitation *imitation) {
 			fprintf(out, ", ");
 
 		fprintf(out, "%s=", imitation->form->matter[i].name);
-		sq_value_dump(imitation->matter[i]);
+		sq_value_dump(out, imitation->matter[i]);
 	}
 
 	if (!imitation->form->nmatter)
 		fprintf(out, "<none>");
 
-	putc(')', out);
+	fputc(')', out);
 }

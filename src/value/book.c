@@ -21,16 +21,16 @@ struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
 }
 
 void sq_book_dump(FILE *out, const struct sq_book *book) {
-	fprintf(out, "Book(");
+	fputc('[', out);
 
 	for (size_t i = 0; i < book->length; ++i) {
 		if (i)
-			fprintf(out, ", ");
+			fputs(", ", out);
 
-		sq_value_dump(book->pages[i]);
+		sq_value_dump(out, book->pages[i]);
 	}
 
-	putc(')', out);
+	fputc(']', out);
 }
 
 void sq_book_deallocate(struct sq_book *book) {

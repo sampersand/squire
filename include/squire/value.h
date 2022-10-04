@@ -218,8 +218,7 @@ static inline struct sq_other *sq_value_as_other(sq_value value) {
 }
 
 sq_value sq_value_clone(sq_value value);
-void sq_value_dump(sq_value value);
-void sq_value_dump_to(FILE *out, sq_value value);
+void sq_value_dump(FILE *out, sq_value value);
 void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value);
 sq_value sq_value_genus(sq_value value);

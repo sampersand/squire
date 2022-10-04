@@ -4,13 +4,13 @@
 void sq_pattern_helper_dump(FILE *out, const struct sq_pattern_helper *helper) {
 	if (helper->kind == SQ_PH_NOT) {
 		fputc('~', out);
-		sq_value_dump(helper->left);
+		sq_value_dump(out, helper->left);
 		return;
 	}
 
-	sq_value_dump(helper->left);
+	sq_value_dump(out, helper->left);
 	fprintf(out, " %c ", helper->kind == SQ_PH_AND ? '&' : '|');
-	sq_value_dump(helper->right);
+	sq_value_dump(out, helper->right);
 }
 
 void sq_pattern_helper_deallocate(struct sq_pattern_helper *helper) {

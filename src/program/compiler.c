@@ -66,7 +66,7 @@ unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value con
 
 #ifdef SQ_LOG
 	printf("consts[%d]=", index); 
-	sq_value_dump(constant);
+	sq_value_dump(stdout, constant);
 	putchar('\n');
 #endif /* SQ_LOG */
 

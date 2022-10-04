@@ -24,11 +24,7 @@
 #define TYPENAME sq_value_typename
 #define AS_STR(c) (AS_TEXT(c)->ptr)
 
-void sq_value_dump(sq_value value) {
-	sq_value_dump_to(stdout, value);
-}
-
-void sq_value_dump_to(FILE *out, sq_value value) {
+void sq_value_dump(FILE *out, sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_G_OTHER:
 		if (value == SQ_NI)
@@ -41,11 +37,11 @@ void sq_value_dump_to(FILE *out, sq_value value) {
 		break;
 
 	case SQ_G_NUMERAL:
-		fprintf(out, "Numeral(%"PRId64")", AS_NUMBER(value));
+		fprintf(out, "%"PRId64, AS_NUMBER(value));
 		break;
 
 	case SQ_G_TEXT:
-		fprintf(out, "Text(%s)", AS_STR(value));
+		sq_text_dump(out, AS_TEXT(value));
 		break;
 
 	case SQ_G_FORM:

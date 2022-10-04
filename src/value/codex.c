@@ -27,17 +27,17 @@ struct sq_codex *sq_codex_allocate(unsigned capacity) {
 }
 
 void sq_codex_dump(FILE *out, const struct sq_codex *codex) {
-	fprintf(out, "Codex(");
+	fputc('{', out);
 
 	for (unsigned i = 0; i < codex->length; ++i) {
-		if (i) fprintf(out, ", ");
+		if (i) fputs(", ", out);
 
-		sq_value_dump(codex->pages[i].key);
-		fprintf(out, ": ");
-		sq_value_dump(codex->pages[i].value);
+		sq_value_dump(out, codex->pages[i].key);
+		fputs(": ", out);
+		sq_value_dump(out, codex->pages[i].value);
 	}
 
-	putc(')', out);
+	fputc('}', out);
 }
 
 void sq_codex_deallocate(struct sq_codex *codex) {

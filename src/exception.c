@@ -77,7 +77,7 @@ void sq_throw2(struct sq_form *form, const char *fmt, ...) {
 void sq_throw_value(sq_value value)  {
 	if (!current_exception_handler) {
 		fprintf(stderr, "uncaught exception encountered: ");
-		sq_value_dump_to(stderr, value);
+		sq_value_dump(stderr, value);
 		putc('\n', stderr);
 		exit(1);
 	}

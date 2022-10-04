@@ -107,7 +107,7 @@ static unsigned declare_constant(struct sq_code *code, sq_value value) {
 
 #ifdef SQ_LOG
 	printf("consts[%d]=", code->consts.len); 
-	sq_value_dump(value);
+	sq_value_dump(stdout, value);
 	putchar('\n');
 #endif /* SQ_LOG */
 

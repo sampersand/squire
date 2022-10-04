@@ -346,8 +346,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// [A,DST] Dumps out `A`, DST <- A
 	case SQ_INT_DUMP:
-		sq_value_dump(operands[0]);
-		putchar('\n');
+		sq_value_dump(stdout, operands[0]);
 		set_next_local(sf, sq_value_clone(operands[0]));
 		return;
 

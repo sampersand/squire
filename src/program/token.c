@@ -139,8 +139,8 @@ static bool strip_whitespace(void) {
 
 static unsigned tohex(char c) {
 	if (isdigit(c)) return c - '0';
-	if ('a' <= c && c <= 'f') return c - 'a';
-	if ('A' <= c && c <= 'F') return c - 'A';
+	if ('a' <= c && c <= 'f') return c - 'a' + 10;
+	if ('A' <= c && c <= 'F') return c - 'A' + 10;
 	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 

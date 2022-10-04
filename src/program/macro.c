@@ -323,7 +323,6 @@ static void parse_transcribe(void) {
 	sq_stream = new_stream;
 }
 
-
 static void parse_macro_statement(char *name) {
 	if (!strcmp(name, "henceforth")) parse_henceforth();
 	else if (!strcmp(name, "nevermore")) parse_nevermore();
