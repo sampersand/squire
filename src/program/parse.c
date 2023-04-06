@@ -747,6 +747,7 @@ static struct form_declaration *parse_form_declaration() {
 	fdecl->meths = xmalloc(sizeof_array(struct sq_journey *, MAX_LEN));
 	fdecl->funcs = xmalloc(sizeof_array(struct sq_journey *, MAX_LEN));
 	fdecl->essences = xmalloc(sizeof_array(struct essence_declaration, MAX_LEN));
+	fdecl->init = NULL;
 	fdecl->constructor = NULL;
 	fdecl->nmatter = 0;
 	fdecl->nfuncs = 0;
@@ -831,6 +832,12 @@ static struct form_declaration *parse_form_declaration() {
 
 			break;
 		}
+
+		case SQ_TK_INIT:
+			if (fdecl->init != NULL)
+				die("cannot declare init twice");
+			fdecl->init = parse_brace_statements("init");
+			break;
 
 		case SQ_TK_ENDL:
 		case SQ_TK_SOFT_ENDL:
@@ -1009,12 +1016,26 @@ static struct journey_declaration *parse_journey_declaration(bool guard, bool is
 
 	struct journey_declaration *jd = xcalloc(1, sizeof(struct journey_declaration));
 
+	bool was_colon_encountered = false;
 	// optional name
 	if (take().kind == SQ_TK_LPAREN) {
 		untake();
 		jd->name = strdup("<anonymous>");
-	} else if (!(jd->name = token_to_identifier(last))) {
-		die("unexpected token in func declaration list");
+	} else {
+		if (last.kind == SQ_TK_LABEL)
+			was_colon_encountered = true, last.kind = SQ_TK_IDENT;
+
+		if (!(jd->name = token_to_identifier(last)))
+			die("unexpected token in func declaration list");
+	}
+
+	if (was_colon_encountered || take().kind == SQ_TK_COLON) {
+		if (!(jd->default_return_genus = parse_expression()))
+			die("expected return genus after label");
+		EXPECT(SQ_TK_COMMA, "expected `,` after default genus");
+	} else {
+		untake();
+		jd->default_return_genus = NULL;
 	}
 
 	jd->npatterns = 0;

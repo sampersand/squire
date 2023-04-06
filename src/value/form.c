@@ -126,7 +126,6 @@ bool sq_form_is_parent_of(const struct sq_form *form, sq_value value) {
 	return is_form_a_parent_of(form, sq_value_as_imitation(value)->form);
 }
 
-
 void sq_form_dump(FILE *out, const struct sq_form *form) {
 	fprintf(out, "Form(%s:", form->name);
 

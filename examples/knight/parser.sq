@@ -41,7 +41,7 @@ form Parser {
 		journey isdigit(c) => '0' <= c && c <= '9';
 		journey islower(c) => (𝔞 <= c && c <= 𝔷) || c == '_' || isdigit(c);
 		journey isupper(c) => (𝔄 <= c && c <= ℨ) || c == '_';
-		journey isspace(c) => [' ', "\t", "\n", "\r", '(', ')', ':'] ~~ c;
+		journey isspace(c) => (' ' | "\t" | "\n" | "\r" | '(' | ')' | ':') ~~ c;
 
 		nigh chr;
 		nigh func;
@@ -64,7 +64,7 @@ form Parser {
 			path islower:
 				reward Variable.fetch(soul.take_whilst(islower))
 
-			path "'"
+			path "'":
 			path '"':
 				renowned _quote = chr N.B. Noncapturing lambadas go brr
 				soul.advance()

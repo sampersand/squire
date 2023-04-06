@@ -81,6 +81,8 @@ struct form_declaration {
 	unsigned nmatter, nfuncs, nmeths, nparents, nessences;
 	char **parents;
 
+	struct statements *init;
+
 	struct journey_declaration **funcs, **meths, *constructor;
 
 	struct matter_declaration {
@@ -104,6 +106,7 @@ struct journey_argument {
 #define SQ_JOURNEY_MAX_PATTERNS 255
 struct journey_declaration {
 	char *name;
+	struct expression *default_return_genus; // may be NULL
 	unsigned npatterns;
 	struct journey_pattern {
 		unsigned pargc, kwargc;
@@ -189,8 +192,7 @@ struct assignment {
 
 struct index_assign {
 	struct primary *into;
-	struct expression *index;
-	struct expression *value;
+	struct expression *value, *index;
 };
 
 struct index {

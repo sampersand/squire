@@ -142,7 +142,7 @@ sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
 		goto done;
 	}
 
-	while (true) {
+	for (; true; ++input) {
 		switch(*input) {
 		case 'I': parsed = SQ_TK_ROMAN_I; break;
 		case 'V': parsed = SQ_TK_ROMAN_V; break;
@@ -163,12 +163,10 @@ sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
 
 		if (stage == 0 || parsed <= stage) stage = parsed;
 		else numeral -= stage * 2;
-
-		++input;
 	}
 
 done:
-
+	
 	if (output)
 		*output = input;
 

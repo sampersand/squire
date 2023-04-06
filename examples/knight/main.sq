@@ -3,11 +3,9 @@
 @transcribe 'literal.sq'
 @transcribe 'function.sq'
 @transcribe 'variable.sq'
-
 @henceforth $die($msg) = << proclaim($msg); dismount(1); >>;
 
-Parser("D & 3 4").next().run()
-
+Parser("D ]'123'").next().run()
 dismount(0);
 
 fork ARGV[I] {

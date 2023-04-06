@@ -30,6 +30,7 @@ enum sq_token_kind {
 	SQ_TK_SWITCH,
 	SQ_TK_CASE,
 	SQ_TK_REJOIN,
+	SQ_TK_INIT,
 	SQ_TK_KINGDOM,
 	// TODO: `assert` as `challenge`?
 

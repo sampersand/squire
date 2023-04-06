@@ -1,16 +1,17 @@
 @transcribe "value.sq"
 @transcribe "literal.sq"
 
+
 form Function : Value {
 	matter func: Journey;
 	matter args: Book;
 
 	change run() {
 		fork soul.func.arity {
-		path N:   reward (soul.func)(),
-		path I:   reward (soul.func)(soul.args[I]),
-		path II:  reward (soul.func)(soul.args[I], soul.args[II]),
-		path III: reward (soul.func)(soul.args[I], soul.args[II], soul.args[III]),
+		path N:   reward (soul.func)()
+		path I:   reward (soul.func)(soul.args[I])
+		path II:  reward (soul.func)(soul.args[I], soul.args[II])
+		path III: reward (soul.func)(soul.args[I], soul.args[II], soul.args[III])
 		path IV:  reward (soul.func)(soul.args[I], soul.args[II], soul.args[III], soul.args[IV])
 		}
 	}

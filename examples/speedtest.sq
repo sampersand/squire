@@ -1,0 +1,18 @@
+sum = N;
+initial = num = MMMMMMMMMMMMMMMMMMMM;
+
+proclaim(𝔰𝔱𝔞𝔯𝔱𝔢𝔡);
+
+i = I;
+whilst i < initial {
+	sum = N;
+	j = I;
+	whilst j < num {
+		((num % j) == 0) && (sum = sum + j);
+		j = j + I;
+	}
+
+	(num == sum) && proclaim(num);
+	num = num - I;
+	i = i + 1;
+}

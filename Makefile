@@ -18,7 +18,7 @@ ifeq ($(MAKECMDGOALS),debug)
 	CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
 	NJOKE=1
 else ifeq ($(MAKECMDGOALS),optimized)
-	CFLAGS+=-flto -march=native -DNDEBUG
+	CFLAGS+=-O3 -flto -DNDEBUG
 endif
 
 ifdef NJOKE
@@ -40,9 +40,6 @@ shared: $(dyn)
 
 clean:
 	@-rm -r $(BINDIR) $(BINDIR)
-
-optimized:
-	$(CC) $(CFLAGS) -o $(exe) $(wildcard $(SRCDIR)/*.c)
 
 $(exe): $(objects) | $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $+

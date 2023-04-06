@@ -6,8 +6,9 @@ journey join(book, sep) {
 
 	whilst i <= book.length {
 		if i != I {
-			acc = acc + "\n"
+			acc = acc + sep
 		}
+
 		acc = acc + book[i].to-text()
 		i = i + I
 	}
@@ -23,53 +24,98 @@ form Literal : Value {
 	change to-text(): Text {
 		fork soul.value {
 			path ni: reward ""
-			path yea: reward "true"
-			path nay: reward "false"
+			path yea: reward "𝔱𝔯𝔲𝔢"
+			path nay: reward "𝔣𝔞𝔩𝔰𝔢"
 			path Numeral: reward arabic(soul.value)
 			path Text: reward soul.value
 			path Book: reward join(soul.value, "\n")
 		}
 	}
-	change to-numeral(): Numeral => numeral(soul.value)
+
+	change to-numeral: Numeral,
+		() if Book ~~ soul.value => soul.value.length,
+		() => tally(soul.value);
+
 	change to-veracity(): Veracity => veracity(soul.value)
 	change to-book(): Book {
-		#veracity(soul.value)
-		dismount("oops");
+		fork soul.value {
+			path ni | nay: reward []
+			path yea: reward [soul]
+			path Book: reward soul
+
+			path Text:
+				nigh b = book(soul.value);
+				nigh i = I;
+				whilst i <= b.length {
+					b[i] = Literal(b[i]);
+					i = i + 1;
+				}
+				reward b;
+
+			path Numeral:
+				if !soul.value {
+					reward [Literal(0)];
+				}
+
+				nigh b = [];
+				nigh v = soul.value;
+				whilst v {
+					insert(b, I, Literal(v % 10));
+					v = v / 10;
+				}
+
+				reward b;
+		}
 	}
 
-	change +
-		(rhs) if Numeral ~~ soul.value => Literal(soul.value + tally(rhs)),
-		(rhs) if Text ~~ soul.value => Literal(soul.value + text(rhs));
-		(rhs) if Book ~~ soul.value => Literal(soul.value + book(rhs));
+	change head
+		(): Value if Book ~~ soul.value => soul.value[I],
+		(): Literal if Text ~~ soul.value => Literal(soul.value[I]);
 
-	@henceforth $literalop($op) = change $op(rhs) => Literal((soul.value) $op (tally(rhs)));
+	change tail
+		(): Value if Book ~~ soul.value => soul.get(II, soul.value.length),
+		(): Literal if Text ~~ soul.value => Literal(substr(soul.value, II, soul.value.length - I));
+
+	change []
+		(idx: Numeral) if Book ~~ soul.value => soul.value[idx],
+		(idx: Numeral) if Text ~~ soul.value => Literal(soul.value[idex]))
+		(start, end: \(x) => x < 0) => soul[start, soul.length - I],
+		(start, end) if Book ~~ soul => soul
+	change get: Literal,
+		(start: Numeral, len: Numeral) if Book ~~ soul.value {
+
+		},
+
+	change +: Literal,
+		(rhs) if Numeral ~~ soul.value => Literal(soul.value + tally(rhs)),
+		(rhs) if Text    ~~ soul.value => Literal(soul.value + text(rhs)),
+		(rhs) if Book    ~~ soul.value => Literal(soul.value + book(rhs));
+
+	@henceforth $literalop($op) = change $op(rhs): Literal => Literal((soul.value) $op (tally(rhs)));
 	$literalop(-)
 	$literalop(*)
 	$literalop(/)
 	$literalop(%)
-	$literalop(^)
 	@nevermore $literalop # undefines it
 
-	change <=>
+	change ^: Literal,
+		(rhs) if Numeral ~~ soul.value => Literal(soul.value ^ tally(rhs)),
+		(rhs) if Book    ~~ soul.value => Literal(join(soul.value, text(rhs)));
+
+	change <=>: Literal,
 		(rhs) if Numeral ~~ soul.value => soul.value <=> tally(rhs),
 		(rhs) if Text ~~ soul.value => soul.value <=> text(rhs),
-		(rhs) if Veracity ~~ soul.value => tally(soul.value) <=> tally(veracity(rhs));
+		(rhs) if Veracity ~~ soul.value => tally(soul.value) <=> tally(veracity(rhs)),
+		(rhs) if Book ~~ soul.value => soul.value <=> book(rhs);
 
-	change ==(rhs) => soul.value == rhs.value
+	change ==(rhs): Veracity => soul.value == rhs.value;
 
 	change dump() {
 		fork soul.value {
-			path yea:
-			path nay:
-			path Numeral:
-				proclaimn(soul)
-
-			path ni:
-				proclaimn("null")
-
-			path Text:
-				# FIXME
-				proclaimn("Text({soul.value})")
+			path yea: proclaimn(𝔱𝔯𝔲𝔢)
+			path nay: proclaimn(𝔣𝔞𝔩𝔰𝔢)
+			path ni:  proclaimn(𝔫𝔲𝔩𝔩)
+			alas: dump(soul.value)
 		}
 	}
 }

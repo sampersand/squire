@@ -819,8 +819,21 @@ struct sq_book *sq_value_to_book(sq_value value) {
 		return book;
 	}
 
+	case SQ_G_IMITATION: {
+		struct sq_journey *to_book = sq_imitation_lookup_change(AS_IMITATION(value), "to_book");
+
+		if (to_book != NULL) {
+			sq_value book = sq_journey_run_deprecated(to_book, 1, &value);
+			if (!sq_value_is_book(book))
+				die("to_book for an imitation of '%s' didn't return a book", AS_IMITATION(value)->form->name);
+			return AS_BOOK(book);
+		}
+
+		// else fallthrough
+	}
+
 	default:
-		todo("others to book");
+		die("cannot convert %s to a book", TYPENAME(value));
 	}
 }
 

@@ -358,6 +358,9 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 			set_index(code, const_index);
 		}
 	}
+	
+	if (fdecl->init)
+		compile_statements(code, fdecl->init);
 
 	form->parents = xmalloc(sizeof_array(struct sq_form *, fdecl->nparents));
 	form->nparents = fdecl->nparents;
@@ -1396,8 +1399,11 @@ static void compile_statements(struct sq_code *code, struct statements *stmts) {
 static void compile_journey_pattern(
 	struct sq_journey_pattern *pattern,
 	struct journey_pattern *jp,
-	bool is_method
+	bool is_method,
+	struct expression *default_return_genus
 ) {
+	(void) default_return_genus;
+
 	(void) is_method;
 	pattern->pargc = jp->pargc;
 	pattern->kwargc = jp->kwargc;
@@ -1508,7 +1514,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 	journey->patterns = xmalloc(sizeof_array(struct sq_journey_pattern, jd->npatterns));
 
 	for (unsigned i = 0; i < jd->npatterns; ++i)
-		compile_journey_pattern(&journey->patterns[i], &jd->patterns[i], is_method);
+		compile_journey_pattern(&journey->patterns[i], &jd->patterns[i], is_method, jd->default_return_genus);
 
 	return journey;
 }

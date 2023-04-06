@@ -1,4 +1,3 @@
-
 # Full-blown pattern matching!
 form Fraction {
 	matter numer: Numeral;

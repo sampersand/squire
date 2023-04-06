@@ -1,0 +1,214 @@
+renowned parse;
+
+form Fraction {
+	matter numer: Numeral;;
+	matter denom: Numeral & ~N;
+}
+
+journey divide(l, r: ~N) => l / r;
+
+journey coerce
+	(_: Veracity, r) => veracity(r),
+	(_: Numeral, r: Book) => r.length,
+	(_: Numeral, r) => tally(r),
+	(_: Text, r: yea) => 𝔱𝔯𝔲𝔢,
+	(_: Text, r: nay) => 𝔣𝔞𝔩𝔰𝔢,
+	(_: Text, r: ni) => "",
+	(_: Text, r: Book) => r * "\n",
+	(_: Text, r) => text(r),
+	(_: Book, r: yea) => [yea],
+	(_: Book, r: nay | ni) => [],
+	(_: Book, r: N) => [N],
+	(_: Book, r: Numeral) {
+		nigh b = [];
+		whilst r {
+			insert(b, I, r % X);
+			r = r / X;
+		}
+		reward b;
+	},
+	(_: Book, r) => book(r);
+
+form Function {
+	matter name, should-run, body;
+
+	recall lookup(name) => soul.FUNCTIONS[name];
+
+	@henceforth $FN($a, $b) = ($a): Function($a, yea, $b),;
+	@henceforth $F2($a, $c) = ($a): Function($a, nay, $c),;
+
+	essence FUNCTIONS = {
+		$FN('R', \() => gamble())
+		$FN('P', \() => inquire())
+
+		$FN('E', \(arg) => run(parse(arg)))
+		$F2('B', \(block) => block)
+		$FN('C', \(block) => run(block))
+		$FN('`', \(cmd) => hex(cmd))
+		$FN('Q', \(code) => dismount(code))
+		$FN('!', \(val) => !val)
+		$FN('L', \(str) => book(str).length)
+		$FN('A', \(val) => ascii(val))
+		$FN('~', \(num) => -tally(num))
+		$FN('D', \(val) { dump(val); reward val; })
+#		$FN('O', \(val) ){
+#			val = text(val);
+#			if val && substr(val, val.length, I) == '\\' {
+#				if val != '\\' {
+#					proclaimn(substr(val, I, val.length - I));
+#				}
+#			} alas {
+#				proclaim(val);
+#			}
+#			reward Literal(ni)
+#		},
+		$FN(',', \(val) => Literal([val]))
+		$FN('[', \(val) => val[I])
+		$FN(']', <<journey
+			(val: Text) => substr(val, II, val.length - I),
+			(val: Book) { catapult "todo"; } >>)
+		$FN('+', \(l, r) => l + coerce(l, r))
+		$FN('-', \(l, r) => l - tally(r))
+		$FN('*', \(l, r) => l * tally(r))
+		$FN('/', \(l, r) => l / tally(r))
+		$FN('%', \(l, r) => l % tally(r))
+		$FN('^', <<journey
+			(l: Numeral, r) => l ^ tally(r),
+			(l: Book, r) => l * text(r)>>)
+		$FN('<', \(l, r) => l < coerce(l, r))
+		$FN('>', \(l, r) => l > coerce(l, r))
+		$FN('?', \(l, r) => l == r)
+		$F2('&', \(l, r) { if l=run(l) { reward run(r) } reward l })
+		$F2('|', \(l, r) { if l=run(l) { reward l } reward run(r) })
+		$FN(';', \(_, r) => r)
+		$F2('=', \(l, r) { l.assign(r = run(r)); reward r })
+		$FN('W', \(l, r) { whilst l { run(r) } })
+		$F2('I', <<journey
+			(i, y, _) if run(i) => run(y),
+			(_, _, n) => run(n)>>)
+		$FN('G', <<journey
+			(c: Text, s, l) => substr(c, (s=tally(s)) + I, s + tally(l)),
+			(c: Book, s, l) { catapult("todo") }>>)
+	};
+}
+
+
+journey isdigit(c) => '0' <= c && c <= '9';
+journey islower(c) => (𝔞 <= c && c <= 𝔷) || c == '_' || isdigit(c);
+journey isupper(c) => (𝔄 <= c && c <= ℨ) || c == '_';
+journey isspace(c) => (' ' | "\t" | "\n" | "\r" | '(' | ')' | ':') ~~ c;
+
+journey parse() {
+}
+
+form Parser {
+	matter stream, index;
+
+	imitate(stream: Text) {
+		soul.stream = stream;
+		soul.index = I;
+	}
+
+	change is-eof() => soul.index > length(soul.stream);
+	change peek() => soul.stream[soul.index];
+	change advance
+		() if soul.index > length(soul.stream) { catapult 𝔢𝔪𝔭𝔱𝔵 𝔰𝔱𝔯𝔢𝔞𝔪 },
+		() => soul.index = soul.index + I
+
+	change peek_advance() {
+		nigh peeked = soul.peek();
+		soul.advance();
+		reward peeked;
+	}
+
+	change take_whilst(cond: Journey): Text {
+		nigh acc = "";
+		nigh chr;
+
+		whilst !soul.is-eof() && cond(chr = soul.peek()) {
+			acc = acc + chr;
+			soul.advance();
+		}
+
+		reward acc;
+	}
+
+	change next(): Value {
+		renowned Literal;
+		renowned Variable;
+		renowned Function;
+
+		N.B. These are actually defined in the global scope.
+		journey isdigit(c) => '0' <= c && c <= '9';
+		journey islower(c) => (𝔞 <= c && c <= 𝔷) || c == '_' || isdigit(c);
+		journey isupper(c) => (𝔄 <= c && c <= ℨ) || c == '_';
+		journey isspace(c) => (' ' | "\t" | "\n" | "\r" | '(' | ')' | ':') ~~ c;
+
+		nigh chr;
+		nigh func;
+
+		fork (chr = soul.peek()) {
+			path ni:
+				catapult 𝔢𝔫𝔡 𝔬𝔣 𝔰𝔱𝔯𝔢𝔞𝔪 𝔢𝔫𝔠𝔬𝔲𝔫𝔱𝔢𝔯𝔢𝔡;
+
+			path '#':
+				soul.take_whilst(\(c) => c != "\n")
+				rejoin; N.B. Ie fallthru
+
+			path isspace:
+				soul.advance();
+				reward soul.next();
+
+			path isdigit:
+				reward Literal(numeral(soul.take_whilst(isdigit)))
+
+			path islower:
+				reward Variable.fetch(soul.take_whilst(islower))
+
+			path "'":
+			path '"':
+				renowned _quote = chr N.B. Noncapturing lambadas go brr
+				soul.advance()
+				nigh result = Literal(soul.take_whilst(\(c) => c != _quote));
+
+				if soul.peek_advance() != chr {
+					catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢;
+				}
+
+				reward result;
+
+			path '@':
+				soul.advance();
+				reward Literal([]);
+
+			path isupper:
+				soul.take_whilst(isupper);
+				fork chr {
+					path 𝔗: reward Literal(yea)
+					path 𝔉: reward Literal(nay)
+					path 𝔑: reward Literal(ni)
+				}
+			done:
+			alas:
+				soul.advance();
+				whence done;
+
+				if ni == (func=Function.FUNCTIONS[chr]) {
+					catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + chr;
+				}
+
+				nigh args = [];
+				nigh i = I;
+
+				whilst i <= func.arity {
+					insert(args, i, soul.next());
+					i = i + I;
+				}
+
+				reward Function(func, args);
+		}
+	}
+}
+
+
+dump(Function.lookup('R'));
