@@ -1,0 +1,6 @@
+journey fibonacci(n) {
+	if (n <= I) { reward n; }
+	reward fibonacci(n - I) + fibonacci(n - II);
+}
+
+proclaim(arabic(fibonacci(tally(ARGV[I]))))

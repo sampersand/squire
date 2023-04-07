@@ -11,6 +11,11 @@ objects+=$(patsubst $(SRCDIR)/value/%.c,$(OBJDIR)/value/%.o,$(wildcard $(SRCDIR)
 objects+=$(patsubst $(SRCDIR)/program/%.c,$(OBJDIR)/program/%.o,$(wildcard $(SRCDIR)/program/*.c))
 objects+=$(patsubst $(SRCDIR)/other/%.c,$(OBJDIR)/other/%.o,$(wildcard $(SRCDIR)/other/*.c))
 objects+=$(patsubst $(SRCDIR)/other/io/%.c,$(OBJDIR)/other/io/%.o,$(wildcard $(SRCDIR)/other/io/*.c))
+allcfiles=$(wildcard $(SRCDIR)/*.c) \
+		$(wildcard $(SRCDIR)/program/*.c) \
+		$(wildcard $(SRCDIR)/value/*.c) \
+		$(wildcard $(SRCDIR)/other/*.c) \
+		$(wildcard $(SRCDIR)/other/io/*.c)
 
 CFLAGS+=-F$(SRCDIR) -Iinclude
 
@@ -18,7 +23,7 @@ ifeq ($(MAKECMDGOALS),debug)
 	CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
 	NJOKE=1
 else ifeq ($(MAKECMDGOALS),optimized)
-	CFLAGS+=-flto -march=native -DNDEBUG
+	CFLAGS+=-flto -DNDEBUG -O3
 endif
 
 ifdef NJOKE
@@ -34,15 +39,14 @@ CFLAGS+=$(EFLAGS)
 .PHONY: all optimized clean shared
 
 debug: $(exe)
-optimized: $(exe)
 all: $(exe)
 shared: $(dyn)
 
 clean:
 	@-rm -r $(BINDIR) $(BINDIR)
 
-optimized:
-	$(CC) $(CFLAGS) -o $(exe) $(wildcard $(SRCDIR)/*.c)
+optimized: $(allcfiles)
+	$(CC) $(CFLAGS) -o $(exe) $+
 
 $(exe): $(objects) | $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $+

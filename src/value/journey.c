@@ -190,22 +190,29 @@ sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
 // }
 
 #ifndef SQ_NMOON_JOKE
-
 #include <time.h>
-extern double moon_phase2(int year,int month,int day, double hour);
 
 bool sq_moon_joke_does_were_flip() {
+	extern double moon_phase2(int year,int month,int day, double hour);
+	static time_t last_check; // cache it so we don't always recalculate
+	static bool should_flip;
+	const int HOUR_IN_SECONDS = 3600;
+
 	time_t t = time(NULL);
-	struct tm *time = localtime(&t);
 
-	double mf = moon_phase2(
-		time->tm_year + 1900,
-		time->tm_mon + 1,
-		time->tm_mday,
-		time->tm_hour
-	);
+	if (last_check <= t + HOUR_IN_SECONDS)  {
+		struct tm *time = localtime(&t);
 
-	return (0.90 - mf) < 0 && !(rand() % 100);
+		double mf = moon_phase2(
+			time->tm_year + 1900,
+			time->tm_mon + 1,
+			time->tm_mday,
+			time->tm_hour
+		);
+		should_flip = (0.9 - mf) < 0;
+	}
+
+	return should_flip && !(rand() % 100);
 }
 #endif /* !SQ_NMOON_JOKE */
 
