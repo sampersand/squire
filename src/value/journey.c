@@ -209,7 +209,7 @@ bool sq_moon_joke_does_were_flip() {
 			time->tm_mday,
 			time->tm_hour
 		);
-		should_flip = (0.9 - mf) < 0;
+		should_flip = 0.95 <= mf;
 	}
 
 	return should_flip && !(rand() % 100);
