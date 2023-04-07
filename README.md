@@ -145,7 +145,7 @@ whilst i <= C {
 ```
 
 ## Were-`if`s
-What programming language based on the medieval ages would be complete without some form of monsters? In Squire, instead of having werewolfs, we have were-`if`s: On full moons (and only on full moons), `if` statements have a 1% chance of executing their body if the condition is _false_. That is this may be executed on a full moon:
+What programming language based on the medieval ages would be complete without some form of monsters? In Squire, instead of having werewolfs, we have were-`if`s: On full moons (and only on full moons), `if` statements have a 1% chance of embracing their inner lycanthropy and executing their body when the condition is _false_. That is, this may be executed on a full moon:
 ```squire
 if nay {
 	proclaim("'Ello world!")
