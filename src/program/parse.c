@@ -140,14 +140,14 @@ static void parse_func_call(struct function_call *fncall) {
 
 static struct book *parse_book() {
 	unsigned len = 0, cap = 8;
-	struct expression **pages = sq_malloc(sq_sizeof_array(struct expression, cap));
+	struct expression **pages = sq_malloc_vec(struct expression, cap);
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
 		if (last.kind == SQ_TK_UNDEFINED)
 			sq_throw("missing rparen for book initialization");
 
 		if (len == cap)
-			pages = sq_realloc(pages, sq_sizeof_array(struct expression, cap *= 2));
+			pages = sq_realloc_vec(struct expression, pages, cap *= 2);
 
 		pages[len++] = parse_expression();
 
@@ -167,8 +167,8 @@ static struct book *parse_book() {
 
 static struct dict *parse_codex() {
 	unsigned len = 0, cap = 8;
-	struct expression **keys = sq_malloc(sq_sizeof_array(struct expression, cap));
-	struct expression **vals = sq_malloc(sq_sizeof_array(struct expression, cap));
+	struct expression **keys = sq_malloc_vec(struct expression, cap);
+	struct expression **vals = sq_malloc_vec(struct expression, cap);
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACE)) {
 		if (last.kind == SQ_TK_UNDEFINED)
@@ -176,8 +176,8 @@ static struct dict *parse_codex() {
 
 		if (len == cap) {
 			cap *= 2;
-			keys = sq_realloc(keys, sq_sizeof_array(struct expression, cap));
-			vals = sq_realloc(vals, sq_sizeof_array(struct expression, cap));
+			keys = sq_realloc_vec(struct expression, keys, cap);
+			vals = sq_realloc_vec(struct expression, vals, cap);
 		}
 
 		bool was_label;
@@ -717,10 +717,10 @@ static struct form_declaration *parse_form_declaration() {
 	} else if (last.kind == SQ_TK_LABEL) {
 		fdecl->name = last.identifier;
 		unsigned cap = 4;
-		fdecl->parents = sq_malloc(sq_sizeof_array(char *, cap));
+		fdecl->parents = sq_malloc_vec(char *, cap);
 		while (true) {
 			if (cap == fdecl->nparents)
-				fdecl->parents = sq_realloc(fdecl->parents, sq_sizeof_array(char *, cap *= 2));
+				fdecl->parents = sq_realloc_vec(char *, fdecl->parents, cap *= 2);
 
 			if (take().kind == SQ_TK_IDENT) {
 				fdecl->parents[fdecl->nparents++] = last.identifier;
@@ -743,10 +743,10 @@ static struct form_declaration *parse_form_declaration() {
 	EXPECT(SQ_TK_LBRACE, "expected '{' before 'form' contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
-	fdecl->matter = sq_malloc(sq_sizeof_array(struct matter_declaration, MAX_LEN));
-	fdecl->meths = sq_malloc(sq_sizeof_array(struct sq_journey *, MAX_LEN));
-	fdecl->funcs = sq_malloc(sq_sizeof_array(struct sq_journey *, MAX_LEN));
-	fdecl->essences = sq_malloc(sq_sizeof_array(struct essence_declaration, MAX_LEN));
+	fdecl->matter = sq_malloc_vec(struct matter_declaration, MAX_LEN);
+	fdecl->meths = sq_malloc_vec(struct sq_journey *, MAX_LEN);
+	fdecl->funcs = sq_malloc_vec(struct sq_journey *, MAX_LEN);
+	fdecl->essences = sq_malloc_vec(struct essence_declaration, MAX_LEN);
 	fdecl->constructor = NULL;
 	fdecl->nmatter = 0;
 	fdecl->nfuncs = 0;
@@ -845,9 +845,9 @@ static struct form_declaration *parse_form_declaration() {
 
 #undef MAX_LEN
 
-	fdecl->matter = sq_realloc(fdecl->matter, sq_sizeof_array(struct matter_declaration, fdecl->nmatter));
-	fdecl->meths = sq_realloc(fdecl->meths, sq_sizeof_array(struct sq_journey *, fdecl->nmeths));
-	fdecl->funcs = sq_realloc(fdecl->funcs, sq_sizeof_array(struct sq_journey *, fdecl->nfuncs));
+	fdecl->matter = sq_realloc_vec(struct matter_declaration, fdecl->matter, fdecl->nmatter);
+	fdecl->meths = sq_realloc_vec(struct sq_journey *, fdecl->meths, fdecl->nmeths);
+	fdecl->funcs = sq_realloc_vec(struct sq_journey *, fdecl->funcs, fdecl->nfuncs);
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
 
@@ -1046,7 +1046,7 @@ static struct if_statement *parse_if_statement() {
 		if (last.kind == SQ_TK_IF) {
 			if_stmt->iffalse = sq_malloc(sizeof(struct statements));
 			if_stmt->iffalse->len = 1;
-			if_stmt->iffalse->stmts = sq_malloc(sq_sizeof_array(struct statement *, 2));
+			if_stmt->iffalse->stmts = sq_malloc_vec(struct statement *, 2);
 			if_stmt->iffalse->stmts[0] = sq_malloc(sizeof(struct statement));
 			if_stmt->iffalse->stmts[0]->kind = SQ_PS_SIF;
 			if_stmt->iffalse->stmts[0]->ifstmt = parse_if_statement();
@@ -1068,7 +1068,7 @@ static struct switch_statement *parse_switch_statement() {
 	sw_stmt->alas = NULL;
 	sw_stmt->ncases = 0;
 	unsigned capacity = 8;
-	sw_stmt->cases = sq_malloc(sq_sizeof_array(struct case_statement, capacity));
+	sw_stmt->cases = sq_malloc_vec(struct case_statement, capacity);
 
 	if (!(sw_stmt->cond = parse_expression()))
 		sq_throw("missing condition for 'fork'");
@@ -1085,7 +1085,7 @@ static struct switch_statement *parse_switch_statement() {
 
 		case SQ_TK_CASE:
 			if (sw_stmt->ncases == capacity)
-				sw_stmt->cases = sq_realloc(sw_stmt->cases, sq_sizeof_array(struct case_statement, capacity *= 2));
+				sw_stmt->cases = sq_realloc_vec(struct case_statement, sw_stmt->cases, capacity *= 2);
 
 			if (!(sw_stmt->cases[sw_stmt->ncases].expr = parse_expression()))
 				sq_throw("unable to parse condition for case");
@@ -1210,13 +1210,13 @@ static struct statement *parse_statement() {
 
 static struct statements *parse_statements() {
 	unsigned cap = 256, len=0;
-	struct statement **list = sq_malloc(sq_sizeof_array(struct statement *, cap));
+	struct statement **list = sq_malloc_vec(struct statement *, cap);
 
 	bool endl = true;
 	while ((list[len] = parse_statement())) {
 		// if (!endl && list[len-1]->kind == SQ_PS_SEXPR) sq_throw("missing `;` between statements");
 		if (++len == cap - 1)
-			list = sq_realloc(list, sq_sizeof_array(struct statement *, cap*=2));
+			list = sq_realloc_vec(struct statement *, list, cap*=2);
 
 		endl = false;
 		while (take_endline().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL)

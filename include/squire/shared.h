@@ -60,6 +60,9 @@
 
 #define sq_sizeof_array(kind, length) (sizeof(kind) * (length))
 
+#define sq_malloc_vec(kind, length) (sq_malloc(sizeof(kind) * (length)))
+#define sq_realloc_vec(kind, ptr, length) (sq_realloc((ptr), sizeof(kind) * (length)))
+
 void *sq_calloc(size_t count, size_t size) SQ_ATTR(malloc) ;
 void *sq_malloc(size_t size) SQ_ATTR(malloc);
 void *sq_realloc(void *ptr, size_t size);

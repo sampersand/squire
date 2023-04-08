@@ -164,7 +164,7 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 
 		imitation->matter = sq_memdup(args.pargv, sq_sizeof_array(sq_value, form->nmatter));
 	} else {
-		imitation->matter = sq_malloc(sq_sizeof_array(sq_value, form->nmatter));
+		imitation->matter = sq_malloc_vec(sq_value, form->nmatter);
 
 		for (unsigned i = 0; i < form->nmatter; ++i)
 			imitation->matter[i]=  SQ_NI;

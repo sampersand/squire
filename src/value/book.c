@@ -64,7 +64,7 @@ static void expand_book(struct sq_book *book, size_t length) {
 	if (book->capacity <= length) {
 		// todo: increase capacity by two.
 		book->capacity = length * 2 + 1;
-		book->pages = sq_realloc(book->pages, sq_sizeof_array(sq_value, book->capacity));
+		book->pages = sq_realloc_vec(sq_value, book->pages, book->capacity);
 	}
 
 	while (book->length < length)

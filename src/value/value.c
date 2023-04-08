@@ -308,7 +308,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		if (index < 0 || AS_TEXT(value)->length <= (unsigned) index)
 			return SQ_NI;
 
-		char *c = sq_malloc(sq_sizeof_array(char, 2));
+		char *c = sq_malloc_vec(char, 2);
 		c[0] = AS_STR(value)[index];
 		c[1] = '\0';
 		return sq_value_new(sq_text_new2(c, 1));
@@ -393,7 +393,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		struct sq_book *lary = AS_BOOK(lhs), *rary = sq_value_to_book(rhs);
 
 		unsigned length = lary->length + rary->length;
-		sq_value *pages = sq_malloc(sq_sizeof_array(sq_value, length));
+		sq_value *pages = sq_malloc_vec(sq_value, length);
 
 		for (unsigned i = 0; i < lary->length; ++i)
 			pages[i] = sq_value_clone(lary->pages[i]);
@@ -410,7 +410,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		// struct sq_codex *ldict = AS_CODEX(lhs), *rdict = sq_value_to_codex(rhs);
 
 		// unsigned i = 0, length = lhs->length + rhs->length;
-		// sq_value *elements = sq_malloc(sq_sizeof_array(sq_value, length));
+		// sq_value *elements = sq_malloc_vec(sq_value, length);
 
 		// for (; i < lhs->length; ++i)
 		// 	elements[i] = sq_value_clone(lary->elements[i]);

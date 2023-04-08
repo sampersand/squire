@@ -326,7 +326,7 @@ static struct sq_token parse_identifier(void) {
 		} else break;
 	}
 
-	token.identifier = sq_realloc(token.identifier, sq_sizeof_array(char , len + 1));
+	token.identifier = sq_realloc_vec(char, token.identifier, len + 1);
 	token.identifier[len] = '\0';
 
 	// check to see if we're a label

@@ -7,7 +7,7 @@
 static void extend_bytecode_cap(struct sq_compiler *compiler) {
 	if (compiler->code.len >= compiler->code.cap) {
 		compiler->code.cap *= 2;
-		compiler->code.ary = sq_realloc(compiler->code.ary, sq_sizeof_array(enum sq_opcode, compiler->code.cap));
+		compiler->code.ary = sq_realloc_vec(enum sq_opcode, compiler->code.ary, compiler->code.cap);
 	}
 }
 
@@ -59,12 +59,12 @@ unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value con
 
 	if (compiler->consts.len >= compiler->consts.cap) {
 		compiler->consts.cap *= 2;
-		compiler->consts.ary = sq_realloc(compiler->consts.ary, sq_sizeof_array(sq_value, compiler->consts.cap));
+		compiler->consts.ary = sq_realloc_vec(sq_value, compiler->consts.ary, compiler->consts.cap);
 	}
 
 	unsigned index = compiler->consts.len++;
 
-#ifdef sq_log
+#ifdef SQ_LOG
 	printf("consts[%d]=", index); 
 	sq_value_dump(stdout, constant);
 	putchar('\n');
@@ -119,7 +119,7 @@ unsigned sq_compiler_global_declare(struct sq_globals *globals, char *name, sq_v
 	// reallocate if necessary
 	if (globals->len == globals->cap) {
 		globals->cap *= 2;
-		globals->ary = sq_realloc(globals->ary, sq_sizeof_array(struct sq_global, globals->cap));
+		globals->ary = sq_realloc_vec(struct sq_global, globals->ary, globals->cap);
 	}
 
 	index = globals->len++;
@@ -160,7 +160,9 @@ unsigned sq_compiler_variable_declare(struct sq_compiler *compiler, char *name) 
 
 	if (compiler->variables.cap <= compiler->variables.len) {
 		compiler->variables.cap *= 2;
-		compiler->variables.ary = sq_realloc(compiler->variables.ary, sq_sizeof_array(struct sq_local, compiler->variables.cap));
+		compiler->variables.ary = sq_realloc_vec(
+			struct sq_local, compiler->variables.ary, compiler->variables.cap
+		);
 	}
 
 	unsigned variable_index = compiler->variables.len++;

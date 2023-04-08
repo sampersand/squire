@@ -39,7 +39,7 @@ static inline struct sq_book *sq_book_new2(size_t length, sq_value *pages) {
 
 // Creates a new book with the given capacity.
 static inline struct sq_book *sq_book_allocate(size_t capacity) {
-	return sq_book_new(0, capacity, sq_malloc(sq_sizeof_array(sq_value, capacity)));
+	return sq_book_new(0, capacity, sq_malloc_vec(sq_value, capacity));
 }
 
 /** Deallocates the memory associated with `book`.

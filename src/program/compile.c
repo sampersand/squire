@@ -57,8 +57,7 @@ struct sq_code {
 };
 
 #define RESIZE(cap, len, pos, type) \
-	if (code->cap == code->len) \
-		code->pos = sq_realloc(code->pos, sq_sizeof_array(type , code->cap*=2));
+	if (code->cap == code->len) code->pos = sq_realloc_vec(type, code->pos, code->cap*=2);
 
 static void extend_bytecode_cap(struct sq_code *code) {
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
@@ -102,10 +101,10 @@ static unsigned next_local(struct sq_code *code) {
 static unsigned declare_constant(struct sq_code *code, sq_value value) {
 	if (code->consts.cap == code->consts.len) {
 		code->consts.cap *= 2;
-		code->consts.ary = sq_realloc(code->consts.ary, sq_sizeof_array(sq_value, code->consts.cap));
+		code->consts.ary = sq_realloc_vec(sq_value, code->consts.ary, code->consts.cap);
 	}
 
-#ifdef sq_log
+#ifdef SQ_LOG
 	printf("consts[%d]=", code->consts.len); 
 	sq_value_dump(stdout, value);
 	putchar('\n');
@@ -169,7 +168,7 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 	// reallocate if necessary
 	if (globals.len == globals.cap) {
 		globals.cap *= 2;
-		globals.ary = sq_realloc(globals.ary, sq_sizeof_array(struct global, globals.cap));
+		globals.ary = sq_realloc_vec(struct global, globals.ary, globals.cap);
 	}
 
 	sq_log("global[%d]: %s\n", globals.len, name);
@@ -277,7 +276,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 	declare_global_variable(form->name, sq_value_new(form));
 
 	form->nmatter = fdecl->nmatter;
-	form->matter = sq_malloc(sq_sizeof_array(struct sq_form_matter, form->nmatter));
+	form->matter = sq_malloc_vec(struct sq_form_matter, form->nmatter);
 
 	int global = -1;
 
@@ -306,17 +305,17 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 	form->imitate = fdecl->constructor ? compile_journey(fdecl->constructor, true) : NULL;
 
 	form->nrecollections = fdecl->nfuncs;
-	form->recollections = sq_malloc(sq_sizeof_array(struct sq_journey *, form->nrecollections));
+	form->recollections = sq_malloc_vec(struct sq_journey *, form->nrecollections);
 	for (unsigned i = 0; i < form->nrecollections; ++i)
 		form->recollections[i] = compile_journey(fdecl->funcs[i], false);
 
 	form->nchanges = fdecl->nmeths;
-	form->changes = sq_malloc(sq_sizeof_array(struct sq_journey *, form->nchanges));
+	form->changes = sq_malloc_vec(struct sq_journey *, form->nchanges);
 	for (unsigned i = 0; i < form->nchanges; ++i)
 		form->changes[i] = compile_journey(fdecl->meths[i], true);
 
 	form->nessences = fdecl->nessences;
-	form->essences = sq_malloc(sq_sizeof_array(struct sq_essence, form->nessences));
+	form->essences = sq_malloc_vec(struct sq_essence, form->nessences);
 	for (unsigned i = 0; i < fdecl->nessences; ++i) {
 		form->essences[i].name = fdecl->essences[i].name;
 		form->essences[i].value = SQ_NI;
@@ -359,7 +358,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 		}
 	}
 
-	form->parents = sq_malloc(sq_sizeof_array(struct sq_form *, fdecl->nparents));
+	form->parents = sq_malloc_vec(struct sq_form *, fdecl->nparents);
 	form->nparents = fdecl->nparents;
 
 	for (unsigned i = 0; i < fdecl->nparents; ++i) {
@@ -415,7 +414,7 @@ static void compile_kingdom_declaration(struct sq_code *code, struct kingdom_dec
 	// struct sq_kingdom *kingdom = sq_malloc(sizeof(struct sq_kingdom));
 	// kingdom->name = kdecl->name;
 	// kingdom->nsubjects = kingdom->subject_cap = kdecl->nsubjects;
-	// kingdom->subjects = sq_malloc(sq_sizeof_array(struct sq_kingdom_subject, kingdom->nsubjects));
+	// kingdom->subjects = sq_malloc_vec(struct sq_kingdom_subject, kingdom->nsubjects);
 
 	// declare_global_variable(strdup(kingdom->name), sq_value_new(kingdom));
 
@@ -1182,7 +1181,7 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 
 	// havent found the label, add it. (note we increase len here)
 	if (len == code->labels.cap)
-		code->labels.ary = sq_realloc(code->labels.ary, sq_sizeof_array(struct label, code->labels.cap *= 2));
+		code->labels.ary = sq_realloc_vec(struct label, code->labels.ary, code->labels.cap *= 2);
 
 	code->labels.ary[len].start = code->codelen;
 	code->labels.ary[len].name = label;
@@ -1403,26 +1402,30 @@ static void compile_journey_pattern(
 	pattern->kwargc = jp->kwargc;
 	pattern->splat = jp->splat != NULL;
 	pattern->splatsplat = jp->splatsplat != NULL;
-	pattern->pargv = sq_malloc(sq_sizeof_array(struct sq_journey_argument, pattern->pargc));
-	pattern->kwargv = sq_malloc(sq_sizeof_array(struct sq_journey_argument, pattern->kwargc));
+	pattern->pargv = sq_malloc_vec(struct sq_journey_argument, pattern->pargc);
+	pattern->kwargv = sq_malloc_vec(struct sq_journey_argument, pattern->kwargc);
 
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
-	code.bytecode = sq_malloc(sq_sizeof_array(union sq_bytecode, code.codecap));
+	code.bytecode = sq_malloc_vec(union sq_bytecode, code.codecap);
+	code.bytecode = sq_malloc_vec(union sq_bytecode, code.codecap);
 
 	code.nlocals = pattern->pargc + pattern->kwargc + (pattern->splat ? 1 : 0) + (pattern->splatsplat ? 1 : 0);
 	code.consts.cap = 64;
 	code.consts.len = 0;
-	code.consts.ary = sq_malloc(sq_sizeof_array(sq_value, code.consts.cap));
+	code.consts.ary = sq_malloc_vec(sq_value, code.consts.cap);
+	code.consts.ary = sq_malloc_vec(sq_value, code.consts.cap);
 
 	code.vars.len = 0;
 	code.vars.cap = SQ_JOURNEY_MAX_ARGC * 2 + 2; // *2 for both positional and kw, then +2 for splat and splatsplat
-	code.vars.ary = sq_malloc(sq_sizeof_array(struct local, code.vars.cap));
+	code.vars.ary = sq_malloc_vec(struct local, code.vars.cap);
+	code.vars.ary = sq_malloc_vec(struct local, code.vars.cap);
 
 	code.labels.len = 0;
 	code.labels.cap = 4;
-	code.labels.ary = sq_malloc(sq_sizeof_array(struct label, code.labels.cap));
+	code.labels.ary = sq_malloc_vec(struct label, code.labels.cap);
+	code.labels.ary = sq_malloc_vec(struct label, code.labels.cap);
 
 	unsigned local_index = 0;
 
@@ -1505,7 +1508,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 	journey->npatterns = jd->npatterns;
 	journey->program = program;
 	journey->is_method = is_method;
-	journey->patterns = sq_malloc(sq_sizeof_array(struct sq_journey_pattern, jd->npatterns));
+	journey->patterns = sq_malloc_vec(struct sq_journey_pattern, jd->npatterns);
 
 	for (unsigned i = 0; i < jd->npatterns; ++i)
 		compile_journey_pattern(&journey->patterns[i], &jd->patterns[i], is_method);
@@ -1515,7 +1518,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 
 static void setup_globals(void) {
 	globals.len = 0;
-	globals.ary = sq_malloc(sq_sizeof_array(struct local, globals.cap = 16));
+	globals.ary = sq_malloc_vec(struct local, globals.cap = 16);
 
 	globals.ary[globals.len  ].name = strdup("ARGV");
 	globals.ary[globals.len++].value = SQ_NI;
@@ -1573,7 +1576,7 @@ void sq_program_compile(struct sq_program *program_, const char *stream) {
 	program->main = compile_journey(&maindecl, false);
 
 	program->nglobals = globals.len;
-	program->globals = sq_malloc(sq_sizeof_array(sq_value , globals.len));
+	program->globals = sq_malloc_vec(sq_value, globals.len);
 
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		program->globals[i] = globals.ary[i].value;

@@ -13,7 +13,7 @@ void sq_envoy_initialize(struct sq_envoy *envoy, const char *filename) {
 	envoy->symlen = 0;
 	envoy->symcap = 4;
 	envoy->filename = strdup(filename);
-	envoy->syms = sq_malloc(sq_sizeof_array(struct sq_envoy_sym, envoy->symcap));
+	envoy->syms = sq_malloc_vec(struct sq_envoy_sym, envoy->symcap);
 }
 
 void sq_envoy_deallocate(struct sq_envoy *envoy) {

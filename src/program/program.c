@@ -17,7 +17,7 @@ void sq_program_initialize(struct sq_program *program) {
 }
 
 sq_value create_argv(unsigned argc, const char **argv) {
-	sq_value *args = sq_malloc(sq_sizeof_array(sq_value, argc));
+	sq_value *args = sq_malloc_vec(sq_value, argc);
 
 	for (unsigned i = 0; i < argc; ++i)
 		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));

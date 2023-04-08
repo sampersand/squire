@@ -22,7 +22,7 @@ struct sq_codex *sq_codex_allocate(unsigned capacity) {
 	codex->capacity = capacity;
 	codex->refcount = 1;
 
-	codex->pages = sq_malloc(sq_sizeof_array(struct sq_codex_page, capacity));
+	codex->pages = sq_malloc_vec(struct sq_codex_page, capacity);
 	return codex;
 }
 
@@ -137,9 +137,10 @@ void sq_codex_index_assign(struct sq_codex *codex, sq_value key, sq_value value)
 	} else {
 		// `+1` in case it starts out with 0 length
 		if (codex->capacity == codex->length) {
-			codex->pages = sq_realloc(
+			codex->pages = sq_realloc_vec(
+				struct sq_codex_page,
 				codex->pages,
-				sq_sizeof_array(struct sq_codex_page, codex->capacity = codex->capacity * 2 + 1)
+				codex->capacity = codex->capacity * 2 + 1
 			);
 		}
 		page = &codex->pages[codex->length++];
