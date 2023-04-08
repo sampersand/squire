@@ -18,7 +18,7 @@ int main(int argc, const char **argv) {
 	if (argv[1][1] == 'e') {
 		sq_program_compile(&program, argv[2]);
 	} else {
-		char *contents = read_file(argv[2]);
+		char *contents = sq_read_file(argv[2]);
 		sq_program_compile(&program, contents);
 		free(contents);
 	}

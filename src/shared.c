@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-void *xmalloc(size_t size) {
+void *sq_malloc(size_t size) {
 	void *ptr = malloc(size);
 
 	if (ptr == NULL)
@@ -15,7 +15,7 @@ void *xmalloc(size_t size) {
 	return ptr;
 }
 
-void *xcalloc(size_t count, size_t size) {
+void *sq_calloc(size_t count, size_t size) {
 	void *ptr = calloc(count, size);
 
 	if (ptr == NULL)
@@ -24,7 +24,7 @@ void *xcalloc(size_t count, size_t size) {
 	return ptr;
 }
 
-void *xrealloc(void *ptr, size_t size) {
+void *sq_realloc(void *ptr, size_t size) {
 	ptr = realloc(ptr, size);
 
 	if (ptr == NULL && size != 0)
@@ -33,16 +33,16 @@ void *xrealloc(void *ptr, size_t size) {
 	return ptr;
 }
 
-void *memdup(void *ptr, size_t size) {
-	ptr = memcpy(xmalloc(size), ptr, size);
+void *sq_memdup(void *ptr, size_t size) {
+	ptr = memcpy(sq_malloc(size), ptr, size);
 
 	if (ptr == NULL && size != 0)
-		sq_memory_error("memdup failed for size %zu", size);
+		sq_memory_error("sq_memdup failed for size %zu", size);
 
 	return ptr;
 }
 
-void sq_memory_error(char *fmt, ...) {
+void sq_memory_error(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
@@ -53,22 +53,37 @@ void sq_memory_error(char *fmt, ...) {
 	abort();
 }
 
-char *read_file(const char *filename) {
+void sq_bug_fn(const char *file, const char *function, long long line, const char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+
+	fprintf(stderr, "bug at %s:%s:%lld: ", file, function, line);
+	vfprintf(stderr, fmt, args);
+	putc('\n', stderr);
+
+#if SQ_HAS_BUILTIN(__builtin_debugtrap)
+	__builtin_debugtrap();
+#endif
+
+	abort();
+}
+
+char *sq_read_file(const char *filename) {
 	FILE *file = fopen(filename, "r");
 
 	if (file == NULL)
-		die("unable to read file '%s': %s", filename, strerror(errno));
+		sq_throw("unable to read file '%s': %s", filename, strerror(errno));
 
 	size_t length = 0;
 	size_t capacity = 2048;
-	char *contents = xmalloc(capacity);
+	char *contents = sq_malloc(capacity);
 
 	while (!feof(file)) {
 		size_t amntread = fread(&contents[length], 1, capacity - length, file);
 
 		if (amntread == 0) {
 			if (!feof(file))
-				die("unable to read file '%s': %s'", filename, strerror(errno));
+				sq_throw("unable to read file '%s': %s'", filename, strerror(errno));
 			break;
 		}
 
@@ -76,14 +91,14 @@ char *read_file(const char *filename) {
 
 		if (length == capacity) {
 			capacity *= 2;
-			contents = xrealloc(contents, capacity);
+			contents = sq_realloc(contents, capacity);
 		}
 	}
 
 	if (fclose(file) == EOF)
 		perror("couldn't close input file");
 
-	contents = xrealloc(contents, length + 1);
+	contents = sq_realloc(contents, length + 1);
 	contents[length] = '\0';
 	return contents;
 }

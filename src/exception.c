@@ -21,13 +21,13 @@ void sq_exception_init(struct sq_program *program) {
 	sq_exception_form.refcount = 1;
 
 	sq_exception_form.nmatter = 1;
-	sq_exception_form.matter = xmalloc(sizeof(struct sq_form_matter));
+	sq_exception_form.matter = sq_malloc(sizeof(struct sq_form_matter));
 	sq_exception_form.matter[0].name = "msg";
 	sq_exception_form.matter[0].genus = SQ_UNDEFINED; // todo: make it text.
 
 	sq_exception_form.nchanges = 1;
-	sq_exception_form.changes = xmalloc(sizeof(struct sq_journey *));
-	struct sq_journey *to_text = sq_exception_form.changes[0] = xmalloc(sizeof(struct sq_journey));
+	sq_exception_form.changes = sq_malloc(sizeof(struct sq_journey *));
+	struct sq_journey *to_text = sq_exception_form.changes[0] = sq_malloc(sizeof(struct sq_journey));
 
 	(void) to_text;
 	(void) program;
@@ -42,7 +42,7 @@ void sq_exception_init(struct sq_program *program) {
 	// to_text->consts = NULL;
 	// to_text->program = program;
 	// to_text->is_method = true;
-	// to_text->bytecode = xmalloc(sizeof_array(union sq_bytecode, 4));
+	// to_text->bytecode = sq_malloc(sq_sizeof_array(union sq_bytecode, 4));
 	// to_text->bytecode[0].opcode = SQ_OC_ILOAD;
 	// to_text->bytecode[1].index = 0;
 	// to_text->bytecode[2].index = 0;

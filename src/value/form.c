@@ -8,7 +8,7 @@
 struct sq_form *sq_form_new(char *name) {
 	assert(name != NULL);
 
-	struct sq_form *form = xcalloc(1, sizeof(struct sq_form));
+	struct sq_form *form = sq_calloc(1, sizeof(struct sq_form));
 
 	form->refcount = 1;
 	form->name = name;
@@ -149,7 +149,7 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 }
 
 struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) {
-	struct sq_imitation *imitation = xmalloc(sizeof(struct sq_imitation));
+	struct sq_imitation *imitation = sq_malloc(sizeof(struct sq_imitation));
 
 	imitation->form = sq_form_clone(form);
 	imitation->refcount = 1;
@@ -162,16 +162,16 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 			if (form->matter[i].genus != SQ_UNDEFINED && !sq_value_matches(form->matter[i].genus, args.pargv[i]))
 				sq_throw("type error in constructor");
 
-		imitation->matter = memdup(args.pargv, sizeof_array(sq_value, form->nmatter));
+		imitation->matter = sq_memdup(args.pargv, sq_sizeof_array(sq_value, form->nmatter));
 	} else {
-		imitation->matter = xmalloc(sizeof_array(sq_value, form->nmatter));
+		imitation->matter = sq_malloc(sq_sizeof_array(sq_value, form->nmatter));
 
 		for (unsigned i = 0; i < form->nmatter; ++i)
 			imitation->matter[i]=  SQ_NI;
 
 		sq_value fn_args[args.pargc + 1];
 		fn_args[0] = sq_value_new(sq_imitation_clone(imitation));
-		memcpy(fn_args + 1, args.pargv, sizeof_array(sq_value, args.pargc));
+		memcpy(fn_args + 1, args.pargv, sq_sizeof_array(sq_value, args.pargc));
 
 		sq_value_free(sq_journey_run_deprecated(form->imitate, args.pargc + 1, fn_args));
 	}
@@ -184,7 +184,7 @@ struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	assert(form->refcount != 0);
 	assert(form->nmatter == 0 || matter != NULL);
 
-	struct sq_imitation *imitation = xmalloc(sizeof(struct sq_imitation));
+	struct sq_imitation *imitation = sq_malloc(sizeof(struct sq_imitation));
 
 	imitation->refcount = 1;
 	imitation->form = form;

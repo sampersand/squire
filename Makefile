@@ -23,7 +23,7 @@ ifeq ($(MAKECMDGOALS),debug)
 	CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
 	NJOKE=1
 else ifeq ($(MAKECMDGOALS),optimized)
-	CFLAGS+=-flto -DNDEBUG -O3
+	CFLAGS+=-flto -DNDEBUG -O3 --DSQ_RELEASE_FAST
 endif
 
 ifdef NJOKE

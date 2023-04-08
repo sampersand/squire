@@ -9,7 +9,7 @@ struct sq_text sq_text_empty = SQ_TEXT_STATIC("");
 
 static struct sq_text *allocate_text(unsigned length) {
 	assert(length != 0);
-	struct sq_text *text = xmalloc(sizeof(struct sq_text));
+	struct sq_text *text = sq_malloc(sizeof(struct sq_text));
 
 	text->refcount = 1;
 	text->length = length;
@@ -38,7 +38,7 @@ struct sq_text *sq_text_allocate(unsigned length) {
 
 	struct sq_text *text = allocate_text(length);
 
-	text->ptr = xmalloc(length + 1);
+	text->ptr = sq_malloc(length + 1);
 
 	return text;
 }

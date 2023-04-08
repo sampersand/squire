@@ -58,39 +58,39 @@ struct sq_code {
 
 #define RESIZE(cap, len, pos, type) \
 	if (code->cap == code->len) \
-		code->pos = xrealloc(code->pos, sizeof_array(type , code->cap*=2));
+		code->pos = sq_realloc(code->pos, sq_sizeof_array(type , code->cap*=2));
 
 static void extend_bytecode_cap(struct sq_code *code) {
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
 }
 
 static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
-	LOG("bytecode[%d].opcode=%s\n", code->codelen, sq_opcode_repr(opcode));
+	sq_log("bytecode[%d].opcode=%s\n", code->codelen, sq_opcode_repr(opcode));
 	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].opcode = opcode;
 }
 
 static void set_index(struct sq_code *code, unsigned index) {
-	LOG("bytecode[%d].index=%d\n", code->codelen, index);
+	sq_log("bytecode[%d].index=%d\n", code->codelen, index);
 	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].index = index;
 }
 
 static void set_interrupt(struct sq_code *code, enum sq_interrupt interrupt) {
-	LOG("bytecode[%d].interrupt=%s\n", code->codelen, sq_interrupt_repr(interrupt));
+	sq_log("bytecode[%d].interrupt=%s\n", code->codelen, sq_interrupt_repr(interrupt));
 	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].interrupt = interrupt;
 }
 
 static void set_count(struct sq_code *code, unsigned count) {
-	LOG("bytecode[%d].count=%d\n", code->codelen, count);
+	sq_log("bytecode[%d].count=%d\n", code->codelen, count);
 
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
 	code->bytecode[code->codelen++].count = count;
 }
 
 static void set_target_to_codelen(struct sq_code *code, unsigned target) {
-	LOG("bytecode[%d].index=%d [update]\n", target, code->codelen);
+	sq_log("bytecode[%d].index=%d [update]\n", target, code->codelen);
 
 	code->bytecode[target].index = code->codelen;
 }
@@ -102,14 +102,14 @@ static unsigned next_local(struct sq_code *code) {
 static unsigned declare_constant(struct sq_code *code, sq_value value) {
 	if (code->consts.cap == code->consts.len) {
 		code->consts.cap *= 2;
-		code->consts.ary = xrealloc(code->consts.ary, sizeof_array(sq_value, code->consts.cap));
+		code->consts.ary = sq_realloc(code->consts.ary, sq_sizeof_array(sq_value, code->consts.cap));
 	}
 
-#ifdef SQ_LOG
+#ifdef sq_log
 	printf("consts[%d]=", code->consts.len); 
 	sq_value_dump(stdout, value);
 	putchar('\n');
-#endif /* SQ_LOG */
+#endif /* sq_log */
 
 	code->consts.ary[code->consts.len] = value;
 	return code->consts.len++;
@@ -161,7 +161,7 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 
 	if (index != -1) {
 		if (globals.ary[index].value != SQ_NI && value != SQ_NI)
-			die("attempted to redefine global variable '%s'", name);
+			sq_throw("attempted to redefine global variable '%s'", name);
 		globals.ary[index].value = value;
 		return index;
 	}
@@ -169,10 +169,10 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 	// reallocate if necessary
 	if (globals.len == globals.cap) {
 		globals.cap *= 2;
-		globals.ary = xrealloc(globals.ary, sizeof_array(struct global, globals.cap));
+		globals.ary = sq_realloc(globals.ary, sq_sizeof_array(struct global, globals.cap));
 	}
 
-	LOG("global[%d]: %s\n", globals.len, name);
+	sq_log("global[%d]: %s\n", globals.len, name);
 
 	// initialize the global
 	globals.ary[globals.len].name = strdup(name);
@@ -192,7 +192,7 @@ static unsigned declare_local_variable(struct sq_code *code, const char *name) {
 	// reallocate if necessary
 	RESIZE(vars.cap, vars.len, vars.ary, struct local);
 
-	LOG("local[%d]: %s\n", globals.len, name);
+	sq_log("local[%d]: %s\n", globals.len, name);
 
 	code->vars.ary[code->vars.len].name = strdup(name);
 	return code->vars.ary[code->vars.len++].index = next_local(code);
@@ -277,7 +277,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 	declare_global_variable(form->name, sq_value_new(form));
 
 	form->nmatter = fdecl->nmatter;
-	form->matter = xmalloc(sizeof_array(struct sq_form_matter, form->nmatter));
+	form->matter = sq_malloc(sq_sizeof_array(struct sq_form_matter, form->nmatter));
 
 	int global = -1;
 
@@ -306,17 +306,17 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 	form->imitate = fdecl->constructor ? compile_journey(fdecl->constructor, true) : NULL;
 
 	form->nrecollections = fdecl->nfuncs;
-	form->recollections = xmalloc(sizeof_array(struct sq_journey *, form->nrecollections));
+	form->recollections = sq_malloc(sq_sizeof_array(struct sq_journey *, form->nrecollections));
 	for (unsigned i = 0; i < form->nrecollections; ++i)
 		form->recollections[i] = compile_journey(fdecl->funcs[i], false);
 
 	form->nchanges = fdecl->nmeths;
-	form->changes = xmalloc(sizeof_array(struct sq_journey *, form->nchanges));
+	form->changes = sq_malloc(sq_sizeof_array(struct sq_journey *, form->nchanges));
 	for (unsigned i = 0; i < form->nchanges; ++i)
 		form->changes[i] = compile_journey(fdecl->meths[i], true);
 
 	form->nessences = fdecl->nessences;
-	form->essences = xmalloc(sizeof_array(struct sq_essence, form->nessences));
+	form->essences = sq_malloc(sq_sizeof_array(struct sq_essence, form->nessences));
 	for (unsigned i = 0; i < fdecl->nessences; ++i) {
 		form->essences[i].name = fdecl->essences[i].name;
 		form->essences[i].value = SQ_NI;
@@ -359,19 +359,19 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 		}
 	}
 
-	form->parents = xmalloc(sizeof_array(struct sq_form *, fdecl->nparents));
+	form->parents = sq_malloc(sq_sizeof_array(struct sq_form *, fdecl->nparents));
 	form->nparents = fdecl->nparents;
 
 	for (unsigned i = 0; i < fdecl->nparents; ++i) {
 		int index = lookup_global_variable(fdecl->parents[i]);
 
 		if (index < 0)
-			die("undeclared form '%s' set as parent", fdecl->parents[i]);
+			sq_throw("undeclared form '%s' set as parent", fdecl->parents[i]);
 		else
 			free(fdecl->parents[i]);
 
 		if (!sq_value_is_form(globals.ary[index].value))
-			die("can only set forms as parents, not %s", sq_value_typename(globals.ary[index].value));
+			sq_throw("can only set forms as parents, not %s", sq_value_typename(globals.ary[index].value));
 		form->parents[i] = sq_value_as_form(sq_value_clone(globals.ary[index].value));
 	}
 
@@ -412,10 +412,10 @@ static void compile_kingdom_declaration(struct sq_code *code, struct kingdom_dec
 // 	} *subjects;
 // };
 
-	// struct sq_kingdom *kingdom = xmalloc(sizeof(struct sq_kingdom));
+	// struct sq_kingdom *kingdom = sq_malloc(sizeof(struct sq_kingdom));
 	// kingdom->name = kdecl->name;
 	// kingdom->nsubjects = kingdom->subject_cap = kdecl->nsubjects;
-	// kingdom->subjects = xmalloc(sizeof_array(struct sq_kingdom_subject, kingdom->nsubjects));
+	// kingdom->subjects = sq_malloc(sq_sizeof_array(struct sq_kingdom_subject, kingdom->nsubjects));
 
 	// declare_global_variable(strdup(kingdom->name), sq_value_new(kingdom));
 
@@ -636,7 +636,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 #define CHECK_FOR_BUILTIN(name_, interrupt_, argc_) \
 		if (!strcmp(name_, fncall->soul->variable)) { \
 			if (argc_ != fncall->argc) \
-				die("argc mismatch for '%s' (expected %d, got %d)", name_, argc_, fncall->argc); \
+				sq_throw("argc mismatch for '%s' (expected %d, got %d)", name_, argc_, fncall->argc); \
 			interrupt = interrupt_; \
 			goto compile_arguments; \
 		}
@@ -809,7 +809,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	default:
-		bug("unknown primary class '%d'", primary->kind);
+		sq_bug("unknown primary class '%d'", primary->kind);
 	}
 
 	free(primary);
@@ -827,7 +827,7 @@ static unsigned compile_unary(struct sq_code *code, struct unary_expression *una
 	case SQ_PS_UPAT_NOT: set_opcode(code, SQ_OC_PAT_NOT); break;
 
 	case SQ_PS_UPRIMARY: result = rhs; goto done;
-	default: bug("unknown unary kind '%d'", unary->kind);
+	default: sq_bug("unknown unary kind '%d'", unary->kind);
 	}
 
 	set_index(code, rhs);
@@ -850,7 +850,7 @@ static unsigned compile_pow(struct sq_code *code, struct pow_expression *pow) {
 	switch (pow->kind) {
 	case SQ_PS_PPOW: set_opcode(code, SQ_OC_POW); break;
 	case SQ_PS_PUNARY: result = lhs; goto done;
-	default: bug("unknown pow kind '%d'", pow->kind);
+	default: sq_bug("unknown pow kind '%d'", pow->kind);
 	}
 
 	set_index(code, lhs);
@@ -876,7 +876,7 @@ static unsigned compile_mul(struct sq_code *code, struct mul_expression *mul) {
 	case SQ_PS_MDIV: set_opcode(code, SQ_OC_DIV); break;
 	case SQ_PS_MMOD: set_opcode(code, SQ_OC_MOD); break;
 	case SQ_PS_MPOW: result = lhs; goto done;
-	default: bug("unknown mul kind '%d'", mul->kind);
+	default: sq_bug("unknown mul kind '%d'", mul->kind);
 	}
 
 	set_index(code, lhs);
@@ -900,7 +900,7 @@ static unsigned compile_add(struct sq_code *code, struct add_expression *add) {
 	case SQ_PS_AADD: set_opcode(code, SQ_OC_ADD); break;
 	case SQ_PS_ASUB: set_opcode(code, SQ_OC_SUB); break;
 	case SQ_PS_AMUL: result = lhs; goto done;
-	default: bug("unknown add kind '%d'", add->kind);
+	default: sq_bug("unknown add kind '%d'", add->kind);
 	}
 
 	set_index(code, lhs);
@@ -927,7 +927,7 @@ static unsigned compile_cmp(struct sq_code *code, struct cmp_expression *cmp) {
 	case SQ_PS_CGEQ: set_opcode(code, SQ_OC_GEQ); break;
 	case SQ_PS_CCMP: set_opcode(code, SQ_OC_CMP); break;
 	case SQ_PS_CADD: result = lhs; goto done;
-	default: bug("unknown cmp kind '%d'", cmp->kind);
+	default: sq_bug("unknown cmp kind '%d'", cmp->kind);
 	}
 
 	set_index(code, lhs);
@@ -955,7 +955,7 @@ static unsigned compile_eql(struct sq_code *code, struct eql_expression *eql) {
 	case SQ_PS_EAND_PAT: set_opcode(code, SQ_OC_PAT_AND); break;
 	case SQ_PS_EOR_PAT: set_opcode(code, SQ_OC_PAT_OR); break;
 	case SQ_PS_ECMP: result = lhs; goto done;
-	default: bug("unknown eql kind '%d'", eql->kind);
+	default: sq_bug("unknown eql kind '%d'", eql->kind);
 	}
 
 	set_index(code, lhs);
@@ -984,7 +984,7 @@ static unsigned compile_bool(struct sq_code *code, struct bool_expression *bool_
 	switch (bool_->kind) {
 	case SQ_PS_BAND: set_opcode(code, SQ_OC_JMP_FALSE); break;
 	case SQ_PS_BOR:  set_opcode(code, SQ_OC_JMP_TRUE); break;
-	default: bug("unknown bool kind '%d'", bool_->kind);
+	default: sq_bug("unknown bool kind '%d'", bool_->kind);
 	}
 
 	set_index(code, tmp);
@@ -1023,7 +1023,7 @@ static unsigned compile_function_call_old(struct sq_code *code, struct function_
 #define BUILTIN_FN(name_, int_, argc_) \
 	if (!strcmp(fncall->func->name, name_)) { \
 		if (fncall->arglen != argc_) \
-			die("exactly %d arg(s) are required for '%s'", argc_, name_); \
+			sq_throw("exactly %d arg(s) are required for '%s'", argc_, name_); \
 		set_opcode(code, SQ_OC_INT); \
 		set_interrupt(code, int_); \
 		goto arguments; \
@@ -1126,7 +1126,7 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		}
 
 		if (var->field && var->field->field)
-			die("only one layer deep for assignment supported rn");
+			sq_throw("only one layer deep for assignment supported rn");
 
 		set_opcode(code, SQ_OC_ISTORE);
 		set_opcode(code, variable);
@@ -1140,7 +1140,7 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		return compile_bool(code, expr->math);
 
 	default:
-		bug("unknown expr kind '%d'", expr->kind);
+		sq_bug("unknown expr kind '%d'", expr->kind);
 	}
 }
 
@@ -1182,7 +1182,7 @@ static void create_label_statement(struct sq_code *code, char *label, bool in_me
 
 	// havent found the label, add it. (note we increase len here)
 	if (len == code->labels.cap)
-		code->labels.ary = xrealloc(code->labels.ary, sizeof_array(struct label, code->labels.cap *= 2));
+		code->labels.ary = sq_realloc(code->labels.ary, sq_sizeof_array(struct label, code->labels.cap *= 2));
 
 	code->labels.ary[len].start = code->codelen;
 	code->labels.ary[len].name = label;
@@ -1214,7 +1214,7 @@ static void compile_label_statement(struct sq_code *code, char *label) {
 		// we've found a destination, assign to that.
 		if (!strcmp((lbl=&code->labels.ary[i])->name, label)) {
 			if (lbl->length != NULL)
-				die("cannot redefine '%s'", label);
+				sq_throw("cannot redefine '%s'", label);
 			free(label);
 
 			set_opcode(code, SQ_OC_COMEFROM);
@@ -1258,7 +1258,7 @@ static void compile_comefrom_statement(struct sq_code *code, char *label) {
 					goto set_existing;
 				}
 
-			die("max amount of 'whence's encountered.");
+			sq_throw("max amount of 'whence's encountered.");
 		}
 	}
 
@@ -1274,7 +1274,7 @@ set_existing:
 
 already_exists:
 
-	if (*lbl->length == MAX_COMEFROMS) die("max amount of 'whence's encountered.");
+	if (*lbl->length == MAX_COMEFROMS) sq_throw("max amount of 'whence's encountered.");
 
 	unsigned length = ++*lbl->length;
 	lbl->length[length] = code->codelen;
@@ -1297,7 +1297,7 @@ static void compile_thence_statement(struct sq_code *code, char *label) {
 				if (lbl->thences[j] == -1)
 					goto set_existing;
 
-			die("max amount of 'whence's encountered.");
+			sq_throw("max amount of 'whence's encountered.");
 		}
 	}
 
@@ -1313,7 +1313,7 @@ set_existing:
 
 already_exists:
 
-	if (*lbl->length == MAX_THENCES) die("max amount of 'thences's encountered.");
+	if (*lbl->length == MAX_THENCES) sq_throw("max amount of 'thences's encountered.");
 // 	set_opcode(code, SQ_OC_JMP);
 // 	set_index(code, code->labels.ary[i].start + MAX_THENCES + 2);
 
@@ -1403,26 +1403,26 @@ static void compile_journey_pattern(
 	pattern->kwargc = jp->kwargc;
 	pattern->splat = jp->splat != NULL;
 	pattern->splatsplat = jp->splatsplat != NULL;
-	pattern->pargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->pargc));
-	pattern->kwargv = xmalloc(sizeof_array(struct sq_journey_argument, pattern->kwargc));
+	pattern->pargv = sq_malloc(sq_sizeof_array(struct sq_journey_argument, pattern->pargc));
+	pattern->kwargv = sq_malloc(sq_sizeof_array(struct sq_journey_argument, pattern->kwargc));
 
 	struct sq_code code;
 	code.codecap = 2048;
 	code.codelen = 0;
-	code.bytecode = xmalloc(sizeof_array(union sq_bytecode, code.codecap));
+	code.bytecode = sq_malloc(sq_sizeof_array(union sq_bytecode, code.codecap));
 
 	code.nlocals = pattern->pargc + pattern->kwargc + (pattern->splat ? 1 : 0) + (pattern->splatsplat ? 1 : 0);
 	code.consts.cap = 64;
 	code.consts.len = 0;
-	code.consts.ary = xmalloc(sizeof_array(sq_value, code.consts.cap));
+	code.consts.ary = sq_malloc(sq_sizeof_array(sq_value, code.consts.cap));
 
 	code.vars.len = 0;
 	code.vars.cap = SQ_JOURNEY_MAX_ARGC * 2 + 2; // *2 for both positional and kw, then +2 for splat and splatsplat
-	code.vars.ary = xmalloc(sizeof_array(struct local, code.vars.cap));
+	code.vars.ary = sq_malloc(sq_sizeof_array(struct local, code.vars.cap));
 
 	code.labels.len = 0;
 	code.labels.cap = 4;
-	code.labels.ary = xmalloc(sizeof_array(struct label, code.labels.cap));
+	code.labels.ary = sq_malloc(sq_sizeof_array(struct label, code.labels.cap));
 
 	unsigned local_index = 0;
 
@@ -1498,14 +1498,14 @@ static void compile_journey_pattern(
 }
 
 static struct sq_journey *compile_journey(struct journey_declaration *jd, bool is_method) {
-	struct sq_journey *journey = xmalloc(sizeof(struct sq_journey));
+	struct sq_journey *journey = sq_malloc(sizeof(struct sq_journey));
 
 	journey->name = jd->name;
 	journey->refcount = 1;
 	journey->npatterns = jd->npatterns;
 	journey->program = program;
 	journey->is_method = is_method;
-	journey->patterns = xmalloc(sizeof_array(struct sq_journey_pattern, jd->npatterns));
+	journey->patterns = sq_malloc(sq_sizeof_array(struct sq_journey_pattern, jd->npatterns));
 
 	for (unsigned i = 0; i < jd->npatterns; ++i)
 		compile_journey_pattern(&journey->patterns[i], &jd->patterns[i], is_method);
@@ -1515,7 +1515,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 
 static void setup_globals(void) {
 	globals.len = 0;
-	globals.ary = xmalloc(sizeof_array(struct local, globals.cap = 16));
+	globals.ary = sq_malloc(sq_sizeof_array(struct local, globals.cap = 16));
 
 	globals.ary[globals.len  ].name = strdup("ARGV");
 	globals.ary[globals.len++].value = SQ_NI;
@@ -1573,7 +1573,7 @@ void sq_program_compile(struct sq_program *program_, const char *stream) {
 	program->main = compile_journey(&maindecl, false);
 
 	program->nglobals = globals.len;
-	program->globals = xmalloc(sizeof_array(sq_value , globals.len));
+	program->globals = sq_malloc(sq_sizeof_array(sq_value , globals.len));
 
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		program->globals[i] = globals.ary[i].value;

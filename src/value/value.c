@@ -65,7 +65,7 @@ void sq_value_dump(FILE *out, sq_value value) {
 		break;
 
 	default:
-		bug("<UNDEFINED: %"PRId64">", value);
+		sq_bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -149,7 +149,7 @@ const char *sq_value_typename(sq_value value) {
 	case SQ_G_FORM: return "Form";
 	case SQ_G_BOOK: return "Book";
 	case SQ_G_CODEX: return "Codex";
-	default: bug("unknown tag '%d'", (int) SQ_VTAG(value));
+	default: sq_bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
 
@@ -192,7 +192,7 @@ sq_value sq_value_genus(sq_value value) {
 		return sq_value_new(&KIND_CODEX);
 
 	default:
-		bug("unknown tag '%d'", (int) SQ_VTAG(value));
+		sq_bug("unknown tag '%d'", (int) SQ_VTAG(value));
 	}
 }
 
@@ -270,7 +270,7 @@ sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
-		die("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot compare '%s' with '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	// 	struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "<=>");
 
 	// 	if (neg != NULL) return sq_journey_run_deprecated(neg, 1, &arg);
@@ -292,7 +292,7 @@ sq_value sq_value_neg(sq_value arg) {
 	}
 
 	default:
-		die("cannot numerically negate '%s'", TYPENAME(arg));
+		sq_throw("cannot numerically negate '%s'", TYPENAME(arg));
 	}
 }
 
@@ -308,7 +308,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		if (index < 0 || AS_TEXT(value)->length <= (unsigned) index)
 			return SQ_NI;
 
-		char *c = xmalloc(sizeof_array(char, 2));
+		char *c = sq_malloc(sq_sizeof_array(char, 2));
 		c[0] = AS_STR(value)[index];
 		c[1] = '\0';
 		return sq_value_new(sq_text_new2(c, 1));
@@ -330,7 +330,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 	}
 
 	default:
-		die("cannot index into '%s'", TYPENAME(value));
+		sq_throw("cannot index into '%s'", TYPENAME(value));
 	}
 }
 
@@ -358,7 +358,7 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 	}
 
 	default:
-		die("cannot index assign into '%s'", TYPENAME(value));
+		sq_throw("cannot index assign into '%s'", TYPENAME(value));
 	}
 }
 
@@ -393,7 +393,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		struct sq_book *lary = AS_BOOK(lhs), *rary = sq_value_to_book(rhs);
 
 		unsigned length = lary->length + rary->length;
-		sq_value *pages = xmalloc(sizeof_array(sq_value, length));
+		sq_value *pages = sq_malloc(sq_sizeof_array(sq_value, length));
 
 		for (unsigned i = 0; i < lary->length; ++i)
 			pages[i] = sq_value_clone(lary->pages[i]);
@@ -406,11 +406,11 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	}
 
 	case SQ_G_CODEX: {
-		todo("'+' dicts");
+		sq_todo("'+' dicts");
 		// struct sq_codex *ldict = AS_CODEX(lhs), *rdict = sq_value_to_codex(rhs);
 
 		// unsigned i = 0, length = lhs->length + rhs->length;
-		// sq_value *elements = xmalloc(sizeof_array(sq_value, length));
+		// sq_value *elements = sq_malloc(sq_sizeof_array(sq_value, length));
 
 		// for (; i < lhs->length; ++i)
 		// 	elements[i] = sq_value_clone(lary->elements[i]);
@@ -432,7 +432,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
-		die("cannot add '%s' to '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot add '%s' to '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 
 }
@@ -443,10 +443,10 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 		return sq_value_new(AS_NUMBER(lhs) - sq_value_to_numeral(rhs));
 
 	case SQ_G_BOOK:
-		todo("set difference");
+		sq_todo("set difference");
 
 	case SQ_G_CODEX:
-		todo("set difference for dict");
+		sq_todo("set difference for dict");
 
 	case SQ_G_IMITATION: {
 		struct sq_journey *sub = sq_imitation_lookup_change(AS_IMITATION(lhs), "-");
@@ -458,7 +458,7 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
-		die("cannot subtract '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot subtract '%s' from '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 
 }
@@ -519,7 +519,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 	default:
 	error:
-		die("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot multiply '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 }
 
@@ -527,7 +527,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
-		if (!rnum) die("cannot divide by N");
+		if (!rnum) sq_throw("cannot divide by N");
 		return sq_value_new(AS_NUMBER(lhs) / rnum);
 	}
 
@@ -542,7 +542,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
-		die("cannot divide '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot divide '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 
 }
@@ -551,7 +551,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
-		if (!rnum) die("cannot modulo by N");
+		if (!rnum) sq_throw("cannot modulo by N");
 		return sq_value_new(AS_NUMBER(lhs) % rnum);
 	}
 
@@ -575,7 +575,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 
 	default:
 	error:
-		die("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot modulo '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 }
 
@@ -599,7 +599,7 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 	}
 
 	default:
-		die("cannot exponentiate '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
+		sq_throw("cannot exponentiate '%s' by '%s'", TYPENAME(lhs), TYPENAME(rhs));
 	}
 }
 
@@ -615,7 +615,7 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 		return sq_journey_run(sq_value_as_journey(tocall), args);
 
 	case SQ_G_IMITATION:
-		todo("call imitation"); 
+		sq_todo("call imitation"); 
 
 	case SQ_G_OTHER:
 		if (sq_value_is_other(tocall)) {
@@ -668,17 +668,17 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		if (to_text != NULL) {
 			sq_value text = sq_journey_run_deprecated(to_text, 1, &value);
 			if (!sq_value_is_text(text))
-				die("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
+				sq_throw("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
 			return AS_TEXT(text);
 		}
 		// else fallthrough
 	}
 
 	case SQ_G_JOURNEY:
-		die("cannot convert %s to a text", TYPENAME(value));
+		sq_throw("cannot convert %s to a text", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %"PRId64">", value);
+		sq_bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -708,7 +708,7 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 		if (to_numeral != NULL) {
 			sq_value numeral = sq_journey_run_deprecated(to_numeral, 1, &value);
 			if (!sq_value_is_numeral(numeral))
-				die("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->name);
+				sq_throw("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(numeral);
 		}
 		// else fallthrough
@@ -717,10 +717,10 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 	case SQ_G_FORM:
 	case SQ_G_JOURNEY:
 	case SQ_G_CODEX:
-		die("cannot convert %s to a numeral", TYPENAME(value));
+		sq_throw("cannot convert %s to a numeral", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %"PRId64">", value);
+		sq_bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -750,7 +750,7 @@ bool sq_value_to_veracity(sq_value value) {
 		if (to_veracity != NULL) {
 			sq_value veracity = sq_journey_run_deprecated(to_veracity, 1, &value);
 			if (!sq_value_is_veracity(veracity))
-				die("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
+				sq_throw("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
 			return AS_VERACITY(veracity);
 		}
 		// else fallthrough
@@ -758,10 +758,10 @@ bool sq_value_to_veracity(sq_value value) {
 
 	case SQ_G_FORM:
 	case SQ_G_JOURNEY:
-		die("cannot convert %s to a veracity", TYPENAME(value));
+		sq_throw("cannot convert %s to a veracity", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %"PRId64">", value);
+		sq_bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -782,7 +782,7 @@ size_t sq_value_length(sq_value value) {
 		if (length != NULL) {
 			sq_value veracity = sq_journey_run_deprecated(length, 1, &value);
 			if (!sq_value_is_numeral(veracity))
-				die("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
+				sq_throw("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
 			return AS_NUMBER(veracity);
 		}
 		// else fallthrough
@@ -792,10 +792,10 @@ size_t sq_value_length(sq_value value) {
 	case SQ_G_NUMERAL:
 	case SQ_G_FORM:
 	case SQ_G_JOURNEY:
-		die("cannot get length of %s", TYPENAME(value));
+		sq_throw("cannot get length of %s", TYPENAME(value));
 
 	default:
-		bug("<UNDEFINED: %"PRId64">", value);
+		sq_bug("<UNDEFINED: %"PRId64">", value);
 	}
 }
 
@@ -810,7 +810,7 @@ struct sq_book *sq_value_to_book(sq_value value) {
 		struct sq_book *book = sq_book_allocate(text->length);
 
 		for (unsigned i = 0; i < text->length; ++i) {
-			char *data = xmalloc(2);
+			char *data = sq_malloc(2);
 			data[0] = text->ptr[i];
 			data[1] = '\0';
 			book->pages[book->length++] = sq_value_new(sq_text_new2(data, 1));
@@ -820,13 +820,13 @@ struct sq_book *sq_value_to_book(sq_value value) {
 	}
 
 	default:
-		todo("others to book");
+		sq_todo("others to book");
 	}
 }
 
 struct sq_codex *sq_value_to_codex(sq_value value) {
 	(void) value;
-	die("todo");
+	sq_throw("todo");
 }
 
 
@@ -974,5 +974,5 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 		sq_throw("cannot `match` on %s", TYPENAME(to_check));
 	}
 
-	bug("unknown genus encountered: %d", sq_value_genus_tag(formlike));
+	sq_bug("unknown genus encountered: %d", sq_value_genus_tag(formlike));
 }

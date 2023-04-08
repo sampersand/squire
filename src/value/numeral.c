@@ -32,7 +32,7 @@ static void convert(unsigned numeral, char one, char five, char ten, char **out)
 
 	case 9: *(*out)++ = one;
 	case 10: *(*out)++ = ten; break;
-	default: bug("uh oh, numeral %d is out of bounds", numeral);
+	default: sq_bug("uh oh, numeral %d is out of bounds", numeral);
 	}
 }
 
@@ -119,7 +119,7 @@ static sq_numeral unicode_roman(const uint8_t *input, const char **output) {
 		case 7: result = 50000; break;
 		case 8: result = 100000; break;
 		default:
-			bug("bad input: %d", input[2]);
+			sq_bug("bad input: %d", input[2]);
 		}
 	}
 

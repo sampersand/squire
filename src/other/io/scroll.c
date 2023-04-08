@@ -30,7 +30,7 @@ void sq_scroll_init(struct sq_scroll *scroll, const char *filename, const char *
 
 	struct sq_other *other;
 #define NEW_JOURNEY(_name, _nargs) \
-	_name##_journey = sq_value_new(other = xmalloc(sizeof(struct sq_other))); \
+	_name##_journey = sq_value_new(other = sq_malloc(sizeof(struct sq_other))); \
 	other->refcount = 1; \
 	other->kind = SQ_OK_BUILTIN_JOURNEY; \
 	other->builtin_journey.name = "Scroll."#_name; \
@@ -98,7 +98,7 @@ struct sq_text *sq_scroll_read(struct sq_scroll *scroll, size_t length) {
 }
 
 struct sq_text *sq_scroll_read_all(struct sq_scroll *scroll) {
-	return sq_text_new(read_file(scroll->filename));
+	return sq_text_new(sq_read_file(scroll->filename));
 }
 
 void sq_scroll_write(struct sq_scroll *scroll, const char *ptr, size_t length) {
@@ -145,7 +145,7 @@ static sq_value read_func(struct sq_args args) {
 
 	case SQ_G_TEXT:
 		if (strcmp(sq_value_as_text(arg)->ptr, "\n"))
-			die("todo: non-newline gets");
+			sq_throw("todo: non-newline gets");
 
 		{
 			size_t length;

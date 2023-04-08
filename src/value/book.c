@@ -10,7 +10,7 @@ struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
 	assert(length <= capacity);
 	assert(!(length != 0 && pages == NULL));
 
-	struct sq_book *book = xmalloc(sizeof(struct sq_book));
+	struct sq_book *book = sq_malloc(sizeof(struct sq_book));
 
 	book->capacity = capacity;
 	book->length = length;
@@ -64,7 +64,7 @@ static void expand_book(struct sq_book *book, size_t length) {
 	if (book->capacity <= length) {
 		// todo: increase capacity by two.
 		book->capacity = length * 2 + 1;
-		book->pages = xrealloc(book->pages, sizeof_array(sq_value, book->capacity));
+		book->pages = sq_realloc(book->pages, sq_sizeof_array(sq_value, book->capacity));
 	}
 
 	while (book->length < length)
@@ -77,7 +77,7 @@ void sq_book_insert(struct sq_book *book, size_t index, sq_value value) {
 	memmove(
 		&book->pages[index + 1],
 		&book->pages[index],
-		sizeof_array(sq_value, book->length - index)
+		sq_sizeof_array(sq_value, book->length - index)
 	);
 
 	sq_value_free(book->pages[index]);
@@ -94,7 +94,7 @@ sq_value sq_book_delete(struct sq_book *book, size_t index) {
 	memmove(
 		&book->pages[index],
 		&book->pages[index + 1],
-		sizeof_array(sq_value, book->length - index)
+		sq_sizeof_array(sq_value, book->length - index)
 	);
 
 	--book->length;
@@ -117,13 +117,13 @@ void sq_book_index_assign(struct sq_book *book, size_t index, sq_value value) {
 
 struct sq_text *sq_book_to_text(const struct sq_book *book) {
 	unsigned len = 0, cap = 64;
-	char *str = xmalloc(cap);
+	char *str = sq_malloc(cap);
 	str[len++] = '[';
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		if (i) {
 			if (cap <= len + 2)
-				str = xrealloc(str, cap *= 2);
+				str = sq_realloc(str, cap *= 2);
 			str[len++] = ',';
 			str[len++] = ' ';
 		}
@@ -131,14 +131,14 @@ struct sq_text *sq_book_to_text(const struct sq_book *book) {
 		struct sq_text *inner = sq_value_to_text(book->pages[i]);
 	
 		if (cap <= inner->length + len)
-			str = xrealloc(str, cap = inner->length + len * 2);
+			str = sq_realloc(str, cap = inner->length + len * 2);
 	
 		memcpy(str + len, inner->ptr, inner->length);
 		len += inner->length;
 		sq_text_free(inner);
 	}
 
-	str = xrealloc(str, len + 2);
+	str = sq_realloc(str, len + 2);
 	str[len++] = ']';
 	str[len] = '\0';
 
@@ -147,7 +147,7 @@ struct sq_text *sq_book_to_text(const struct sq_book *book) {
 
 struct sq_codex *sq_book_to_codex(const struct sq_book *book) {
 	(void) book;
-	todo(__FUNCTION__);
+	sq_todo(__FUNCTION__);
 }
 
 struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt) {
@@ -162,12 +162,12 @@ struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt) {
 
 struct sq_text *sq_book_join(const struct sq_book *book, const struct sq_text *sep) {
 	unsigned len = 0, cap = 64, seplen = strlen(sep->ptr);
-	char *str = xmalloc(cap);
+	char *str = sq_malloc(cap);
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		if (i) {
 			if (cap <= len + seplen)
-				str = xrealloc(str, cap = cap * 2 + seplen);
+				str = sq_realloc(str, cap = cap * 2 + seplen);
 
 			memcpy(str + len, sep->ptr, seplen);
 			len += seplen;
@@ -175,14 +175,14 @@ struct sq_text *sq_book_join(const struct sq_book *book, const struct sq_text *s
 
 		struct sq_text *text = sq_value_to_text(book->pages[i]);
 		if (cap <= text->length + len)
-			str = xrealloc(str, cap = cap * 2 + text->length);
+			str = sq_realloc(str, cap = cap * 2 + text->length);
 
 		memcpy(str + len, text->ptr, text->length);
 		len += text->length;
 		sq_text_free(text);
 	}
 
-	str = xrealloc(str, len + 1);
+	str = sq_realloc(str, len + 1);
 	str[len] = '\0';
 
 	return sq_text_new2(str, len);

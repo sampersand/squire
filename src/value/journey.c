@@ -218,7 +218,7 @@ bool sq_moon_joke_does_were_flip() {
 
 static inline union sq_bytecode next_bytecode(struct sq_stackframe *sf) {
 	union sq_bytecode bc = sf->pattern->code.bytecode[sf->ip++];
-	LOG("runtime[%d]=%u\n", sf->ip-1, bc.index);
+	sq_log("runtime[%d]=%u\n", sf->ip-1, bc.index);
 	return bc;
 }
 
@@ -285,7 +285,7 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 
 	// ASCII
 	case SQ_INT_ASCII: return 1;
-	case SQ_INT_UNDEFINED: bug("undefined encountered");
+	case SQ_INT_UNDEFINED: sq_bug("undefined encountered");
 	}
 }
 
@@ -395,7 +395,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		size_t tmp;
 		size_t capacity = 2048;
 		size_t length = 0;
-		char *result = xmalloc(capacity);
+		char *result = sq_malloc(capacity);
 
 		// try to read the entire stream's stdout to `result`.
 		while (0 != (tmp = fread(result + length, 1, capacity - length, stream))) {
@@ -403,14 +403,14 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 			if (length == capacity) {
 				capacity *= 2;
-				result = xrealloc(result, capacity);
+				result = sq_realloc(result, capacity);
 			}
 		}
 
 		// Abort if `stream` had an error.
 		if (ferror(stream)) sq_throw_io("reading `hex` result stream");
 
-		result = xrealloc(result, length + 1);
+		result = sq_realloc(result, length + 1);
 		result[length] = '\0';
 
 		// Abort if we cant close stream.
@@ -527,7 +527,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		else if (sq_value_is_codex(operands[0]))
 			set_next_local(sf, sq_codex_delete(sq_value_as_codex(operands[0]), operands[1]));
 		else
-			die("can only delete from books and codices");
+			sq_throw("can only delete from books and codices");
 
 		return;
 	}
@@ -545,7 +545,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// temporary hacks until we get kingdoms working.
 	case SQ_INT_FOPEN: {
-		other = xmalloc(sizeof(struct sq_other));
+		other = sq_malloc(sizeof(struct sq_other));
 		other->refcount = 1;
 		other->kind = SQ_OK_SCROLL;
 		struct sq_text *filename = sq_value_to_text(operands[0]);
@@ -560,7 +560,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	case SQ_INT_ASCII:
 		if (sq_value_is_numeral(operands[0])) {
-			char *data = xmalloc(2);
+			char *data = sq_malloc(2);
 			data[0] = sq_value_as_numeral(operands[0]) & 0xff;
 			data[1] = '\0';
 			set_next_local(sf, sq_value_new(sq_text_new(data)));
@@ -573,7 +573,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		return;
 
 	case SQ_INT_UNDEFINED:
-		bug("undefined encountered");
+		sq_bug("undefined encountered");
 	}
 }
 
@@ -656,7 +656,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		case SQ_OC_UNDEFINED:
-			bug("encountered SQ_OC_UNDEFINED %s", "");
+			sq_bug("encountered SQ_OC_UNDEFINED %s", "");
 
 	/*** Control Flow ***/
 		case SQ_OC_JMP:
@@ -731,7 +731,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 	/** Misc **/
 		case SQ_OC_CITE: {
-			struct sq_other *ptr = xmalloc(sizeof(struct sq_other));
+			struct sq_other *ptr = sq_malloc(sizeof(struct sq_other));
 			ptr->refcount = 1;
 			ptr->kind = SQ_OK_CITATION;
 			ptr->citation = next_local(sf);
@@ -816,7 +816,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_PAT_NOT:
 		case SQ_OC_PAT_OR:
 		case SQ_OC_PAT_AND: {
-			struct sq_other *helper = xmalloc(sizeof(struct sq_other));
+			struct sq_other *helper = sq_malloc(sizeof(struct sq_other));
 			helper->refcount = 1;
 			helper->kind = SQ_OK_PAT_HELPER;
 			helper->helper.left = sq_value_clone(operands[0]);
@@ -892,7 +892,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		default:
-			bug("unknown opcode: %d", opcode);
+			sq_bug("unknown opcode: %d", opcode);
 		}
 
 	}

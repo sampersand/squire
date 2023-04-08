@@ -4,41 +4,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(__GNUC__) || defined(SQ_USE_ATTRIBUTES)
+#ifdef __has_builtin
+# define SQ_HAS_BUILTIN(x) __has_builtin(x)
+#else
+# define SQ_HAS_BUILTIN(x) 0
+#endif /* defined __has_builtin */
+
+#ifdef __has_attribute
+# define SQ_HAS_ATTRIBUTE(x) __has_attribute(x)
+#else
+# define SQ_HAS_ATTRIBUTE(x) 0
+#endif /* defined __has_attribute */
+
+#if defined(__GNUC__) || defined(__clang__)
 # define SQ_ATTR(...) __attribute__((__VA_ARGS__))
 #else
 # define SQ_ATTR(...)
-#endif /* __GNUC__ || SQ_USE_ATTRIBUTES */
+#endif /* __GNUC__ || __clang__ */
 
-#define SQ_NONNULL SQ_ATTR(nonnull)
-#define sizeof_array(kind, length) (sizeof(kind) * (length))
+#if SQ_HAS_ATTRIBUTE(nonnull)
+# define SQ_NONNULL SQ_ATTR(nonnull)
+#else
+# define SQ_NONNULL
+#endif /* SQ_HAS_ATTRIBUTE(nonnull) */
 
-#define SQ_UNLIKELY(x) (x)
-#define SQ_LIKELY(x) (x)
+#if SQ_HAS_BUILTIN(__builtin_expect)
+# define SQ_LIKELY(x) (__builtin_expect(1, !!(x)))
+#else
+# define SQ_LIKELY(x) (!!(x))
+#endif /* SQ_HAS_BUILTIN(__builtin_expect) */
+#define SQ_UNLIKELY(x) SQ_LIKELY(!(x))
 
-#include <squire/exception.h>
+#if SQ_HAS_BUILTIN(__builtin_unreachable)
+# define SQ_UNREACHABLE do { __builtin_unreachable(); } while(0)
+#else
+# define SQ_UNREACHABLE do { abort(); } while(0)
+#endif /* SQ_HAS_BUILTIN(__builtin_unreachable) */
 
-#define die sq_throw
-#define todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
-#define bug(...) (\
-	fprintf(stderr, "bug at " __FILE__ ":%s:%d: ", __func__, __LINE__),\
-	fprintf(stderr, __VA_ARGS__),\
-	fputc('\n', stderr),\
-	fflush(stderr),\
-	abort())
+#ifdef SQ_RELEASE_FAST
+# define sq_bug(...) SQ_UNREACHABLE
+#else
+# define sq_bug(...) do {sq_bug_fn(__FILE__, __func__, __LINE__, __VA_ARGS__); } while(0)
+#endif /* defined(SQ_RELEASE_FAST) */
 
 #ifdef SQ_LOG
-#define LOG printf
+#define sq_log printf
 #else
-#define LOG(...) ((void) 0)
-#endif
+#define sq_log(...) ((void) 0)
+#endif /* SQ_LOG */
 
-void *xcalloc(size_t count, size_t size) SQ_ATTR(malloc);
-void *xmalloc(size_t size) SQ_ATTR(malloc);
-void *xrealloc(void *ptr, size_t size);
-void *memdup(void *ptr, size_t size);
 
-void sq_memory_error(char *msg, ...) SQ_ATTR(cold,noreturn);
-char *read_file(const char *filename);
+#include <squire/exception.h>
+#define die sq_throw
+#define sq_todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
+
+#define sq_sizeof_array(kind, length) (sizeof(kind) * (length))
+
+void *sq_calloc(size_t count, size_t size) SQ_ATTR(malloc) ;
+void *sq_malloc(size_t size) SQ_ATTR(malloc);
+void *sq_realloc(void *ptr, size_t size);
+void *sq_memdup(void *ptr, size_t size);
+
+void sq_bug_fn(
+	const char *file, const char *function, long long line, const char *fmt, ...
+) SQ_ATTR(cold,noreturn);
+void sq_memory_error(const char *fmt, ...) SQ_ATTR(cold,noreturn);
+char *sq_read_file(const char *filename);
 
 #endif /* !SQ_SHARED_H */

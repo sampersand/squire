@@ -7,12 +7,12 @@
 static void extend_bytecode_cap(struct sq_compiler *compiler) {
 	if (compiler->code.len >= compiler->code.cap) {
 		compiler->code.cap *= 2;
-		compiler->code.ary = xrealloc(compiler->code.ary, sizeof_array(enum sq_opcode, compiler->code.cap));
+		compiler->code.ary = sq_realloc(compiler->code.ary, sq_sizeof_array(enum sq_opcode, compiler->code.cap));
 	}
 }
 
 void sq_compiler_set_opcode(struct sq_compiler *compiler, enum sq_opcode opcode) {
-	LOG("bytecode[%d].opcode=%s\n", compiler->code.len, sq_opcode_repr(opcode));
+	sq_log("bytecode[%d].opcode=%s\n", compiler->code.len, sq_opcode_repr(opcode));
 
 	extend_bytecode_cap(compiler);
 
@@ -20,7 +20,7 @@ void sq_compiler_set_opcode(struct sq_compiler *compiler, enum sq_opcode opcode)
 }
 
 void sq_compiler_set_index(struct sq_compiler *compiler, unsigned index) {
-	LOG("bytecode[%d].index=%d\n", compiler->code.len, index);
+	sq_log("bytecode[%d].index=%d\n", compiler->code.len, index);
 
 	extend_bytecode_cap(compiler);
 
@@ -28,7 +28,7 @@ void sq_compiler_set_index(struct sq_compiler *compiler, unsigned index) {
 }
 
 void sq_compiler_set_interrupt(struct sq_compiler *compiler, enum sq_interrupt interrupt) {
-	LOG("bytecode[%d].interrupt=%s\n", compiler->code.len, sq_interrupt_repr(interrupt));
+	sq_log("bytecode[%d].interrupt=%s\n", compiler->code.len, sq_interrupt_repr(interrupt));
 
 	extend_bytecode_cap(compiler);
 
@@ -36,7 +36,7 @@ void sq_compiler_set_interrupt(struct sq_compiler *compiler, enum sq_interrupt i
 }
 
 void sq_compiler_set_count(struct sq_compiler *compiler, unsigned count) {
-	LOG("bytecode[%d].count=%d\n", compiler->code.len, count);
+	sq_log("bytecode[%d].count=%d\n", compiler->code.len, count);
 
 	extend_bytecode_cap(compiler);
 
@@ -59,16 +59,16 @@ unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value con
 
 	if (compiler->consts.len >= compiler->consts.cap) {
 		compiler->consts.cap *= 2;
-		compiler->consts.ary = xrealloc(compiler->consts.ary, sizeof_array(sq_value, compiler->consts.cap));
+		compiler->consts.ary = sq_realloc(compiler->consts.ary, sq_sizeof_array(sq_value, compiler->consts.cap));
 	}
 
 	unsigned index = compiler->consts.len++;
 
-#ifdef SQ_LOG
+#ifdef sq_log
 	printf("consts[%d]=", index); 
 	sq_value_dump(stdout, constant);
 	putchar('\n');
-#endif /* SQ_LOG */
+#endif /* sq_log */
 
 	compiler->consts.ary[index] = constant;
 
@@ -111,7 +111,7 @@ unsigned sq_compiler_global_declare(struct sq_globals *globals, char *name, sq_v
 
 	if (index != SQ_COMPILER_NOT_FOUND) {
 		if (globals->ary[index].value != SQ_NI && value != SQ_NI)
-			die("attempted to redefine global variable '%s'", name);
+			sq_throw("attempted to redefine global variable '%s'", name);
 
 		goto found;
 	}
@@ -119,12 +119,12 @@ unsigned sq_compiler_global_declare(struct sq_globals *globals, char *name, sq_v
 	// reallocate if necessary
 	if (globals->len == globals->cap) {
 		globals->cap *= 2;
-		globals->ary = xrealloc(globals->ary, sizeof_array(struct sq_global, globals->cap));
+		globals->ary = sq_realloc(globals->ary, sq_sizeof_array(struct sq_global, globals->cap));
 	}
 
 	index = globals->len++;
 
-	LOG("global[%d]: %s\n", index, name);
+	sq_log("global[%d]: %s\n", index, name);
 
 	// initialize the global
 	globals->ary[index].name = strdup(name);
@@ -160,13 +160,13 @@ unsigned sq_compiler_variable_declare(struct sq_compiler *compiler, char *name) 
 
 	if (compiler->variables.cap <= compiler->variables.len) {
 		compiler->variables.cap *= 2;
-		compiler->variables.ary = xrealloc(compiler->variables.ary, sizeof_array(struct sq_local, compiler->variables.cap));
+		compiler->variables.ary = sq_realloc(compiler->variables.ary, sq_sizeof_array(struct sq_local, compiler->variables.cap));
 	}
 
 	unsigned variable_index = compiler->variables.len++;
 	unsigned local_index = sq_compiler_next_local(compiler);
 
-	LOG("locals[%d]: %s (variables[%d])\n", local_index, name, variable_index);
+	sq_log("locals[%d]: %s (variables[%d])\n", local_index, name, variable_index);
 
 	compiler->variables.ary[variable_index].name = name;
 	compiler->variables.ary[variable_index].index = local_index;

@@ -45,12 +45,12 @@ static struct sq_text *parse_fraktur_bareword(void) {
 	if (!(fraktur_len = fraktur_length(sq_stream, &fraktur_pos)))
 		return NULL;
 
-	char *fraktur = xmalloc(16);
+	char *fraktur = sq_malloc(16);
 	unsigned cap = 16, len = 0;
 
 	do {
 		if (cap == len)
-			fraktur = xrealloc(fraktur, cap *= 2);
+			fraktur = sq_realloc(fraktur, cap *= 2);
 
 		if ((fraktur_len = fraktur_length(sq_stream, &fraktur_pos))) {
 			sq_stream += fraktur_len;
@@ -94,7 +94,7 @@ static bool strip_whitespace_maybe_ignore_slash(bool ignore_slash) <%
 					break;
 				}
 
-				if (!*sq_stream++) die("unterminated block comment");
+				if (!*sq_stream++) sq_throw("unterminated block comment");
 			}
 		}
 #if 0
@@ -104,7 +104,7 @@ static bool strip_whitespace_maybe_ignore_slash(bool ignore_slash) <%
 			if (*sq_stream && *sq_stream++ != '\n' && !ignore_slash) {
 				sq_stream -= 2;
 				continue;
-				// die("unexpected '\\' on its own.");
+				// sq_throw("unexpected '\\' on its own.");
 			}
 			continue;
 		}
@@ -115,7 +115,7 @@ static bool strip_whitespace_maybe_ignore_slash(bool ignore_slash) <%
 			// but oh well whatever.
 			if (c == '\n') had_a_newline = true;
 			else if (c == ' ' && had_a_newline)
-				die("THOU SHALT NOT INDENT WITH SPACES!");
+				sq_throw("THOU SHALT NOT INDENT WITH SPACES!");
 		}
 	}
 
@@ -141,7 +141,7 @@ static unsigned tohex(char c) {
 	if (isdigit(c)) return c - '0';
 	if ('a' <= c && c <= 'f') return c - 'a' + 10;
 	if ('A' <= c && c <= 'F') return c - 'A' + 10;
-	die("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
+	sq_throw("char '%1$c' (\\x%1$02x) isn't a hex digit", c);
 }
 
 static struct sq_token parse_arabic_numeral(void) {
@@ -154,7 +154,7 @@ static struct sq_token parse_arabic_numeral(void) {
 	} while (isdigit(*++sq_stream));
 
 	if (isalpha(*sq_stream) || *sq_stream == '_')
-		die("invalid trailing characters on arabic numeral literal: %llu%c\n",
+		sq_throw("invalid trailing characters on arabic numeral literal: %llu%c\n",
 			(long long) token.numeral, *sq_stream);
 
 	return token;
@@ -211,7 +211,7 @@ static struct sq_token next_interpolation_token(void) {
 
 static struct sq_token parse_text(void) {
 	unsigned length = 0;
-	char *dst = xmalloc(strlen(sq_stream));
+	char *dst = sq_malloc(strlen(sq_stream));
 	char quote, c;
 
 	if (put_back_quote)
@@ -222,7 +222,7 @@ static struct sq_token parse_text(void) {
 	while ((c = *sq_stream++) != quote) {
 	top:
 		if (!c)
-			die("unterminated quote encountered");
+			sq_throw("unterminated quote encountered");
 
 		if (c == '{') {
 			_interpolate_is_curly_brace = true;
@@ -261,7 +261,7 @@ static struct sq_token parse_text(void) {
 		case '(':
 		interpolate:
 			if (MAX_INTERPOLATIONS < interpolation_length)
-				die("too many interpolations");
+				sq_throw("too many interpolations");
 
 			interpolations[interpolation_length + 1].depth = 1;
 			interpolations[interpolation_length + 1].quote = quote;
@@ -277,7 +277,7 @@ static struct sq_token parse_text(void) {
 
 		case 'x':
 			if (sq_stream[0] == quote || sq_stream[0] == '\0' || sq_stream[1] == quote)
-				die("unterminated escape sequence");
+				sq_throw("unterminated escape sequence");
 
 			c = tohex(sq_stream[0]) * 16 + tohex(sq_stream[1]);
 			sq_stream += 2;
@@ -304,11 +304,11 @@ static struct sq_token parse_identifier(void) {
 	token.kind = SQ_TK_IDENT;
 	unsigned len = 0, cap = 16;
 
-	token.identifier = xmalloc(cap);
+	token.identifier = sq_malloc(cap);
 
 	while (true) {
 		if (len == cap)
-			token.identifier = xrealloc(token.identifier, cap *= 2);
+			token.identifier = sq_realloc(token.identifier, cap *= 2);
 
 		if (isupper(*sq_stream) && len && !isupper(token.identifier[0])) {
 			token.identifier[len++] = '_';
@@ -326,7 +326,7 @@ static struct sq_token parse_identifier(void) {
 		} else break;
 	}
 
-	token.identifier = xrealloc(token.identifier, sizeof_array(char , len + 1));
+	token.identifier = sq_realloc(token.identifier, sq_sizeof_array(char , len + 1));
 	token.identifier[len] = '\0';
 
 	// check to see if we're a label
@@ -483,7 +483,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START("|", SQ_TK_PAT_OR);
 	CHECK_FOR_START("=", SQ_TK_ASSIGN);
 
-	die("unknown token start '%c'", *sq_stream);
+	sq_throw("unknown token start '%c'", *sq_stream);
 }
 
 

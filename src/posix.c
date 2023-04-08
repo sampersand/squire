@@ -9,7 +9,7 @@ struct _nothing_to_see_here;
 char *strdup(char *str) {
 	size_t length = strlen(str) + 1;
 
-	return memcpy(xmalloc(length), str, length);
+	return memcpy(sq_malloc(length), str, length);
 }
 
 char *strndup(char *str, size_t maxlen) {
@@ -18,7 +18,7 @@ char *strndup(char *str, size_t maxlen) {
 	if (length < maxlen)
 		return strdup(str);
 
-	char *result = xmalloc(maxlen);
+	char *result = sq_malloc(maxlen);
 	memcpy(result, str, maxlen);
 	result[maxlen] = '\0';
 

@@ -7,7 +7,7 @@
 void sq_kingdom_initialize(struct sq_kingdom *kingdom, unsigned capacity) {
 	kingdom->nsubjects = 0;
 	kingdom->subject_cap = capacity;
-	kingdom->subjects = xmalloc(sizeof_array(struct sq_kingdom_subject, capacity));
+	kingdom->subjects = sq_malloc(sq_sizeof_array(struct sq_kingdom_subject, capacity));
 }
 
 void sq_kingdom_dump(FILE *out, const struct sq_kingdom *kingdom) {
@@ -62,9 +62,9 @@ bool sq_kingdom_set_attr(struct sq_kingdom *kingdom, const char *name, sq_value 
 	if (kingdom->subject_cap == kingdom->nsubjects) {
 		kingdom->subject_cap *= 2;
 		kingdom->subjects =
-			xrealloc(
+			sq_realloc(
 				kingdom->subjects,
-				sizeof_array(struct sq_kingdom_subject, kingdom->subject_cap)
+				sq_sizeof_array(struct sq_kingdom_subject, kingdom->subject_cap)
 			);
 	}
 

@@ -34,7 +34,7 @@ static struct sq_token take() {
 
 #define EXPECTED(kind_, iffalse) \
 	do { if (take().kind != kind_) { iffalse; } } while(0)
-#define EXPECT(kind_, ...) EXPECTED(kind_, die(__VA_ARGS__))
+#define EXPECT(kind_, ...) EXPECTED(kind_, sq_throw(__VA_ARGS__))
 #define GUARD(kind_) EXPECTED(kind_, untake(); return NULL)
 
 static struct expression *parse_expression(void);
@@ -63,7 +63,7 @@ static char *token_to_identifier(struct sq_token token) {
 
 }
 static struct variable_old *parse_variable(void) {
-	struct variable_old *var = xmalloc(sizeof(struct variable_old));
+	struct variable_old *var = sq_malloc(sizeof(struct variable_old));
 
 	if (!(var->name = token_to_identifier(take())))
 		return untake(), free(var), NULL;
@@ -83,22 +83,22 @@ static struct function_call_old *parse_func_call_old(struct variable_old *func) 
 	unsigned arg_count = 0;
 
 	while (take().kind != SQ_TK_RPAREN && arg_count <= SQ_JOURNEY_MAX_ARGC) {
-		if (last.kind == SQ_TK_UNDEFINED) die("missing rparen for fn call");
+		if (last.kind == SQ_TK_UNDEFINED) sq_throw("missing rparen for fn call");
 		untake();
 
 		if (!(args[arg_count++] = parse_expression()))
-			die("invalid argument #%d found in function call", arg_count-1);
+			sq_throw("invalid argument #%d found in function call", arg_count-1);
 
 		if (take().kind != SQ_TK_COMMA) {
 			if (last.kind != SQ_TK_RPAREN)
-				die("missing rparen for fn call");
+				sq_throw("missing rparen for fn call");
 			break;
 		}
 	}
 
-	struct function_call_old *fncall = xmalloc(sizeof(struct function_call_old));
+	struct function_call_old *fncall = sq_malloc(sizeof(struct function_call_old));
 	fncall->func = func;
-	fncall->args = memdup(args, sizeof_array(struct expression *, arg_count));
+	fncall->args = sq_memdup(args, sq_sizeof_array(struct expression *, arg_count));
 
 	fncall->arglen = arg_count;
 
@@ -111,43 +111,43 @@ static void parse_func_call(struct function_call *fncall) {
 
 	while (take().kind != SQ_TK_RPAREN && fncall->argc <= SQ_JOURNEY_MAX_ARGC) {
 		if (last.kind == SQ_TK_UNDEFINED)
-			die("missing rparen for fn call");
+			sq_throw("missing rparen for fn call");
 
 		untake();
 
 		if (!(args[fncall->argc++] = parse_expression()))
-			die("invalid argument #%d found in function call", fncall->argc-1);
+			sq_throw("invalid argument #%d found in function call", fncall->argc-1);
 
 		if (take().kind != SQ_TK_COMMA) {
 			if (last.kind != SQ_TK_RPAREN)
-				die("missing rparen for fn call");
+				sq_throw("missing rparen for fn call");
 			break;
 		}
 	}
 
-	fncall->args = memdup(args, sizeof_array(struct expression *, fncall->argc));
+	fncall->args = sq_memdup(args, sq_sizeof_array(struct expression *, fncall->argc));
 }
 
 // static struct index *parse_index(struct primary *primary) {
 // 	GUARD(SQ_TK_LBRACKET);
 
-// 	struct index *index = xmalloc(sizeof(struct index));
+// 	struct index *index = sq_malloc(sizeof(struct index));
 // 	index->into = primary;
-// 	if (!(index->index = parse_expression())) die("Cant compile index");
+// 	if (!(index->index = parse_expression())) sq_throw("Cant compile index");
 // 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
 // 	return index;
 // }
 
 static struct book *parse_book() {
 	unsigned len = 0, cap = 8;
-	struct expression **pages = xmalloc(sizeof_array(struct expression, cap));
+	struct expression **pages = sq_malloc(sq_sizeof_array(struct expression, cap));
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
 		if (last.kind == SQ_TK_UNDEFINED)
-			die("missing rparen for book initialization");
+			sq_throw("missing rparen for book initialization");
 
 		if (len == cap)
-			pages = xrealloc(pages, sizeof_array(struct expression, cap *= 2));
+			pages = sq_realloc(pages, sq_sizeof_array(struct expression, cap *= 2));
 
 		pages[len++] = parse_expression();
 
@@ -159,7 +159,7 @@ static struct book *parse_book() {
 
 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of book");
 
-	struct book *book = xmalloc(sizeof(struct book));
+	struct book *book = sq_malloc(sizeof(struct book));
 	book->npages = len;
 	book->pages = pages;
 	return book;
@@ -167,17 +167,17 @@ static struct book *parse_book() {
 
 static struct dict *parse_codex() {
 	unsigned len = 0, cap = 8;
-	struct expression **keys = xmalloc(sizeof_array(struct expression, cap));
-	struct expression **vals = xmalloc(sizeof_array(struct expression, cap));
+	struct expression **keys = sq_malloc(sq_sizeof_array(struct expression, cap));
+	struct expression **vals = sq_malloc(sq_sizeof_array(struct expression, cap));
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACE)) {
 		if (last.kind == SQ_TK_UNDEFINED)
-			die("missing rparen for codex call");
+			sq_throw("missing rparen for codex call");
 
 		if (len == cap) {
 			cap *= 2;
-			keys = xrealloc(keys, sizeof_array(struct expression, cap));
-			vals = xrealloc(vals, sizeof_array(struct expression, cap));
+			keys = sq_realloc(keys, sq_sizeof_array(struct expression, cap));
+			vals = sq_realloc(vals, sq_sizeof_array(struct expression, cap));
 		}
 
 		bool was_label;
@@ -200,7 +200,7 @@ static struct dict *parse_codex() {
 
 	EXPECT(SQ_TK_RBRACE, "expected a '}' at end of codex");
 
-	struct dict *dict = xmalloc(sizeof(struct dict));
+	struct dict *dict = sq_malloc(sizeof(struct dict));
 	dict->neles = len;
 	dict->keys = keys;
 	dict->vals = vals;
@@ -226,7 +226,7 @@ static struct primary *parse_primary() {
 		
 	case SQ_TK_INDEX:
 		primary.kind = SQ_PS_PBOOK;
-		primary.book = xmalloc(sizeof(struct book));
+		primary.book = sq_malloc(sizeof(struct book));
 		primary.book->npages = 0;
 		primary.book->pages = NULL;
 		break;
@@ -260,7 +260,7 @@ static struct primary *parse_primary() {
 	case SQ_TK_LABEL: {
 		untake();
 		last.kind = SQ_TK_IDENT;
-		struct variable_old *var = xmalloc(sizeof(struct variable_old));
+		struct variable_old *var = sq_malloc(sizeof(struct variable_old));
 
 		if (!(var->name = token_to_identifier(take())))
 			return untake(), free(var), NULL;
@@ -279,7 +279,7 @@ static struct primary *parse_primary() {
 
 		if (take().kind == SQ_TK_LPAREN) {
 			primary.kind = SQ_PS_PPAREN;
-			primary.expr = xmalloc(sizeof(struct expression));
+			primary.expr = sq_malloc(sizeof(struct expression));
 			primary.expr->kind = SQ_PS_EFNCALL;
 			primary.expr->fncall = parse_func_call_old(var);
 		} else {
@@ -308,7 +308,7 @@ static struct primary *parse_primary() {
 	struct primary *prim_ptr;
 
 reparse_primary:
-	prim_ptr = memdup(&primary, sizeof(struct primary));
+	prim_ptr = sq_memdup(&primary, sizeof(struct primary));
 
 	switch (take().kind) {
 	case SQ_TK_LPAREN:
@@ -330,7 +330,7 @@ reparse_primary:
 		primary.kind = SQ_PS_PINDEX;
 		primary.index.into = prim_ptr;
 		if (!(primary.index.index = parse_expression()))
-			die("Cant parse index expression");
+			sq_throw("Cant parse index expression");
 		EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
 		goto reparse_primary;
 
@@ -370,7 +370,7 @@ static struct unary_expression *parse_unary_expression() {
 	if (!(unary.rhs = parse_primary()))
 		return NULL;
 
-	return memdup(&unary, sizeof(struct unary_expression));
+	return sq_memdup(&unary, sizeof(struct unary_expression));
 }
 
 static struct pow_expression *parse_pow_expression() {
@@ -390,10 +390,10 @@ static struct pow_expression *parse_pow_expression() {
 
 	if (pow.kind != SQ_PS_PUNARY) {
 		if (!(pow.rhs = parse_pow_expression()))
-			die("missing right-hand side for pow-like operation");
+			sq_throw("missing right-hand side for pow-like operation");
 	}
 
-	return memdup(&pow, sizeof(struct pow_expression));
+	return sq_memdup(&pow, sizeof(struct pow_expression));
 }
 
 static struct mul_expression *parse_mul_expression() {
@@ -419,10 +419,10 @@ static struct mul_expression *parse_mul_expression() {
 
 	if (mul.kind != SQ_PS_MPOW) {
 		if (!(mul.rhs = parse_mul_expression()))
-			die("missing right-hand side for mul-like operation");
+			sq_throw("missing right-hand side for mul-like operation");
 	}
 
-	return memdup(&mul, sizeof(struct mul_expression));
+	return sq_memdup(&mul, sizeof(struct mul_expression));
 }
 
 static struct add_expression *parse_add_expression() {
@@ -445,10 +445,10 @@ static struct add_expression *parse_add_expression() {
 
 	if (add.kind != SQ_PS_AMUL) {
 		if (!(add.rhs = parse_add_expression()))
-			die("missing right-hand side for add-like operation");
+			sq_throw("missing right-hand side for add-like operation");
 	}
 
-	return memdup(&add, sizeof(struct add_expression));
+	return sq_memdup(&add, sizeof(struct add_expression));
 }
 
 static struct cmp_expression *parse_cmp_expression() {
@@ -480,10 +480,10 @@ static struct cmp_expression *parse_cmp_expression() {
 
 	if (cmp.kind != SQ_PS_CADD) {
 		if (!(cmp.rhs = parse_cmp_expression()))
-			die("missing right-hand side for cmp-like operation");
+			sq_throw("missing right-hand side for cmp-like operation");
 	}
 
-	return memdup(&cmp, sizeof(struct cmp_expression));
+	return sq_memdup(&cmp, sizeof(struct cmp_expression));
 }
 
 static struct eql_expression *parse_eql_expression() {
@@ -515,10 +515,10 @@ static struct eql_expression *parse_eql_expression() {
 
 	if (eql.kind != SQ_PS_ECMP) {
 		if (!(eql.rhs = parse_eql_expression()))
-			die("missing right-hand side for eql-like operation");
+			sq_throw("missing right-hand side for eql-like operation");
 	}
 
-	return memdup(&eql, sizeof(struct eql_expression));
+	return sq_memdup(&eql, sizeof(struct eql_expression));
 }
 
 static struct bool_expression *parse_bool_expression() {
@@ -535,32 +535,32 @@ static struct bool_expression *parse_bool_expression() {
 
 	if (eql.kind != SQ_PS_BEQL) {
 		if (!(eql.rhs = parse_bool_expression()))
-			die("missing right-hand side for bool-like operation");
+			sq_throw("missing right-hand side for bool-like operation");
 	}
 
-	return memdup(&eql, sizeof(struct bool_expression));
+	return sq_memdup(&eql, sizeof(struct bool_expression));
 }
 
 static struct assignment *parse_assignment(struct variable_old *var) {
 	GUARD(SQ_TK_ASSIGN);
 
-	struct assignment *asgn = xmalloc(sizeof(struct assignment));
+	struct assignment *asgn = sq_malloc(sizeof(struct assignment));
 	asgn->var = var;
 	if (!(asgn->expr = parse_expression()))
-		die("missing rhs for assignment");
+		sq_throw("missing rhs for assignment");
 	return asgn;
 }
 
 static struct index_assign *parse_index_assign(struct index *aidx) {
 	GUARD(SQ_TK_ASSIGN);
 
-	struct index_assign *ary_asgn = xmalloc(sizeof(struct index_assign));
+	struct index_assign *ary_asgn = sq_malloc(sizeof(struct index_assign));
 
 	ary_asgn->into = aidx->into;
 	ary_asgn->index = aidx->index;
 
 	if (!(ary_asgn->value = parse_expression()))
-		die("cannot parse value for ary assignment");
+		sq_throw("cannot parse value for ary assignment");
 
 	return ary_asgn;
 }
@@ -594,7 +594,7 @@ static struct expression *parse_expression_inner(bool include_assignment, struct
 
 	if (include_assignment) {
 		if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
-			struct variable_old *var = xmalloc(sizeof(struct variable_old));
+			struct variable_old *var = sq_malloc(sizeof(struct variable_old));
 			var->name = prim->variable;
 			var->field = NULL;
 			prim->kind = SQ_PS_PVARIABLE_OLD;
@@ -619,7 +619,7 @@ static struct expression *parse_expression() {
 	if (!(expr.math = parse_bool_expression()))
 		return NULL;
 
-	return parse_expression_inner(true, memdup(&expr, sizeof(struct expression)));
+	return parse_expression_inner(true, sq_memdup(&expr, sizeof(struct expression)));
 }
 
 static struct expression *parse_expression_no_assignment() {
@@ -629,7 +629,7 @@ static struct expression *parse_expression_no_assignment() {
 	if (!(expr.math = parse_bool_expression()))
 		return NULL;
 
-	return parse_expression_inner(false, memdup(&expr, sizeof(struct expression)));
+	return parse_expression_inner(false, sq_memdup(&expr, sizeof(struct expression)));
 }
 
 static struct variable_old *parse_variable(void);
@@ -644,19 +644,19 @@ struct kingdom_declaration *parse_kingdom_declaration() {
 	GUARD(SQ_TK_KINGDOM);
 
 	if (MAX_KINGDOMS <= current_kingdom)
-		die("too many nested kingdoms");
+		sq_throw("too many nested kingdoms");
 
 	// this is terrible
 	struct variable_old *var = parse_variable();
-	struct kingdom_declaration *kingdom = xmalloc(sizeof(struct kingdom_declaration));
+	struct kingdom_declaration *kingdom = sq_malloc(sizeof(struct kingdom_declaration));
 	kingdom->name = var->name;
 	bool is_first = true;
 
 	while (var->field) {
 		if (!var->is_namespace_access)
-			die("expected a namespace access, not %s.%s", kingdom->name, var->field);
+			sq_throw("expected a namespace access, not %s.%s", kingdom->name, var->field);
 
-		kingdom->name = xrealloc(kingdom->name, strlen(kingdom->name) + strlen(var->field->name) + 3);
+		kingdom->name = sq_realloc(kingdom->name, strlen(kingdom->name) + strlen(var->field->name) + 3);
 		strcat(kingdom->name, "::");
 		strcat(kingdom->name, var->field->name);
 		if (!is_first) free(var->name);
@@ -673,7 +673,7 @@ struct kingdom_declaration *parse_kingdom_declaration() {
 
 static struct scope_declaration *parse_global_declaration() {
 	GUARD(SQ_TK_GLOBAL);
-	struct scope_declaration *global = xmalloc(sizeof(struct scope_declaration));
+	struct scope_declaration *global = sq_malloc(sizeof(struct scope_declaration));
 
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'renowned'");
 	global->name = last.identifier;
@@ -688,10 +688,10 @@ static struct scope_declaration *parse_global_declaration() {
 }
 static struct scope_declaration *parse_local_declaration() {
 	GUARD(SQ_TK_LOCAL);
-	struct scope_declaration *local = xmalloc(sizeof(struct scope_declaration));
+	struct scope_declaration *local = sq_malloc(sizeof(struct scope_declaration));
 
 	if (take().kind != SQ_TK_IDENT && last.kind != SQ_TK_LABEL)
-		die("expected an identifier after 'nigh'");
+		sq_throw("expected an identifier after 'nigh'");
 
 	local->name = last.identifier;
 	local->genus = last.kind != SQ_TK_LABEL ? NULL : parse_expression_no_assignment();
@@ -708,7 +708,7 @@ static struct scope_declaration *parse_local_declaration() {
 
 static struct form_declaration *parse_form_declaration() {
 	GUARD(SQ_TK_CLASS);
-	struct form_declaration *fdecl = xmalloc(sizeof(struct form_declaration));
+	struct form_declaration *fdecl = sq_malloc(sizeof(struct form_declaration));
 	fdecl->nparents = 0;
 
 	// optional name
@@ -717,10 +717,10 @@ static struct form_declaration *parse_form_declaration() {
 	} else if (last.kind == SQ_TK_LABEL) {
 		fdecl->name = last.identifier;
 		unsigned cap = 4;
-		fdecl->parents = xmalloc(sizeof_array(char *, cap));
+		fdecl->parents = sq_malloc(sq_sizeof_array(char *, cap));
 		while (true) {
 			if (cap == fdecl->nparents)
-				fdecl->parents = xrealloc(fdecl->parents, sizeof_array(char *, cap *= 2));
+				fdecl->parents = sq_realloc(fdecl->parents, sq_sizeof_array(char *, cap *= 2));
 
 			if (take().kind == SQ_TK_IDENT) {
 				fdecl->parents[fdecl->nparents++] = last.identifier;
@@ -743,10 +743,10 @@ static struct form_declaration *parse_form_declaration() {
 	EXPECT(SQ_TK_LBRACE, "expected '{' before 'form' contents");
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
-	fdecl->matter = xmalloc(sizeof_array(struct matter_declaration, MAX_LEN));
-	fdecl->meths = xmalloc(sizeof_array(struct sq_journey *, MAX_LEN));
-	fdecl->funcs = xmalloc(sizeof_array(struct sq_journey *, MAX_LEN));
-	fdecl->essences = xmalloc(sizeof_array(struct essence_declaration, MAX_LEN));
+	fdecl->matter = sq_malloc(sq_sizeof_array(struct matter_declaration, MAX_LEN));
+	fdecl->meths = sq_malloc(sq_sizeof_array(struct sq_journey *, MAX_LEN));
+	fdecl->funcs = sq_malloc(sq_sizeof_array(struct sq_journey *, MAX_LEN));
+	fdecl->essences = sq_malloc(sq_sizeof_array(struct essence_declaration, MAX_LEN));
 	fdecl->constructor = NULL;
 	fdecl->nmatter = 0;
 	fdecl->nfuncs = 0;
@@ -763,18 +763,18 @@ static struct form_declaration *parse_form_declaration() {
 			struct journey_declaration *fn = parse_journey_declaration(false, 1, true);
 			if (tkn.kind == SQ_TK_CONSTRUCTOR) {
 				if (fdecl->constructor != NULL)
-					die("cannot have two constructors.");
+					sq_throw("cannot have two constructors.");
 				fdecl->constructor = fn;
 			} else if (tkn.kind == SQ_TK_METHOD) {
 				if (fdecl->nmeths >= MAX_LEN)
-					die("too many methods!");
+					sq_throw("too many methods!");
 				fdecl->meths[fdecl->nmeths++] = fn;
 			} else if (tkn.kind == SQ_TK_CLASSFN) {
 				if (fdecl->nfuncs >= MAX_LEN)
-					die("too many form methods!");
+					sq_throw("too many form methods!");
 				fdecl->funcs[fdecl->nfuncs++] = fn;
 			} else {
-				die("[bug] its not a constructor, func, or formfn?");
+				sq_throw("[bug] its not a constructor, func, or formfn?");
 			}
 
 			break;
@@ -783,7 +783,7 @@ static struct form_declaration *parse_form_declaration() {
 		case SQ_TK_ESSENCE:
 			while (take().kind == SQ_TK_IDENT || last.kind == SQ_TK_LABEL) {
 				if (fdecl->nessences > MAX_LEN)
-					die("too many essences!");
+					sq_throw("too many essences!");
 
 				fdecl->essences[fdecl->nessences++].name = last.identifier;
 				fdecl->essences[fdecl->nessences - 1].value = NULL;
@@ -816,7 +816,7 @@ static struct form_declaration *parse_form_declaration() {
 				}
 
 				if (fdecl->nmatter > MAX_LEN)
-					die("too many fields!");
+					sq_throw("too many fields!");
 
 				fdecl->matter[fdecl->nmatter].name = last.identifier;
 				fdecl->matter[fdecl->nmatter].genus =
@@ -837,7 +837,7 @@ static struct form_declaration *parse_form_declaration() {
 			continue;
 
 		default:
-			die("unknown token encountered when parsing 'form'.");
+			sq_throw("unknown token encountered when parsing 'form'.");
 		}
 	}
 
@@ -845,9 +845,9 @@ static struct form_declaration *parse_form_declaration() {
 
 #undef MAX_LEN
 
-	fdecl->matter = xrealloc(fdecl->matter, sizeof_array(struct matter_declaration, fdecl->nmatter));
-	fdecl->meths = xrealloc(fdecl->meths, sizeof_array(struct sq_journey *, fdecl->nmeths));
-	fdecl->funcs = xrealloc(fdecl->funcs, sizeof_array(struct sq_journey *, fdecl->nfuncs));
+	fdecl->matter = sq_realloc(fdecl->matter, sq_sizeof_array(struct matter_declaration, fdecl->nmatter));
+	fdecl->meths = sq_realloc(fdecl->meths, sq_sizeof_array(struct sq_journey *, fdecl->nmeths));
+	fdecl->funcs = sq_realloc(fdecl->funcs, sq_sizeof_array(struct sq_journey *, fdecl->nfuncs));
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
 
@@ -860,7 +860,7 @@ static struct statements *parse_brace_statements(char *what) {
 	struct statements *stmts;
 	EXPECT(SQ_TK_LBRACE, "missing '{' for '%s' body", what);
 	if (!(stmts = parse_statements()))
-		die("missing body for '%s'", what);
+		sq_throw("missing body for '%s'", what);
 
 	EXPECT(SQ_TK_RBRACE, "missing '}' for '%s' body", what);
 	return stmts;
@@ -888,13 +888,13 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 
 		case SQ_TK_MUL:
 			if (stage == STAGE_KW_ONLY) {
-				die("duplicate splat argument encountered");
+				sq_throw("duplicate splat argument encountered");
 			} else if (take().kind == SQ_TK_COMMA || last.kind == SQ_TK_RPAREN) {
 				assert(!jp->splat);
 				jp->splat = strdup(""); // make it empty, so it still registers, but isn't accessible
 				untake();
 			} else if (last.kind != SQ_TK_IDENT) {
-				die("expected name (or nothing) after '*'");
+				sq_throw("expected name (or nothing) after '*'");
 			} else {
 				assert(!jp->splat);
 				jp->splat = last.identifier;
@@ -911,11 +911,11 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 				assert(!jp->splatsplat);
 				jp->splatsplat = last.identifier;
 			} else {
-				die("expected name after '**'");
+				sq_throw("expected name after '**'");
 			}
 
 			if (take().kind != SQ_TK_COMMA) untake(); // allow trailing comma
-			if (take().kind != SQ_TK_RPAREN) die("missing closing paren");
+			if (take().kind != SQ_TK_RPAREN) sq_throw("missing closing paren");
 			goto done_with_arguments;
 
 		case SQ_TK_IDENT:
@@ -923,11 +923,11 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			// are we a keyword argument or a normal positional one?
 			if (stage == STAGE_KW_ONLY) {
 				if (jp->kwargc == SQ_JOURNEY_MAX_ARGC)
-					die("too many keyword arguments!");
+					sq_throw("too many keyword arguments!");
 				current = &jp->kwargv[jp->kwargc++];
 			} else {
 				if (jp->pargc == SQ_JOURNEY_MAX_ARGC)
-					die("too many positional arguments!");
+					sq_throw("too many positional arguments!");
 				current = &jp->pargv[jp->pargc++];
 			}
 
@@ -936,15 +936,15 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 
 			// if we were a label (ie had a colon after it), parse a genus.
 			if (last.kind == SQ_TK_LABEL && !(current->genus = parse_expression_no_assignment()))
-				die("missing genus for argument '%s'", current->name);
+				sq_throw("missing genus for argument '%s'", current->name);
 
 			// if the next symbol's an `=`, then parse the default value.
 			if (take().kind == SQ_TK_ASSIGN) {
 				if (!(current->default_ = parse_expression()))
-					die("missing default for argument '%s'", current->name);
+					sq_throw("missing default for argument '%s'", current->name);
 				stage = STAGE_DEFAULT;
 			} else if (stage == STAGE_DEFAULT) {
-				die("positional parameter after default ones");
+				sq_throw("positional parameter after default ones");
 			} else {
 				untake();
 			}
@@ -952,7 +952,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			break;
 
 		default:
-			die("unexpected token encountered when parsing arguments: 0x%x", last.kind);
+			sq_throw("unexpected token encountered when parsing arguments: 0x%x", last.kind);
 		}
 
 		// the next symbol after an argument either be a comma or a rparen
@@ -964,7 +964,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			goto done_with_arguments;
 
 		default:
-			die("unknown token within variable declaration list: %d", last.kind);
+			sq_throw("unknown token within variable declaration list: %d", last.kind);
 		}
 	}
 
@@ -973,26 +973,26 @@ done_with_arguments:
 	if (take().kind == SQ_TK_COLON)  {
 		_sq_do_not_allow_space_if_in_identifiers = true;
 		if (!(jp->return_genus = parse_expression_no_assignment()))
-			die("unable to parse return genus");
+			sq_throw("unable to parse return genus");
 		_sq_do_not_allow_space_if_in_identifiers = false;
 	} else {
 		untake();
 	}
 
 	if (take().kind == SQ_TK_IF) {
-		if (!(jp->condition = parse_expression())) die("unable to parse if condition");
+		if (!(jp->condition = parse_expression())) sq_throw("unable to parse if condition");
 	} else {
 		untake();
 	}
 
 	// shorthand notation
 	if (take().kind == SQ_TK_ARROW) {
-		jp->body = xmalloc(sizeof(struct statements));
+		jp->body = sq_malloc(sizeof(struct statements));
 		jp->body->len = 1;
-		jp->body->stmts = xmalloc(sizeof(struct statement *));
-		jp->body->stmts[0] = xmalloc(sizeof(struct statement));
+		jp->body->stmts = sq_malloc(sizeof(struct statement *));
+		jp->body->stmts[0] = sq_malloc(sizeof(struct statement));
 		jp->body->stmts[0]->kind = SQ_PS_SRETURN;
-		jp->body->stmts[0]->rstmt = xmalloc(sizeof(struct return_statement));
+		jp->body->stmts[0]->rstmt = sq_malloc(sizeof(struct return_statement));
 
 		if ((jp->body->stmts[0]->rstmt->value = parse_expression()))
 			return;
@@ -1000,28 +1000,28 @@ done_with_arguments:
 		return;
 	}
 
-	die("no body given for function");
+	sq_throw("no body given for function");
 }
 
 static struct journey_declaration *parse_journey_declaration(bool guard, bool is_method, bool multiple_patterns) {
 	if (guard)
 		GUARD(SQ_TK_FUNC);
 
-	struct journey_declaration *jd = xcalloc(1, sizeof(struct journey_declaration));
+	struct journey_declaration *jd = sq_calloc(1, sizeof(struct journey_declaration));
 
 	// optional name
 	if (take().kind == SQ_TK_LPAREN) {
 		untake();
 		jd->name = strdup("<anonymous>");
 	} else if (!(jd->name = token_to_identifier(last))) {
-		die("unexpected token in func declaration list");
+		sq_throw("unexpected token in func declaration list");
 	}
 
 	jd->npatterns = 0;
 
 	do {
 		if (SQ_JOURNEY_MAX_PATTERNS <= jd->npatterns)
-			die("too many patterns encountered");
+			sq_throw("too many patterns encountered");
 
 		parse_journey_pattern(is_method, &jd->patterns[jd->npatterns++]);
 
@@ -1034,9 +1034,9 @@ static struct journey_declaration *parse_journey_declaration(bool guard, bool is
 
 static struct if_statement *parse_if_statement() {
 	GUARD(SQ_TK_IF);
-	struct if_statement *if_stmt = xmalloc(sizeof(struct if_statement));
+	struct if_statement *if_stmt = sq_malloc(sizeof(struct if_statement));
 	if (!(if_stmt->cond = parse_expression()))
-		die("missing condition for 'if'");
+		sq_throw("missing condition for 'if'");
 
 	if_stmt->iftrue = parse_brace_statements("if");
 
@@ -1044,10 +1044,10 @@ static struct if_statement *parse_if_statement() {
 		take();
 		untake();
 		if (last.kind == SQ_TK_IF) {
-			if_stmt->iffalse = xmalloc(sizeof(struct statements));
+			if_stmt->iffalse = sq_malloc(sizeof(struct statements));
 			if_stmt->iffalse->len = 1;
-			if_stmt->iffalse->stmts = xmalloc(sizeof_array(struct statement *, 2));
-			if_stmt->iffalse->stmts[0] = xmalloc(sizeof(struct statement));
+			if_stmt->iffalse->stmts = sq_malloc(sq_sizeof_array(struct statement *, 2));
+			if_stmt->iffalse->stmts[0] = sq_malloc(sizeof(struct statement));
 			if_stmt->iffalse->stmts[0]->kind = SQ_PS_SIF;
 			if_stmt->iffalse->stmts[0]->ifstmt = parse_if_statement();
 			if_stmt->iffalse->stmts[1] = NULL;
@@ -1064,14 +1064,14 @@ static struct if_statement *parse_if_statement() {
 
 static struct switch_statement *parse_switch_statement() {
 	GUARD(SQ_TK_SWITCH);
-	struct switch_statement *sw_stmt = xmalloc(sizeof(struct switch_statement));
+	struct switch_statement *sw_stmt = sq_malloc(sizeof(struct switch_statement));
 	sw_stmt->alas = NULL;
 	sw_stmt->ncases = 0;
 	unsigned capacity = 8;
-	sw_stmt->cases = xmalloc(sizeof_array(struct case_statement, capacity));
+	sw_stmt->cases = sq_malloc(sq_sizeof_array(struct case_statement, capacity));
 
 	if (!(sw_stmt->cond = parse_expression()))
-		die("missing condition for 'fork'");
+		sq_throw("missing condition for 'fork'");
 
 	EXPECT(SQ_TK_LBRACE, "expected a '{' after fork condition");
 
@@ -1079,16 +1079,16 @@ static struct switch_statement *parse_switch_statement() {
 		switch (take().kind) {
 		case SQ_TK_ELSE:
 			EXPECT(SQ_TK_COLON, "expected a ':' after alas");
-			if (sw_stmt->alas) die("cannot declare 'alas' case twice.");
+			if (sw_stmt->alas) sq_throw("cannot declare 'alas' case twice.");
 			sw_stmt->alas = parse_statements();
 			break;
 
 		case SQ_TK_CASE:
 			if (sw_stmt->ncases == capacity)
-				sw_stmt->cases = xrealloc(sw_stmt->cases, sizeof_array(struct case_statement, capacity *= 2));
+				sw_stmt->cases = sq_realloc(sw_stmt->cases, sq_sizeof_array(struct case_statement, capacity *= 2));
 
 			if (!(sw_stmt->cases[sw_stmt->ncases].expr = parse_expression()))
-				die("unable to parse condition for case");
+				sq_throw("unable to parse condition for case");
 
 				EXPECT(SQ_TK_COLON, "expected a ':' after path description");
 
@@ -1112,16 +1112,16 @@ static struct switch_statement *parse_switch_statement() {
 			return sw_stmt;
 
 		default:
-			die("unexpected token; expecting `path` or `}` after fork body");
+			sq_throw("unexpected token; expecting `path` or `}` after fork body");
 		}
 	}
 }
 
 static struct while_statement *parse_while_statement() {
 	GUARD(SQ_TK_WHILE);
-	struct while_statement *while_stmt = xmalloc(sizeof(struct while_statement));
+	struct while_statement *while_stmt = sq_malloc(sizeof(struct while_statement));
 	if (!(while_stmt->cond = parse_expression()))
-		die("missing condition for 'whilst'");
+		sq_throw("missing condition for 'whilst'");
 
 	while_stmt->body = parse_brace_statements("whilst");
 	return while_stmt;
@@ -1129,7 +1129,7 @@ static struct while_statement *parse_while_statement() {
 
 static struct return_statement *parse_return_statement() {
 	GUARD(SQ_TK_RETURN);
-	struct return_statement *ret_stmt = xmalloc(sizeof(struct return_statement));
+	struct return_statement *ret_stmt = sq_malloc(sizeof(struct return_statement));
 
 	ret_stmt->value = parse_expression();
 
@@ -1139,14 +1139,14 @@ static struct return_statement *parse_return_statement() {
 static struct expression *parse_throw_statement() {
 	GUARD(SQ_TK_THROW);
 	struct expression *expression = parse_expression();
-	if (!expression) die("expected expression after 'catapult'");
+	if (!expression) sq_throw("expected expression after 'catapult'");
 	return expression;
 }
 
 static struct trycatch_statement *parse_trycatch_statement() {
 	GUARD(SQ_TK_TRY);
 
-	struct trycatch_statement *tc = xmalloc(sizeof(struct trycatch_statement));
+	struct trycatch_statement *tc = sq_malloc(sizeof(struct trycatch_statement));
 	tc->try = parse_brace_statements("attempt");
 	EXPECT(SQ_TK_ELSE, "expected 'alas' after 'attempt'");
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'alas'");
@@ -1168,7 +1168,7 @@ static char *parse_comefrom_declaration() {
 	GUARD(SQ_TK_COMEFROM);
 
 	if (take().kind != SQ_TK_IDENT)
-		die("expecting an identifier");
+		sq_throw("expecting an identifier");
 
 	return last.identifier;
 }
@@ -1177,7 +1177,7 @@ static char *parse_thence_declaration() {
 	GUARD(SQ_TK_THENCE);
 
 	if (take().kind != SQ_TK_IDENT)
-		die("expecting an identifier");
+		sq_throw("expecting an identifier");
 
 	return last.identifier;
 }
@@ -1205,18 +1205,18 @@ static struct statement *parse_statement() {
 	else if ((stmt.expr = parse_expression())) stmt.kind = SQ_PS_SEXPR;
 	else return NULL;
 
-	return memdup(&stmt, sizeof(struct statement));
+	return sq_memdup(&stmt, sizeof(struct statement));
 }
 
 static struct statements *parse_statements() {
 	unsigned cap = 256, len=0;
-	struct statement **list = xmalloc(sizeof_array(struct statement *, cap));
+	struct statement **list = sq_malloc(sq_sizeof_array(struct statement *, cap));
 
 	bool endl = true;
 	while ((list[len] = parse_statement())) {
-		// if (!endl && list[len-1]->kind == SQ_PS_SEXPR) die("missing `;` between statements");
+		// if (!endl && list[len-1]->kind == SQ_PS_SEXPR) sq_throw("missing `;` between statements");
 		if (++len == cap - 1)
-			list = xrealloc(list, sizeof_array(struct statement *, cap*=2));
+			list = sq_realloc(list, sq_sizeof_array(struct statement *, cap*=2));
 
 		endl = false;
 		while (take_endline().kind == SQ_TK_ENDL || last.kind == SQ_TK_SOFT_ENDL)
@@ -1230,7 +1230,7 @@ static struct statements *parse_statements() {
 	}
 	untake();
 
-	struct statements *stmts = xmalloc(sizeof(struct statements));
+	struct statements *stmts = sq_malloc(sizeof(struct statements));
 	stmts->len = len;
 	stmts->stmts = list;
 	return stmts;

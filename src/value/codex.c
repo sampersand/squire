@@ -5,7 +5,7 @@
 #include <string.h>
 
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages) {
-	struct sq_codex *codex = xmalloc(sizeof(struct sq_codex));
+	struct sq_codex *codex = sq_malloc(sizeof(struct sq_codex));
 
 	codex->length = length;
 	codex->capacity = capacity;
@@ -16,13 +16,13 @@ struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_code
 }
 
 struct sq_codex *sq_codex_allocate(unsigned capacity) {
-	struct sq_codex *codex = xmalloc(sizeof(struct sq_codex));
+	struct sq_codex *codex = sq_malloc(sizeof(struct sq_codex));
 
 	codex->length = 0;
 	codex->capacity = capacity;
 	codex->refcount = 1;
 
-	codex->pages = xmalloc(sizeof_array(struct sq_codex_page, capacity));
+	codex->pages = sq_malloc(sq_sizeof_array(struct sq_codex_page, capacity));
 	return codex;
 }
 
@@ -55,13 +55,13 @@ void sq_codex_deallocate(struct sq_codex *codex) {
 
 struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 	unsigned len = 0, cap = 64;
-	char *str = xmalloc(cap);
+	char *str = sq_malloc(cap);
 	str[len++] = '{';
 
 	for (unsigned i = 0; i < codex->length; ++i) {
 		if (i) {
 			if (cap <= len + 2)
-				str = xrealloc(str, cap *= 2);
+				str = sq_realloc(str, cap *= 2);
 			str[len++] = ',';
 			str[len++] = ' ';
 		}
@@ -69,7 +69,7 @@ struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 		struct sq_text *key = sq_value_to_text(codex->pages[i].key);
 	
 		if (cap <= key->length + len + 2)
-			str = xrealloc(str, cap = key->length + len * 2 + 2);
+			str = sq_realloc(str, cap = key->length + len * 2 + 2);
 	
 		memcpy(str + len, key->ptr, key->length);
 		len += key->length;
@@ -80,14 +80,14 @@ struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 		struct sq_text *value = sq_value_to_text(codex->pages[i].value);
 	
 		if (cap <= value->length + len + 2)
-			str = xrealloc(str, cap = value->length + len * 2 + 2);
+			str = sq_realloc(str, cap = value->length + len * 2 + 2);
 	
 		memcpy(str + len, value->ptr, value->length);
 		len += value->length;
 		sq_text_free(value);
 	}
 
-	str = xrealloc(str, len + 2);
+	str = sq_realloc(str, len + 2);
 	str[len++] = '}';
 	str[len] = '\0';
 
@@ -137,9 +137,9 @@ void sq_codex_index_assign(struct sq_codex *codex, sq_value key, sq_value value)
 	} else {
 		// `+1` in case it starts out with 0 length
 		if (codex->capacity == codex->length) {
-			codex->pages = xrealloc(
+			codex->pages = sq_realloc(
 				codex->pages,
-				sizeof_array(struct sq_codex_page, codex->capacity = codex->capacity * 2 + 1)
+				sq_sizeof_array(struct sq_codex_page, codex->capacity = codex->capacity * 2 + 1)
 			);
 		}
 		page = &codex->pages[codex->length++];

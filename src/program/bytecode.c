@@ -34,7 +34,7 @@ const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 
 	case SQ_INT_FOPEN: return "SQ_INT_FOPEN";
 	case SQ_INT_ASCII: return "SQ_INT_ASCII";
-	case SQ_INT_UNDEFINED: bug("undefined encountered");
+	case SQ_INT_UNDEFINED: sq_bug("undefined encountered");
 	}
 }
 

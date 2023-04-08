@@ -93,7 +93,7 @@ static void parse_henceforth_literal(struct macro_variable *var) {
 	struct sq_token *tokens;
 
 	len = 0;
-	tokens = xmalloc(sizeof_array(struct sq_token, cap = 8));
+	tokens = sq_malloc(sq_sizeof_array(struct sq_token, cap = 8));
 
 	is_in_macro_declaration = true;
 	bool is_verbatim = false;
@@ -120,20 +120,20 @@ static void parse_henceforth_literal(struct macro_variable *var) {
 			goto done;
 
 		case SQ_TK_UNDEFINED:
-			die("unterminated macro");
+			sq_throw("unterminated macro");
 
 		default:
 			break;
 		}
 
 		if (len == cap)
-			tokens = xrealloc(tokens, sizeof_array(struct sq_token, cap *= 2));
+			tokens = sq_realloc(tokens, sq_sizeof_array(struct sq_token, cap *= 2));
 	}
 
 done:
 	is_in_macro_declaration = false;
 
-	var->tokens = xrealloc(tokens, sizeof_array(struct sq_token, len));
+	var->tokens = sq_realloc(tokens, sq_sizeof_array(struct sq_token, len));
 	var->tokenlen = len;
 	var->args = NULL;
 	var->arglen = 0;
@@ -141,15 +141,15 @@ done:
 }
 
 static void parse_henceforth_function(struct macro_variable *var) {
-	char **args = xmalloc(sizeof_array(char *, MAX_ARGLEN));
+	char **args = sq_malloc(sq_sizeof_array(char *, MAX_ARGLEN));
 	unsigned arglen = 0;
 
 	char c;
 	while (true) {
 		strip_whitespace();
 		if ((c = *sq_stream++) == ')') break;
-		if (c != '$') die("expected '$' or ')'");
-		if (arglen == MAX_ARGLEN) die("too many arguments");
+		if (c != '$') sq_throw("expected '$' or ')'");
+		if (arglen == MAX_ARGLEN) sq_throw("too many arguments");
 
 		args[arglen++] = parse_identifier().identifier;
 		strip_whitespace();
@@ -157,10 +157,10 @@ static void parse_henceforth_function(struct macro_variable *var) {
 	}
 
 	if (sq_next_token().kind != SQ_TK_ASSIGN)
-		die("expected '=' after macro function declaration");
+		sq_throw("expected '=' after macro function declaration");
 
 	parse_henceforth_literal(var);
-	var->args = xrealloc(args, sizeof_array(char *, arglen));
+	var->args = sq_realloc(args, sq_sizeof_array(char *, arglen));
 	var->arglen = arglen;
 	var->is_function = true;
 }
@@ -169,7 +169,7 @@ static char *parse_macro_identifier_name(void) {
 	strip_whitespace();
 
 	if (*sq_stream++ != '$')
-		die("expected a macro identifier");
+		sq_throw("expected a macro identifier");
 
 	return parse_identifier().identifier;
 }
@@ -187,8 +187,8 @@ static void parse_henceforth(void) {
 
 	if (variables.len == variables.cap) {
 		variables.vars = variables.len
-			? xrealloc(variables.vars, sizeof_array(struct macro_variable, variables.cap *= 2))
-			: xmalloc(sizeof_array(struct macro_variable, variables.cap = 8));
+			? sq_realloc(variables.vars, sq_sizeof_array(struct macro_variable, variables.cap *= 2))
+			: sq_malloc(sq_sizeof_array(struct macro_variable, variables.cap = 8));
 	}
 
 	(var = &variables.vars[variables.len++])->name = name;
@@ -202,7 +202,7 @@ found_token:;
 	} else if (token.kind == SQ_TK_LPAREN) {
 		parse_henceforth_function(var);
 	} else {
-		die("unknown token after @henceforth");
+		sq_throw("unknown token after @henceforth");
 	}
 }
 
@@ -228,7 +228,7 @@ static void parse_whereupon(void) {
 		if (!strcmp(variables.vars[i].name, name)) { is_defined = true; break; }
 
 	unsigned len = 0, cap = 128;
-	struct sq_token token, *tokens = xmalloc(sizeof_array(struct sq_token, cap));
+	struct sq_token token, *tokens = sq_malloc(sq_sizeof_array(struct sq_token, cap));
 
 	while (true) {
 		strip_whitespace_maybe_ignore_slash(true);
@@ -253,12 +253,12 @@ static void parse_whereupon(void) {
 		}
 
 		if ((token = sq_next_token()).kind == SQ_TK_UNDEFINED)
-			die("`@nowhere` found nowhere.");
+			sq_throw("`@nowhere` found nowhere.");
 
 		if (!is_defined) continue;
 
 		if (cap == len)
-			tokens = xrealloc(tokens, sizeof_array(struct sq_token, cap *= 2));
+			tokens = sq_realloc(tokens, sq_sizeof_array(struct sq_token, cap *= 2));
 
 		tokens[len++] = token;
 	}
@@ -285,8 +285,8 @@ static bool should_compile(char *filename) {
 			return free(path), false;
 
 	if (npaths == pathcap) {
-		if (!paths) paths = xmalloc(sizeof_array(char *, pathcap = 16));
-		else paths = xrealloc(paths, sizeof_array(char *, pathcap *= 2));
+		if (!paths) paths = sq_malloc(sq_sizeof_array(char *, pathcap = 16));
+		else paths = sq_realloc(paths, sq_sizeof_array(char *, pathcap *= 2));
 	}
 
 	paths[npaths++] = path;
@@ -296,7 +296,7 @@ static bool should_compile(char *filename) {
 
 static void parse_transcribe(void) {
 	strip_whitespace();
-	if (*sq_stream != '\'' && *sq_stream != '\"') die("can only compile strings");
+	if (*sq_stream != '\'' && *sq_stream != '\"') sq_throw("can only compile strings");
 	char *filename = parse_text().text->ptr; // lol memfree?
 
 	if (!should_compile(filename)) return;
@@ -311,7 +311,7 @@ static void parse_transcribe(void) {
 	if (errno) perror("cannot get file size"), exit(1);
 
 	size_t stream_len = strlen(sq_stream);
-	char *new_stream = xmalloc(stream_len + file_size + 1);
+	char *new_stream = sq_malloc(stream_len + file_size + 1);
 	fread(new_stream, 1, file_size, file);
 
 	if (errno) perror("cannot get read file contents"), exit(1);
@@ -328,17 +328,17 @@ static void parse_macro_statement(char *name) {
 	else if (!strcmp(name, "nevermore")) parse_nevermore();
 	else if (!strcmp(name, "transcribe")) parse_transcribe();
 	else if (!strcmp(name, "whereupon")) parse_whereupon();
-	else if (!strcmp(name, "nowhere")) die("unexpected '@nowhere'");
-	else if (!strcmp(name, "alas")) die("unexpected '@alas'");
+	else if (!strcmp(name, "nowhere")) sq_throw("unexpected '@nowhere'");
+	else if (!strcmp(name, "alas")) sq_throw("unexpected '@alas'");
 	else if (!strcmp(name, "expand")) { /* parse_expand(); */ }
-	else die("unknown macro statement kind '%s'", name);;
+	else sq_throw("unknown macro statement kind '%s'", name);;
 
 	free(name);
 }
 
 static void	parse_macro_identifier_invocation(struct expansion *exp, struct macro_variable *var) {
 	if (sq_next_token().kind != SQ_TK_LPAREN)
-		die("expected '(' after macro function '%s'", var->name);
+		sq_throw("expected '(' after macro function '%s'", var->name);
 
 	struct {
 		struct sq_token *args;
@@ -352,7 +352,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		len = 0;
 		cap = 8;
 		paren_depth = 0;
-		arg = xmalloc(sizeof_array(struct sq_token , cap));
+		arg = sq_malloc(sq_sizeof_array(struct sq_token , cap));
 		bool is_verbatim = false;
 
 		while (true) {
@@ -376,7 +376,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 			case SQ_TK_RPAREN:
 				if (!is_verbatim && !paren_depth--) {
 					if (i != var->arglen - 1)
-						die("unexpected `)`; too few arguments");
+						sq_throw("unexpected `)`; too few arguments");
 					goto next_arg;
 				}
 				break;
@@ -391,26 +391,26 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 
 			arg[len++] = token;
 			if (len == cap)
-				arg = xrealloc(arg, sizeof_array(struct sq_token , cap *= 2));
+				arg = sq_realloc(arg, sq_sizeof_array(struct sq_token , cap *= 2));
 		}
 
 	next_arg:
 
-		args[i].args = xrealloc(arg, sizeof_array(struct sq_token , cap));
+		args[i].args = sq_realloc(arg, sq_sizeof_array(struct sq_token , cap));
 		args[i].len = len;
 	}
 
 	if (!var->arglen && sq_next_token().kind != SQ_TK_RPAREN)
-		die("missing closing ')'");
+		sq_throw("missing closing ')'");
 
 	// expand them out and make the resulting array
 	len = 0;
 	cap = var->tokenlen;
-	struct sq_token *tokens = xmalloc(sizeof_array(struct sq_token , cap));
+	struct sq_token *tokens = sq_malloc(sq_sizeof_array(struct sq_token , cap));
 
 	for (unsigned i = 0; i < var->tokenlen; ++i) {
 		if (cap == len)
-			tokens = xrealloc(tokens, sizeof_array(struct sq_token , cap *= 2));
+			tokens = sq_realloc(tokens, sq_sizeof_array(struct sq_token , cap *= 2));
 
 		if (var->tokens[i].kind != SQ_TK_MACRO_VAR) {
 			tokens[len++] = var->tokens[i]; // todo: dup it?
@@ -422,7 +422,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 				continue;
 
 			for (unsigned k = 0; k < args[j].len; ++k) {
-				if (cap == len) tokens = xrealloc(tokens, sizeof_array(struct sq_token , cap *= 2));
+				if (cap == len) tokens = sq_realloc(tokens, sq_sizeof_array(struct sq_token , cap *= 2));
 				tokens[len++] = args[j].args[k];
 			}
 
@@ -434,7 +434,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		;
 	}
 
-	exp->tokens = xrealloc(tokens, sizeof_array(struct sq_token , len));
+	exp->tokens = sq_realloc(tokens, sq_sizeof_array(struct sq_token , len));
 	exp->len = len;
 }
 
@@ -445,7 +445,7 @@ static bool parse_macro_identifier(char *name) {
 		return true;
 
 	if (!strcmp(name, "__COUNTER__")) {
-		expansions[++expansion_pos].tokens = xmalloc(sizeof(struct sq_token));
+		expansions[++expansion_pos].tokens = sq_malloc(sizeof(struct sq_token));
 		expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMERAL;
 		expansions[expansion_pos].tokens[0].numeral = unique_value++;
 		expansions[expansion_pos].len = 1;
@@ -459,12 +459,12 @@ static bool parse_macro_identifier(char *name) {
 		if (!strcmp(name, (var = &variables.vars[i])->name))
 			goto found;
 
-	die("unknown macro identifier '$%s'", name);
+	sq_throw("unknown macro identifier '$%s'", name);
 
 found:
 	// free(name);
 	if (MAX_EXPANSIONS < expansion_pos)
-		die("too many expansions!");
+		sq_throw("too many expansions!");
 
 	struct expansion exp;
 

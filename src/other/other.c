@@ -143,7 +143,7 @@ struct sq_text *sq_other_to_text(const struct sq_other *other) {
 	case SQ_OK_BUILTIN_JOURNEY:
 	case SQ_OK_CITATION:
 	case SQ_OK_PAT_HELPER:
-		todo("others to text");
+		sq_todo("others to text");
 	}
 }
 
