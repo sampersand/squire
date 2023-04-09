@@ -10,7 +10,7 @@ struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
 	assert(length <= capacity);
 	assert(!(length != 0 && pages == NULL));
 
-	struct sq_book *book = sq_malloc(sizeof(struct sq_book));
+	struct sq_book *book = sq_malloc_single(struct sq_book);
 
 	book->capacity = capacity;
 	book->length = length;

@@ -149,7 +149,7 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 }
 
 struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) {
-	struct sq_imitation *imitation = sq_malloc(sizeof(struct sq_imitation));
+	struct sq_imitation *imitation = sq_malloc_single(struct sq_imitation);
 
 	imitation->form = sq_form_clone(form);
 	imitation->refcount = 1;
@@ -184,7 +184,7 @@ struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	assert(form->refcount != 0);
 	assert(form->nmatter == 0 || matter != NULL);
 
-	struct sq_imitation *imitation = sq_malloc(sizeof(struct sq_imitation));
+	struct sq_imitation *imitation = sq_malloc_single(struct sq_imitation);
 
 	imitation->refcount = 1;
 	imitation->form = form;

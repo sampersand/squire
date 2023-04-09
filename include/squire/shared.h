@@ -53,17 +53,17 @@
 #define sq_log(...) ((void) 0)
 #endif /* SQ_LOG */
 
-
 #include <squire/exception.h>
 #define die sq_throw
 #define sq_todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
 
 #define sq_sizeof_array(kind, length) (sizeof(kind) * (length))
 
-#define sq_malloc_vec(kind, length) (sq_malloc(sizeof(kind) * (length)))
-#define sq_realloc_vec(kind, ptr, length) (sq_realloc((ptr), sizeof(kind) * (length)))
+#define sq_malloc_single(kind) ((kind *) sq_malloc(sizeof(kind)))
+#define sq_malloc_vec(kind, length) ((kind *) sq_malloc(sq_sizeof_array(kind, (length))))
+#define sq_realloc_vec(kind, ptr, length) ((kind *) sq_realloc((ptr), sq_sizeof_array(kind, (length))))
 
-void *sq_calloc(size_t count, size_t size) SQ_ATTR(malloc) ;
+void *sq_calloc(size_t count, size_t size) SQ_ATTR(malloc);
 void *sq_malloc(size_t size) SQ_ATTR(malloc);
 void *sq_realloc(void *ptr, size_t size);
 void *sq_memdup(void *ptr, size_t size);

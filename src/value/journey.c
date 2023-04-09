@@ -545,7 +545,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// temporary hacks until we get kingdoms working.
 	case SQ_INT_FOPEN: {
-		other = sq_malloc(sizeof(struct sq_other));
+		other = sq_malloc_single(struct sq_other);
 		other->refcount = 1;
 		other->kind = SQ_OK_SCROLL;
 		struct sq_text *filename = sq_value_to_text(operands[0]);
@@ -731,7 +731,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 
 	/** Misc **/
 		case SQ_OC_CITE: {
-			struct sq_other *ptr = sq_malloc(sizeof(struct sq_other));
+			struct sq_other *ptr = sq_malloc_single(struct sq_other);
 			ptr->refcount = 1;
 			ptr->kind = SQ_OK_CITATION;
 			ptr->citation = next_local(sf);
@@ -816,7 +816,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_PAT_NOT:
 		case SQ_OC_PAT_OR:
 		case SQ_OC_PAT_AND: {
-			struct sq_other *helper = sq_malloc(sizeof(struct sq_other));
+			struct sq_other *helper = sq_malloc_single(struct sq_other);
 			helper->refcount = 1;
 			helper->kind = SQ_OK_PAT_HELPER;
 			helper->helper.left = sq_value_clone(operands[0]);

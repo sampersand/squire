@@ -1501,7 +1501,7 @@ static void compile_journey_pattern(
 }
 
 static struct sq_journey *compile_journey(struct journey_declaration *jd, bool is_method) {
-	struct sq_journey *journey = sq_malloc(sizeof(struct sq_journey));
+	struct sq_journey *journey = sq_malloc_single(struct sq_journey);
 
 	journey->name = jd->name;
 	journey->refcount = 1;
@@ -1518,7 +1518,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 
 static void setup_globals(void) {
 	globals.len = 0;
-	globals.ary = sq_malloc_vec(struct local, globals.cap = 16);
+	globals.ary = sq_malloc_vec(struct global, globals.cap = 16);
 
 	globals.ary[globals.len  ].name = strdup("ARGV");
 	globals.ary[globals.len++].value = SQ_NI;

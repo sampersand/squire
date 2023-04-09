@@ -445,7 +445,7 @@ static bool parse_macro_identifier(char *name) {
 		return true;
 
 	if (!strcmp(name, "__COUNTER__")) {
-		expansions[++expansion_pos].tokens = sq_malloc(sizeof(struct sq_token));
+		expansions[++expansion_pos].tokens = sq_malloc_single(struct sq_token);
 		expansions[expansion_pos].tokens[0].kind = SQ_TK_NUMERAL;
 		expansions[expansion_pos].tokens[0].numeral = unique_value++;
 		expansions[expansion_pos].len = 1;

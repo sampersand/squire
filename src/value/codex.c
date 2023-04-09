@@ -5,7 +5,7 @@
 #include <string.h>
 
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages) {
-	struct sq_codex *codex = sq_malloc(sizeof(struct sq_codex));
+	struct sq_codex *codex = sq_malloc_single(struct sq_codex);
 
 	codex->length = length;
 	codex->capacity = capacity;
@@ -16,7 +16,7 @@ struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_code
 }
 
 struct sq_codex *sq_codex_allocate(unsigned capacity) {
-	struct sq_codex *codex = sq_malloc(sizeof(struct sq_codex));
+	struct sq_codex *codex = sq_malloc_single(struct sq_codex);
 
 	codex->length = 0;
 	codex->capacity = capacity;

@@ -63,7 +63,7 @@ static char *token_to_identifier(struct sq_token token) {
 
 }
 static struct variable_old *parse_variable(void) {
-	struct variable_old *var = sq_malloc(sizeof(struct variable_old));
+	struct variable_old *var = sq_malloc_single(struct variable_old);
 
 	if (!(var->name = token_to_identifier(take())))
 		return untake(), free(var), NULL;
@@ -96,7 +96,7 @@ static struct function_call_old *parse_func_call_old(struct variable_old *func) 
 		}
 	}
 
-	struct function_call_old *fncall = sq_malloc(sizeof(struct function_call_old));
+	struct function_call_old *fncall = sq_malloc_single(struct function_call_old);
 	fncall->func = func;
 	fncall->args = sq_memdup(args, sq_sizeof_array(struct expression *, arg_count));
 
@@ -131,7 +131,7 @@ static void parse_func_call(struct function_call *fncall) {
 // static struct index *parse_index(struct primary *primary) {
 // 	GUARD(SQ_TK_LBRACKET);
 
-// 	struct index *index = sq_malloc(sizeof(struct index));
+// 	struct index *index = sq_malloc_single(sruct index));
 // 	index->into = primary;
 // 	if (!(index->index = parse_expression())) sq_throw("Cant compile index");
 // 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of index");
@@ -140,14 +140,14 @@ static void parse_func_call(struct function_call *fncall) {
 
 static struct book *parse_book() {
 	unsigned len = 0, cap = 8;
-	struct expression **pages = sq_malloc_vec(struct expression, cap);
+	struct expression **pages = sq_malloc_vec(struct expression *, cap);
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACKET)) {
 		if (last.kind == SQ_TK_UNDEFINED)
 			sq_throw("missing rparen for book initialization");
 
 		if (len == cap)
-			pages = sq_realloc_vec(struct expression, pages, cap *= 2);
+			pages = sq_realloc_vec(struct expression *, pages, cap *= 2);
 
 		pages[len++] = parse_expression();
 
@@ -159,7 +159,7 @@ static struct book *parse_book() {
 
 	EXPECT(SQ_TK_RBRACKET, "expected a ']' at end of book");
 
-	struct book *book = sq_malloc(sizeof(struct book));
+	struct book *book = sq_malloc_single(struct book);
 	book->npages = len;
 	book->pages = pages;
 	return book;
@@ -167,8 +167,8 @@ static struct book *parse_book() {
 
 static struct dict *parse_codex() {
 	unsigned len = 0, cap = 8;
-	struct expression **keys = sq_malloc_vec(struct expression, cap);
-	struct expression **vals = sq_malloc_vec(struct expression, cap);
+	struct expression **keys = sq_malloc_vec(struct expression *, cap);
+	struct expression **vals = sq_malloc_vec(struct expression *, cap);
 
 	while ((take(),untake(),last.kind != SQ_TK_RBRACE)) {
 		if (last.kind == SQ_TK_UNDEFINED)
@@ -176,8 +176,8 @@ static struct dict *parse_codex() {
 
 		if (len == cap) {
 			cap *= 2;
-			keys = sq_realloc_vec(struct expression, keys, cap);
-			vals = sq_realloc_vec(struct expression, vals, cap);
+			keys = sq_realloc_vec(struct expression *, keys, cap);
+			vals = sq_realloc_vec(struct expression *, vals, cap);
 		}
 
 		bool was_label;
@@ -200,7 +200,7 @@ static struct dict *parse_codex() {
 
 	EXPECT(SQ_TK_RBRACE, "expected a '}' at end of codex");
 
-	struct dict *dict = sq_malloc(sizeof(struct dict));
+	struct dict *dict = sq_malloc_single(struct dict);
 	dict->neles = len;
 	dict->keys = keys;
 	dict->vals = vals;
@@ -226,7 +226,7 @@ static struct primary *parse_primary() {
 		
 	case SQ_TK_INDEX:
 		primary.kind = SQ_PS_PBOOK;
-		primary.book = sq_malloc(sizeof(struct book));
+		primary.book = sq_malloc_single(struct book);
 		primary.book->npages = 0;
 		primary.book->pages = NULL;
 		break;
@@ -260,7 +260,7 @@ static struct primary *parse_primary() {
 	case SQ_TK_LABEL: {
 		untake();
 		last.kind = SQ_TK_IDENT;
-		struct variable_old *var = sq_malloc(sizeof(struct variable_old));
+		struct variable_old *var = sq_malloc_single(struct variable_old);
 
 		if (!(var->name = token_to_identifier(take())))
 			return untake(), free(var), NULL;
@@ -279,7 +279,7 @@ static struct primary *parse_primary() {
 
 		if (take().kind == SQ_TK_LPAREN) {
 			primary.kind = SQ_PS_PPAREN;
-			primary.expr = sq_malloc(sizeof(struct expression));
+			primary.expr = sq_malloc_single(struct expression);
 			primary.expr->kind = SQ_PS_EFNCALL;
 			primary.expr->fncall = parse_func_call_old(var);
 		} else {
@@ -544,7 +544,7 @@ static struct bool_expression *parse_bool_expression() {
 static struct assignment *parse_assignment(struct variable_old *var) {
 	GUARD(SQ_TK_ASSIGN);
 
-	struct assignment *asgn = sq_malloc(sizeof(struct assignment));
+	struct assignment *asgn = sq_malloc_single(struct assignment);
 	asgn->var = var;
 	if (!(asgn->expr = parse_expression()))
 		sq_throw("missing rhs for assignment");
@@ -554,7 +554,7 @@ static struct assignment *parse_assignment(struct variable_old *var) {
 static struct index_assign *parse_index_assign(struct index *aidx) {
 	GUARD(SQ_TK_ASSIGN);
 
-	struct index_assign *ary_asgn = sq_malloc(sizeof(struct index_assign));
+	struct index_assign *ary_asgn = sq_malloc_single(struct index_assign);
 
 	ary_asgn->into = aidx->into;
 	ary_asgn->index = aidx->index;
@@ -594,7 +594,7 @@ static struct expression *parse_expression_inner(bool include_assignment, struct
 
 	if (include_assignment) {
 		if (last.kind == SQ_TK_ASSIGN && prim->kind == SQ_PS_PVARIABLE) {
-			struct variable_old *var = sq_malloc(sizeof(struct variable_old));
+			struct variable_old *var = sq_malloc_single(struct variable_old);
 			var->name = prim->variable;
 			var->field = NULL;
 			prim->kind = SQ_PS_PVARIABLE_OLD;
@@ -648,7 +648,7 @@ struct kingdom_declaration *parse_kingdom_declaration() {
 
 	// this is terrible
 	struct variable_old *var = parse_variable();
-	struct kingdom_declaration *kingdom = sq_malloc(sizeof(struct kingdom_declaration));
+	struct kingdom_declaration *kingdom = sq_malloc_single(struct kingdom_declaration);
 	kingdom->name = var->name;
 	bool is_first = true;
 
@@ -673,7 +673,7 @@ struct kingdom_declaration *parse_kingdom_declaration() {
 
 static struct scope_declaration *parse_global_declaration() {
 	GUARD(SQ_TK_GLOBAL);
-	struct scope_declaration *global = sq_malloc(sizeof(struct scope_declaration));
+	struct scope_declaration *global = sq_malloc_single(struct scope_declaration);
 
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'renowned'");
 	global->name = last.identifier;
@@ -688,7 +688,7 @@ static struct scope_declaration *parse_global_declaration() {
 }
 static struct scope_declaration *parse_local_declaration() {
 	GUARD(SQ_TK_LOCAL);
-	struct scope_declaration *local = sq_malloc(sizeof(struct scope_declaration));
+	struct scope_declaration *local = sq_malloc_single(struct scope_declaration);
 
 	if (take().kind != SQ_TK_IDENT && last.kind != SQ_TK_LABEL)
 		sq_throw("expected an identifier after 'nigh'");
@@ -708,7 +708,7 @@ static struct scope_declaration *parse_local_declaration() {
 
 static struct form_declaration *parse_form_declaration() {
 	GUARD(SQ_TK_CLASS);
-	struct form_declaration *fdecl = sq_malloc(sizeof(struct form_declaration));
+	struct form_declaration *fdecl = sq_malloc_single(struct form_declaration);
 	fdecl->nparents = 0;
 
 	// optional name
@@ -744,8 +744,8 @@ static struct form_declaration *parse_form_declaration() {
 
 #define MAX_LEN 256 // having more than this is a god object anyways.
 	fdecl->matter = sq_malloc_vec(struct matter_declaration, MAX_LEN);
-	fdecl->meths = sq_malloc_vec(struct sq_journey *, MAX_LEN);
-	fdecl->funcs = sq_malloc_vec(struct sq_journey *, MAX_LEN);
+	fdecl->meths = sq_malloc_vec(struct journey_declaration *, MAX_LEN);
+	fdecl->funcs = sq_malloc_vec(struct journey_declaration *, MAX_LEN);
 	fdecl->essences = sq_malloc_vec(struct essence_declaration, MAX_LEN);
 	fdecl->constructor = NULL;
 	fdecl->nmatter = 0;
@@ -846,8 +846,8 @@ static struct form_declaration *parse_form_declaration() {
 #undef MAX_LEN
 
 	fdecl->matter = sq_realloc_vec(struct matter_declaration, fdecl->matter, fdecl->nmatter);
-	fdecl->meths = sq_realloc_vec(struct sq_journey *, fdecl->meths, fdecl->nmeths);
-	fdecl->funcs = sq_realloc_vec(struct sq_journey *, fdecl->funcs, fdecl->nfuncs);
+	fdecl->meths = sq_realloc_vec(struct journey_declaration *, fdecl->meths, fdecl->nmeths);
+	fdecl->funcs = sq_realloc_vec(struct journey_declaration *, fdecl->funcs, fdecl->nfuncs);
 
 	EXPECT(SQ_TK_RBRACE, "expected '}' after 'form' body");
 
@@ -987,12 +987,12 @@ done_with_arguments:
 
 	// shorthand notation
 	if (take().kind == SQ_TK_ARROW) {
-		jp->body = sq_malloc(sizeof(struct statements));
+		jp->body = sq_malloc_single(struct statements);
 		jp->body->len = 1;
-		jp->body->stmts = sq_malloc(sizeof(struct statement *));
-		jp->body->stmts[0] = sq_malloc(sizeof(struct statement));
+		jp->body->stmts = sq_malloc_single(struct statement *);
+		jp->body->stmts[0] = sq_malloc_single(struct statement);
 		jp->body->stmts[0]->kind = SQ_PS_SRETURN;
-		jp->body->stmts[0]->rstmt = sq_malloc(sizeof(struct return_statement));
+		jp->body->stmts[0]->rstmt = sq_malloc_single(struct return_statement);
 
 		if ((jp->body->stmts[0]->rstmt->value = parse_expression()))
 			return;
@@ -1034,7 +1034,7 @@ static struct journey_declaration *parse_journey_declaration(bool guard, bool is
 
 static struct if_statement *parse_if_statement() {
 	GUARD(SQ_TK_IF);
-	struct if_statement *if_stmt = sq_malloc(sizeof(struct if_statement));
+	struct if_statement *if_stmt = sq_malloc_single(struct if_statement);
 	if (!(if_stmt->cond = parse_expression()))
 		sq_throw("missing condition for 'if'");
 
@@ -1044,10 +1044,10 @@ static struct if_statement *parse_if_statement() {
 		take();
 		untake();
 		if (last.kind == SQ_TK_IF) {
-			if_stmt->iffalse = sq_malloc(sizeof(struct statements));
+			if_stmt->iffalse = sq_malloc_single(struct statements);
 			if_stmt->iffalse->len = 1;
 			if_stmt->iffalse->stmts = sq_malloc_vec(struct statement *, 2);
-			if_stmt->iffalse->stmts[0] = sq_malloc(sizeof(struct statement));
+			if_stmt->iffalse->stmts[0] = sq_malloc_single(struct statement);
 			if_stmt->iffalse->stmts[0]->kind = SQ_PS_SIF;
 			if_stmt->iffalse->stmts[0]->ifstmt = parse_if_statement();
 			if_stmt->iffalse->stmts[1] = NULL;
@@ -1064,7 +1064,7 @@ static struct if_statement *parse_if_statement() {
 
 static struct switch_statement *parse_switch_statement() {
 	GUARD(SQ_TK_SWITCH);
-	struct switch_statement *sw_stmt = sq_malloc(sizeof(struct switch_statement));
+	struct switch_statement *sw_stmt = sq_malloc_single(struct switch_statement);
 	sw_stmt->alas = NULL;
 	sw_stmt->ncases = 0;
 	unsigned capacity = 8;
@@ -1119,7 +1119,7 @@ static struct switch_statement *parse_switch_statement() {
 
 static struct while_statement *parse_while_statement() {
 	GUARD(SQ_TK_WHILE);
-	struct while_statement *while_stmt = sq_malloc(sizeof(struct while_statement));
+	struct while_statement *while_stmt = sq_malloc_single(struct while_statement);
 	if (!(while_stmt->cond = parse_expression()))
 		sq_throw("missing condition for 'whilst'");
 
@@ -1129,7 +1129,7 @@ static struct while_statement *parse_while_statement() {
 
 static struct return_statement *parse_return_statement() {
 	GUARD(SQ_TK_RETURN);
-	struct return_statement *ret_stmt = sq_malloc(sizeof(struct return_statement));
+	struct return_statement *ret_stmt = sq_malloc_single(struct return_statement);
 
 	ret_stmt->value = parse_expression();
 
@@ -1146,7 +1146,7 @@ static struct expression *parse_throw_statement() {
 static struct trycatch_statement *parse_trycatch_statement() {
 	GUARD(SQ_TK_TRY);
 
-	struct trycatch_statement *tc = sq_malloc(sizeof(struct trycatch_statement));
+	struct trycatch_statement *tc = sq_malloc_single(struct trycatch_statement);
 	tc->try = parse_brace_statements("attempt");
 	EXPECT(SQ_TK_ELSE, "expected 'alas' after 'attempt'");
 	EXPECT(SQ_TK_IDENT, "expected an identifier after 'alas'");
@@ -1230,7 +1230,7 @@ static struct statements *parse_statements() {
 	}
 	untake();
 
-	struct statements *stmts = sq_malloc(sizeof(struct statements));
+	struct statements *stmts = sq_malloc_single(struct statements);
 	stmts->len = len;
 	stmts->stmts = list;
 	return stmts;

@@ -7,7 +7,7 @@
 static void extend_bytecode_cap(struct sq_compiler *compiler) {
 	if (compiler->code.len >= compiler->code.cap) {
 		compiler->code.cap *= 2;
-		compiler->code.ary = sq_realloc_vec(enum sq_opcode, compiler->code.ary, compiler->code.cap);
+		compiler->code.ary = sq_realloc_vec(union sq_bytecode, compiler->code.ary, compiler->code.cap);
 	}
 }
 
