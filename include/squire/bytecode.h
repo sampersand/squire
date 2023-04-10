@@ -27,6 +27,7 @@ enum sq_interrupt {
 	SQ_INT_BOOK_NEW     = 0x31, // [N,...,DST] DST <- N-length array.
 	SQ_INT_ARRAY_INSERT = 0x32, // [A,B,C,DST] A.insert(len=B,pos=C); (Stores in DST, though this is not intended)
 	SQ_INT_ARRAY_DELETE = 0x33, // [A,B,DST] DST <- A.delete(B)
+	SQ_INT_BABEL        = 0x34, // [A,...,B,DST] DST <- babel(exec=A,stdin=B,args=...)
 
 	SQ_INT_ARABIC       = 0x40, // [A,DST] DST <- A.to_numeral().arabic()
 	SQ_INT_ROMAN        = 0x41, // [A,DST] DST <- A.to_numeral().roman()

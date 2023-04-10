@@ -31,6 +31,7 @@ const char *sq_interrupt_repr(enum sq_interrupt interrupt) {
 
 	case SQ_INT_ARABIC: return "SQ_INT_ARABIC";
 	case SQ_INT_ROMAN: return "SQ_INT_ROMAN";
+	case SQ_INT_BABEL: return "SQ_INT_BABEL";
 
 	case SQ_INT_FOPEN: return "SQ_INT_FOPEN";
 	case SQ_INT_ASCII: return "SQ_INT_ASCII";

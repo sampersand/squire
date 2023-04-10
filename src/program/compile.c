@@ -807,6 +807,24 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		set_index(code, result = next_local(code));
 		break;
 
+	case SQ_PS_PBABEL: {
+		unsigned executable = compile_primary(code, primary->babel.executable);
+		unsigned args[SQ_BABEL_MAX_ARGC];
+		for (unsigned i = 0; i < primary->babel.nargs; ++i)
+			args[i] = compile_expression(code, primary->babel.args[i]);
+		unsigned stdin = compile_primary(code, primary->babel.stdin);
+
+		set_opcode(code, SQ_OC_INT);
+		set_interrupt(code, SQ_INT_BABEL);
+		set_index(code, executable);
+		set_index(code, stdin);
+		set_count(code, primary->babel.nargs);
+		for (unsigned i = 0; i < primary->babel.nargs; ++i)
+			set_index(code, args[i]);
+		set_index(code, result = next_local(code));
+		break;
+	}
+
 	default:
 		sq_bug("unknown primary class '%d'", primary->kind);
 	}

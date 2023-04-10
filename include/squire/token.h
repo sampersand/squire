@@ -31,6 +31,7 @@ enum sq_token_kind {
 	SQ_TK_CASE,
 	SQ_TK_REJOIN,
 	SQ_TK_KINGDOM,
+	SQ_TK_BABEL,
 	// TODO: `assert` as `challenge`?
 
 	SQ_TK_MACRO_VAR = 0x40,

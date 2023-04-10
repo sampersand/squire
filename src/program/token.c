@@ -428,6 +428,7 @@ static struct sq_token next_normal_token(void) {
 	CHECK_FOR_START_KW("rejoin",       SQ_TK_REJOIN);
 	CHECK_FOR_START_KW("path",         SQ_TK_CASE);
 	CHECK_FOR_START_KW("kingdom",      SQ_TK_KINGDOM);
+	CHECK_FOR_START_KW("babel",        SQ_TK_BABEL);
 
 	CHECK_FOR_START_KW("yea",          SQ_TK_YAY);
 	CHECK_FOR_START_KW("nay",          SQ_TK_NAY);

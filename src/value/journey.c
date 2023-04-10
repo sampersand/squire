@@ -2,6 +2,7 @@
 #include <squire/journey.h>
 #include <squire/text.h>
 #include <squire/program.h>
+#include <squire/parse.h>
 #include <squire/shared.h>
 #include <squire/form.h>
 #include <squire/book.h>
@@ -245,6 +246,109 @@ static void set_next_local(struct sq_stackframe *sf, sq_value value) {
 	set_local(sf, next_index(sf), value);
 }
 
+// todo: does this exist already?
+static int write_all(int fd, const void *buf, size_t nbytes) {
+	ssize_t tmp = 0;
+	while ((tmp = write(fd, buf, nbytes))) {
+		if (tmp < 0) return -1;
+		nbytes -= tmp;
+	} 
+	return 0;
+}
+/*
+static char *read_all(int fd) {
+	size_t buf_len = 0, buf_cap = 1024;
+	char *buf = sq_malloc_vec(char, buf_cap), *curr = buf;
+
+	ssize_t tmp = 0;
+	while ((tmp = write(fd, buf, nbytes))) {
+		if (tmp < 0) return free(buf), 0;
+		nbytes -= tmp;
+	} 
+	return 0;
+}
+struct sq_text *do_babel2(
+	const struct sq_text *executable,
+	const struct sq_text *executable_stdin,
+	unsigned nargs,
+	const struct sq_text **args
+) {
+	int in_fds[2], out_fds[2], status;
+	pid_t child_pid;
+	char *c_args[nargs + 2];
+	c_args[0] = sq_text_to_c_str(executable);
+	for (unsigned i = 0; i < nargs; ++i)
+		c_args[i + 1] = sq_text_to_c_str(args[i]);
+	c_args[nargs + 1] = 0;
+
+
+	// TODO: check these for errors.
+	pipe(in_fds);
+	pipe(out_fds);
+	write_all(in_fds[1], executable_stdin->ptr, executable_stdin->length);
+	close(in_fds[1]);
+
+	if (!(child_pid = fork())) {
+		dup2(in_fds[0], STDIN_FILENO);
+		dup2(out_fds[1], STDOUT_FILENO);
+		dup2(out_fds[1], STDERR_FILENO);
+		execvp(c_args[0], c_args);
+		perror("cant exec");
+		_Exit(1);
+	}
+
+	char *result = read_all(out_fds[0]);
+	close(out_fds[0]);
+	waitpid(child_pid, &status, 0);
+
+	for (unsigned i = 0; i <= nargs; ++i) free(c_args[i]);
+	return sq_text_new(result);
+}*/
+
+struct sq_text *do_babel(
+	const struct sq_text *executable,
+	const struct sq_text *executable_stdin,
+	unsigned nargs,
+	const struct sq_text **args
+) {
+	int in_fds[2], out_fds[2], status;
+	pid_t child_pid;
+
+	if (pipe(in_fds)) sq_throw_io("unable to create pipes");
+	if (pipe(out_fds)) {
+		sq_throw_io("unable to create pipes");
+	}
+	if (write_all(in_fds[1], executable_stdin->ptr, executable_stdin->length)) {
+		sq_throw_io("unable to write stdin");
+	}
+	close(in_fds[1]);
+
+	char *c_args[nargs + 2];
+	c_args[0] = sq_text_to_c_str(executable);
+	for (unsigned i = 0; i < nargs; ++i)
+		c_args[i + 1] = sq_text_to_c_str(args[i]);
+	c_args[nargs + 1] = 0;
+
+	if (!(child_pid = fork())) {
+		dup2(in_fds[0], STDIN_FILENO);
+		dup2(out_fds[1], STDOUT_FILENO);
+		dup2(out_fds[1], STDERR_FILENO);
+		execvp(c_args[0], c_args);
+		perror("cant exec");
+		_Exit(1);
+	}
+
+	char *result = malloc(1000);
+	read(out_fds[0], result, 1000);
+	close(out_fds[0]);
+	waitpid(child_pid, &status, 0);
+
+	for (unsigned i = 0; i <= nargs; ++i)
+		free(c_args[i]);
+	return sq_text_new(result);
+}
+
+
 #define MAX_INTERRUPT_OPERAND_COUNT 3
 static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 	switch (interrupt) {
@@ -274,6 +378,7 @@ static unsigned interrupt_operands(enum sq_interrupt interrupt) {
 
 	case SQ_INT_ARRAY_DELETE:
 	case SQ_INT_PTR_SET:
+	case SQ_INT_BABEL:
 		return 2;
 
 	case SQ_INT_CODEX_NEW:
@@ -532,6 +637,27 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		return;
 	}
 
+	// [A,...,B,DST] DST <- babel(exec=A,stdin=B,args=...)c
+	case SQ_INT_BABEL: {
+		unsigned amnt = next_count(sf);
+		struct sq_text *args[SQ_BABEL_MAX_ARGC], *executable, *stdin;
+
+		executable = sq_value_to_text(operands[0]);
+		for (unsigned i = 0; i < amnt; ++i)
+			args[i] = sq_value_to_text(*next_local(sf));
+		stdin = sq_value_to_text(operands[1]);
+
+		set_next_local(sf, 
+			sq_value_new_text(do_babel(executable, stdin, amnt, (const struct sq_text **) &*args))
+		);
+
+		sq_text_free(executable);
+		sq_text_free(stdin);
+		for (unsigned i = 0; i < amnt; ++i)
+			sq_text_free(args[i]);
+		return;
+
+	}
 
 	// [A,DST] DST <- A.to_numeral().arabic()
 	case SQ_INT_ARABIC:

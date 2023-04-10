@@ -268,6 +268,7 @@ struct primary {
 		SQ_PS_PBOOK,
 		SQ_PS_PCODEX,
 		SQ_PS_PCITE,
+		SQ_PS_PBABEL,
 
 		SQ_PS_PFNCALL,
 		SQ_PS_PFACCESS,
@@ -283,6 +284,14 @@ struct primary {
 		char *variable;
 		struct book *book;
 		struct dict *dict;
+		struct {
+#ifndef SQ_BABEL_MAX_ARGC
+# define SQ_BABEL_MAX_ARGC 64
+#endif /* !SQ_BABEL_MAX_ARGC */
+			struct primary *executable, *stdin;
+			struct expression *args[SQ_BABEL_MAX_ARGC];
+			unsigned nargs;
+		} babel;
 
 		struct function_call fncall;
 		struct field_access faccess;

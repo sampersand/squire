@@ -7,6 +7,7 @@
 
 #include <string.h>
 
+#define parse_error sq_throw
 struct sq_token last;
 bool rewound;
 
@@ -223,7 +224,36 @@ static struct primary *parse_primary() {
 		primary.kind = SQ_PS_PCITE;
 		primary.expr = parse_expression();
 		break;
-		
+
+	case SQ_TK_BABEL:
+		primary.kind = SQ_PS_PBABEL;
+		if (!(primary.babel.executable = parse_primary()))
+			parse_error("expected a primary after `babel`");
+
+		if (!(primary.babel.nargs = (take().kind == SQ_TK_LBRACE)))
+			untake();
+		else {
+			primary.babel.nargs = 0;
+			while (take().kind != SQ_TK_RBRACE) {
+				untake();
+				if (SQ_BABEL_MAX_ARGC == primary.babel.nargs)
+					parse_error("too many arguments in babel expr (%d max)", SQ_BABEL_MAX_ARGC);
+
+				if (!(primary.babel.args[primary.babel.nargs++] = parse_expression()))
+						parse_error("expected a expression within args.");
+
+				if (take().kind == SQ_TK_COMMA) 
+					continue;
+
+				untake();
+				EXPECT(SQ_TK_RBRACE, "expected `}` or a text within args.");
+				break;
+			}
+		}
+		if (!(primary.babel.stdin = parse_primary()))
+			parse_error("expected stdin after `babel`'s excecutable (and possibly args)");
+		break;
+
 	case SQ_TK_INDEX:
 		primary.kind = SQ_PS_PBOOK;
 		primary.book = sq_malloc_single(struct book);

@@ -50,6 +50,14 @@ void sq_text_dealloc(struct sq_text *text) {
 	free(text);
 }
 
+
+char *sq_text_to_c_str(const struct sq_text *text) {
+	char *ret = sq_malloc_vec(char, text->length + 1);
+	memcpy(ret, text->ptr, text->length);
+	ret[text->length] = '\0';
+	return ret;
+}
+
 static char num2hex(char c) {
 	return c + (c <= 9 ? '0' : 'A' - 10);
 }
