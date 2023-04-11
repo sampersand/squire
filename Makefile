@@ -1,69 +1,64 @@
-CC?=gcc
-CFLAGS+=-Wall -Wextra -Wpedantic -std=gnu11
-SRCDIR?=src
-OBJDIR?=obj
-BINDIR?=bin
+.DEFAULT_GOAL := all
 
-exe=$(BINDIR)/squire
-dyn=$(BINDIR)/libsquire.so
-objects=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
-objects+=$(patsubst $(SRCDIR)/value/%.c,$(OBJDIR)/value/%.o,$(wildcard $(SRCDIR)/value/*.c))
-objects+=$(patsubst $(SRCDIR)/program/%.c,$(OBJDIR)/program/%.o,$(wildcard $(SRCDIR)/program/*.c))
-objects+=$(patsubst $(SRCDIR)/other/%.c,$(OBJDIR)/other/%.o,$(wildcard $(SRCDIR)/other/*.c))
-objects+=$(patsubst $(SRCDIR)/other/io/%.c,$(OBJDIR)/other/io/%.o,$(wildcard $(SRCDIR)/other/io/*.c))
-allcfiles=$(wildcard $(SRCDIR)/*.c) \
-		$(wildcard $(SRCDIR)/program/*.c) \
-		$(wildcard $(SRCDIR)/value/*.c) \
-		$(wildcard $(SRCDIR)/other/*.c) \
-		$(wildcard $(SRCDIR)/other/io/*.c)
+## Special options
+# Things that generally dont need to be overwritten but can be if needed.
+ROOTDIR?=.
+OBJDIR:=$(ROOTDIR)/obj
+EXECUTABLE=$(ROOTDIR)/$(projectname)
+COMPILER_C_FLAGS?=
 
-CFLAGS+=-F$(SRCDIR) -Iinclude
+## Setup variables
+# These can be modified if desired at project creation, but shouldn't need to
+# be updated when compiling.
+projectname:=squire
+srcdir:=$(ROOTDIR)/src
+includedir:=$(ROOTDIR)/include/$(projectname)
+override required_compiler_flags:=\
+	-I$(dir $(includedir)) \
+	-Wall -Wpedantic -Wextra
 
-ifeq ($(MAKECMDGOALS),debug)
-	CFLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
-	NJOKE=1
-else ifeq ($(MAKECMDGOALS),optimized)
-	CFLAGS+=-flto -DNDEBUG -O3 --DSQ_RELEASE_FAST
+## Internal variables
+# These don't ever need to be edited
+recurisve-c-files=$(foreach path,\
+	$(wildcard $(1)/*),\
+	$(if $(filter %.c,$(path)),$(path),$(call recurisve-c-files,$(path))))
+sources:=$(call recurisve-c-files,$(srcdir))
+objects:=$(sources:$(srcdir)/%.c=$(OBJDIR)/%.o)
+
+## Custom logic
+ifdef optimized
+	COMPILER_C_FLAGS+=-flto -O3 -DNDEBUG -DSQ_RELEASE_FAST
+else ifdef debug
+	COMPILER_C_FLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
+	njoke:=1
+else
+	COMPILER_C_FLAGS+=-g -O1
 endif
 
-ifdef NJOKE
-CFLAGS+=-DSQ_NMOON_JOKE
+ifdef njoke
+	COMPILER_C_FLAGS+=-DSQ_NMOON_JOKE
 endif
 
-ifdef COMPUTED_GOTOS
-CFLAGS+=-DKN_COMPUTED_GOTOS -Wno-gnu-label-as-value -Wno-gnu-designator
-endif
+override cflags:=$(COMPILER_C_FLAGS) $(CFLAGS) $(required_compiler_flags)
+## end custom logic
 
-CFLAGS+=$(CEXTRA)
-CFLAGS+=$(EFLAGS)
-.PHONY: all optimized clean shared
+.PHONY: all
+all: $(objects) $(EXECUTABLE)
 
-debug: $(exe)
-all: $(exe)
-shared: $(dyn)
-
+.PHONY: clean
 clean:
-	@-rm -r $(BINDIR) $(BINDIR)
+	-rm -rf $(OBJDIR) $(EXECUTABLE)
 
-optimized: $(allcfiles)
-	$(CC) $(CFLAGS) -o $(exe) $+
+# Compiles the executable
+$(EXECUTABLE): $(objects)
+	@mkdir -p $(@D)
+	$(CC) $(cflags) -o $@ $+
 
-$(exe): $(objects) | $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $+
+# `token.c` is wonky cause it `#include`s a c file. 
+$(OBJDIR)/program/token.o: $(srcdir)/program/token.c $(srcdir)/program/macro.c
+	$(CC) $(cflags) -o $@ -c $<
 
-$(dyn): $(objects) | $(BINDIR)
-	$(CC) $(CFLAGS) -shared -o $@ $+
-
-$(BINDIR):
-	@mkdir -p $(BINDIR)
-
-$(OBJDIR):
-	@mkdir -p $(OBJDIR)/value $(OBJDIR)/program $(OBJDIR)/other/io
-
-$(objects): | $(OBJDIR)
-
-$(OBJDIR)/program/token.o: $(SRCDIR)/program/token.c $(SRCDIR)/program/macro.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+# Create the object files. The `include` can be uncommented if that's what youre doing
+$(OBJDIR)/%.o: $(srcdir)/%.c #$(includedir)/%.h
+	@mkdir -p $(@D)
+	$(CC) $(cflags) -o $@ -c $<
