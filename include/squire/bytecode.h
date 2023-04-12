@@ -40,56 +40,72 @@ enum sq_interrupt {
 };
 
 
+#define SQ_OPCODE_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
+#define SQ_OPCODE_SHIFT_AMOUNT 2
+_Static_assert(SQ_OPCODE_MAX_ARITY < (1 << SQ_OPCODE_SHIFT_AMOUNT), "max arity and shift amnt mismatch");
+
+#define SQ_OPCODE(arity, id) ( \
+	((id) << SQ_OPCODE_SHIFT_AMOUNT) | (arity) \
+)
+	
+/*
+ * bottom 2 bits are size
+ */
 enum sq_opcode {
-	SQ_OC_UNDEFINED     = 0x00, // should never occur in code
-	SQ_OC_NOOP          = 0x01, // [] do nothing
-	SQ_OC_MOV           = 0x02, // [SRC,DST] Dst <- SRC
-	SQ_OC_INT           = 0x03, // [INT,...] Does the interrupt.
+	SQ_OC_UNDEFINED     = SQ_OPCODE(0,  0), // should never occur in code
+	SQ_OC_NOOP          = SQ_OPCODE(0,  1), // [] do nothing
+	SQ_OC_MOV           = SQ_OPCODE(1,  0), // [SRC,DST] Dst <- SRC
+	SQ_OC_INT           = SQ_OPCODE(0,  2), // [INT,...] Does the interrupt.
 
-	SQ_OC_JMP           = 0x20, // [POS] IP <- POS
-	SQ_OC_JMP_FALSE     = 0x21, // [CND,POS] IP <- POS if CND is false
-	SQ_OC_JMP_TRUE      = 0x22, // [CND,POS] IP <- POS if CND if true
-	SQ_OC_CALL          = 0x23, // [FN,NUM,...] Calls FN; NUM args are read
-	SQ_OC_RETURN        = 0x24, // [IDX] Returns the given value
-	SQ_OC_COMEFROM      = 0x25, // [AMNT,...] Performs COMEFROM for AMNT times
-	SQ_OC_TRYCATCH      = 0x26, // [POS,ERR] Go when `catapult`s occur, set `ERR`
-	SQ_OC_THROW         = 0x27, // [IDX] Throws an exception
-	SQ_OC_POPTRYCATCH   = 0x29, // [] Removes a `catch` block from the stack.
+	SQ_OC_JMP           = SQ_OPCODE(0,  3), // [POS] IP <- POS
+	SQ_OC_JMP_TRUE      = SQ_OPCODE(1,  1), // [CND,POS] IP <- POS if CND if true
+	SQ_OC_JMP_FALSE     = SQ_OPCODE(1,  2), // [CND,POS] IP <- POS if CND is false
 #ifndef SQ_NMOON_JOKE
-	SQ_OC_WERE_JMP      = 0x2A, // same as JMP_FALSE, but 1% chance not to on full moon
+	SQ_OC_WERE_JMP      = SQ_OPCODE(1,  3), // same as JMP_FALSE, but 1% chance not to on full moon
 #endif /* !SQ_MOON_JOKE */
-	SQ_OC_CITE          = 0x2B, // [A,DST] DST <- &A
+	SQ_OC_CALL          = SQ_OPCODE(1,  4), // [FN,NUM,...] Calls FN; NUM args are read
+	SQ_OC_RETURN        = SQ_OPCODE(1,  7), // [IDX] Returns the given value
+	SQ_OC_COMEFROM      = SQ_OPCODE(0,  4), // [AMNT,...] Performs COMEFROM for AMNT times
+	SQ_OC_TRYCATCH      = SQ_OPCODE(0,  5), // [POS,ERR] Go when `catapult`s occur, set `ERR`
+	SQ_OC_THROW         = SQ_OPCODE(1,  8), // [IDX] Throws an exception
+	SQ_OC_POPTRYCATCH   = SQ_OPCODE(0,  6), // [] Removes a `catch` block from the stack.
+	SQ_OC_CITE          = SQ_OPCODE(0,  7), // [A,DST] DST <- &A
 
-	SQ_OC_NOT           = 0x40, // [A,DST] DST <- !A
-	SQ_OC_NEG           = 0x41, // [A,DST] DST <- -A` (ie unary minus)
-	SQ_OC_EQL           = 0x42, // [A,B,DST] DST <- A == B
-	SQ_OC_NEQ           = 0x43, // [A,B,DST] DST <- A != B
-	SQ_OC_LTH           = 0x44, // [A,B,DST] DST <- A < B
-	SQ_OC_GTH           = 0x45, // [A,B,DST] DST <- A > B
-	SQ_OC_LEQ           = 0x46, // [A,B,DST] DST <- A <= B
-	SQ_OC_GEQ           = 0x47, // [A,B,DST] DST <- A >= B
-	SQ_OC_CMP           = 0x48, // [A,B,DST] DST <- A <=> B
-	SQ_OC_ADD           = 0x49, // [A,B,DST] DST <- A + B
-	SQ_OC_SUB           = 0x4A, // [A,B,DST] DST <- A - B
-	SQ_OC_MUL           = 0x4B, // [A,B,DST] DST <- A * B
-	SQ_OC_DIV           = 0x4C, // [A,B,DST] DST <- A / B
-	SQ_OC_MOD           = 0x4D, // [A,B,DST] DST <- A % B
-	SQ_OC_POW           = 0x4E, // [A,B,DST] DST <- A ^ B
-	SQ_OC_INDEX         = 0x4F, // [A,B,DST] DST <- A[B]
-	SQ_OC_INDEX_ASSIGN  = 0x50, // [A,B,C] Performs `A[B]=C`; no destination.
-	SQ_OC_MATCHES       = 0x51, // [A,B,DST] DST <- A.matches(B)
-	SQ_OC_PAT_AND       = 0x52, // [A,B,DST] DST <- A & B
-	SQ_OC_PAT_OR        = 0x53, // [A,B,DST] DST <- A | B
-	SQ_OC_PAT_NOT       = 0x54, // [A,DST] DST <- ~A
+	SQ_OC_NOT           = SQ_OPCODE(1, 10), // [A,DST] DST <- !A
+	SQ_OC_NEG           = SQ_OPCODE(1, 11), // [A,DST] DST <- -A` (ie unary minus)
+	SQ_OC_EQL           = SQ_OPCODE(2,  0), // [A,B,DST] DST <- A == B
+	SQ_OC_NEQ           = SQ_OPCODE(2,  1), // [A,B,DST] DST <- A != B
+	SQ_OC_LTH           = SQ_OPCODE(2,  2), // [A,B,DST] DST <- A < B
+	SQ_OC_GTH           = SQ_OPCODE(2,  3), // [A,B,DST] DST <- A > B
+	SQ_OC_LEQ           = SQ_OPCODE(2,  4), // [A,B,DST] DST <- A <= B
+	SQ_OC_GEQ           = SQ_OPCODE(2,  5), // [A,B,DST] DST <- A >= B
+	SQ_OC_CMP           = SQ_OPCODE(2,  6), // [A,B,DST] DST <- A <=> B
+	SQ_OC_ADD           = SQ_OPCODE(2,  7), // [A,B,DST] DST <- A + B
+	SQ_OC_SUB           = SQ_OPCODE(2,  8), // [A,B,DST] DST <- A - B
+	SQ_OC_MUL           = SQ_OPCODE(2,  9), // [A,B,DST] DST <- A * B
+	SQ_OC_DIV           = SQ_OPCODE(2, 10), // [A,B,DST] DST <- A / B
+	SQ_OC_MOD           = SQ_OPCODE(2, 11), // [A,B,DST] DST <- A % B
+	SQ_OC_POW           = SQ_OPCODE(2, 12), // [A,B,DST] DST <- A ^ B
+	SQ_OC_INDEX         = SQ_OPCODE(2, 13), // [A,B,DST] DST <- A[B]
+	SQ_OC_INDEX_ASSIGN  = SQ_OPCODE(3,  0), // [A,B,C] Performs `A[B]=C`; no destination.
+	SQ_OC_MATCHES       = SQ_OPCODE(2, 14), // [A,B,DST] DST <- A.matches(B)
+	SQ_OC_PAT_AND       = SQ_OPCODE(2, 15), // [A,B,DST] DST <- A & B
+	SQ_OC_PAT_OR        = SQ_OPCODE(2, 16), // [A,B,DST] DST <- A | B
+	SQ_OC_PAT_NOT       = SQ_OPCODE(1,  9), // [A,DST] DST <- ~A
 
-	SQ_OC_CLOAD         = 0x60, // [CNST,DST] DST <- constant `CNST`
-	SQ_OC_GLOAD         = 0x61, // [GLBL,DST] DST <- global `GLBL`
-	SQ_OC_GSTORE        = 0x62, // [SRC,GLBL] global GLBL <- SRC
-	SQ_OC_ILOAD         = 0x63, // [A,B,DST] DST <- A.B
-	SQ_OC_ISTORE        = 0x64, // [A,B,C,DST] Performs `A.B=C`; (Stores in DST, though this is not intended)
-	SQ_OC_FEGENUS_STORE = 0x65, // [A,B,C] Sets `A.B`'s kind to constant `C` (essence)
-	SQ_OC_FMGENUS_STORE = 0x66, // [A,B,C] Sets `A.B`'s kind to constant `C` (matter)
+	SQ_OC_CLOAD         = SQ_OPCODE(0,  9), // [CNST,DST] DST <- constant `CNST`
+	SQ_OC_GLOAD         = SQ_OPCODE(0, 10), // [GLBL,DST] DST <- global `GLBL`
+	SQ_OC_GSTORE        = SQ_OPCODE(1, 12), // [SRC,GLBL] global GLBL <- SRC
+	SQ_OC_ILOAD         = SQ_OPCODE(1,  6), // [A,B,DST] DST <- A.B
+	SQ_OC_ISTORE        = SQ_OPCODE(2, 17), // [A,B,C,DST] Performs `A.B=C`; (Stores in DST, though this is not intended)
+	SQ_OC_FEGENUS_STORE = SQ_OPCODE(2, 18), // [A,B,C] Sets `A.B`'s kind to constant `C` (essence)
+	SQ_OC_FMGENUS_STORE = SQ_OPCODE(2, 19), // [A,B,C] Sets `A.B`'s kind to constant `C` (matter)
 };
+#undef SQ_OPCODE
+
+static inline unsigned sq_opcode_arity(enum sq_opcode opcode) {
+	return opcode & ((1 << SQ_OPCODE_SHIFT_AMOUNT) - 1);
+}
 
 union sq_bytecode {
 	enum sq_opcode opcode;

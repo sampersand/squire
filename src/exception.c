@@ -14,7 +14,7 @@ sq_value exception;
 unsigned current_exception_handler;
 
 // very basics of an exception with a form. todo: that
-struct sq_form sq_exception_form;
+struct sq_form sq_exception_form, sq_io_exception_form;
 
 void sq_exception_init(struct sq_program *program) {
 	sq_exception_form.name = "Rock";
@@ -62,18 +62,6 @@ void sq_exception_init(struct sq_program *program) {
 
 }
 
-void sq_throw2(struct sq_form *form, const char *fmt, ...) {
-	(void) form;
-
-	char *message;
-	va_list args;
-	va_start(args, fmt);
-	vasprintf(&message, fmt, args);
-	va_end(args);
-
-	sq_throw_value(sq_value_new_text(sq_text_new(message)));
-}
-
 void sq_throw_value(sq_value value)  {
 	if (!current_exception_handler) {
 		fprintf(stderr, "uncaught exception encountered: ");
@@ -88,16 +76,14 @@ void sq_throw_value(sq_value value)  {
 	longjmp(exception_handlers[--current_exception_handler], 1);
 }
 
-void sq_throw_io(const char *fmt, ...) {
-	const char *error = strerror(errno);
+void sq_throw2(struct sq_form *form, const char *fmt, ...) {
+	(void) form;
+
 	char *message;
 	va_list args;
 	va_start(args, fmt);
 	vasprintf(&message, fmt, args);
 	va_end(args);
 
-	char *msg2;
-	asprintf(&msg2, "io error %s: %s", message, error);
-
-	sq_throw_value(sq_value_new_text(sq_text_new(msg2)));
+	sq_throw_value(sq_value_new_text(sq_text_new(message)));
 }

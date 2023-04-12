@@ -703,86 +703,38 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	}
 }
 
-static unsigned normal_operands(enum sq_opcode opcode) {
-	switch (opcode) {
-		case SQ_OC_MOV:
-		case SQ_OC_JMP_TRUE:
-		case SQ_OC_JMP_FALSE:
-#ifndef SQ_NMOON_JOKE
-		case SQ_OC_WERE_JMP:
-#endif /* SQ_NMOON_JOKE */
-		case SQ_OC_NOT:
-		case SQ_OC_NEG:
-		case SQ_OC_CALL:
-		case SQ_OC_GSTORE:
-		case SQ_OC_ILOAD:
-		case SQ_OC_RETURN:
-		case SQ_OC_THROW:
-		case SQ_OC_PAT_NOT:
-			return 1;
-
-		case SQ_OC_EQL:
-		case SQ_OC_NEQ:
-		case SQ_OC_LTH:
-		case SQ_OC_GTH:
-		case SQ_OC_LEQ:
-		case SQ_OC_GEQ:
-		case SQ_OC_CMP:
-		case SQ_OC_ADD:
-		case SQ_OC_SUB:
-		case SQ_OC_MUL:
-		case SQ_OC_DIV:
-		case SQ_OC_MOD:
-		case SQ_OC_POW:
-		case SQ_OC_MATCHES:
-		case SQ_OC_PAT_AND:
-		case SQ_OC_PAT_OR:
-		case SQ_OC_INDEX:
-		case SQ_OC_ISTORE:
-		case SQ_OC_FEGENUS_STORE:
-		case SQ_OC_FMGENUS_STORE:
-			return 2;
-
-		case SQ_OC_INDEX_ASSIGN:
-			return 3;
-
-		case SQ_OC_CITE:
-		default:
-			return 0;
-	}
-}
-
-#define MAX_OPERAND_COUNT 3 // the max amount of operands (3) is from INDEX_ASSIGN
 sq_value run_stackframe(struct sq_stackframe *sf) {
 	enum sq_opcode opcode;
-	sq_value operands[MAX_OPERAND_COUNT];
+	sq_value operands[SQ_OPCODE_MAX_ARITY], result;
 	unsigned arity, index;
 	const struct sq_codeblock *code = &sf->pattern->code;
 
 	while (sf->ip < code->codelen) {
+#ifndef NDEBUG
+		result = SQ_UNDEFINED;
+#endif
 		opcode = next_bytecode(sf).opcode;
-		arity = normal_operands(opcode);
+		arity = sq_opcode_arity(opcode);
 
 		for (unsigned i = 0; i < arity; ++i)
 			operands[i] = *next_local(sf); // note we do not clone it!
 
-		switch (opcode) {
+#define SET_RESULT(val) do { result = val; goto push_result; } while(0)
 
+		switch (opcode) {
 	/*** Misc ***/
+		case SQ_OC_UNDEFINED:
+			sq_bug("encountered SQ_OC_UNDEFINED");
 
 		case SQ_OC_NOOP:
 			continue;
 
 		case SQ_OC_MOV:
-			set_next_local(sf, sq_value_clone(operands[0]));
-			continue;
+			SET_RESULT(sq_value_clone(operands[0]));
 
 		case SQ_OC_INT:
 			handle_interrupt(sf);
 			continue;
-
-		case SQ_OC_UNDEFINED:
-			sq_bug("encountered SQ_OC_UNDEFINED %s", "");
 
 	/*** Control Flow ***/
 		case SQ_OC_JMP:
@@ -795,8 +747,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 		case SQ_OC_WERE_JMP:
 #endif /* SQ_NMOON_JOKE */
 			index = next_index(sf);
-			bool should_jump =
-				sq_value_to_veracity(operands[0]) == (opcode == SQ_OC_JMP_TRUE);
+			bool should_jump = sq_value_to_veracity(operands[0]) == (opcode == SQ_OC_JMP_TRUE);
 
 #ifndef SQ_NMOON_JOKE
 			if (opcode == SQ_OC_WERE_JMP && sq_moon_joke_does_were_flip())
@@ -826,8 +777,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			for (unsigned i = 0; i < pargc; ++i)
 				args.pargv[i] = sq_value_clone(*next_local(sf));
 
-			set_next_local(sf, sq_value_call(operands[0], args));
-			continue;
+			SET_RESULT(sq_value_call(operands[0], args));
 		}
 
 		case SQ_OC_RETURN:
@@ -861,83 +811,34 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			ptr->refcount = 1;
 			ptr->kind = SQ_OK_CITATION;
 			ptr->citation = next_local(sf);
-			set_next_local(sf, sq_value_new(ptr));
-			break;
+			SET_RESULT(sq_value_new(ptr));
 		}
 
 	/** Logic **/
-		case SQ_OC_NOT:
-			set_next_local(sf, sq_value_new(sq_value_not(operands[0])));
-			continue;
-
-		case SQ_OC_EQL:
-			set_next_local(sf, sq_value_new(sq_value_eql(operands[0], operands[1])));
-			continue;
-
-		case SQ_OC_NEQ:
-			set_next_local(sf, sq_value_new(sq_value_neq(operands[0], operands[1])));
-			continue;
-
-		case SQ_OC_LTH:
-			set_next_local(sf, sq_value_new(sq_value_lth(operands[0], operands[1])));
-			continue;
-
-		case SQ_OC_GTH:
-			set_next_local(sf, sq_value_new(sq_value_gth(operands[0], operands[1])));
-			continue;
-
-		case SQ_OC_LEQ:
-			set_next_local(sf, sq_value_new(sq_value_leq(operands[0], operands[1])));
-			continue;
-
-		case SQ_OC_GEQ:
-			set_next_local(sf, sq_value_new(sq_value_geq(operands[0], operands[1])));
-			continue;
-
-		case SQ_OC_CMP:
-			set_next_local(sf, sq_value_new(sq_value_cmp(operands[0], operands[1])));
-			continue;
+		case SQ_OC_NOT: SET_RESULT(sq_value_new(sq_value_not(operands[0])));
+		case SQ_OC_EQL: SET_RESULT(sq_value_new(sq_value_eql(operands[0], operands[1])));
+		case SQ_OC_NEQ: SET_RESULT(sq_value_new(sq_value_neq(operands[0], operands[1])));
+		case SQ_OC_LTH: SET_RESULT(sq_value_new(sq_value_lth(operands[0], operands[1])));
+		case SQ_OC_GTH: SET_RESULT(sq_value_new(sq_value_gth(operands[0], operands[1])));
+		case SQ_OC_LEQ: SET_RESULT(sq_value_new(sq_value_leq(operands[0], operands[1])));
+		case SQ_OC_GEQ: SET_RESULT(sq_value_new(sq_value_geq(operands[0], operands[1])));
+		case SQ_OC_CMP: SET_RESULT(sq_value_new(sq_value_cmp(operands[0], operands[1])));
 
 	/** Math **/
-		case SQ_OC_NEG:
-			set_next_local(sf, sq_value_neg(operands[0]));
-			continue;
-
-		case SQ_OC_ADD:
-			set_next_local(sf, sq_value_add(operands[0], operands[1]));
-			continue;
-
-		case SQ_OC_SUB:
-			set_next_local(sf, sq_value_sub(operands[0], operands[1]));
-			continue;
-
-		case SQ_OC_MUL:
-			set_next_local(sf, sq_value_mul(operands[0], operands[1]));
-			continue;
-
-		case SQ_OC_DIV:
-			set_next_local(sf, sq_value_div(operands[0], operands[1]));
-			continue;
-
-		case SQ_OC_MOD:
-			set_next_local(sf, sq_value_mod(operands[0], operands[1]));
-			continue;
-
-		case SQ_OC_POW:
-			set_next_local(sf, sq_value_pow(operands[0], operands[1]));
-			continue;
-
-		case SQ_OC_INDEX:
-			set_next_local(sf, sq_value_index(operands[0], operands[1]));
-			continue;
-
+		case SQ_OC_NEG: SET_RESULT(sq_value_neg(operands[0]));
+		case SQ_OC_ADD: SET_RESULT(sq_value_add(operands[0], operands[1]));
+		case SQ_OC_SUB: SET_RESULT(sq_value_sub(operands[0], operands[1]));
+		case SQ_OC_MUL: SET_RESULT(sq_value_mul(operands[0], operands[1]));
+		case SQ_OC_DIV: SET_RESULT(sq_value_div(operands[0], operands[1]));
+		case SQ_OC_MOD: SET_RESULT(sq_value_mod(operands[0], operands[1]));
+		case SQ_OC_POW: SET_RESULT(sq_value_pow(operands[0], operands[1]));
+		case SQ_OC_INDEX: SET_RESULT(sq_value_index(operands[0], operands[1]));
 		case SQ_OC_INDEX_ASSIGN:
 			sq_value_index_assign(operands[0], sq_value_clone(operands[1]), sq_value_clone(operands[2]));
 			continue;
 
 		case SQ_OC_MATCHES:
-			set_next_local(sf, sq_value_new(sq_value_matches(operands[0], operands[1])));
-			continue;
+			SET_RESULT(sq_value_new(sq_value_matches(operands[0], operands[1])));
 
 		case SQ_OC_PAT_NOT:
 		case SQ_OC_PAT_OR:
@@ -954,8 +855,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 				helper->helper.kind = opcode == SQ_OC_PAT_AND ? SQ_PH_AND : SQ_PH_OR;
 			}
 
-			set_next_local(sf, sq_value_new(helper));
-			continue;
+			SET_RESULT(sq_value_new(helper));
 		}
 
 	/*** Interpreter Stuff ***/
@@ -963,15 +863,13 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			index = next_index(sf);
 			assert(index < code->nconsts);
 
-			set_next_local(sf, sq_value_clone(code->consts[index]));
-			continue;
+			SET_RESULT(sq_value_clone(code->consts[index]));
 
 		case SQ_OC_GLOAD:
 			index = next_index(sf);
 			assert(index < sf->journey->program->nglobals);
 
-			set_next_local(sf, sq_value_clone(sf->journey->program->globals[index]));
-			continue;
+			SET_RESULT(sq_value_clone(sf->journey->program->globals[index]));
 
 		case SQ_OC_GSTORE:
 			index = next_index(sf);
@@ -986,8 +884,7 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			assert(index < code->nconsts);
 			assert(sq_value_is_text(operands[1] = code->consts[index]));
 
-			set_next_local(sf, sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
-			continue;
+			SET_RESULT(sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
 
 		case SQ_OC_ISTORE:
 			index = next_index(sf);
@@ -998,19 +895,16 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
 			continue;
 
-		case SQ_OC_FEGENUS_STORE: {
+		case SQ_OC_FEGENUS_STORE:
 			index = next_index(sf);
-
 			assert(sq_value_is_form(operands[0]));
 			assert(index < sq_value_as_form(operands[0])->nessences);
 			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
 			sq_value_as_form(operands[0])->essences[index].genus = sq_value_clone(operands[1]);
 			continue;
-		}
 
 		case SQ_OC_FMGENUS_STORE:
 			index = next_index(sf);
-
 			assert(sq_value_is_form(operands[0]));
 			assert(index < sq_value_as_form(operands[0])->nmatter);
 			assert(sq_value_as_form(operands[0])->matter[index].genus == SQ_UNDEFINED);
@@ -1021,6 +915,12 @@ sq_value run_stackframe(struct sq_stackframe *sf) {
 			sq_bug("unknown opcode: %d", opcode);
 		}
 
+		SQ_UNREACHABLE;
+
+	push_result:
+
+		assert(result != SQ_UNDEFINED);
+		set_next_local(sf, result);
 	}
 
 	return SQ_NI;

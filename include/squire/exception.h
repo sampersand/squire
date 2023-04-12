@@ -8,12 +8,14 @@
 #include <setjmp.h>
 #include <squire/value.h>
 #include <squire/shared.h>
+#include <stdio.h>
+#include <errno.h>
 
 // jmp_buf redo_location;
 extern jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
 extern sq_value exception;
 extern unsigned current_exception_handler;
-extern struct sq_form sq_exception_form;
+extern struct sq_form sq_exception_form, sq_io_exception_form;
 
 struct sq_program;
 void sq_exception_init(struct sq_program *program);
@@ -24,6 +26,9 @@ void sq_throw2(struct sq_form *form, const char *fmt, ...) SQ_ATTR(cold,noreturn
 #define sq_throw(...) sq_throw2(&sq_exception_form, __VA_ARGS__)
 
 void sq_throw_io(const char *fmt, ...) SQ_ATTR(cold,noreturn);
+
+#define sq_throw_io(...) sq_throw_io_(__VA_ARGS__, strerror(errno))
+#define sq_throw_io_(fmt, ...) sq_throw2(&sq_io_exception_form, "io error: " fmt ": %s", __VA_ARGS__)
 
 /*
   catapult "lol" # you catapult a "projectile"
