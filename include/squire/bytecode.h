@@ -1,43 +1,55 @@
 #ifndef SQ_BYTECODE_H
 #define SQ_BYTECODE_H
 
+#define SQ_INTERRUPT_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
+#define SQ_INTERRUPT_SHIFT_AMOUNT 2
+_Static_assert(SQ_INTERRUPT_MAX_ARITY < (1 << SQ_INTERRUPT_SHIFT_AMOUNT), "max arity and shift amnt mismatch");
+
+#define SQ_INTERRUPT(arity, id) ( \
+	((id) << SQ_INTERRUPT_SHIFT_AMOUNT) | (arity) \
+)
+
 enum sq_interrupt {
-	SQ_INT_UNDEFINED    = 0x00,
-	SQ_INT_TONUMERAL    = 0x01, // [A,DST] DST <- A.to_numeral()
-	SQ_INT_TOTEXT       = 0x02, // [A,DST] DST <- A.to_text()
-	SQ_INT_TOVERACITY   = 0x03, // [A,DST] DST <- A.to_veracity()
-	SQ_INT_TOBOOK       = 0x04, // [A,DST] DST <- A.to_book()
-	SQ_INT_TOCODEX      = 0x05, // [A,DST] DST <- A.to_codex()
-	SQ_INT_KINDOF       = 0x06, // [A,DST] DST <- A.genus
+	SQ_INT_UNDEFINED    = SQ_INTERRUPT(1,  0),
+	SQ_INT_TONUMERAL    = SQ_INTERRUPT(1,  1), // [A,DST] DST <- A.to_numeral()
+	SQ_INT_TOTEXT       = SQ_INTERRUPT(1,  2), // [A,DST] DST <- A.to_text()
+	SQ_INT_TOVERACITY   = SQ_INTERRUPT(1,  3), // [A,DST] DST <- A.to_veracity()
+	SQ_INT_TOBOOK       = SQ_INTERRUPT(1,  4), // [A,DST] DST <- A.to_book()
+	SQ_INT_TOCODEX      = SQ_INTERRUPT(1,  5), // [A,DST] DST <- A.to_codex()
+	SQ_INT_KINDOF       = SQ_INTERRUPT(1,  6), // [A,DST] DST <- A.genus
 
-	SQ_INT_PRINT        = 0x10, // [A,DST] Print `A`, DST <- ni
-	SQ_INT_PRINTLN      = 0x11, // [A,DST] Print `A` with a newline, DST <- ni
-	SQ_INT_DUMP         = 0x12, // [A,DST] Dumps out `A`, DST <- A
-	SQ_INT_PROMPT       = 0x13, // [DST] DST <- next line from stdin
-	SQ_INT_SYSTEM       = 0x14, // [CMD,DST] DST <- stdout of running `cmd`.
-	SQ_INT_EXIT         = 0x15, // [CODE] Exits with the given code.
-	SQ_INT_RANDOM       = 0x16, // [DST] DST <- random numeral
-	SQ_INT_PTR_GET      = 0x17, // [A,DST] DST <- *A
-	SQ_INT_PTR_SET      = 0x18, // [A,B,DST] DST <- *A = B
+	SQ_INT_PRINT        = SQ_INTERRUPT(1, 10), // [A,DST] Print `A`, DST <- ni
+	SQ_INT_PRINTLN      = SQ_INTERRUPT(1, 11), // [A,DST] Print `A` with a newline, DST <- ni
+	SQ_INT_DUMP         = SQ_INTERRUPT(1, 12), // [A,DST] Dumps out `A`, DST <- A
+	SQ_INT_PROMPT       = SQ_INTERRUPT(0,  0), // [DST] DST <- next line from stdin
+	SQ_INT_SYSTEM       = SQ_INTERRUPT(1, 13), // [CMD,DST] DST <- stdout of running `cmd`.
+	SQ_INT_EXIT         = SQ_INTERRUPT(1, 14), // [CODE] Exits with the given code.
+	SQ_INT_RANDOM       = SQ_INTERRUPT(0,  1), // [DST] DST <- random numeral
+	SQ_INT_PTR_GET      = SQ_INTERRUPT(1, 15), // [A,DST] DST <- *A
+	SQ_INT_PTR_SET      = SQ_INTERRUPT(2,  1), // [A,B,DST] DST <- *A = B
 
-	SQ_INT_SUBSTR       = 0x20, // [A,B,C,DST] DST <- A[B..B+C]
-	SQ_INT_LENGTH       = 0x21, // [A,DST] DST <- length A: book/codex/text
+	SQ_INT_SUBSTR       = SQ_INTERRUPT(3,  0), // [A,B,C,DST] DST <- A[B..B+C]
+	SQ_INT_LENGTH       = SQ_INTERRUPT(1,  7), // [A,DST] DST <- length A: book/codex/text
+	SQ_INT_ASCII        = SQ_INTERRUPT(1, 16),
 
-	SQ_INT_CODEX_NEW    = 0x30, // [N,...,DST] DST <- N key-value pairs.
-	SQ_INT_BOOK_NEW     = 0x31, // [N,...,DST] DST <- N-length array.
-	SQ_INT_ARRAY_INSERT = 0x32, // [A,B,C,DST] A.insert(len=B,pos=C); (Stores in DST, though this is not intended)
-	SQ_INT_ARRAY_DELETE = 0x33, // [A,B,DST] DST <- A.delete(B)
-	SQ_INT_BABEL        = 0x34, // [A,...,B,DST] DST <- babel(exec=A,stdin=B,args=...)
+	SQ_INT_CODEX_NEW    = SQ_INTERRUPT(0,  2), // [N,...,DST] DST <- N key-value pairs.
+	SQ_INT_BOOK_NEW     = SQ_INTERRUPT(0,  3), // [N,...,DST] DST <- N-length array.
+	SQ_INT_ARRAY_INSERT = SQ_INTERRUPT(3,  1), // [A,B,C,DST] A.insert(len=B,pos=C); (Stores in DST, though this is not intended)
+	SQ_INT_ARRAY_DELETE = SQ_INTERRUPT(2,  0), // [A,B,DST] DST <- A.delete(B)
+	SQ_INT_BABEL        = SQ_INTERRUPT(2,  2), // [A,...,B,DST] DST <- babel(exec=A,stdin=B,args=...)
 
-	SQ_INT_ARABIC       = 0x40, // [A,DST] DST <- A.to_numeral().arabic()
-	SQ_INT_ROMAN        = 0x41, // [A,DST] DST <- A.to_numeral().roman()
+	SQ_INT_ARABIC       = SQ_INTERRUPT(1,  8), // [A,DST] DST <- A.to_numeral().arabic()
+	SQ_INT_ROMAN        = SQ_INTERRUPT(1,  9), // [A,DST] DST <- A.to_numeral().roman()
+	// ASCII
 
 	// temporary hacks until we get kingdoms working.
-	SQ_INT_FOPEN,
-
-	// ASCII
-	SQ_INT_ASCII,
+	SQ_INT_FOPEN = SQ_INTERRUPT(2, 3),
 };
+#undef SQ_INTERRUPT
+
+static inline unsigned sq_interrupt_arity(enum sq_interrupt interrupt) {
+	return interrupt & ((1 << SQ_INTERRUPT_SHIFT_AMOUNT) - 1);
+}
 
 
 #define SQ_OPCODE_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
@@ -48,9 +60,6 @@ _Static_assert(SQ_OPCODE_MAX_ARITY < (1 << SQ_OPCODE_SHIFT_AMOUNT), "max arity a
 	((id) << SQ_OPCODE_SHIFT_AMOUNT) | (arity) \
 )
 	
-/*
- * bottom 2 bits are size
- */
 enum sq_opcode {
 	SQ_OC_UNDEFINED     = SQ_OPCODE(0,  0), // should never occur in code
 	SQ_OC_NOOP          = SQ_OPCODE(0,  1), // [] do nothing
