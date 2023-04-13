@@ -69,7 +69,7 @@ struct sq_stackframe {
 	sq_value *locals;
 };
 
-static sq_value run_stackframe(struct sq_stackframe *stackframe);
+static sq_value sq_run_stackframe(struct sq_stackframe *stackframe);
 
 static int assign_positional_arguments(
 	struct sq_stackframe *sf,
@@ -104,7 +104,7 @@ static int assign_positional_arguments(
 			assert(0 <= pattern->pargv[i].default_start);
 
 			sf->ip = pattern->pargv[i].default_start;
-			sf->locals[i] = run_stackframe(sf);
+			sf->locals[i] = sq_run_stackframe(sf);
 		}
 	}
 
@@ -116,7 +116,7 @@ static int assign_positional_arguments(
 			continue;
 
 		sf->ip = pattern->pargv[j].genus_start;
-		sq_value genus = run_stackframe(sf);
+		sq_value genus = sq_run_stackframe(sf);
 
 		bool matches = sq_value_matches(genus, sf->locals[j]);
 		sq_value_free(genus);
@@ -158,14 +158,14 @@ static sq_value try_run_pattern(
 	// ie we have a condition
 	if (0 <= pattern->condition_start) {
 		sf.ip = pattern->condition_start;
-		sq_value condition = run_stackframe(&sf);
+		sq_value condition = sq_run_stackframe(&sf);
 		bool is_valid = sq_value_to_numeral(condition);
 		sq_value_free(condition);
 		if (!is_valid) goto free_and_return;
 	}
 
 	sf.ip = pattern->start_index;
-	result = run_stackframe(&sf);
+	result = sq_run_stackframe(&sf);
 
 free_and_return:
 
@@ -355,7 +355,7 @@ struct sq_text *do_babel(
 		_Exit(1);
 	}
 
-	char *result = malloc(1000);
+	char *result = malloc(1000); // todo: read more than 1000
 	read(out_fds[0], result, 1000);
 	close(out_fds[0]);
 	waitpid(child_pid, &status, 0);
@@ -573,7 +573,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		return;
 	}
 
-
 	// [A,B,C,DST] DST <- A[B..B+C]
 	VM_CASE(SQ_INT_SUBSTR) {
 		text = sq_value_to_text(operands[0]);
@@ -599,7 +598,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		set_next_local(sf, sq_value_new((sq_numeral) sq_value_length(operands[0])));
 		return;
 
-
 	// [N,...,DST] DST <- N key-value pairs.
 	VM_CASE(SQ_INT_CODEX_NEW) {
 		unsigned amnt = next_count(sf);
@@ -613,7 +611,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		set_next_local(sf, sq_value_new(codex));
 		return;
 	}
-
 
 	// [N,...,DST] DST <- N-length array.
 	VM_CASE(SQ_INT_BOOK_NEW) {
@@ -716,7 +713,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	VM_SWITCH_END
 }
 
-sq_value run_stackframe(struct sq_stackframe *sf) {
+static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 #ifdef SQ_USE_COMPUTED_GOTOS
 	static const void *labels[] = {
 # ifndef NDEBUG
