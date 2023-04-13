@@ -57,7 +57,7 @@ void sq_bug_fn(const char *file, const char *function, long long line, const cha
 	va_list args;
 	va_start(args, fmt);
 
-	fprintf(stderr, "bug at %s:%s:%lld: ", file, function, line);
+	fprintf(stderr, "bug at %s:%lld (%s): ", file, line, function);
 	vfprintf(stderr, fmt, args);
 	putc('\n', stderr);
 
