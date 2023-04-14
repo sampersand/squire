@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-static SQ_NORETURN void memory_error(const char *fmt, ...) SQ_COLD SQ_ATTR_PRINTF(1,2);
 static void memory_error(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
@@ -55,6 +54,7 @@ void *sq_memdup(void *ptr, size_t size) {
 	return ptr;
 }
 
+#undef sq_bug_fn
 void sq_bug_fn(const char *file, const char *function, size_t line, const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);

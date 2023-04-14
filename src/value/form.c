@@ -85,7 +85,7 @@ sq_value sq_form_get_attr(struct sq_form *form, const char *attr) {
 	struct sq_journey *recall = sq_form_lookup_recollection(form, attr);
 
 	if (recall != NULL)
-		return sq_value_new(sq_journey_clone(recall));
+		return sq_value_new_journey(sq_journey_clone(recall));
 
 	struct sq_essence *essence = sq_form_lookup_essence(form, attr);
 	if (essence != NULL)
@@ -170,7 +170,7 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 			imitation->matter[i]=  SQ_NI;
 
 		sq_value fn_args[args.pargc + 1];
-		fn_args[0] = sq_value_new(sq_imitation_clone(imitation));
+		fn_args[0] = sq_value_new_imitation(sq_imitation_clone(imitation));
 		memcpy(fn_args + 1, args.pargv, sq_sizeof_array(sq_value, args.pargc));
 
 		sq_value_free(sq_journey_run_deprecated(form->imitate, args.pargc + 1, fn_args));
@@ -231,7 +231,7 @@ sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name)
 	struct sq_journey *change = sq_imitation_lookup_change(imitation, name);
 
 	if (change != NULL)
-		return sq_value_new(sq_journey_clone(change));
+		return sq_value_new_journey(sq_journey_clone(change));
 
 	sq_value *matter = sq_imitation_lookup_matter(imitation, name);
 	if (matter != NULL)

@@ -30,7 +30,7 @@ void sq_scroll_init(struct sq_scroll *scroll, const char *filename, const char *
 
 	struct sq_other *other;
 #define NEW_JOURNEY(_name, _nargs) \
-	_name##_journey = sq_value_new(other = sq_malloc_single(struct sq_other)); \
+	_name##_journey = sq_value_new_other(other = sq_malloc_single(struct sq_other)); \
 	other->refcount = 1; \
 	other->kind = SQ_OK_BUILTIN_JOURNEY; \
 	other->builtin_journey.name = "Scroll."#_name; \
@@ -57,10 +57,10 @@ void sq_scroll_deallocate(struct sq_scroll *scroll) {
 
 sq_value sq_scroll_get_attr(const struct sq_scroll *scroll, const char *attr) {
 	if (!strcmp(attr, "filename"))
-		return sq_value_new(sq_text_new(strdup(scroll->filename)));
+		return sq_value_new_text(sq_text_new(strdup(scroll->filename)));
 
 	if (!strcmp(attr, "mode"))
-		return sq_value_new(sq_text_new(strdup(scroll->mode)));
+		return sq_value_new_text(sq_text_new(strdup(scroll->mode)));
 
 	if (!strcmp(attr, "write")) return write_journey;
 	if (!strcmp(attr, "read")) return read_journey;
@@ -141,7 +141,7 @@ static sq_value read_func(struct sq_args args) {
 		if (sq_value_as_numeral(arg) < 0)
 			sq_throw("can only read nonnegative amounts");
 
-		return sq_value_new(sq_scroll_read(scroll, sq_value_as_numeral(arg)));
+		return sq_value_new_text(sq_scroll_read(scroll, sq_value_as_numeral(arg)));
 
 	case SQ_G_TEXT:
 		if (strcmp(sq_value_as_text(arg)->ptr, "\n"))
@@ -153,12 +153,12 @@ static sq_value read_func(struct sq_args args) {
 
 			if (!result) sq_throw(strerror(errno));
 
-			return sq_value_new(sq_text_new(strndup(result, length)));
+			return sq_value_new_text(sq_text_new(strndup(result, length)));
 		}
 
 	case SQ_G_OTHER:
 		if (arg == SQ_NI)
-			return sq_value_new(sq_scroll_read_all(scroll));
+			return sq_value_new_text(sq_scroll_read_all(scroll));
 		// else, fallthrough
 
 	default:
@@ -187,7 +187,7 @@ static sq_value seek_func(struct sq_args args) {
 	sq_numeral whence = sq_value_to_numeral(args.pargv[2]);
 
 	sq_scroll_seek(scroll, offset, whence);
-	return sq_value_new((sq_numeral) sq_scroll_tell(scroll));
+	return sq_value_new_numeral(sq_scroll_tell(scroll));
 }
 
 static sq_value close_func(struct sq_args args) {

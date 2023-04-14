@@ -257,7 +257,7 @@ static unsigned load_variable_class(struct sq_code *code, struct variable_old *v
 	while ((var = var->field)) {
 		set_opcode(code, SQ_OC_ILOAD);
 		set_index(code, *parent = index);
-		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->name)))));
+		set_index(code, new_constant(code, sq_value_new_text(sq_text_new(strdup(var->name)))));
 		set_index(code, index = next_local(code));
 	}
 
@@ -273,7 +273,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 
 static void compile_form_declaration(struct sq_code *code, struct form_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
-	declare_global_variable(form->name, sq_value_new(form));
+	declare_global_variable(form->name, sq_value_new_form(form));
 
 	form->nmatter = fdecl->nmatter;
 	form->matter = sq_malloc_vec(struct sq_form_matter, form->nmatter);
@@ -292,7 +292,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 				set_index(code, global = next_local(code));
 			}
 
-//			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->matter[i].name))));
+//			unsigned const_index = new_constant(code, sq_value_new_text(sq_text_new(strdup(fdecl->matter[i].name))));
 
 			unsigned kind = compile_expression(code, fdecl->matter[i].genus);
 			set_opcode(code, SQ_OC_FMGENUS_STORE);
@@ -335,7 +335,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 		for (unsigned i = 0; i < fdecl->nessences; ++i) {
 			// note: this is technically extraneous if we never access the essence
 			unsigned index;
-			unsigned const_index = new_constant(code, sq_value_new(sq_text_new(strdup(fdecl->essences[i].name))));
+			unsigned const_index = new_constant(code, sq_value_new_text(sq_text_new(strdup(fdecl->essences[i].name))));
 
 			if (fdecl->essences[i].genus != NULL) {
 				index = compile_expression(code, fdecl->essences[i].genus);
@@ -433,7 +433,7 @@ static void compile_journey_declaration(struct journey_declaration *jd) {
 	struct sq_journey *func = compile_journey(jd, false);
 	free(jd); // but none of the fields, as they're now owned by `func`.
 
-	declare_global_variable(func->name, sq_value_new(func));
+	declare_global_variable(func->name, sq_value_new_journey(func));
 }
 
 static void compile_if_statement(struct sq_code *code, struct if_statement *ifstmt) {
@@ -694,7 +694,7 @@ compile_arguments:;
 
 		set_opcode(code, SQ_OC_ILOAD);
 		set_index(code, soul);
-		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(fncall->field)))));
+		set_index(code, new_constant(code, sq_value_new_text(sq_text_new(strdup(fncall->field)))));
 		set_index(code, target = next_local(code));
 
 		set_opcode(code, SQ_OC_CALL);
@@ -722,7 +722,7 @@ static unsigned compile_field_access(struct sq_code *code, struct field_access *
 
 	set_opcode(code, SQ_OC_ILOAD);
 	set_index(code, soul);
-	set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(faccess->field)))));
+	set_index(code, new_constant(code, sq_value_new_text(sq_text_new(strdup(faccess->field)))));
 	set_index(code, target = next_local(code));
 
 	return target;
@@ -760,20 +760,20 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		struct sq_journey *func = compile_journey(primary->lambda, false);
 		free(primary->lambda);
 
-		result = load_constant(code, sq_value_new(func));
+		result = load_constant(code, sq_value_new_journey(func));
 		break;
 	}
 
 	case SQ_PS_PNUMERAL:
-		result = load_constant(code, sq_value_new(primary->numeral));
+		result = load_constant(code, sq_value_new_numeral(primary->numeral));
 		break;
 
 	case SQ_PS_PTEXT:
-		result = load_constant(code, sq_value_new(primary->text));
+		result = load_constant(code, sq_value_new_text(primary->text));
 		break;
 
 	case SQ_PS_PVERACITY:
-		result = load_constant(code, sq_value_new(primary->veracity));
+		result = load_constant(code, sq_value_new_veracity(primary->veracity));
 		break;
 
 	case SQ_PS_PNI:
@@ -1148,7 +1148,7 @@ static unsigned compile_expression(struct sq_code *code, struct expression *expr
 		set_opcode(code, SQ_OC_ISTORE);
 		set_opcode(code, variable);
 		set_index(code, index);
-		set_index(code, new_constant(code, sq_value_new(sq_text_new(strdup(var->field->name)))));
+		set_index(code, new_constant(code, sq_value_new_text(sq_text_new(strdup(var->field->name)))));
 
 		return index;
 	}
@@ -1542,31 +1542,31 @@ static void setup_globals(void) {
 	globals.ary[globals.len++].value = SQ_NI;
 
 	globals.ary[globals.len  ].name = strdup("Numeral");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Numeral")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Numeral")));
 
 	globals.ary[globals.len  ].name = strdup("Text");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Text")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Text")));
 
 	globals.ary[globals.len  ].name = strdup("Veracity");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Veracity")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Veracity")));
 
 	globals.ary[globals.len  ].name = strdup("Ni");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Ni")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Ni")));
 
 	globals.ary[globals.len  ].name = strdup("Journey");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Journey")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Journey")));
 
 	globals.ary[globals.len  ].name = strdup("Imitation");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Imitation")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Imitation")));
 
 	globals.ary[globals.len  ].name = strdup("Form");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Form")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Form")));
 
 	globals.ary[globals.len  ].name = strdup("Book");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Book")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Book")));
 
 	globals.ary[globals.len  ].name = strdup("Codex");
-	globals.ary[globals.len++].value = sq_value_new(sq_text_new(strdup("Codex")));
+	globals.ary[globals.len++].value = sq_value_new_text(sq_text_new(strdup("Codex")));
 }
 
 void sq_program_compile(struct sq_program *program_, const char *stream) {

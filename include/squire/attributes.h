@@ -19,8 +19,17 @@
 # define SQ_ATTR(...)
 #endif /* __GNUC__ || __clang__ */
 
-#define SQ_NORETURN _Noreturn
-#define SQ_STATIC_ASSERT(...) _Static_assert(__VA_ARGS__)
+
+#if __STDC_VERSION__ >= 201112L
+# define SQ_NORETURN _Noreturn
+# define SQ_ALIGNAS(...) _Alignas(__VA_ARGS__)
+# define SQ_STATIC_ASSERT(...) _Static_assert(__VA_ARGS__)
+#else
+# define SQ_HAS_NORETURN
+# define SQ_NORETURN
+# define SQ_ALIGNAS(...)
+# define SQ_STATIC_ASSERT(...) void sq_doesntexist(void)
+#endif
 
 #if SQ_HAS_ATTRIBUTE(cold)
 # define SQ_COLD SQ_ATTR(cold)
@@ -80,9 +89,9 @@
 #define SQ_UNLIKELY(x) SQ_LIKELY(!(x))
 
 #if SQ_HAS_BUILTIN(__builtin_unreachable)
-# define SQ_UNREACHABLE do { __builtin_unreachable(); } while(0)
+# define SQ_UNREACHABLE __builtin_unreachable()
 #else
-# define SQ_UNREACHABLE do { abort(); } while(0)
+# define SQ_UNREACHABLE abort()
 #endif /* SQ_HAS_BUILTIN(__builtin_unreachable) */
 
 #if SQ_HAS_ATTRIBUTE(nonnull)

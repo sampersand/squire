@@ -47,6 +47,6 @@ static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
 #define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_G_OTHER)
 
 #define SQ_VALUE_ALIGNMENT (1<<SQ_VSHIFT)
-#define SQ_VALUE_ALIGN _Alignas(SQ_VALUE_ALIGNMENT)
+#define SQ_VALUE_ALIGN SQ_ALIGNAS(SQ_VALUE_ALIGNMENT)
 
 #endif /* SQ_VALUEDECL_H */

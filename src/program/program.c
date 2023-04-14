@@ -20,7 +20,7 @@ sq_value create_argv(unsigned argc, const char **argv) {
 	sq_value *args = sq_malloc_vec(sq_value, argc);
 
 	for (unsigned i = 0; i < argc; ++i)
-		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));
+		args[i] = sq_value_new_text(sq_text_new(strdup(argv[i])));
 
 	return sq_value_new_book(sq_book_new2(argc, args));
 }
@@ -37,7 +37,7 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	sq_value args[argc];
 
 	for (unsigned i = 0; i < argc; ++i)
-		args[i] = sq_value_new(sq_text_new(strdup(argv[i])));
+		args[i] = sq_value_new_text(sq_text_new(strdup(argv[i])));
 
 	sq_value_free(sq_journey_run_deprecated(program->main, 0, NULL));
 

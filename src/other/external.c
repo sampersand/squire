@@ -15,7 +15,7 @@ void sq_external_deallocate(struct sq_external *external) {
 
 sq_value sq_external_genus(struct sq_external *external) {
 	// todo: actually return a form and not the name lol.
-	return sq_value_new(sq_text_new(strdup(external->form->name)));
+	return sq_value_new_text(sq_text_new(strdup(external->form->name)));
 }
 
 struct sq_text *sq_external_to_text(const struct sq_external *external) {

@@ -106,25 +106,25 @@ sq_value sq_other_genus(const struct sq_other *other) {
 
 	switch (other->kind) {
 	case SQ_OK_SCROLL:
-		return sq_value_new(&KIND_SCROLL);
+		return sq_value_new_text(&KIND_SCROLL);
 
 	case SQ_OK_EXTERNAL:
 		return sq_external_genus(sq_other_as_external((struct sq_other *) other));
 
 	case SQ_OK_KINGDOM:
-		return sq_value_new(&KIND_KINGDOM);
+		return sq_value_new_text(&KIND_KINGDOM);
 
 	case SQ_OK_ENVOY:
-		return sq_value_new(&KIND_ENVOY);
+		return sq_value_new_text(&KIND_ENVOY);
 
 	case SQ_OK_BUILTIN_JOURNEY:
-		return sq_value_new(&KIND_BUILTIN_JOURNEY);
+		return sq_value_new_text(&KIND_BUILTIN_JOURNEY);
 
 	case SQ_OK_CITATION:
-		return sq_value_new(&KIND_CITATION);
+		return sq_value_new_text(&KIND_CITATION);
 
 	case SQ_OK_PAT_HELPER:
-		return sq_value_new(&KIND_PATTERN_HELPER);
+		return sq_value_new_text(&KIND_PATTERN_HELPER);
 	}
 }
 
@@ -236,7 +236,7 @@ bool sq_other_matches(const struct sq_other *formlike, sq_value to_check) {
 	case SQ_OK_ENVOY:
 	case SQ_OK_BUILTIN_JOURNEY:
 	case SQ_OK_CITATION:
-		return sq_value_eql(sq_value_new((struct sq_other *) formlike), to_check);
+		return sq_value_eql(sq_value_new_other((struct sq_other *) formlike), to_check);
 
 	case SQ_OK_PAT_HELPER:
 		return sq_pattern_helper_matches(sq_other_as_pattern_helper((struct sq_other *) formlike), to_check);

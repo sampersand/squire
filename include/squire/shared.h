@@ -6,12 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef SQ_RELEASE_FAST
-# define sq_bug(...) SQ_UNREACHABLE
-#else
-# define sq_bug(...) do {sq_bug_fn(__FILE__, __func__, __LINE__, __VA_ARGS__); } while(0)
-#endif /* defined(SQ_RELEASE_FAST) */
-
 #ifdef SQ_LOG
 #define sq_log printf
 #else
@@ -66,6 +60,7 @@ void *sq_realloc(void *ptr, size_t size)
 ;
 
 void *sq_memdup(void *ptr, size_t size)
+	SQ_NODISCARD
 // #if SQ_HAS_ATTRIBUTE(malloc)
 // 	SQ_ATTR(malloc)
 // #endif
@@ -76,6 +71,13 @@ void *sq_memdup(void *ptr, size_t size)
 
 void SQ_NORETURN sq_bug_fn(const char *file, const char *fn, size_t line, const char *fmt, ...)
 	SQ_COLD SQ_ATTR_PRINTF(4, 5) SQ_NONNULL;
+#define sq_bug_fn(...) (sq_bug_fn(__VA_ARGS__),SQ_UNREACHABLE)
+
+#ifdef SQ_RELEASE_FAST
+# define sq_bug(...) SQ_UNREACHABLE
+#else
+# define sq_bug(...) sq_bug_fn(__FILE__, __func__, __LINE__, __VA_ARGS__)
+#endif /* defined(SQ_RELEASE_FAST) */
 
 char *sq_read_file(const char *filename) SQ_NONNULL SQ_RETURNS_NONNULL;
 

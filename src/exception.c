@@ -62,6 +62,7 @@ void sq_exception_init(struct sq_program *program) {
 
 }
 
+#undef sq_throw_value
 void sq_throw_value(sq_value value)  {
 	if (!current_exception_handler) {
 		fprintf(stderr, "uncaught exception encountered: ");
@@ -76,6 +77,7 @@ void sq_throw_value(sq_value value)  {
 	longjmp(exception_handlers[--current_exception_handler], 1);
 }
 
+#undef sq_throw2
 void sq_throw2(struct sq_form *form, const char *fmt, ...) {
 	(void) form;
 

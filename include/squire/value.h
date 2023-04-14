@@ -8,43 +8,6 @@
 
 #include <squire/valuedecl.h>
 
-// #define SQ_TAG(kind) _Generic((kind){0}, \
-// 	sq_numeral: SQ_G_NUMERAL, \
-// 	bool: SQ_G_CONSTANT, \
-// 	struct sq_text: SQ_G_TEXT, \
-// 	struct sq_form: SQ_G_FORM, \
-// 	struct sq_imitation: SQ_G_IMITATION, \
-// 	struct sq_journey: SQ_G_JOURNEY, \
-// 	struct sq_array: SQ_G_BOOK, \
-// 	struct sq_codex: SQ_G_CODEX \
-// )
-
-// #define sq_value_is(x, kind) (SQ_VTAG(x) == SQ_TAG(kind))
-// #define sq_value_as(x, kind) (assert(sq_value_is(x, kind), _Generic(kind, \
-// 	sq_numeral: (x) >> SQ_VSHIFT, \
-// 	bool: (x) == SQ_YEA, \
-// 	struct sq_text *: (kind) SQ_VUNMASK(x), \
-// 	struct sq_form *: (kind) SQ_VUNMASK(x), \
-// 	struct sq_imitation *: (kind) SQ_VUNMASK(x), \
-// 	struct sq_journey *: (kind) SQ_VUNMASK(x), \
-// 	struct sq_array *: (kind) SQ_VUNMASK(x), \
-// 	struct sq_codex *: (kind) SQ_VUNMASK(x)\
-
-// (SQ_VTAG(x) == SQ_TAG(kind))
-
-#define sq_value_new(x) (_Generic(x, \
-	sq_numeral: sq_value_new_numeral, \
-	sq_veracity: sq_value_new_veracity, \
-	struct sq_text *: sq_value_new_text, \
-	struct sq_form *: sq_value_new_form, \
-	struct sq_imitation *: sq_value_new_imitation, \
-	struct sq_journey *: sq_value_new_journey, \
-	struct sq_book *: sq_value_new_book, \
-	struct sq_codex *: sq_value_new_codex, \
-	struct sq_other *: sq_value_new_other \
-)(x))
-
-
 static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
 	assert(numeral == (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) numeral) << SQ_VSHIFT, SQ_G_NUMERAL);

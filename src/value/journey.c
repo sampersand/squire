@@ -128,7 +128,7 @@ static int assign_positional_arguments(
 		splat = sq_book_allocate(0);
 
 	if (splat != NULL)	
-		sf->locals[i++] = sq_value_new(splat);
+		sf->locals[i++] = sq_value_new_book(splat);
 
 	// todo, check for genuses.
 
@@ -421,27 +421,27 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// [A,DST] DST <- A.to_numeral()
 	VM_CASE(SQ_INT_TONUMERAL)
-		set_next_local(sf, sq_value_new(sq_value_to_numeral(operands[0])));
+		set_next_local(sf, sq_value_new_numeral(sq_value_to_numeral(operands[0])));
 		return;
 
 	// [A,DST] DST <- A.to_text()
 	VM_CASE(SQ_INT_TOTEXT)
-		set_next_local(sf, sq_value_new(sq_value_to_text(operands[0])));
+		set_next_local(sf, sq_value_new_text(sq_value_to_text(operands[0])));
 		return;
 
 	// [A,DST] DST <- A.to_veracity()
 	VM_CASE(SQ_INT_TOVERACITY)
-		set_next_local(sf, sq_value_new(sq_value_to_veracity(operands[0])));
+		set_next_local(sf, sq_value_new_veracity(sq_value_to_veracity(operands[0])));
 		return;
 
 	// [A,DST] DST <- A.to_book()
 	VM_CASE(SQ_INT_TOBOOK)
-		set_next_local(sf, sq_value_new(sq_value_to_book(operands[0])));
+		set_next_local(sf, sq_value_new_book(sq_value_to_book(operands[0])));
 		return;
 
 	// [A,DST] DST <- A.to_codex()
 	VM_CASE(SQ_INT_TOCODEX)
-		set_next_local(sf, sq_value_new(sq_value_to_codex(operands[0])));
+		set_next_local(sf, sq_value_new_codex(sq_value_to_codex(operands[0])));
 		return;
 
 	// [A,DST] DST <- A.genus
@@ -496,7 +496,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 			line[length] = '\0';
 		}
 
-		set_next_local(sf, sq_value_new(sq_text_new(line)));
+		set_next_local(sf, sq_value_new_text(sq_text_new(line)));
 		return;
 	}
 
@@ -537,7 +537,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		if (pclose(stream) == -1)
 			sq_throw_io("closing `hex` output stream");
 
-		set_next_local(sf, sq_value_new(sq_text_new(result)));
+		set_next_local(sf, sq_value_new_text(sq_text_new(result)));
 		return;
 	}
 
@@ -548,7 +548,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	// [DST] DST <- random numeral
 	VM_CASE(SQ_INT_RANDOM)
 		// TODO: better random numbers
-		set_next_local(sf, sq_value_new((sq_numeral) rand()));
+		set_next_local(sf, sq_value_new_numeral(rand()));
 		return;
 
 	// [A,DST] DST <- *A
@@ -589,13 +589,13 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		else
 			result = sq_text_new(strdup(text->ptr + start)); // todo: we know the length
 
-		set_next_local(sf, sq_value_new(result));
+		set_next_local(sf, sq_value_new_text(result));
 		return;
 	}
 
 	// [A,DST] DST <- length A: book/codex/text
 	VM_CASE(SQ_INT_LENGTH)
-		set_next_local(sf, sq_value_new((sq_numeral) sq_value_length(operands[0])));
+		set_next_local(sf, sq_value_new_numeral(sq_value_length(operands[0])));
 		return;
 
 	// [N,...,DST] DST <- N key-value pairs.
@@ -608,7 +608,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 			codex->pages[codex->length].value = sq_value_clone(*next_local(sf));
 		}
 
-		set_next_local(sf, sq_value_new(codex));
+		set_next_local(sf, sq_value_new_codex(codex));
 		return;
 	}
 
@@ -620,7 +620,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		for (; book->length < amnt; ++book->length)
 			book->pages[book->length] = sq_value_clone(*next_local(sf));
 
-		set_next_local(sf, sq_value_new(book));
+		set_next_local(sf, sq_value_new_book(book));
 		return;
 	}
 
@@ -673,12 +673,12 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// [A,DST] DST <- A.to_numeral().arabic()
 	VM_CASE(SQ_INT_ARABIC)
-		set_next_local(sf, sq_value_new(sq_numeral_to_arabic(sq_value_to_numeral(operands[0]))));
+		set_next_local(sf, sq_value_new_text(sq_numeral_to_arabic(sq_value_to_numeral(operands[0]))));
 		return;
 
 	// [A,DST] DST <- A.to_numeral().roman()
 	VM_CASE(SQ_INT_ROMAN)
-		set_next_local(sf, sq_value_new(sq_numeral_to_roman(sq_value_to_numeral(operands[0]))));
+		set_next_local(sf, sq_value_new_text(sq_numeral_to_roman(sq_value_to_numeral(operands[0]))));
 		return;
 
 	// temporary hacks until we get kingdoms working.
@@ -692,7 +692,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		sq_text_free(filename);
 		sq_text_free(mode);
 
-		set_next_local(sf, sq_value_new(other));
+		set_next_local(sf, sq_value_new_other(other));
 		return;
 	}
 
@@ -701,9 +701,9 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 			char *data = sq_malloc(2);
 			data[0] = sq_value_as_numeral(operands[0]) & 0xff;
 			data[1] = '\0';
-			set_next_local(sf, sq_value_new(sq_text_new(data)));
+			set_next_local(sf, sq_value_new_text(sq_text_new(data)));
 		} else if (sq_value_is_text(operands[0])) {
-			set_next_local(sf, sq_value_new((sq_numeral) sq_value_as_text(operands[0])->ptr[0]));
+			set_next_local(sf, sq_value_new_numeral(sq_value_as_text(operands[0])->ptr[0]));
 		} else {
 			sq_throw("can only ascii numerals and text, not '%s'", sq_value_typename(operands[0]));
 		}
@@ -878,18 +878,18 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			ptr->refcount = 1;
 			ptr->kind = SQ_OK_CITATION;
 			ptr->citation = next_local(sf);
-			SET_RESULT(sq_value_new(ptr));
+			SET_RESULT(sq_value_new_other(ptr));
 		}
 
 	/** Logic **/
-		VM_CASE(SQ_OC_NOT) SET_RESULT(sq_value_new(sq_value_not(operands[0])));
-		VM_CASE(SQ_OC_EQL) SET_RESULT(sq_value_new(sq_value_eql(operands[0], operands[1])));
-		VM_CASE(SQ_OC_NEQ) SET_RESULT(sq_value_new(sq_value_neq(operands[0], operands[1])));
-		VM_CASE(SQ_OC_LTH) SET_RESULT(sq_value_new(sq_value_lth(operands[0], operands[1])));
-		VM_CASE(SQ_OC_GTH) SET_RESULT(sq_value_new(sq_value_gth(operands[0], operands[1])));
-		VM_CASE(SQ_OC_LEQ) SET_RESULT(sq_value_new(sq_value_leq(operands[0], operands[1])));
-		VM_CASE(SQ_OC_GEQ) SET_RESULT(sq_value_new(sq_value_geq(operands[0], operands[1])));
-		VM_CASE(SQ_OC_CMP) SET_RESULT(sq_value_new(sq_value_cmp(operands[0], operands[1])));
+		VM_CASE(SQ_OC_NOT) SET_RESULT(sq_value_new_veracity(sq_value_not(operands[0])));
+		VM_CASE(SQ_OC_EQL) SET_RESULT(sq_value_new_veracity(sq_value_eql(operands[0], operands[1])));
+		VM_CASE(SQ_OC_NEQ) SET_RESULT(sq_value_new_veracity(sq_value_neq(operands[0], operands[1])));
+		VM_CASE(SQ_OC_LTH) SET_RESULT(sq_value_new_veracity(sq_value_lth(operands[0], operands[1])));
+		VM_CASE(SQ_OC_GTH) SET_RESULT(sq_value_new_veracity(sq_value_gth(operands[0], operands[1])));
+		VM_CASE(SQ_OC_LEQ) SET_RESULT(sq_value_new_veracity(sq_value_leq(operands[0], operands[1])));
+		VM_CASE(SQ_OC_GEQ) SET_RESULT(sq_value_new_veracity(sq_value_geq(operands[0], operands[1])));
+		VM_CASE(SQ_OC_CMP) SET_RESULT(sq_value_new_veracity(sq_value_cmp(operands[0], operands[1])));
 
 	/** Math **/
 		VM_CASE(SQ_OC_NEG) SET_RESULT(sq_value_neg(operands[0]));
@@ -905,7 +905,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		VM_CASE(SQ_OC_MATCHES)
-			SET_RESULT(sq_value_new(sq_value_matches(operands[0], operands[1])));
+			SET_RESULT(sq_value_new_veracity(sq_value_matches(operands[0], operands[1])));
 
 		VM_CASE(SQ_OC_PAT_NOT)
 		VM_CASE(SQ_OC_PAT_OR)
@@ -922,7 +922,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 				helper->helper.kind = opcode == SQ_OC_PAT_AND ? SQ_PH_AND : SQ_PH_OR;
 			}
 
-			SET_RESULT(sq_value_new(helper));
+			SET_RESULT(sq_value_new_other(helper));
 		}
 
 	/*** Interpreter Stuff ***/

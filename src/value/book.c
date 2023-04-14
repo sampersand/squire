@@ -196,7 +196,7 @@ struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book
 			struct sq_book *new = sq_book_allocate(2);
 			new->pages[new->length++] = sq_value_clone(book->pages[i]);
 			new->pages[new->length++] = sq_value_clone(rhs->pages[i]);
-			result->pages[result->length++] = sq_value_new(new);
+			result->pages[result->length++] = sq_value_new_book(new);
 		}
 
 	return result;

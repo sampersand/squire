@@ -25,13 +25,10 @@ void SQ_NORETURN sq_throw2(struct sq_form *form, const char *fmt, ...)
 	SQ_COLD
 	SQ_NONNULL
 	SQ_ATTR_PRINTF(2, 3);
+#define sq_throw_value(...) (sq_throw_value(__VA_ARGS__),SQ_UNREACHABLE) // a hack for c99
+#define sq_throw2(...) (sq_throw2(__VA_ARGS__),SQ_UNREACHABLE)
 
 #define sq_throw(...) sq_throw2(&sq_exception_form, __VA_ARGS__)
-void SQ_NORETURN sq_throw_io(const char *fmt, ...)
-	SQ_COLD
-	SQ_NONNULL
-	SQ_ATTR_PRINTF(1, 2);
-
 #define sq_throw_io(...) sq_throw_io_(__VA_ARGS__, strerror(errno))
 #define sq_throw_io_(fmt, ...) sq_throw2(&sq_io_exception_form, "io error: " fmt ": %s", __VA_ARGS__)
 

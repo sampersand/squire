@@ -72,26 +72,26 @@ void sq_value_dump(FILE *out, sq_value value) {
 sq_value sq_value_clone(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_G_TEXT:
-		return sq_value_new(sq_text_clone(AS_TEXT(value)));
+		return sq_value_new_text(sq_text_clone(AS_TEXT(value)));
 
 	case SQ_G_FORM:
-		return sq_value_new(sq_form_clone(AS_FORM(value)));
+		return sq_value_new_form(sq_form_clone(AS_FORM(value)));
 
 	case SQ_G_IMITATION:
-		return sq_value_new(sq_imitation_clone(AS_IMITATION(value)));
+		return sq_value_new_imitation(sq_imitation_clone(AS_IMITATION(value)));
 
 	case SQ_G_JOURNEY:
-		return sq_value_new(sq_journey_clone(AS_JOURNEY(value)));
+		return sq_value_new_journey(sq_journey_clone(AS_JOURNEY(value)));
 
 	case SQ_G_BOOK:
-		return sq_value_new(sq_book_clone(AS_BOOK(value)));
+		return sq_value_new_book(sq_book_clone(AS_BOOK(value)));
 
 	case SQ_G_CODEX:
-		return sq_value_new(sq_codex_clone(AS_CODEX(value)));
+		return sq_value_new_codex(sq_codex_clone(AS_CODEX(value)));
 
 	case SQ_G_OTHER:
 		if (sq_value_is_other(value))
-			return sq_value_new(sq_other_clone(AS_OTHER(value)));
+			return sq_value_new_other(sq_other_clone(AS_OTHER(value)));
 
 	default:
 		return value;
@@ -168,28 +168,28 @@ sq_value sq_value_genus(sq_value value) {
 		if (sq_value_is_other(value))
 			return sq_other_genus(AS_OTHER(value));
 		else
-			return sq_value_new(value == SQ_NI ? &KIND_NI : &KIND_VERACITY);
+			return sq_value_new_text(value == SQ_NI ? &KIND_NI : &KIND_VERACITY);
 
 	case SQ_G_NUMERAL:
-		return sq_value_new(&KIND_NUMERAL);
+		return sq_value_new_text(&KIND_NUMERAL);
 
 	case SQ_G_TEXT:
-		return sq_value_new(&KIND_TEXT);
+		return sq_value_new_text(&KIND_TEXT);
 
 	case SQ_G_IMITATION:
-		return sq_value_new(sq_form_clone(AS_IMITATION(value)->form));
+		return sq_value_new_form(sq_form_clone(AS_IMITATION(value)->form));
 
 	case SQ_G_JOURNEY:
-		return sq_value_new(&KIND_FUNCTION);
+		return sq_value_new_text(&KIND_FUNCTION);
 
 	case SQ_G_FORM:
-		return sq_value_new(&KIND_FORM);
+		return sq_value_new_text(&KIND_FORM);
 
 	case SQ_G_BOOK:
-		return sq_value_new(&KIND_ARRAY);
+		return sq_value_new_text(&KIND_ARRAY);
 
 	case SQ_G_CODEX:
-		return sq_value_new(&KIND_CODEX);
+		return sq_value_new_text(&KIND_CODEX);
 
 	default:
 		sq_bug("unknown tag '%d'", (int) SQ_VTAG(value));
@@ -281,7 +281,7 @@ sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 sq_value sq_value_neg(sq_value arg) {
 	switch (SQ_VTAG(arg)) {
 	case SQ_G_NUMERAL:
-		return sq_value_new(-AS_NUMBER(arg));
+		return sq_value_new_numeral(-AS_NUMBER(arg));
 
 	case SQ_G_IMITATION: {
 		struct sq_journey *neg = sq_imitation_lookup_change(AS_IMITATION(arg), "-@");
@@ -311,7 +311,7 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 		char *c = sq_malloc_vec(char, 2);
 		c[0] = AS_STR(value)[index];
 		c[1] = '\0';
-		return sq_value_new(sq_text_new2(c, 1));
+		return sq_value_new_text(sq_text_new2(c, 1));
 	}
 
 	case SQ_G_BOOK:
@@ -367,12 +367,12 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 	if (sq_value_is_text(rhs)) {
 		// free_lhs = true;
-		lhs = sq_value_new(sq_value_to_text(lhs));
+		lhs = sq_value_new_text(sq_value_to_text(lhs));
 	}
 
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL:
-		return sq_value_new(AS_NUMBER(lhs) + sq_value_to_numeral(rhs));
+		return sq_value_new_numeral(AS_NUMBER(lhs) + sq_value_to_numeral(rhs));
 
 	case SQ_G_TEXT: {
 		struct sq_text *rstr = sq_value_to_text(rhs);
@@ -383,12 +383,12 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 		// sq_text_free(rstr);
 		// if (free_lhs) sq_value_free(lhs);
-		return sq_value_new(result);
+		return sq_value_new_text(result);
 	}
 
 	case SQ_G_BOOK: {
 		if (sq_value_is_journey(rhs))
-			return sq_value_new(sq_book_select(AS_BOOK(lhs), AS_JOURNEY(rhs)));
+			return sq_value_new_book(sq_book_select(AS_BOOK(lhs), AS_JOURNEY(rhs)));
 
 		struct sq_book *lary = AS_BOOK(lhs), *rary = sq_value_to_book(rhs);
 
@@ -402,7 +402,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 			pages[lary->length + i] = sq_value_clone(rary->pages[i]);
 
 		// sq_book_free(rary);
-		return sq_value_new(sq_book_new2(length, pages));
+		return sq_value_new_book(sq_book_new2(length, pages));
 	}
 
 	case SQ_G_CODEX: {
@@ -440,7 +440,7 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL:
-		return sq_value_new(AS_NUMBER(lhs) - sq_value_to_numeral(rhs));
+		return sq_value_new_numeral(AS_NUMBER(lhs) - sq_value_to_numeral(rhs));
 
 	case SQ_G_BOOK:
 		sq_todo("set difference");
@@ -466,16 +466,16 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL:
-		return sq_value_new(AS_NUMBER(lhs) * sq_value_to_numeral(rhs));
+		return sq_value_new_numeral(AS_NUMBER(lhs) * sq_value_to_numeral(rhs));
 
 	case SQ_G_TEXT: {
 		sq_numeral amnt = sq_value_to_numeral(rhs);
 		if (amnt == 0 || AS_TEXT(lhs)->length == 0)
-			return sq_value_new(&sq_text_empty);
+			return sq_value_new_text(&sq_text_empty);
 		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_TEXT(lhs)->length) >= UINT_MAX)
 			sq_throw("text multiplication by %"PRId64" is out of range", amnt);
 		if (amnt == 1)
-			return sq_value_new(sq_text_clone(AS_TEXT(lhs)));
+			return sq_value_new_text(sq_text_clone(AS_TEXT(lhs)));
 
 		struct sq_text *result = sq_text_allocate(AS_TEXT(lhs)->length * amnt);
 		char *ptr = result->ptr;
@@ -485,7 +485,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 			ptr += AS_TEXT(lhs)->length;
 		}
 
-		return sq_value_new(result);
+		return sq_value_new_text(result);
 	}
 
 	case SQ_G_BOOK:;
@@ -494,17 +494,17 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		if (sq_value_is_numeral(rhs)) {
 			sq_numeral num = AS_NUMBER(rhs);
 			if (num < 0) sq_throw("cannot repeat by %"PRId64" is out of range", num);
-			return sq_value_new(sq_book_repeat(book, num));
+			return sq_value_new_book(sq_book_repeat(book, num));
 		}
 
 		if (sq_value_is_text(rhs))
-			return sq_value_new(sq_book_join(book, AS_TEXT(rhs)));
+			return sq_value_new_text(sq_book_join(book, AS_TEXT(rhs)));
 
 		if (sq_value_is_book(rhs))
-			return sq_value_new(sq_book_product(book, AS_BOOK(rhs)));
+			return sq_value_new_book(sq_book_product(book, AS_BOOK(rhs)));
 
 		if (sq_value_is_journey(rhs))
-			return sq_value_new(sq_book_map(book, AS_JOURNEY(rhs)));
+			return sq_value_new_book(sq_book_map(book, AS_JOURNEY(rhs)));
 
 		goto error;
 
@@ -528,7 +528,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
 		if (!rnum) sq_throw("cannot divide by N");
-		return sq_value_new(AS_NUMBER(lhs) / rnum);
+		return sq_value_new_numeral(AS_NUMBER(lhs) / rnum);
 	}
 
 	case SQ_G_IMITATION: {
@@ -552,7 +552,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
 		if (!rnum) sq_throw("cannot modulo by N");
-		return sq_value_new(AS_NUMBER(lhs) % rnum);
+		return sq_value_new_numeral(AS_NUMBER(lhs) % rnum);
 	}
 
 	case SQ_G_BOOK:;
@@ -584,8 +584,8 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 	switch (SQ_VTAG(lhs)) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
-		if (!rnum) return sq_value_new((sq_numeral) 1);
-		return sq_value_new((sq_numeral) pow(AS_NUMBER(lhs), rnum));
+		if (!rnum) return sq_value_new_numeral(1);
+		return sq_value_new_numeral(pow(AS_NUMBER(lhs), rnum));
 	}
 
 	case SQ_G_IMITATION: {
@@ -609,7 +609,7 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 
 	switch (sq_value_genus_tag(tocall)) {
 	case SQ_G_FORM:
-		return sq_value_new(sq_form_imitate(sq_value_as_form(tocall), args));
+		return sq_value_new_imitation(sq_form_imitate(sq_value_as_form(tocall), args));
 
 	case SQ_G_JOURNEY:
 		return sq_journey_run(sq_value_as_journey(tocall), args);
@@ -700,7 +700,7 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 			return strtoll(AS_STR(value), NULL, 10);
 
 	case SQ_G_BOOK:
-		return sq_value_new(sq_book_to_text(AS_BOOK(value)));
+		return sq_value_new_text(sq_book_to_text(AS_BOOK(value)));
 
 	case SQ_G_IMITATION: {
 		struct sq_journey *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
@@ -813,7 +813,7 @@ struct sq_book *sq_value_to_book(sq_value value) {
 			char *data = sq_malloc(2);
 			data[0] = text->ptr[i];
 			data[1] = '\0';
-			book->pages[book->length++] = sq_value_new(sq_text_new2(data, 1));
+			book->pages[book->length++] = sq_value_new_text(sq_text_new2(data, 1));
 		}
 
 		return book;
@@ -835,7 +835,7 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 		return sq_value_genus(soul);
 
 	if (!strcmp(attr, "length"))
-		return sq_value_new((sq_numeral) sq_value_length(soul));
+		return sq_value_new_numeral(sq_value_length(soul));
 
 	sq_value result = SQ_UNDEFINED;
 
@@ -858,7 +858,7 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 	case SQ_G_JOURNEY:
 		// this should probably be more sophisticated, eg the arity of the nth pattern
 		if (!strcmp(attr, "arity"))
-			result = sq_value_new((sq_numeral) sq_value_as_journey(soul)->patterns[0].pargc);
+			result = sq_value_new_numeral(sq_value_as_journey(soul)->patterns[0].pargc);
 		break;
 
 	case SQ_G_OTHER:
@@ -868,9 +868,9 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 
 	case SQ_G_TEXT:
 		if (!strcmp(attr, "verso"))
-			result = sq_value_index(soul, sq_value_new((sq_numeral) 1));
+			result = sq_value_index(soul, sq_value_new_numeral(1));
 		else if (!strcmp(attr, "recto"))
-			result = sq_value_index(soul, sq_value_new((sq_numeral) -1));
+			result = sq_value_index(soul, sq_value_new_numeral(-1));
 		break;
 
 	case SQ_G_NUMERAL:
