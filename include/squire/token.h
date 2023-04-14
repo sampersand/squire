@@ -92,7 +92,7 @@ enum sq_token_kind {
 	SQ_TK_ASSIGN,
 	SQ_TK_INDEX,
 	SQ_TK_INDEX_ASSIGN,
-};
+} SQ_CLOSED_ENUM;
 
 struct sq_token {
 	enum sq_token_kind kind;

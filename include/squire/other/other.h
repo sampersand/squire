@@ -23,7 +23,7 @@ struct sq_other {
 		SQ_OK_ENVOY,
 		SQ_OK_CITATION,
 		SQ_OK_PAT_HELPER
-	} kind;
+	} SQ_CLOSED_ENUM kind;
 
 	union {
 		struct sq_scroll scroll;

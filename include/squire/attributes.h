@@ -50,11 +50,11 @@
 #endif /* SQ_HAS_ATTRIBUTE(printf) */
 
 #if SQ_HAS_ATTRIBUTE(nodiscard)
-# define SQ_ATTR_NODISCARD SQ_ATTR(nodiscard)
+# define SQ_NODISCARD SQ_ATTR(nodiscard)
 #elif SQ_HAS_ATTRIBUTE(warn_unused_result)
-# define SQ_ATTR_NODISCARD SQ_ATTR(warn_unused_result)
+# define SQ_NODISCARD SQ_ATTR(warn_unused_result)
 #else
-# define SQ_ATTR_NODISCARD
+# define SQ_NODISCARD
 #endif /* SQ_HAS_ATTRIBUTE(nodiscard) */
 
 #if SQ_HAS_ATTRIBUTE(noalias)

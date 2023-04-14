@@ -2,6 +2,7 @@
 #define SQ_ENVOY_H
 
 #include <squire/value.h>
+#include <squire/attributes.h>
 
 struct sq_envoy {
 	void *dyllib;
@@ -36,7 +37,7 @@ enum sq_envoy_kind {
 	SQ_ENVOY_T_SSIZE_T,
 	SQ_ENVOY_T_VOID_PTR,
 	SQ_ENVOY_T_CHAR_PTR,
-};
+} SQ_CLOSED_ENUM;
 
 
 void sq_envoy_initialize(struct sq_envoy *envoy, const char *filename);

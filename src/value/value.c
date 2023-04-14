@@ -17,7 +17,7 @@
 #define AS_FORM sq_value_as_form
 #define AS_IMITATION sq_value_as_imitation
 #define AS_VERACITY sq_value_as_veracity
-#define AS_JOURNEY sq_value_as_function
+#define AS_JOURNEY sq_value_as_journey
 #define AS_BOOK sq_value_as_book
 #define AS_CODEX sq_value_as_codex
 #define AS_OTHER sq_value_as_other
@@ -934,7 +934,7 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 
 	case SQ_G_JOURNEY: {
 		struct sq_args args = { .pargc = 1, .pargv = &to_check };
-		sq_value_clone(to_check); // as we pass ownership.
+		(void) sq_value_clone(to_check); // as we pass ownership.
 
 		sq_value result = sq_journey_run(sq_value_as_journey(formlike), args);
 		matches = sq_value_to_veracity(result);

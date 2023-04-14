@@ -1,6 +1,8 @@
 #ifndef SQ_BYTECODE_H
 #define SQ_BYTECODE_H
 
+#include <squire/attributes.h>
+
 #define SQ_INTERRUPT_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
 #define SQ_INTERRUPT_SHIFT_AMOUNT 2
 _Static_assert(SQ_INTERRUPT_MAX_ARITY < (1 << SQ_INTERRUPT_SHIFT_AMOUNT), "max arity and shift amnt mismatch");
@@ -44,13 +46,13 @@ enum sq_interrupt {
 
 	// temporary hacks until we get kingdoms working.
 	SQ_INT_FOPEN = SQ_INTERRUPT(2, 3),
-};
+} SQ_CLOSED_ENUM;
 #undef SQ_INTERRUPT
 
+static inline unsigned sq_interrupt_arity(enum sq_interrupt interrupt) SQ_NODISCARD;
 static inline unsigned sq_interrupt_arity(enum sq_interrupt interrupt) {
 	return interrupt & ((1 << SQ_INTERRUPT_SHIFT_AMOUNT) - 1);
 }
-
 
 #define SQ_OPCODE_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
 #define SQ_OPCODE_SHIFT_AMOUNT 2
@@ -109,9 +111,10 @@ enum sq_opcode {
 	SQ_OC_ISTORE        = SQ_OPCODE(2, 17), // [A,B,C,DST] Performs `A.B=C`; (Stores in DST, though this is not intended)
 	SQ_OC_FEGENUS_STORE = SQ_OPCODE(2, 18), // [A,B,C] Sets `A.B`'s kind to constant `C` (essence)
 	SQ_OC_FMGENUS_STORE = SQ_OPCODE(2, 19), // [A,B,C] Sets `A.B`'s kind to constant `C` (matter)
-};
+} SQ_CLOSED_ENUM;
 #undef SQ_OPCODE
 
+static inline unsigned sq_opcode_arity(enum sq_opcode opcode) SQ_NODISCARD;
 static inline unsigned sq_opcode_arity(enum sq_opcode opcode) {
 	return opcode & ((1 << SQ_OPCODE_SHIFT_AMOUNT) - 1);
 }
@@ -123,7 +126,7 @@ union sq_bytecode {
 	unsigned count;
 };
 
-const char *sq_interrupt_repr(enum sq_interrupt interrupt);
-const char *sq_opcode_repr(enum sq_opcode opcode);
+const char *sq_interrupt_repr(enum sq_interrupt interrupt) SQ_NODISCARD SQ_RETURNS_NONNULL;
+const char *sq_opcode_repr(enum sq_opcode opcode) SQ_NODISCARD SQ_RETURNS_NONNULL;
 
 #endif /* !SQ_BYTECODE_H */

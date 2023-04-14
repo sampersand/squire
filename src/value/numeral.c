@@ -13,7 +13,7 @@ enum roman_numeral {
 	SQ_TK_ROMAN_C = 100,
 	SQ_TK_ROMAN_D = 500,
 	SQ_TK_ROMAN_M = 1000,
-};
+} SQ_CLOSED_ENUM;
 
 static void convert(unsigned numeral, char one, char five, char ten, char **out) {
 	if (5 < numeral && numeral <= 8) *(*out)++ = five;

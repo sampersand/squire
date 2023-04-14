@@ -12,8 +12,8 @@ struct sq_text {
 
 extern struct sq_text sq_text_empty;
 
-struct sq_text *sq_text_allocate(unsigned length);
-struct sq_text *sq_text_new2(char *ptr, unsigned length);
+struct sq_text *sq_text_allocate(unsigned length) SQ_RETURNS_NONNULL;
+struct sq_text *sq_text_new2(char *ptr, unsigned length) SQ_RETURNS_NONNULL;
 
 static inline struct sq_text *sq_text_new(char *ptr) {
 	return sq_text_new2(ptr, strlen(ptr));

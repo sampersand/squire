@@ -30,7 +30,7 @@
 #define sq_realloc_vec(kind, ptr, length) ((kind *) sq_realloc((ptr), sq_sizeof_array(kind, (length))))
 
 void *sq_malloc(size_t size)
-	SQ_ATTR_NODISCARD
+	SQ_NODISCARD
 #if SQ_HAS_ATTRIBUTE(malloc)
 	SQ_ATTR(malloc)
 #endif
@@ -43,7 +43,7 @@ void *sq_malloc(size_t size)
 	;
 
 void *sq_calloc(size_t count, size_t size)
-	SQ_ATTR_NODISCARD
+	SQ_NODISCARD
 #if SQ_HAS_ATTRIBUTE(malloc)
 	SQ_ATTR(malloc)
 #endif
@@ -56,7 +56,7 @@ void *sq_calloc(size_t count, size_t size)
 	;
 
 void *sq_realloc(void *ptr, size_t size)
-	SQ_ATTR_NODISCARD
+	SQ_NODISCARD
 // #if SQ_HAS_ATTRIBUTE(malloc)
 // 	SQ_ATTR(malloc)
 // #endif
@@ -66,7 +66,6 @@ void *sq_realloc(void *ptr, size_t size)
 ;
 
 void *sq_memdup(void *ptr, size_t size)
-	SQ_ATTR_NODISCARD
 // #if SQ_HAS_ATTRIBUTE(malloc)
 // 	SQ_ATTR(malloc)
 // #endif
@@ -75,14 +74,9 @@ void *sq_memdup(void *ptr, size_t size)
 // #endif
 ;
 
-void sq_bug_fn(
-	const char *SQ_NONNULL file,
-	const char *SQ_NONNULL function,
-	size_t line,
-	const char *SQ_NONNULL fmt,
-	...
-) SQ_ATTR_NORETURN_COLD SQ_ATTR_PRINTF(4, 5);
+void sq_bug_fn(const char *file, const char *function, size_t line, const char *fmt, ...)
+	SQ_ATTR_NORETURN_COLD SQ_ATTR_PRINTF(4, 5) SQ_NONNULL;
 
-char *sq_read_file(const char *SQ_NONNULL filename);
+char *sq_read_file(const char *filename) SQ_NONNULL SQ_RETURNS_NONNULL;
 
 #endif /* !SQ_SHARED_H */

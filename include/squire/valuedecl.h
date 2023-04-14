@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <squire/attributes.h>
 
 struct sq_text;
 struct sq_form;
@@ -25,8 +26,7 @@ enum sq_genus_tag {
 	SQ_G_JOURNEY   = 5,
 	SQ_G_BOOK      = 6,
 	SQ_G_CODEX     = 7,
-};
-
+} SQ_CLOSED_ENUM;
 
 #define SQ_VSHIFT 4
 #define SQ_VMASK_BITS ((1<<SQ_VSHIFT)-1)
