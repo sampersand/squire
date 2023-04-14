@@ -49,28 +49,12 @@ void *sq_calloc(size_t count, size_t size)
 #endif
 	;
 
-void *sq_realloc(void *ptr, size_t size)
-	SQ_NODISCARD
-// #if SQ_HAS_ATTRIBUTE(malloc)
-// 	SQ_ATTR(malloc)
-// #endif
-// #if SQ_HAS_ATTRIBUTE(alloc_size)
-// 	SQ_ATTR(alloc_size(1))
-// #endif
-;
+void *sq_realloc(void *ptr, size_t size) SQ_NODISCARD;
+void *sq_memdup(void *ptr, size_t size) SQ_NODISCARD;
 
-void *sq_memdup(void *ptr, size_t size)
-	SQ_NODISCARD
-// #if SQ_HAS_ATTRIBUTE(malloc)
-// 	SQ_ATTR(malloc)
-// #endif
-// #if SQ_HAS_ATTRIBUTE(alloc_size)
-// 	SQ_ATTR(alloc_size(1))
-// #endif
-;
-
-void SQ_NORETURN sq_bug_fn(const char *file, const char *fn, size_t line, const char *fmt, ...)
+SQ_NORETURN void sq_bug_fn(const char *file, const char *fn, size_t line, const char *fmt, ...)
 	SQ_COLD SQ_ATTR_PRINTF(4, 5) SQ_NONNULL;
+
 #define sq_bug_fn(...) (sq_bug_fn(__VA_ARGS__),SQ_UNREACHABLE)
 
 #ifdef SQ_RELEASE_FAST
@@ -79,6 +63,6 @@ void SQ_NORETURN sq_bug_fn(const char *file, const char *fn, size_t line, const 
 # define sq_bug(...) sq_bug_fn(__FILE__, __func__, __LINE__, __VA_ARGS__)
 #endif /* defined(SQ_RELEASE_FAST) */
 
-char *sq_read_file(const char *filename) SQ_NONNULL SQ_RETURNS_NONNULL;
+char *sq_read_file(const char *filename) SQ_NONNULL SQ_RETURNS_NONNULL ;
 
 #endif /* !SQ_SHARED_H */

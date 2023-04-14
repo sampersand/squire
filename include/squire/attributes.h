@@ -25,8 +25,11 @@
 # define SQ_ALIGNAS(...) _Alignas(__VA_ARGS__)
 # define SQ_STATIC_ASSERT(...) _Static_assert(__VA_ARGS__)
 #else
-# define SQ_HAS_NORETURN
-# define SQ_NORETURN
+# if SQ_HAS_ATTRIBUTE(noreturn)
+#  define SQ_NORETURN SQ_ATTR(noreturn)
+# else
+#  define SQ_NORETURN
+# endif
 # define SQ_ALIGNAS(...)
 # define SQ_STATIC_ASSERT(...) void sq_doesntexist(void)
 #endif

@@ -1,10 +1,10 @@
 struct person { name, favcolor }
 
 func greet(person) {
-	proclaim("Hello, " + person.name + "!\n");
+	print("Hello, " + person.name + "!\n");
 
 	if person.favcolor == "green" {
-		proclaim("I like green too!\n");
+		print("I like green too!\n");
 	}
 }
 
@@ -16,11 +16,11 @@ func fizzBuzz (max) {
 	i = 1;
 
 	while i < max {
-		if !(i % 3) { proclaim("Fizz") }
-		if !(i % 5) { proclaim("Buzz") }
-		if  (i%3)*(i%5) { proclaim(i) }
+		if !(i % 3) { print("Fizz") }
+		if !(i % 5) { print("Buzz") }
+		if  (i%3)*(i%5) { print(i) }
 		i = i + 1;
-		proclaim("\n");
+		print("\n");
 	}
 }
 

@@ -33,7 +33,7 @@ struct sq_other {
 		struct sq_envoy envoy;
 		sq_citation citation;
 		struct sq_pattern_helper helper;
-	} f;
+	};
 };
 
 static inline enum sq_other_kind sq_other_kindof(const struct sq_other *other) {
