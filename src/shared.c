@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-static void memory_error(const char *fmt, ...) SQ_ATTR_NORETURN_COLD SQ_ATTR_PRINTF(1,2);
+static SQ_NORETURN void memory_error(const char *fmt, ...) SQ_COLD SQ_ATTR_PRINTF(1,2);
 static void memory_error(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);

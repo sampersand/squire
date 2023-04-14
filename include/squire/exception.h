@@ -20,14 +20,17 @@ extern struct sq_form sq_exception_form, sq_io_exception_form;
 struct sq_program;
 void sq_exception_init(struct sq_program *program);
 
-void sq_throw_value(sq_value value) SQ_ATTR_NORETURN_COLD;
-void sq_throw2(struct sq_form *form, const char *fmt, ...)
-	SQ_ATTR_NORETURN_COLD
+void SQ_NORETURN sq_throw_value(sq_value value) SQ_COLD;
+void SQ_NORETURN sq_throw2(struct sq_form *form, const char *fmt, ...)
+	SQ_COLD
 	SQ_NONNULL
 	SQ_ATTR_PRINTF(2, 3);
 
 #define sq_throw(...) sq_throw2(&sq_exception_form, __VA_ARGS__)
-void sq_throw_io(const char *fmt, ...) SQ_ATTR_NORETURN_COLD SQ_NONNULL SQ_ATTR_PRINTF(1, 2);
+void SQ_NORETURN sq_throw_io(const char *fmt, ...)
+	SQ_COLD
+	SQ_NONNULL
+	SQ_ATTR_PRINTF(1, 2);
 
 #define sq_throw_io(...) sq_throw_io_(__VA_ARGS__, strerror(errno))
 #define sq_throw_io_(fmt, ...) sq_throw2(&sq_io_exception_form, "io error: " fmt ": %s", __VA_ARGS__)

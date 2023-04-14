@@ -30,7 +30,7 @@ enum sq_genus_tag {
 
 #define SQ_VSHIFT 4
 #define SQ_VMASK_BITS ((1<<SQ_VSHIFT)-1)
-_Static_assert((SQ_VMASK_BITS & SQ_G_CODEX) == SQ_G_CODEX, "oops?");
+SQ_STATIC_ASSERT((SQ_VMASK_BITS & SQ_G_CODEX) == SQ_G_CODEX, "oops?");
 
 #define SQ_VMASK(value, kind) ((value) | (kind))
 #define SQ_VUNMASK(value) ((value) & ~SQ_VMASK_BITS)

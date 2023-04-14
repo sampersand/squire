@@ -5,7 +5,10 @@
 
 #define SQ_INTERRUPT_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
 #define SQ_INTERRUPT_SHIFT_AMOUNT 2
-_Static_assert(SQ_INTERRUPT_MAX_ARITY < (1 << SQ_INTERRUPT_SHIFT_AMOUNT), "max arity and shift amnt mismatch");
+SQ_STATIC_ASSERT(
+	SQ_INTERRUPT_MAX_ARITY < (1 << SQ_INTERRUPT_SHIFT_AMOUNT),
+	"max arity and shift amnt mismatch"
+);
 
 #define SQ_INTERRUPT(arity, id) ( \
 	((id) << SQ_INTERRUPT_SHIFT_AMOUNT) | (arity) \
@@ -56,7 +59,7 @@ static inline unsigned sq_interrupt_arity(enum sq_interrupt interrupt) {
 
 #define SQ_OPCODE_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
 #define SQ_OPCODE_SHIFT_AMOUNT 2
-_Static_assert(SQ_OPCODE_MAX_ARITY < (1 << SQ_OPCODE_SHIFT_AMOUNT), "max arity and shift amnt mismatch");
+SQ_STATIC_ASSERT(SQ_OPCODE_MAX_ARITY < (1 << SQ_OPCODE_SHIFT_AMOUNT), "max arity and shift amnt mismatch");
 
 #define SQ_OPCODE(arity, id) ( \
 	((id) << SQ_OPCODE_SHIFT_AMOUNT) | (arity) \

@@ -74,8 +74,8 @@ void *sq_memdup(void *ptr, size_t size)
 // #endif
 ;
 
-void sq_bug_fn(const char *file, const char *function, size_t line, const char *fmt, ...)
-	SQ_ATTR_NORETURN_COLD SQ_ATTR_PRINTF(4, 5) SQ_NONNULL;
+void SQ_NORETURN sq_bug_fn(const char *file, const char *fn, size_t line, const char *fmt, ...)
+	SQ_COLD SQ_ATTR_PRINTF(4, 5) SQ_NONNULL;
 
 char *sq_read_file(const char *filename) SQ_NONNULL SQ_RETURNS_NONNULL;
 

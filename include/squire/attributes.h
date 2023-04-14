@@ -19,17 +19,14 @@
 # define SQ_ATTR(...)
 #endif /* __GNUC__ || __clang__ */
 
-#if SQ_HAS_ATTRIBUTE(noreturn)
-# if SQ_HAS_ATTRIBUTE(cold)
-#  define SQ_ATTR_NORETURN_COLD SQ_ATTR(noreturn,cold)
-# else
-#  define SQ_ATTR_NORETURN_COLD SQ_ATTR(noreturn)
-# endif
-#elif SQ_HAS_ATTRIBUTE(cold)
-# define SQ_ATTR_NORETURN_COLD _Noreturn SQ_ATTR(cold)
+#define SQ_NORETURN _Noreturn
+#define SQ_STATIC_ASSERT(...) _Static_assert(__VA_ARGS__)
+
+#if SQ_HAS_ATTRIBUTE(cold)
+# define SQ_COLD SQ_ATTR(cold)
 #else
-# define SQ_ATTR_NORETURN_COLD _Noreturn
-#endif /* SQ_HAS_ATTRIBUTE(nonnull) */
+# define SQ_COLD
+#endif
 
 #if SQ_HAS_ATTRIBUTE(enum_extensibility)
 # define SQ_CLOSED_ENUM SQ_ATTR(enum_extensibility(closed))
