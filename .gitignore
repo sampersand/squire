@@ -1,4 +1,5 @@
-squire
+./squire
+!include/squire
 bin
 obj
 tmp.sq

@@ -6,43 +6,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
-void *sq_malloc(size_t size) {
-	void *ptr = malloc(size);
-
-	if (ptr == NULL)
-		sq_memory_error("unable to allocate %zu bytes of memory", size);
-
-	return ptr;
-}
-
-void *sq_calloc(size_t count, size_t size) {
-	void *ptr = calloc(count, size);
-
-	if (ptr == NULL)
-		sq_memory_error("unable to zero-allocate %zu bytes of memory", size);
-
-	return ptr;
-}
-
-void *sq_realloc(void *ptr, size_t size) {
-	ptr = realloc(ptr, size);
-
-	if (ptr == NULL && size != 0)
-		sq_memory_error("unable to reallocate %zu bytes of memory", size);
-
-	return ptr;
-}
-
-void *sq_memdup(void *ptr, size_t size) {
-	ptr = memcpy(sq_malloc(size), ptr, size);
-
-	if (ptr == NULL && size != 0)
-		sq_memory_error("sq_memdup failed for size %zu", size);
-
-	return ptr;
-}
-
-void sq_memory_error(const char *fmt, ...) {
+static void memory_error(const char *fmt, ...) SQ_ATTR_NORETURN_COLD SQ_ATTR_PRINTF(1,2);
+static void memory_error(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
@@ -53,11 +18,48 @@ void sq_memory_error(const char *fmt, ...) {
 	abort();
 }
 
-void sq_bug_fn(const char *file, const char *function, long long line, const char *fmt, ...) {
+
+void *sq_malloc(size_t size) {
+	void *ptr = malloc(size);
+
+	if (ptr == NULL && size)
+		memory_error("unable to allocate %zu bytes of memory", size);
+
+	return ptr;
+}
+
+void *sq_calloc(size_t count, size_t size) {
+	void *ptr = calloc(count, size);
+
+	if (ptr == NULL && size)
+		memory_error("unable to zero-allocate %zu bytes of memory", size);
+
+	return ptr;
+}
+
+void *sq_realloc(void *ptr, size_t size) {
+	ptr = realloc(ptr, size);
+
+	if (ptr == NULL && size != 0)
+		memory_error("unable to reallocate %zu bytes of memory", size);
+
+	return ptr;
+}
+
+void *sq_memdup(void *ptr, size_t size) {
+	ptr = memcpy(sq_malloc(size), ptr, size);
+
+	if (ptr == NULL && size != 0)
+		memory_error("sq_memdup failed for size %zu", size);
+
+	return ptr;
+}
+
+void sq_bug_fn(const char *file, const char *function, size_t line, const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
-	fprintf(stderr, "bug at %s:%lld (%s): ", file, line, function);
+	fprintf(stderr, "bug at %s:%zu (%s): ", file, line, function);
 	vfprintf(stderr, fmt, args);
 	putc('\n', stderr);
 
