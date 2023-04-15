@@ -273,20 +273,20 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 
 static void compile_form_declaration(struct sq_code *code, struct form_declaration *fdecl) {
 	struct sq_form *form = sq_form_new(fdecl->name);
-	declare_global_variable(form->name, sq_value_new_form(form));
+	declare_global_variable(form->vt->name, sq_value_new_form(form));
 
-	form->nmatter = fdecl->nmatter;
-	form->matter = sq_malloc_vec(struct sq_form_matter, form->nmatter);
+	form->vt->nmatter = fdecl->nmatter;
+	form->vt->matter = sq_malloc_vec(struct sq_form_matter, form->vt->nmatter);
 
 	int global = -1;
 
 	for (unsigned i = 0; i < fdecl->nmatter; ++i) {
-		form->matter[i].name = fdecl->matter[i].name;
-		form->matter[i].genus = SQ_UNDEFINED;
+		form->vt->matter[i].name = fdecl->matter[i].name;
+		form->vt->matter[i].genus = SQ_UNDEFINED;
 
 		if (fdecl->matter[i].genus) {
 			if (global == -1) {
-				global = lookup_global_variable(form->name);
+				global = lookup_global_variable(form->vt->name);
 				set_opcode(code, SQ_OC_GLOAD);
 				set_index(code, global);
 				set_index(code, global = next_local(code));
@@ -302,31 +302,31 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 		}
 	}
 
-	form->imitate = fdecl->constructor ? compile_journey(fdecl->constructor, true) : NULL;
+	form->vt->imitate = fdecl->constructor ? compile_journey(fdecl->constructor, true) : NULL;
 
-	form->nrecollections = fdecl->nfuncs;
-	form->recollections = sq_malloc_vec(struct sq_journey *, form->nrecollections);
-	for (unsigned i = 0; i < form->nrecollections; ++i)
-		form->recollections[i] = compile_journey(fdecl->funcs[i], false);
+	form->vt->nrecollections = fdecl->nfuncs;
+	form->vt->recollections = sq_malloc_vec(struct sq_journey *, form->vt->nrecollections);
+	for (unsigned i = 0; i < form->vt->nrecollections; ++i)
+		form->vt->recollections[i] = compile_journey(fdecl->funcs[i], false);
 
-	form->nchanges = fdecl->nmeths;
-	form->changes = sq_malloc_vec(struct sq_journey *, form->nchanges);
-	for (unsigned i = 0; i < form->nchanges; ++i)
-		form->changes[i] = compile_journey(fdecl->meths[i], true);
+	form->vt->nchanges = fdecl->nmeths;
+	form->vt->changes = sq_malloc_vec(struct sq_journey *, form->vt->nchanges);
+	for (unsigned i = 0; i < form->vt->nchanges; ++i)
+		form->vt->changes[i] = compile_journey(fdecl->meths[i], true);
 
-	form->nessences = fdecl->nessences;
-	form->essences = sq_malloc_vec(struct sq_essence, form->nessences);
+	form->vt->nessences = fdecl->nessences;
+	form->vt->essences = sq_malloc_vec(struct sq_essence, form->vt->nessences);
 	for (unsigned i = 0; i < fdecl->nessences; ++i) {
-		form->essences[i].name = fdecl->essences[i].name;
-		form->essences[i].value = SQ_NI;
-		form->essences[i].genus = SQ_UNDEFINED;
+		form->vt->essences[i].name = fdecl->essences[i].name;
+		form->vt->essences[i].value = SQ_NI;
+		form->vt->essences[i].genus = SQ_UNDEFINED;
 	}
 
 	// no idea why this is a separate block. i think it's a holdover of older code and can be merged in
 	// with the `for` loop above.
 	if (fdecl->nessences) {
 		if (global < 0) {
-			global = lookup_global_variable(form->name);
+			global = lookup_global_variable(form->vt->name);
 			set_opcode(code, SQ_OC_GLOAD);
 			set_index(code, global);
 			set_index(code, global = next_local(code));
@@ -346,7 +346,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 			}
 
 			if (!fdecl->essences[i].value) {
-				form->essences[i].value = SQ_NI;
+				form->vt->essences[i].value = SQ_NI;
 				continue;
 			}
 
@@ -358,8 +358,8 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 		}
 	}
 
-	form->parents = sq_malloc_vec(struct sq_form *, fdecl->nparents);
-	form->nparents = fdecl->nparents;
+	form->vt->parents = sq_malloc_vec(struct sq_form *, fdecl->nparents);
+	form->vt->nparents = fdecl->nparents;
 
 	for (unsigned i = 0; i < fdecl->nparents; ++i) {
 		int index = lookup_global_variable(fdecl->parents[i]);
@@ -371,7 +371,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 
 		if (!sq_value_is_form(globals.ary[index].value))
 			sq_throw("can only set forms as parents, not %s", sq_value_typename(globals.ary[index].value));
-		form->parents[i] = sq_value_as_form(globals.ary[index].value);
+		form->vt->parents[i] = sq_value_as_form(globals.ary[index].value);
 	}
 
 	free(fdecl); // but none of the fields, as they're now owned by `form`.

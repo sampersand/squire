@@ -1037,7 +1037,7 @@ static struct journey_declaration *parse_journey_declaration(bool guard, bool is
 	if (guard)
 		GUARD(SQ_TK_FUNC);
 
-	struct journey_declaration *jd = sq_calloc(1, sizeof(struct journey_declaration));
+	struct journey_declaration *jd = sq_mallocz(struct journey_declaration);
 
 	// optional name
 	if (take().kind == SQ_TK_LPAREN) {

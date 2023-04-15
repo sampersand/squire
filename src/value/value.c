@@ -570,10 +570,10 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 
 	switch (sq_value_genus_tag(tocall)) {
 	case SQ_G_FORM:
-		return sq_value_new_imitation(sq_form_imitate(sq_value_as_form(tocall), args));
+		return sq_value_new_imitation(sq_form_imitate(AS_FORM(tocall), args));
 
 	case SQ_G_JOURNEY:
-		return sq_journey_run(sq_value_as_journey(tocall), args);
+		return sq_journey_run(AS_JOURNEY(tocall), args);
 
 	case SQ_G_IMITATION:
 		sq_todo("call imitation"); 
@@ -614,7 +614,7 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		return AS_TEXT(value);
 
 	case SQ_G_FORM:
-		return sq_text_new(strdup(AS_FORM(value)->name));
+		return sq_text_new(strdup(AS_FORM(value)->vt->name));
 
 	case SQ_G_BOOK:
 		return sq_book_to_text(AS_BOOK(value));
@@ -628,7 +628,7 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		if (to_text != NULL) {
 			sq_value text = sq_journey_run_deprecated(to_text, 1, &value);
 			if (!sq_value_is_text(text))
-				sq_throw("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->name);
+				sq_throw("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->vt->name);
 			return AS_TEXT(text);
 		}
 		// else fallthrough
@@ -668,7 +668,7 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 		if (to_numeral != NULL) {
 			sq_value numeral = sq_journey_run_deprecated(to_numeral, 1, &value);
 			if (!sq_value_is_numeral(numeral))
-				sq_throw("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->name);
+				sq_throw("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->vt->name);
 			return AS_NUMBER(numeral);
 		}
 		// else fallthrough
@@ -710,7 +710,7 @@ bool sq_value_to_veracity(sq_value value) {
 		if (to_veracity != NULL) {
 			sq_value veracity = sq_journey_run_deprecated(to_veracity, 1, &value);
 			if (!sq_value_is_veracity(veracity))
-				sq_throw("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
+				sq_throw("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->vt->name);
 			return AS_VERACITY(veracity);
 		}
 		// else fallthrough
@@ -728,10 +728,10 @@ bool sq_value_to_veracity(sq_value value) {
 size_t sq_value_length(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_G_BOOK:
-		return sq_value_as_book(value)->length;
+		return AS_BOOK(value)->length;
 
 	case SQ_G_CODEX:
-		return sq_value_as_codex(value)->length;
+		return AS_CODEX(value)->length;
 
 	case SQ_G_TEXT:
 		return AS_TEXT(value)->length;
@@ -742,7 +742,7 @@ size_t sq_value_length(sq_value value) {
 		if (length != NULL) {
 			sq_value veracity = sq_journey_run_deprecated(length, 1, &value);
 			if (!sq_value_is_numeral(veracity))
-				sq_throw("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->name);
+				sq_throw("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->vt->name);
 			return AS_NUMBER(veracity);
 		}
 		// else fallthrough
@@ -800,24 +800,24 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 
 	switch (sq_value_genus_tag(soul)) {
 	case SQ_G_FORM:
-		result = sq_form_get_attr(sq_value_as_form(soul), attr);
+		result = sq_form_get_attr(AS_FORM(soul), attr);
 		break;
 
 	case SQ_G_IMITATION:
-		result = sq_imitation_get_attr(sq_value_as_imitation(soul), attr);
+		result = sq_imitation_get_attr(AS_IMITATION(soul), attr);
 		break;
 
 	case SQ_G_BOOK:
 		if (!strcmp(attr, "verso"))
-			result = sq_book_index(sq_value_as_book(soul), 1);
+			result = sq_book_index(AS_BOOK(soul), 1);
 		else if (!strcmp(attr, "recto"))
-			result = sq_book_index2(sq_value_as_book(soul), -1);
+			result = sq_book_index2(AS_BOOK(soul), -1);
 		break;
 
 	case SQ_G_JOURNEY:
 		// this should probably be more sophisticated, eg the arity of the nth pattern
 		if (!strcmp(attr, "arity"))
-			result = sq_value_new_numeral(sq_value_as_journey(soul)->patterns[0].pargc);
+			result = sq_value_new_numeral(AS_JOURNEY(soul)->patterns[0].pargc);
 		break;
 
 	case SQ_G_OTHER:
@@ -846,25 +846,25 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 void sq_value_set_attr(sq_value soul, const char *attr, sq_value value) {
 	switch (sq_value_genus_tag(soul)) {
 	case SQ_G_FORM:
-		if (sq_form_set_attr(sq_value_as_form(soul), attr, value))
+		if (sq_form_set_attr(AS_FORM(soul), attr, value))
 			return;
 
 		break;
 
 	case SQ_G_IMITATION:
-		if (sq_imitation_set_attr(sq_value_as_imitation(soul), attr, value))
+		if (sq_imitation_set_attr(AS_IMITATION(soul), attr, value))
 			return;
 
 		break;
 
 	case SQ_G_BOOK:
 		if (!strcmp(attr, "verso")) {
-			sq_book_index_assign(sq_value_as_book(soul), 1, value);
+			sq_book_index_assign(AS_BOOK(soul), 1, value);
 			return;
 		}
 
 		if (!strcmp(attr, "recto")) {
-			sq_book_index_assign2(sq_value_as_book(soul), -1, value);
+			sq_book_index_assign2(AS_BOOK(soul), -1, value);
 			return;
 		}
 
@@ -889,12 +889,12 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 	bool matches;
 	switch (sq_value_genus_tag(formlike)) {
 	case SQ_G_FORM:
-		return sq_form_is_parent_of(sq_value_as_form(formlike), to_check);
+		return sq_form_is_parent_of(AS_FORM(formlike), to_check);
 
 	case SQ_G_JOURNEY: {
 		struct sq_args args = { .pargc = 1, .pargv = &to_check };
 
-		sq_value result = sq_journey_run(sq_value_as_journey(formlike), args);
+		sq_value result = sq_journey_run(AS_JOURNEY(formlike), args);
 		matches = sq_value_to_veracity(result);
 
 		return matches;
@@ -902,15 +902,15 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 
 	case SQ_G_TEXT:
 		// temporary hack until we get forms for primitives too
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Numeral") && sq_value_is_numeral(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Text") && sq_value_is_text(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Veracity") && sq_value_is_veracity(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Ni") && to_check == SQ_NI) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Form") && sq_value_is_form(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Imitation") && sq_value_is_imitation(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Journey") && sq_value_is_journey(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Book") && sq_value_is_book(to_check)) return true;
-		if (!strcmp(sq_value_as_text(formlike)->ptr, "Codex") && sq_value_is_codex(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Numeral") && sq_value_is_numeral(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Text") && sq_value_is_text(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Veracity") && sq_value_is_veracity(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Ni") && to_check == SQ_NI) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Form") && sq_value_is_form(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Imitation") && sq_value_is_imitation(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Journey") && sq_value_is_journey(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Book") && sq_value_is_book(to_check)) return true;
+		if (!strcmp(AS_TEXT(formlike)->ptr, "Codex") && sq_value_is_codex(to_check)) return true;
 		// fallthrough
 
 	case SQ_G_OTHER:
@@ -921,8 +921,8 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 		return sq_value_eql(formlike, to_check);
 
 	case SQ_G_BOOK:
-		for (unsigned i = 0; i < sq_value_as_book(formlike)->length; ++i)
-			if (sq_value_matches(sq_value_as_book(formlike)->pages[i], to_check))
+		for (unsigned i = 0; i < AS_BOOK(formlike)->length; ++i)
+			if (sq_value_matches(AS_BOOK(formlike)->pages[i], to_check))
 				return true;
 		return false;
 

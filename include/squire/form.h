@@ -42,6 +42,10 @@
  */
 struct sq_form {
 	struct sq_basic basic;
+	struct sq_form_vtable *vt;
+};
+
+struct sq_form_vtable {
 	unsigned nessences, nrecollections, nmatter, nchanges, nparents;
 
 	char *name;
@@ -59,8 +63,7 @@ struct sq_form {
 	struct sq_form **parents;
 };
 
-#warning todo
-// SQ_VALUE_ASSERT_SIZE(struct sq_form);
+SQ_VALUE_ASSERT_SIZE(struct sq_form);
 
 /** An instance of a `sq_form`. */
 struct sq_imitation {

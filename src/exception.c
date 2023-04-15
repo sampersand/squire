@@ -15,19 +15,21 @@ unsigned current_exception_handler;
 
 // very basics of an exception with a form. todo: that
 struct sq_form sq_exception_form, sq_io_exception_form;
+struct sq_form_vtable sq_exception_form_vtable, sq_io_exception_form_vtable;
 
 void sq_exception_init(struct sq_program *program) {
-	sq_exception_form.name = "Rock";
 	sq_exception_form.basic = SQ_BASIC_DEFAULT;
+	sq_exception_form.vt = &sq_exception_form_vtable;
+	sq_exception_form.vt->name = "Rock";
 
-	sq_exception_form.nmatter = 1;
-	sq_exception_form.matter = sq_malloc_single(struct sq_form_matter);
-	sq_exception_form.matter[0].name = "msg";
-	sq_exception_form.matter[0].genus = SQ_UNDEFINED; // todo: make it text.
+	sq_exception_form.vt->nmatter = 1;
+	sq_exception_form.vt->matter = sq_malloc_single(struct sq_form_matter);
+	sq_exception_form.vt->matter[0].name = "msg";
+	sq_exception_form.vt->matter[0].genus = SQ_UNDEFINED; // todo: make it text.
 
-	sq_exception_form.nchanges = 1;
-	sq_exception_form.changes = sq_malloc_single(struct sq_journey *);
-	struct sq_journey *to_text = sq_exception_form.changes[0] = sq_malloc_single(struct sq_journey);
+	sq_exception_form.vt->nchanges = 1;
+	sq_exception_form.vt->changes = sq_malloc_single(struct sq_journey *);
+	struct sq_journey *to_text = sq_exception_form.vt->changes[0] = sq_malloc_single(struct sq_journey);
 
 	(void) to_text;
 	(void) program;

@@ -19,6 +19,7 @@
 #define sq_todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
 
 #define sq_sizeof_array(kind, length) (sizeof(kind) * (length))
+#define sq_mallocz(kind) ((kind *) sq_calloc(1, sizeof(kind)))
 #define sq_malloc_single(kind) ((kind *) sq_malloc(sizeof(kind)))
 #define sq_malloc_vec(kind, length) ((kind *) sq_malloc(sq_sizeof_array(kind, (length))))
 #define sq_realloc_vec(kind, ptr, length) ((kind *) sq_realloc((ptr), sq_sizeof_array(kind, (length))))

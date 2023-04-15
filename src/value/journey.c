@@ -563,7 +563,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
 			sq_throw("can only addend citations");
 
-		set_next_local(sf, other->citation = operands[1]);
+		set_next_local(sf, *other->citation = operands[1]);
 		return;
 	}
 
@@ -952,17 +952,17 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		VM_CASE(SQ_OC_FEGENUS_STORE)
 			index = next_index(sf);
 			assert(sq_value_is_form(operands[0]));
-			assert(index < sq_value_as_form(operands[0])->nessences);
-			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
-			sq_value_as_form(operands[0])->essences[index].genus = operands[1];
+			assert(index < sq_value_as_form(operands[0])->vt->nessences);
+			assert(sq_value_as_form(operands[0])->vt->essences[index].genus == SQ_UNDEFINED);
+			sq_value_as_form(operands[0])->vt->essences[index].genus = operands[1];
 			continue;
 
 		VM_CASE(SQ_OC_FMGENUS_STORE)
 			index = next_index(sf);
 			assert(sq_value_is_form(operands[0]));
-			assert(index < sq_value_as_form(operands[0])->nmatter);
-			assert(sq_value_as_form(operands[0])->matter[index].genus == SQ_UNDEFINED);
-			sq_value_as_form(operands[0])->matter[index].genus = operands[1];
+			assert(index < sq_value_as_form(operands[0])->vt->nmatter);
+			assert(sq_value_as_form(operands[0])->vt->matter[index].genus == SQ_UNDEFINED);
+			sq_value_as_form(operands[0])->vt->matter[index].genus = operands[1];
 			continue;
 		VM_SWITCH_END
 
