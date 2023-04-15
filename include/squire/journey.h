@@ -44,8 +44,24 @@ struct sq_journey {
 
 	struct sq_journey_pattern *patterns;
 };
+
+struct sq_stackframe {
+	unsigned ip;
+	const struct sq_journey *journey;
+	const struct sq_journey_pattern *pattern;
+	sq_value *locals;
+};
+
+#ifndef SQ_MAX_STACKFRAME_COUNT
+# define SQ_MAX_STACKFRAME_COUNT 10000000
+#endif
+extern struct sq_stackframe sq_stackframes[SQ_MAX_STACKFRAME_COUNT];
+extern unsigned sq_current_stackframe;
+
+
 SQ_VALUE_ASSERT_SIZE(struct sq_journey);
 
+void sq_stackframe_mark(struct sq_stackframe *stackframe);
 void sq_journey_mark(struct sq_journey *journey);
 void sq_journey_deallocate(struct sq_journey *journey);
 

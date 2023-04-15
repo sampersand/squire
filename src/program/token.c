@@ -45,7 +45,7 @@ static struct sq_text *parse_fraktur_bareword(void) {
 	if (!(fraktur_len = fraktur_length(sq_stream, &fraktur_pos)))
 		return NULL;
 
-	char *fraktur = sq_malloc(16);
+	char *fraktur = sq_malloc_heap(16);
 	unsigned cap = 16, len = 0;
 
 	do {
@@ -211,7 +211,7 @@ static struct sq_token next_interpolation_token(void) {
 
 static struct sq_token parse_text(void) {
 	unsigned length = 0;
-	char *dst = sq_malloc(strlen(sq_stream));
+	char *dst = sq_malloc_heap(strlen(sq_stream));
 	char quote, c;
 
 	if (put_back_quote)
@@ -304,7 +304,7 @@ static struct sq_token parse_identifier(void) {
 	token.kind = SQ_TK_IDENT;
 	unsigned len = 0, cap = 16;
 
-	token.identifier = sq_malloc(cap);
+	token.identifier = sq_malloc_heap(cap);
 
 	while (true) {
 		if (len == cap)

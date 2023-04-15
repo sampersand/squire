@@ -30,8 +30,7 @@ void sq_scroll_init(struct sq_scroll *scroll, const char *filename, const char *
 
 	struct sq_other *other;
 #define NEW_JOURNEY(_name, _nargs) \
-	_name##_journey = sq_value_new_other(other = sq_malloc_single(struct sq_other)); \
-	other->basic = SQ_BASIC_DEFAULT; \
+	_name##_journey = sq_value_new_other(other = sq_mallocv(struct sq_other)); \
 	other->kind = SQ_OK_BUILTIN_JOURNEY; \
 	other->builtin_journey.name = "Scroll."#_name; \
 	other->builtin_journey.nargs = _nargs; \

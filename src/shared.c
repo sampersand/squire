@@ -18,7 +18,7 @@ static void memory_error(const char *fmt, ...) {
 }
 
 
-void *sq_malloc(size_t size) {
+void *sq_malloc_heap(size_t size) {
 	void *ptr = malloc(size);
 
 	if (ptr == NULL && size)
@@ -46,7 +46,7 @@ void *sq_realloc(void *ptr, size_t size) {
 }
 
 void *sq_memdup(void *ptr, size_t size) {
-	ptr = memcpy(sq_malloc(size), ptr, size);
+	ptr = memcpy(sq_malloc_heap(size), ptr, size);
 
 	if (ptr == NULL && size != 0)
 		memory_error("sq_memdup failed for size %zu", size);
@@ -78,7 +78,7 @@ char *sq_read_file(const char *filename) {
 
 	size_t length = 0;
 	size_t capacity = 2048;
-	char *contents = sq_malloc(capacity);
+	char *contents = sq_malloc_heap(capacity);
 
 	while (!feof(file)) {
 		size_t amntread = fread(&contents[length], 1, capacity - length, file);

@@ -1,8 +1,8 @@
 #ifndef SQ_SHARED_H
 #define SQ_SHARED_H
 
-#include <squire/valuedecl.h>
 #include <squire/attributes.h>
+#include <squire/gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,11 +20,15 @@
 
 #define sq_sizeof_array(kind, length) (sizeof(kind) * (length))
 #define sq_mallocz(kind) ((kind *) sq_calloc(1, sizeof(kind)))
-#define sq_malloc_single(kind) ((kind *) sq_malloc(sizeof(kind)))
-#define sq_malloc_vec(kind, length) ((kind *) sq_malloc(sq_sizeof_array(kind, (length))))
+#define sq_mallocv(kind) (assert(sizeof(kind) <= SQ_VALUE_SIZE),\
+	(kind *) sq_gc_malloc( \
+	SQ_TAG_FOR(kind) \
+))
+#define sq_malloc_single(kind) ((kind *) sq_malloc_heap(sizeof(kind)))
+#define sq_malloc_vec(kind, length) ((kind *) sq_malloc_heap(sq_sizeof_array(kind, (length))))
 #define sq_realloc_vec(kind, ptr, length) ((kind *) sq_realloc((ptr), sq_sizeof_array(kind, (length))))
 
-void *sq_malloc(size_t size)
+void *sq_malloc_heap(size_t size)
 	SQ_NODISCARD
 #if SQ_HAS_ATTRIBUTE(malloc)
 	SQ_ATTR(malloc)

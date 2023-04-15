@@ -10,9 +10,8 @@ struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
 	assert(length <= capacity);
 	assert(!(length != 0 && pages == NULL));
 
-	struct sq_book *book = sq_malloc_single(struct sq_book);
+	struct sq_book *book = sq_mallocv(struct sq_book);
 
-	book->basic = SQ_BASIC_DEFAULT;
 	book->capacity = capacity;
 	book->length = length;
 	book->pages = pages;
@@ -117,7 +116,7 @@ void sq_book_index_assign(struct sq_book *book, size_t index, sq_value value) {
 
 struct sq_text *sq_book_to_text(const struct sq_book *book) {
 	unsigned len = 0, cap = 64;
-	char *str = sq_malloc(cap);
+	char *str = sq_malloc_heap(cap);
 	str[len++] = '[';
 
 	for (unsigned i = 0; i < book->length; ++i) {
@@ -161,7 +160,7 @@ struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt) {
 
 struct sq_text *sq_book_join(const struct sq_book *book, const struct sq_text *sep) {
 	unsigned len = 0, cap = 64, seplen = strlen(sep->ptr);
-	char *str = sq_malloc(cap);
+	char *str = sq_malloc_heap(cap);
 
 	for (unsigned i = 0; i < book->length; ++i) {
 		if (i) {

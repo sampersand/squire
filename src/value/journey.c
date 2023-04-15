@@ -44,8 +44,23 @@ static void deallocate_pattern(struct sq_journey_pattern *pattern) {
 	free(pattern->code.bytecode);
 }
 
+void sq_stackframe_mark(struct sq_stackframe *stackframe) {
+#ifndef NDEBUG
+	for (unsigned i = 0; i < stackframe->journey->npatterns; ++i)
+		if (&stackframe->journey->patterns[i] == stackframe->pattern)
+			goto found;
+	assert(0); // uh oh, the stackframe wasn't a part of the current journey
+found:
+#endif
+	
+	sq_journey_mark((struct sq_journey *)  stackframe->journey); // lol we just removed constness..
+	for (unsigned i = 0; i < stackframe->pattern->code.nlocals;	++i)
+		sq_value_mark(stackframe->locals[i]);
+}
+
 void sq_journey_mark(struct sq_journey *journey) {
 	SQ_GUARD_MARK(journey);
+	printf("marking: %s (%d)\n", journey->name, journey->npatterns);
 
 	for (unsigned i = 0; i < journey->npatterns; ++i) {
 		struct sq_journey_pattern pattern = journey->patterns[i];
@@ -66,13 +81,6 @@ void sq_journey_deallocate(struct sq_journey *journey) {
 void sq_journey_dump(FILE *out, const struct sq_journey *journey) {
 	fprintf(out, "Journey(%s, %d patterns)", journey->name, journey->npatterns);
 }
-
-struct sq_stackframe {
-	unsigned ip;
-	const struct sq_journey *journey;
-	const struct sq_journey_pattern *pattern;
-	sq_value *locals;
-};
 
 static sq_value sq_run_stackframe(struct sq_stackframe *stackframe);
 
@@ -139,12 +147,20 @@ static int assign_positional_arguments(
 	return i;
 }
 
+
+struct sq_stackframe sq_stackframes[SQ_MAX_STACKFRAME_COUNT];
+unsigned sq_current_stackframe;
+
 static sq_value try_run_pattern(
 	const struct sq_journey *journey,
 	const struct sq_journey_pattern *pattern,
 	struct sq_args *args
 ) {
-	struct sq_stackframe sf = {
+	if (sq_current_stackframe == SQ_MAX_STACKFRAME_COUNT)
+		sq_throw("too many stackframes encountered");
+
+	struct sq_stackframe *sf = &sq_stackframes[sq_current_stackframe++];
+	*sf = (struct sq_stackframe) {
 		.journey = journey,
 		.pattern = pattern,
 		.locals = calloc(sizeof(sq_value), pattern->code.nlocals)
@@ -152,7 +168,7 @@ static sq_value try_run_pattern(
 
 	sq_value result = SQ_UNDEFINED;
 
-	int positional_argument_stop_index = assign_positional_arguments(&sf, pattern, args);
+	int positional_argument_stop_index = assign_positional_arguments(sf, pattern, args);
 
 	if (positional_argument_stop_index < 0)
 		goto free_and_return;
@@ -161,18 +177,18 @@ static sq_value try_run_pattern(
 
 	// ie we have a condition
 	if (0 <= pattern->condition_start) {
-		sf.ip = pattern->condition_start;
-		sq_value condition = sq_run_stackframe(&sf);
+		sf->ip = pattern->condition_start;
+		sq_value condition = sq_run_stackframe(sf);
 		bool is_valid = sq_value_to_numeral(condition);
 		if (!is_valid) goto free_and_return;
 	}
 
-	sf.ip = pattern->start_index;
-	result = sq_run_stackframe(&sf);
+	sf->ip = pattern->start_index;
+	result = sq_run_stackframe(sf);
 
 free_and_return:
-
-	free(sf.locals);
+	free(sf->locals);
+	--sq_current_stackframe;
 	return result;
 }
 
@@ -472,6 +488,8 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	VM_CASE(SQ_INT_DUMP)
 		sq_value_dump(stdout, operands[0]);
 		set_next_local(sf, operands[0]);
+		sq_gc_start();
+		#warning gc start in dump
 		return;
 
 	// [DST] DST <- next line from stdin
@@ -510,7 +528,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		size_t tmp;
 		size_t capacity = 2048;
 		size_t length = 0;
-		char *result = sq_malloc(capacity);
+		char *result = sq_malloc_heap(capacity);
 
 		// try to read the entire stream's stdout to `result`.
 		while (0 != (tmp = fread(result + length, 1, capacity - length, stream))) {
@@ -671,8 +689,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// temporary hacks until we get kingdoms working.
 	VM_CASE(SQ_INT_FOPEN) {
-		other = sq_malloc_single(struct sq_other);
-		other->basic = SQ_BASIC_DEFAULT;
+		other = sq_mallocv(struct sq_other);
 		other->kind = SQ_OK_SCROLL;
 		struct sq_text *filename = sq_value_to_text(operands[0]);
 		struct sq_text *mode = sq_value_to_text(operands[1]);
@@ -684,7 +701,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	VM_CASE(SQ_INT_ASCII)
 		if (sq_value_is_numeral(operands[0])) {
-			char *data = sq_malloc(2);
+			char *data = sq_malloc_heap(2);
 			data[0] = sq_value_as_numeral(operands[0]) & 0xff;
 			data[1] = '\0';
 			set_next_local(sf, sq_value_new_text(sq_text_new(data)));
@@ -862,8 +879,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 
 	/** Misc **/
 		VM_CASE(SQ_OC_CITE) {
-			struct sq_other *ptr = sq_malloc_single(struct sq_other);
-			ptr->basic = SQ_BASIC_DEFAULT;
+			struct sq_other *ptr = sq_mallocv(struct sq_other);
 			ptr->kind = SQ_OK_CITATION;
 			ptr->citation = next_local(sf);
 			SET_RESULT(sq_value_new_other(ptr));
@@ -898,8 +914,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		VM_CASE(SQ_OC_PAT_NOT)
 		VM_CASE(SQ_OC_PAT_OR)
 		VM_CASE(SQ_OC_PAT_AND) {
-			struct sq_other *helper = sq_malloc_single(struct sq_other);
-			helper->basic = SQ_BASIC_DEFAULT;
+			struct sq_other *helper = sq_mallocv(struct sq_other);
 			helper->kind = SQ_OK_PAT_HELPER;
 			helper->helper.left = operands[0];
 

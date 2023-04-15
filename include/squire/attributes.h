@@ -89,7 +89,7 @@
 #else
 # define SQ_LIKELY(x) (!!(x))
 #endif /* SQ_HAS_BUILTIN(__builtin_expect) */
-#define SQ_UNLIKELY(x) SQ_LIKELY(!(x))
+#define SQ_UNLIKELY(x) (!SQ_LIKELY(!(x)))
 
 #if SQ_HAS_BUILTIN(__builtin_unreachable)
 # define SQ_UNREACHABLE __builtin_unreachable()

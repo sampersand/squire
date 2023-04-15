@@ -2,6 +2,7 @@
 #include <squire/text.h>
 #include <squire/value.h>
 #include <squire/form.h>
+#include <squire/other/other.h>
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -18,7 +19,7 @@ struct sq_form sq_exception_form, sq_io_exception_form;
 struct sq_form_vtable sq_exception_form_vtable, sq_io_exception_form_vtable;
 
 void sq_exception_init(struct sq_program *program) {
-	sq_exception_form.basic = SQ_BASIC_DEFAULT;
+	sq_exception_form.basic = SQ_STATIC_BASIC(struct sq_form);
 	sq_exception_form.vt = &sq_exception_form_vtable;
 	sq_exception_form.vt->name = "Rock";
 
@@ -29,7 +30,7 @@ void sq_exception_init(struct sq_program *program) {
 
 	sq_exception_form.vt->nchanges = 1;
 	sq_exception_form.vt->changes = sq_malloc_single(struct sq_journey *);
-	struct sq_journey *to_text = sq_exception_form.vt->changes[0] = sq_malloc_single(struct sq_journey);
+	struct sq_journey *to_text = sq_exception_form.vt->changes[0] = sq_mallocv(struct sq_journey);
 
 	(void) to_text;
 	(void) program;

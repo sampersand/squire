@@ -69,22 +69,28 @@ void sq_value_dump(FILE *out, sq_value value) {
 	}
 }
 
-void sq_value_mark(sq_value value);
-void sq_value_deallocate(sq_value value);
-
 void sq_value_mark(sq_value value) {
+	assert(value != SQ_UNDEFINED);
+
+	if (sq_value_is_numeral(value)) return;
+
+	// printf("marking: ");
+	// sq_value_dump(stdout, value);
+	// printf("\n");
 	switch (SQ_VTAG(value)) {
-	case SQ_G_TEXT: sq_text_mark(AS_TEXT(value)); return;
-	case SQ_G_FORM: sq_form_mark(AS_FORM(value)); return;
-	case SQ_G_IMITATION: sq_imitation_mark(AS_IMITATION(value)); return;
-	case SQ_G_JOURNEY: sq_journey_mark(AS_JOURNEY(value)); return;
-	case SQ_G_BOOK: sq_book_mark(AS_BOOK(value)); return;
-	case SQ_G_CODEX: sq_codex_mark(AS_CODEX(value)); return;
+	case SQ_G_TEXT: sq_text_mark(AS_TEXT(value)); break;
+	case SQ_G_FORM: sq_form_mark(AS_FORM(value)); break;
+	case SQ_G_IMITATION: sq_imitation_mark(AS_IMITATION(value)); break;
+	case SQ_G_JOURNEY: sq_journey_mark(AS_JOURNEY(value)); break;
+	case SQ_G_BOOK: sq_book_mark(AS_BOOK(value)); break;
+	case SQ_G_CODEX: sq_codex_mark(AS_CODEX(value)); break;
 	case SQ_G_OTHER: if (sq_value_is_other(value)) sq_other_mark(AS_OTHER(value));
 	}
 }
 
 void sq_value_deallocate(sq_value value) {
+	assert(value != SQ_UNDEFINED);
+
 	switch (SQ_VTAG(value)) {
 	case SQ_G_TEXT: sq_text_deallocate(AS_TEXT(value)); return;
 	case SQ_G_FORM: sq_form_deallocate(AS_FORM(value)); return;
@@ -769,7 +775,7 @@ struct sq_book *sq_value_to_book(sq_value value) {
 		struct sq_book *book = sq_book_allocate(text->length);
 
 		for (unsigned i = 0; i < text->length; ++i) {
-			char *data = sq_malloc(2);
+			char *data = sq_malloc_heap(2);
 			data[0] = text->ptr[i];
 			data[1] = '\0';
 			book->pages[book->length++] = sq_value_new_text(sq_text_new2(data, 1));

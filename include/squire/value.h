@@ -8,6 +8,11 @@
 
 #include <squire/valuedecl.h>
 
+static inline sq_value sq_value_new_ptr_unchecked(void *ptr, enum sq_genus_tag tag) {
+	assert(tag != SQ_G_NUMERAL);
+	return ((sq_value) ptr) | tag;
+}
+
 static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
 	assert(numeral == (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) numeral) << SQ_VSHIFT, SQ_G_NUMERAL);

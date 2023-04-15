@@ -311,7 +311,7 @@ static void parse_transcribe(void) {
 	if (errno) perror("cannot get file size"), exit(1);
 
 	size_t stream_len = strlen(sq_stream);
-	char *new_stream = sq_malloc(stream_len + file_size + 1);
+	char *new_stream = sq_malloc_heap(stream_len + file_size + 1);
 	fread(new_stream, 1, file_size, file);
 
 	if (errno) perror("cannot get read file contents"), exit(1);

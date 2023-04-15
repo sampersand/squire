@@ -23,13 +23,13 @@ static inline struct sq_text *sq_text_new(char *ptr) {
 #define SQ_TEXT_STATIC(literal) \
 	{ \
 		.ptr = (literal), \
-		.basic = SQ_BASIC_DEFAULT, \
+		.basic = SQ_STATIC_BASIC(struct sq_text), \
 		.length = sizeof(literal) - 1, \
 	}
 	// TODO: init basic
 
 static inline void sq_text_mark(struct sq_text *string) {
-	(void) string;
+	string->basic.marked = 1;
 }
 
 void sq_text_deallocate(struct sq_text *string);

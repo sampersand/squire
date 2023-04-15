@@ -4,7 +4,7 @@
 #include <squire/program.h>
 
 static struct sq_other sq_io_kingdom_other = {
-	.basic = SQ_BASIC_DEFAULT,
+	.basic = SQ_STATIC_BASIC(struct sq_other),
 	.kind = SQ_OK_KINGDOM,
 	.kingdom = {
 		.name = "Io"

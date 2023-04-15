@@ -5,9 +5,8 @@
 #include <string.h>
 
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages) {
-	struct sq_codex *codex = sq_malloc_single(struct sq_codex);
+	struct sq_codex *codex = sq_mallocv(struct sq_codex);
 
-	codex->basic = SQ_BASIC_DEFAULT;
 	codex->length = length;
 	codex->capacity = capacity;
 
@@ -16,11 +15,10 @@ struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_code
 }
 
 struct sq_codex *sq_codex_allocate(unsigned capacity) {
-	struct sq_codex *codex = sq_malloc_single(struct sq_codex);
+	struct sq_codex *codex = sq_mallocv(struct sq_codex);
 
 	codex->length = 0;
 	codex->capacity = capacity;
-	codex->basic = SQ_BASIC_DEFAULT;
 
 	codex->pages = sq_malloc_vec(struct sq_codex_page, capacity);
 	return codex;
@@ -56,7 +54,7 @@ void sq_codex_deallocate(struct sq_codex *codex) {
 
 struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 	unsigned len = 0, cap = 64;
-	char *str = sq_malloc(cap);
+	char *str = sq_malloc_heap(cap);
 	str[len++] = '{';
 
 	for (unsigned i = 0; i < codex->length; ++i) {

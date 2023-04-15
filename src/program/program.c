@@ -16,6 +16,19 @@ void sq_program_initialize(struct sq_program *program) {
 	sq_io_startup(program);	
 }
 
+void sq_program_mark(struct sq_program *program) {
+	for (unsigned i = 0; i < program->nglobals; ++i) {
+		if (program->globals[i] != SQ_UNDEFINED)
+			sq_value_mark(program->globals[i]);
+	}
+
+	sq_journey_mark(program->main);
+
+	for (unsigned i = 0; i < sq_current_stackframe; ++i)
+		sq_stackframe_mark(&sq_stackframes[i]);
+}
+
+
 sq_value create_argv(unsigned argc, const char **argv) {
 	sq_value *args = sq_malloc_vec(sq_value, argc);
 

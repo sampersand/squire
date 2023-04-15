@@ -93,8 +93,6 @@ void sq_other_deallocate(struct sq_other *other) {
 	case SQ_OK_PAT_HELPER:
 		break;
 	}
-
-	free(other);
 }
 
 const char *sq_other_typename(const struct sq_other *other) {

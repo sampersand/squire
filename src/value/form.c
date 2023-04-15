@@ -8,9 +8,8 @@
 struct sq_form *sq_form_new(char *name) {
 	assert(name != NULL);
 
-	struct sq_form *form = sq_malloc_single(struct sq_form);
+	struct sq_form *form = sq_mallocv(struct sq_form);
 
-	form->basic = SQ_BASIC_DEFAULT;
 	form->vt = sq_mallocz(struct sq_form_vtable);
 	form->vt->name = name;
 
@@ -150,10 +149,9 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 }
 
 struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) {
-	struct sq_imitation *imitation = sq_malloc_single(struct sq_imitation);
+	struct sq_imitation *imitation = sq_mallocv(struct sq_imitation);
 
 	imitation->form = form;
-	imitation->basic = SQ_BASIC_DEFAULT;
 
 	if (!form->vt->imitate) {
 		if (args.pargc != form->vt->nmatter)
@@ -184,9 +182,8 @@ struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	assert(form != NULL);
 	assert(form->vt->nmatter == 0 || matter != NULL);
 
-	struct sq_imitation *imitation = sq_malloc_single(struct sq_imitation);
+	struct sq_imitation *imitation = sq_mallocv(struct sq_imitation);
 
-	imitation->basic = SQ_BASIC_DEFAULT;
 	imitation->form = form;
 	imitation->matter = matter;
 

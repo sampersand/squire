@@ -411,7 +411,7 @@ static void compile_kingdom_declaration(struct sq_code *code, struct kingdom_dec
 // 	} *subjects;
 // };
 
-	// struct sq_kingdom *kingdom = sq_malloc(sizeof(struct sq_kingdom));
+	// struct sq_kingdom *kingdom = sq_malloc_heap(sizeof(struct sq_kingdom));
 	// kingdom->name = kdecl->name;
 	// kingdom->nsubjects = kingdom->subject_cap = kdecl->nsubjects;
 	// kingdom->subjects = sq_malloc_vec(struct sq_kingdom_subject, kingdom->nsubjects);
@@ -1519,10 +1519,9 @@ static void compile_journey_pattern(
 }
 
 static struct sq_journey *compile_journey(struct journey_declaration *jd, bool is_method) {
-	struct sq_journey *journey = sq_malloc_single(struct sq_journey);
+	struct sq_journey *journey = sq_mallocv(struct sq_journey);
 
 	journey->name = jd->name;
-	journey->basic = SQ_BASIC_DEFAULT;
 	journey->npatterns = jd->npatterns;
 	journey->program = program;
 	journey->is_method = is_method;
@@ -1573,7 +1572,7 @@ void sq_program_compile(struct sq_program *program_, const char *stream) {
 	setup_globals();
 
 	program = program_;
-	program->nglobals = 1;
+	program->nglobals = 0;
 	program->globals = NULL;
 
 	struct journey_declaration maindecl = {
@@ -1598,4 +1597,5 @@ void sq_program_compile(struct sq_program *program_, const char *stream) {
 
 	for (unsigned i = 0; i < program->nglobals; ++i)
 		program->globals[i] = globals.ary[i].value;
+	
 }

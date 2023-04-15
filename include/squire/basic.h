@@ -2,6 +2,7 @@
 #define SQ_BASIC_H
 
 #include <squire/attributes.h>
+#include <squire/valuedecl.h>
 
 #define SQ_VALUE_SIZE 64
 #define SQ_VALUE_ALIGNMENT 8
@@ -13,12 +14,16 @@
 	SQ_STATIC_ASSERT(sizeof(type) <= SQ_VALUE_SIZE, \
 		"type '" #type "' is too large (" SQ_TO_STRING_(SQ_VALUE_SIZE))
 
+enum foo { x };
 struct sq_basic {
 	SQ_ALIGNAS(SQ_VALUE_ALIGNMENT) char _blank;
-	bool marked: 1;
-} __align;
+	int marked: 1;
+	int in_use: 1;
+	enum sq_genus_tag genus: SQ_GENUS_TAG_BITS;
+};
 
-#define SQ_BASIC_DEFAULT ((struct sq_basic) { .marked = 0 })
+#define SQ_STATIC_BASIC(kind) ((struct sq_basic) { .marked = 0, .in_use = 1, \
+	.genus = SQ_TAG_FOR(kind) })
 #define SQ_GUARD_MARK(what) do { if ((what)->basic.marked) return; (what)->basic.marked = 1; } while(0)
 
 #endif
