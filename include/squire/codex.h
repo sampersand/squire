@@ -3,9 +3,11 @@
 #include <squire/value.h>
 
 struct sq_codex {
-	SQ_VALUE_ALIGN struct sq_codex_page *pages;
+	struct sq_basic basic;
+	struct sq_codex_page *pages;
 	unsigned length, capacity, refcount;
 };
+SQ_VALUE_ASSERT_SIZE(struct sq_codex);
 
 struct sq_codex_page {
 	sq_value key, value;

@@ -41,6 +41,7 @@
  * `parents` (TODO: describe aristotle)
  */
 struct sq_form {
+	struct sq_basic basic;
 	char *name;
 
 	unsigned nessences, nrecollections, nmatter, nchanges, nparents;
@@ -61,12 +62,17 @@ struct sq_form {
 	struct sq_form **parents;
 };
 
+#warning todo
+// SQ_VALUE_ASSERT_SIZE(struct sq_form);
+
 /** An instance of a `sq_form`. */
 struct sq_imitation {
+	struct sq_basic basic;
 	struct sq_form *form;
 	sq_value *matter;
 	unsigned refcount;
 };
+SQ_VALUE_ASSERT_SIZE(struct sq_imitation);
 
 /** Allocates a new form with the given `name`.
  * 

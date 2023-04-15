@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <squire/basic.h>
 #include <squire/attributes.h>
 
 struct sq_text;
@@ -45,8 +46,5 @@ static inline enum sq_genus_tag sq_value_genus_tag(sq_value value) {
 #define SQ_NAY SQ_VMASK((2 << SQ_VSHIFT), SQ_G_OTHER)
 #define SQ_NI SQ_VMASK((0 << SQ_VSHIFT), SQ_G_OTHER)
 #define SQ_UNDEFINED SQ_VMASK((3 << SQ_VSHIFT), SQ_G_OTHER)
-
-#define SQ_VALUE_ALIGNMENT (1<<SQ_VSHIFT)
-#define SQ_VALUE_ALIGN SQ_ALIGNAS(SQ_VALUE_ALIGNMENT)
 
 #endif /* SQ_VALUEDECL_H */

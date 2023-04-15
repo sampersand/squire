@@ -36,13 +36,15 @@ struct sq_journey_pattern {
 };
 
 struct sq_journey {
-	SQ_VALUE_ALIGN char *name;
+	struct sq_basic basic;
+	char *name;
 	unsigned refcount, npatterns;
 	struct sq_program *program;
 	bool is_method;
 
 	struct sq_journey_pattern *patterns;
 };
+SQ_VALUE_ASSERT_SIZE(struct sq_journey);
 
 void sq_journey_deallocate(struct sq_journey *journey);
 

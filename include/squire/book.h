@@ -13,18 +13,18 @@
  * to `sq_book_deallocate` to free its resources.
  */
 struct sq_book {
+	struct sq_basic basic;
+
 	/* The pages associated with this book. */
-	SQ_VALUE_ALIGN sq_value *pages;
+	sq_value *pages;
 
 	/* How many pages are in this book. */
 	size_t length;
 
 	/* How many pages the book can hold before reallocating. */
 	size_t capacity;
-
-	/** How many outstanding referencing there are to this book. */
-	unsigned refcount;
 };
+SQ_VALUE_ASSERT_SIZE(struct sq_book);
 
 /** Creates a new book from the given `length`, `capacity`, and `pages`.
  *
