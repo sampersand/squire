@@ -8,10 +8,6 @@
 
 #include <squire/valuedecl.h>
 
-// todo: remove these
-#define sq_value_clone(x) (x)
-#define sq_value_free(x) ((void) 0)
-
 static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
 	assert(numeral == (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) numeral) << SQ_VSHIFT, SQ_G_NUMERAL);

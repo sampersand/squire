@@ -371,7 +371,7 @@ static void compile_form_declaration(struct sq_code *code, struct form_declarati
 
 		if (!sq_value_is_form(globals.ary[index].value))
 			sq_throw("can only set forms as parents, not %s", sq_value_typename(globals.ary[index].value));
-		form->parents[i] = sq_value_as_form(sq_value_clone(globals.ary[index].value));
+		form->parents[i] = sq_value_as_form(globals.ary[index].value);
 	}
 
 	free(fdecl); // but none of the fields, as they're now owned by `form`.

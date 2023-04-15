@@ -43,9 +43,5 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 }
 
 void sq_program_finish(struct sq_program *program) {
-	// for (unsigned i = 0; i < program->nglobals; ++i)
-	// 	sq_value_free(program->globals[i]);
-
 	free(program->globals);
-	// sq_journey_free(program->main);
 }

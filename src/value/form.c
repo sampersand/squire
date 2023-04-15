@@ -103,7 +103,6 @@ bool sq_form_set_attr(struct sq_form *form, const char *attr, sq_value value) {
 	if (essence->genus != SQ_UNDEFINED && !sq_value_matches(essence->genus, value))
 		sq_throw("essence didnt match!");
 
-	sq_value_free(essence->value);
 	essence->value = value;
 
 	return true;
@@ -173,7 +172,7 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 		fn_args[0] = sq_value_new_imitation(imitation);
 		memcpy(fn_args + 1, args.pargv, sq_sizeof_array(sq_value, args.pargc));
 
-		sq_value_free(sq_journey_run_deprecated(form->imitate, args.pargc + 1, fn_args));
+		sq_journey_run_deprecated(form->imitate, args.pargc + 1, fn_args);
 	}
 
 	return imitation;
@@ -247,7 +246,6 @@ bool sq_imitation_set_attr(struct sq_imitation *imitation, const char *attr, sq_
 	if (imitation->form->matter[index].genus != SQ_UNDEFINED && !sq_value_matches(imitation->form->matter[index].genus, value))
 		sq_throw("matter didnt match!");
 
-	sq_value_free(imitation->matter[index]);
 	imitation->matter[index] = value;
 
 	return true;

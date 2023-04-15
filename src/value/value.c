@@ -357,11 +357,12 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		unsigned length = lary->length + rary->length;
 		sq_value *pages = sq_malloc_vec(sq_value, length);
 
+		// todo: memcpy
 		for (unsigned i = 0; i < lary->length; ++i)
-			pages[i] = sq_value_clone(lary->pages[i]);
+			pages[i] = lary->pages[i];
 
 		for (unsigned i = 0; i < rary->length; ++i)
-			pages[lary->length + i] = sq_value_clone(rary->pages[i]);
+			pages[lary->length + i] = rary->pages[i];
 
 		return sq_value_new_book(sq_book_new2(length, pages));
 	}
@@ -374,11 +375,10 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		// sq_value *elements = sq_malloc_vec(sq_value, length);
 
 		// for (; i < lhs->length; ++i)
-		// 	elements[i] = sq_value_clone(lary->elements[i]);
+		// 	elements[i] = lary->elements[i];
 		// for (; i < lhs->length; ++i)
-		// 	elements[i] = sq_value_clone(rary->elements[i]);
+		// 	elements[i] = rary->elements[i];
 
-		// sq_book_free(rhs);
 		// return sq_value_new(lary);
 	}
 
@@ -893,7 +893,6 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 
 	case SQ_G_JOURNEY: {
 		struct sq_args args = { .pargc = 1, .pargv = &to_check };
-		(void) sq_value_clone(to_check); // as we pass ownership.
 
 		sq_value result = sq_journey_run(sq_value_as_journey(formlike), args);
 		matches = sq_value_to_veracity(result);

@@ -89,7 +89,6 @@ struct sq_text *sq_scroll_read(struct sq_scroll *scroll, size_t length) {
 		position += nread;
 
 	if (ferror(scroll->file)) {
-		// sq_text_free(text);
 		sq_throw_io("unable to read %zu bytes from '%s'", length, scroll->filename);
 	}
 

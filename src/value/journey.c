@@ -38,9 +38,6 @@ static void deallocate_pattern(struct sq_journey_pattern *pattern) {
 	for (unsigned i = 0; i < pattern->kwargc; ++i)
 		free(pattern->kwargv[i].name);
 
-	for (unsigned i = 0; i < pattern->code.nconsts; ++i)
-		sq_value_free(pattern->code.consts[i]);
-
 	free(pattern->pargv);
 	free(pattern->kwargv);
 	free(pattern->code.consts);
@@ -88,7 +85,7 @@ static int assign_positional_arguments(
 	struct sq_book *splat = NULL;
 	// first, assign all positional arguments that we can.
 	for (i = 0; i < args->pargc && i < pattern->pargc; ++i)
-		sf->locals[i] = sq_value_clone(args->pargv[i]);
+		sf->locals[i] = args->pargv[i];
 
 	if (pattern->pargc == args->pargc) {
 		// do nothing, all argument counts worked out.
@@ -100,7 +97,7 @@ static int assign_positional_arguments(
 		splat = sq_book_allocate(args->pargc - i);
 
 		for (unsigned j = i; j < args->pargc; ++j)
-			splat->pages[splat->length++] = sq_value_clone(args->pargv[j]);
+			splat->pages[splat->length++] = args->pargv[j];
 	} else {
 		// we have fewer arguments than total argument count, so either fill out defaults, or return -1.
 
@@ -127,7 +124,6 @@ static int assign_positional_arguments(
 		sq_value genus = sq_run_stackframe(sf);
 
 		bool matches = sq_value_matches(genus, sf->locals[j]);
-		sq_value_free(genus);
 		if (!matches)
 			return -1;
 	}
@@ -168,7 +164,6 @@ static sq_value try_run_pattern(
 		sf.ip = pattern->condition_start;
 		sq_value condition = sq_run_stackframe(&sf);
 		bool is_valid = sq_value_to_numeral(condition);
-		sq_value_free(condition);
 		if (!is_valid) goto free_and_return;
 	}
 
@@ -177,10 +172,7 @@ static sq_value try_run_pattern(
 
 free_and_return:
 
-	for (unsigned i = 0; i < pattern->code.nlocals; ++i)
-		sq_value_free(sf.locals[i]);
 	free(sf.locals);
-
 	return result;
 }
 
@@ -263,7 +255,6 @@ static inline sq_value *next_local(struct sq_stackframe *sf) {
 static void set_local(struct sq_stackframe *sf, unsigned index, sq_value value) {
 	assert(index <= sf->pattern->code.nlocals);
 
-	sq_value_free(sf->locals[index]);
 	sf->locals[index] = value;
 }
 
@@ -454,7 +445,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 	// [A,DST] DST <- A.genus
 	VM_CASE(SQ_INT_KINDOF)
-		set_next_local(sf, sq_value_clone(sq_value_genus(operands[0])));
+		set_next_local(sf, sq_value_genus(operands[0]));
 		return;
 
 	// [A,DST] Print `A`, DST <- ni
@@ -480,7 +471,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	// [A,DST] Dumps out `A`, DST <- A
 	VM_CASE(SQ_INT_DUMP)
 		sq_value_dump(stdout, operands[0]);
-		set_next_local(sf, sq_value_clone(operands[0]));
+		set_next_local(sf, operands[0]);
 		return;
 
 	// [DST] DST <- next line from stdin
@@ -561,7 +552,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
 			sq_throw("can only read citations");
 
-		set_next_local(sf, sq_value_clone(*other->citation));
+		set_next_local(sf, *other->citation);
 		return;
 	}
 
@@ -572,8 +563,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
 			sq_throw("can only addend citations");
 
-		sq_value_free(*other->citation);
-		set_next_local(sf, sq_value_clone(*other->citation = sq_value_clone(operands[1])));
+		set_next_local(sf, other->citation = operands[1]);
 		return;
 	}
 
@@ -608,8 +598,8 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		struct sq_codex *codex = sq_codex_allocate(amnt);
 
 		for (; codex->length < amnt; ++codex->length) {
-			codex->pages[codex->length].key = sq_value_clone(*next_local(sf));
-			codex->pages[codex->length].value = sq_value_clone(*next_local(sf));
+			codex->pages[codex->length].key = *next_local(sf);
+			codex->pages[codex->length].value = *next_local(sf);
 		}
 
 		set_next_local(sf, sq_value_new_codex(codex));
@@ -622,7 +612,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		struct sq_book *book = sq_book_allocate(amnt);
 
 		for (; book->length < amnt; ++book->length)
-			book->pages[book->length] = sq_value_clone(*next_local(sf));
+			book->pages[book->length] = *next_local(sf);
 
 		set_next_local(sf, sq_value_new_book(book));
 		return;
@@ -636,8 +626,8 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		struct sq_book *book = sq_value_as_book(operands[0]);
 		unsigned index = sq_value_to_numeral(operands[1]);
 
-		sq_book_insert2(book, index, sq_value_clone(operands[2]));
-		set_next_local(sf, sq_value_clone(operands[2]));
+		sq_book_insert2(book, index, operands[2]);
+		set_next_local(sf, operands[2]);
 		return;
 	}
 
@@ -795,7 +785,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		VM_CASE(SQ_OC_MOV)
-			SET_RESULT(sq_value_clone(operands[0]));
+			SET_RESULT(operands[0]);
 
 		VM_CASE(SQ_OC_INT)
 			handle_interrupt(sf);
@@ -840,17 +830,17 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			struct sq_args args = { .pargc = pargc, .pargv = pargv };
 
 			for (unsigned i = 0; i < pargc; ++i)
-				args.pargv[i] = sq_value_clone(*next_local(sf));
+				args.pargv[i] = *next_local(sf);
 
 			SET_RESULT(sq_value_call(operands[0], args));
 		}
 
 		VM_CASE(SQ_OC_RETURN)
-			return sq_value_clone(operands[0]);
+			return operands[0];
 
 		VM_CASE(SQ_OC_THROW)
 			// TODO: catch thrown values and free memory in the current journey.
-			sq_throw_value(sq_value_clone(operands[0]));
+			sq_throw_value(operands[0]);
 
 		VM_CASE(SQ_OC_POPTRYCATCH)
 			sq_exception_pop();
@@ -899,7 +889,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		VM_CASE(SQ_OC_POW) SET_RESULT(sq_value_pow(operands[0], operands[1]));
 		VM_CASE(SQ_OC_INDEX) SET_RESULT(sq_value_index(operands[0], operands[1]));
 		VM_CASE(SQ_OC_INDEX_ASSIGN)
-			sq_value_index_assign(operands[0], sq_value_clone(operands[1]), sq_value_clone(operands[2]));
+			sq_value_index_assign(operands[0], operands[1], operands[2]);
 			continue;
 
 		VM_CASE(SQ_OC_MATCHES)
@@ -911,12 +901,12 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			struct sq_other *helper = sq_malloc_single(struct sq_other);
 			helper->basic = SQ_BASIC_DEFAULT;
 			helper->kind = SQ_OK_PAT_HELPER;
-			helper->helper.left = sq_value_clone(operands[0]);
+			helper->helper.left = operands[0];
 
 			if (opcode == SQ_OC_PAT_NOT)
 				helper->helper.kind = SQ_PH_NOT;
 			else {
-				helper->helper.right = sq_value_clone(operands[1]);
+				helper->helper.right = operands[1];
 				helper->helper.kind = opcode == SQ_OC_PAT_AND ? SQ_PH_AND : SQ_PH_OR;
 			}
 
@@ -928,20 +918,19 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			index = next_index(sf);
 			assert(index < code->nconsts);
 
-			SET_RESULT(sq_value_clone(code->consts[index]));
+			SET_RESULT(code->consts[index]);
 
 		VM_CASE(SQ_OC_GLOAD)
 			index = next_index(sf);
 			assert(index < sf->journey->program->nglobals);
 
-			SET_RESULT(sq_value_clone(sf->journey->program->globals[index]));
+			SET_RESULT(sf->journey->program->globals[index]);
 
 		VM_CASE(SQ_OC_GSTORE)
 			index = next_index(sf);
 			assert(index < sf->journey->program->nglobals);
 
-			sq_value_free(sf->journey->program->globals[index]);
-			sf->journey->program->globals[index] = sq_value_clone(operands[0]);
+			sf->journey->program->globals[index] = operands[0];
 			continue;
 
 		VM_CASE(SQ_OC_ILOAD)
@@ -965,7 +954,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			assert(sq_value_is_form(operands[0]));
 			assert(index < sq_value_as_form(operands[0])->nessences);
 			assert(sq_value_as_form(operands[0])->essences[index].genus == SQ_UNDEFINED);
-			sq_value_as_form(operands[0])->essences[index].genus = sq_value_clone(operands[1]);
+			sq_value_as_form(operands[0])->essences[index].genus = operands[1];
 			continue;
 
 		VM_CASE(SQ_OC_FMGENUS_STORE)
@@ -973,7 +962,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			assert(sq_value_is_form(operands[0]));
 			assert(index < sq_value_as_form(operands[0])->nmatter);
 			assert(sq_value_as_form(operands[0])->matter[index].genus == SQ_UNDEFINED);
-			sq_value_as_form(operands[0])->matter[index].genus = sq_value_clone(operands[1]);
+			sq_value_as_form(operands[0])->matter[index].genus = operands[1];
 			continue;
 		VM_SWITCH_END
 

@@ -82,7 +82,6 @@ void sq_book_insert(struct sq_book *book, size_t index, sq_value value) {
 		sq_sizeof_array(sq_value, book->length - index)
 	);
 
-	sq_value_free(book->pages[index]);
 	book->pages[index] = value;
 }
 
@@ -108,12 +107,11 @@ sq_value sq_book_index(const struct sq_book *book, size_t index) {
 	if (book->length <= index)
 		return SQ_NI;
 
-	return sq_value_clone(book->pages[index]);
+	return book->pages[index];
 }
 
 void sq_book_index_assign(struct sq_book *book, size_t index, sq_value value) {
 	expand_book(book, index + 1);
-	sq_value_free(book->pages[index]);
 	book->pages[index] = value;
 }
 
@@ -156,7 +154,7 @@ struct sq_book *sq_book_repeat(const struct sq_book *book, unsigned amnt) {
 
 	for (unsigned i = 0; i < amnt; ++i)
 		for (unsigned j = 0; j < book->length; ++j)
-			new->pages[new->length++] = sq_value_clone(book->pages[j]);
+			new->pages[new->length++] = book->pages[j];
 
 	return new;
 }
@@ -194,8 +192,8 @@ struct sq_book *sq_book_product(const struct sq_book *book, const struct sq_book
 	for (unsigned i = 0; i < book->length; ++i)
 		for (unsigned j = 0; j < rhs->length; ++j) {
 			struct sq_book *new = sq_book_allocate(2);
-			new->pages[new->length++] = sq_value_clone(book->pages[i]);
-			new->pages[new->length++] = sq_value_clone(rhs->pages[i]);
+			new->pages[new->length++] = book->pages[i];
+			new->pages[new->length++] = rhs->pages[i];
 			result->pages[result->length++] = sq_value_new_book(new);
 		}
 
@@ -216,14 +214,14 @@ struct sq_book *sq_book_select(const struct sq_book *book, const struct sq_journ
 
 	for (unsigned i = 0; i < book->length; ++i)
 		if (sq_value_to_veracity(sq_journey_run_deprecated(func, 1, &book->pages[i])))
-			result->pages[result->length++] = sq_value_clone(book->pages[i]);
+			result->pages[result->length++] = book->pages[i];
 
 	return result;
 }
 
 sq_value sq_book_reduce(const struct sq_book *book, const struct sq_journey *func) {
 	if (!book->length) return SQ_NI;
-	sq_value acc[2] = { sq_value_clone(book->pages[0]) };
+	sq_value acc[2] = { book->pages[0] };
 
 	for (unsigned i = 1; i < book->length; ++i) {
 		acc[1] = book->pages[i];
