@@ -19,7 +19,7 @@
 # define SQ_ATTR(...)
 #endif /* __GNUC__ || __clang__ */
 
-
+// We're mostly c11 compliant, barring anonymous unions. 
 #if __STDC_VERSION__ >= 201112L
 # define SQ_NORETURN _Noreturn
 # define SQ_ALIGNAS(...) _Alignas(__VA_ARGS__)

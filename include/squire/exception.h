@@ -20,9 +20,9 @@ extern struct sq_form sq_exception_form, sq_io_exception_form;
 struct sq_program;
 void sq_exception_init(struct sq_program *program);
 
-SQ_NORETURN void sq_throw_value(sq_value value) SQ_COLD ;
-SQ_NORETURN SQ_ATTR_PRINTF(2, 3) SQ_COLD SQ_NONNULL;
-void sq_throw2(struct sq_form *form, const char *fmt, ...);
+SQ_NORETURN void sq_throw_value(sq_value value) SQ_COLD;
+SQ_NORETURN void sq_throw2(struct sq_form *form, const char *fmt, ...)
+	SQ_ATTR_PRINTF(2, 3) SQ_COLD SQ_NONNULL;
 
 #define sq_throw_value(...) (sq_throw_value(__VA_ARGS__),SQ_UNREACHABLE) // a hack for c99
 // #define sq_throw2(...) (sq_throw2(__VA_ARGS__),SQ_UNREACHABLE)
