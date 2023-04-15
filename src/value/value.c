@@ -69,66 +69,30 @@ void sq_value_dump(FILE *out, sq_value value) {
 	}
 }
 
-sq_value sq_value_clone(sq_value value) {
+void sq_value_mark(sq_value value);
+void sq_value_deallocate(sq_value value);
+
+void sq_value_mark(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_TEXT:
-		return sq_value_new_text(sq_text_clone(AS_TEXT(value)));
-
-	case SQ_G_FORM:
-		return sq_value_new_form(sq_form_clone(AS_FORM(value)));
-
-	case SQ_G_IMITATION:
-		return sq_value_new_imitation(sq_imitation_clone(AS_IMITATION(value)));
-
-	case SQ_G_JOURNEY:
-		return sq_value_new_journey(sq_journey_clone(AS_JOURNEY(value)));
-
-	case SQ_G_BOOK:
-		return sq_value_new_book(sq_book_clone(AS_BOOK(value)));
-
-	case SQ_G_CODEX:
-		return sq_value_new_codex(sq_codex_clone(AS_CODEX(value)));
-
-	case SQ_G_OTHER:
-		if (sq_value_is_other(value))
-			return sq_value_new_other(sq_other_clone(AS_OTHER(value)));
-
-	default:
-		return value;
+	case SQ_G_TEXT: sq_text_mark(AS_TEXT(value)); return;
+	case SQ_G_FORM: sq_form_mark(AS_FORM(value)); return;
+	case SQ_G_IMITATION: sq_imitation_mark(AS_IMITATION(value)); return;
+	case SQ_G_JOURNEY: sq_journey_mark(AS_JOURNEY(value)); return;
+	case SQ_G_BOOK: sq_book_mark(AS_BOOK(value)); return;
+	case SQ_G_CODEX: sq_codex_mark(AS_CODEX(value)); return;
+	case SQ_G_OTHER: if (sq_value_is_other(value)) sq_other_mark(AS_OTHER(value));
 	}
 }
 
-void sq_value_free(sq_value value) {
+void sq_value_deallocate(sq_value value) {
 	switch (SQ_VTAG(value)) {
-	case SQ_G_TEXT:
-		sq_text_free(AS_TEXT(value));
-		return;
-
-	case SQ_G_FORM:
-		sq_form_free(AS_FORM(value));
-		return;
-
-	case SQ_G_IMITATION:
-		sq_imitation_free(AS_IMITATION(value));
-		return;
-
-	case SQ_G_JOURNEY:
-		sq_journey_free(AS_JOURNEY(value));
-		return;
-
-	case SQ_G_BOOK:
-		sq_book_free(AS_BOOK(value));
-		return;
-
-	case SQ_G_CODEX:
-		sq_codex_free(AS_CODEX(value));
-		return;
-
-	case SQ_G_OTHER:
-		if (sq_value_is_other(value))
-			sq_other_free(AS_OTHER(value));
-
-		return;
+	case SQ_G_TEXT: sq_text_deallocate(AS_TEXT(value)); return;
+	case SQ_G_FORM: sq_form_deallocate(AS_FORM(value)); return;
+	case SQ_G_IMITATION: sq_imitation_deallocate(AS_IMITATION(value)); return;
+	case SQ_G_JOURNEY: sq_journey_deallocate(AS_JOURNEY(value)); return;
+	case SQ_G_BOOK: sq_book_deallocate(AS_BOOK(value)); return;
+	case SQ_G_CODEX: sq_codex_deallocate(AS_CODEX(value)); return;
+	case SQ_G_OTHER: if (sq_value_is_other(value)) sq_other_deallocate(AS_OTHER(value));
 	}
 }
 
@@ -177,7 +141,7 @@ sq_value sq_value_genus(sq_value value) {
 		return sq_value_new_text(&KIND_TEXT);
 
 	case SQ_G_IMITATION:
-		return sq_value_new_form(sq_form_clone(AS_IMITATION(value)->form));
+		return sq_value_new_form(AS_IMITATION(value)->form);
 
 	case SQ_G_JOURNEY:
 		return sq_value_new_text(&KIND_FUNCTION);
@@ -381,8 +345,6 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		memcpy(result->ptr, AS_STR(lhs), AS_TEXT(lhs)->length);
 		memcpy(result->ptr + AS_TEXT(lhs)->length, rstr->ptr, rstr->length + 1);
 
-		// sq_text_free(rstr);
-		// if (free_lhs) sq_value_free(lhs);
 		return sq_value_new_text(result);
 	}
 
@@ -401,7 +363,6 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 		for (unsigned i = 0; i < rary->length; ++i)
 			pages[lary->length + i] = sq_value_clone(rary->pages[i]);
 
-		// sq_book_free(rary);
 		return sq_value_new_book(sq_book_new2(length, pages));
 	}
 
@@ -475,7 +436,7 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 		if (amnt < 0 || amnt >= UINT_MAX || (amnt * AS_TEXT(lhs)->length) >= UINT_MAX)
 			sq_throw("text multiplication by %"PRId64" is out of range", amnt);
 		if (amnt == 1)
-			return sq_value_new_text(sq_text_clone(AS_TEXT(lhs)));
+			return sq_value_new_text(AS_TEXT(lhs));
 
 		struct sq_text *result = sq_text_allocate(AS_TEXT(lhs)->length * amnt);
 		char *ptr = result->ptr;
@@ -650,7 +611,6 @@ struct sq_text *sq_value_to_text(sq_value value) {
 		return sq_numeral_to_text(AS_NUMBER(value));
 
 	case SQ_G_TEXT:
-		sq_text_clone(AS_TEXT(value));
 		return AS_TEXT(value);
 
 	case SQ_G_FORM:
@@ -802,7 +762,6 @@ size_t sq_value_length(sq_value value) {
 struct sq_book *sq_value_to_book(sq_value value) {
 	switch (SQ_VTAG(value)) {
 	case SQ_G_BOOK:
-		++AS_BOOK(value)->refcount;
 		return AS_BOOK(value);
 
 	case SQ_G_TEXT: {
@@ -939,7 +898,6 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 		sq_value result = sq_journey_run(sq_value_as_journey(formlike), args);
 		matches = sq_value_to_veracity(result);
 
-		sq_value_free(result);
 		return matches;
 	}
 

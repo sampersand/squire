@@ -8,6 +8,7 @@ struct sq_external;
 
 struct sq_external_form {
 	const char *name;
+	void (*mark)(struct sq_external *);
 	void (*deallocate)(struct sq_external *);
 	void (*dump)(FILE *, const struct sq_external *);	
 	sq_value (*get_attr)(const struct sq_external *, const char *);
@@ -23,7 +24,6 @@ struct sq_external {
 	const struct sq_external_form *form;
 	void *data;
 };
-
 
 static inline const char *sq_external_typename(const struct sq_external *external) {
 	return external->form->name;

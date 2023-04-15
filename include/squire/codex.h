@@ -5,14 +5,13 @@
 struct sq_codex {
 	struct sq_basic basic;
 	struct sq_codex_page *pages;
-	unsigned length, capacity, refcount;
+	unsigned length, capacity;
 };
 SQ_VALUE_ASSERT_SIZE(struct sq_codex);
 
 struct sq_codex_page {
 	sq_value key, value;
 };
-
 
 struct sq_codex *sq_codex_allocate(unsigned capacity);
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages);
@@ -21,23 +20,8 @@ static inline struct sq_codex *sq_codex_new2(unsigned length, struct sq_codex_pa
 	return sq_codex_new(length, length, pages);
 }
 
-static inline struct sq_codex *sq_codex_clone(struct sq_codex *codex) {
-	assert(codex->refcount);
-
-	++codex->refcount;
-
-	return codex;
-}
-
+void sq_codex_mark(struct sq_codex *codex);
 void sq_codex_deallocate(struct sq_codex *codex);
-
-static inline void sq_codex_free(struct sq_codex *codex) {
-	if(1)return; // memory issues go brr
-	assert(codex->refcount);
-
-	if (!--codex->refcount)
-		sq_codex_deallocate(codex);
-}
 
 struct sq_text *sq_codex_to_text(const struct sq_codex *codex);
 struct sq_codex_page *sq_codex_fetch_page(struct sq_codex *codex, sq_value key) SQ_NODISCARD;

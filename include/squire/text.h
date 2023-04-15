@@ -7,7 +7,6 @@
 struct sq_text {
 	struct sq_basic basic;
 	char *ptr;
-	int refcount;
 	unsigned length;
 };
 SQ_VALUE_ASSERT_SIZE(struct sq_basic);
@@ -24,29 +23,16 @@ static inline struct sq_text *sq_text_new(char *ptr) {
 #define SQ_TEXT_STATIC(literal) \
 	{ \
 		.ptr = (literal), \
-		.refcount = -1, \
+		.basic = SQ_BASIC_DEFAULT, \
 		.length = sizeof(literal) - 1, \
 	}
+	// TODO: init basic
 
-static inline struct sq_text *sq_text_clone(struct sq_text *text) {
-	assert(text->refcount);
-
-	if (0 < text->refcount)
-		++text->refcount;
-
-	return text;
+static inline void sq_text_mark(struct sq_text *string) {
+	(void) string;
 }
 
-void sq_text_dealloc(struct sq_text *stirng);
-
-static inline void sq_text_free(struct sq_text *text) {
-	if(1) return;
-	assert(text->refcount);
-
-	if (0 < text->refcount && !--text->refcount)
-		sq_text_dealloc(text);
-}
-
+void sq_text_deallocate(struct sq_text *string);
 void sq_text_combine(const struct sq_text *lhs, const struct sq_text *rhs);
 void sq_text_dump(FILE *out, const struct sq_text *text);
 char *sq_text_to_c_str(const struct sq_text *text);

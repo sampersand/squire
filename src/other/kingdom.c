@@ -24,10 +24,8 @@ void sq_kingdom_dump(FILE *out, const struct sq_kingdom *kingdom) {
 void sq_kingdom_deallocate(struct sq_kingdom *kingdom) {
 	free(kingdom->name);
 
-	for (unsigned i = 0; i < kingdom->nsubjects; ++i) {
+	for (unsigned i = 0; i < kingdom->nsubjects; ++i)
 		free(kingdom->subjects[i].name);
-		sq_value_free(kingdom->subjects[i].person);
-	}
 
 	free(kingdom->subjects);
 }
@@ -47,14 +45,13 @@ sq_value sq_kingdom_get_attr(const struct sq_kingdom *kingdom, const char *name)
 	if (subject == NULL) return SQ_UNDEFINED;
 
 	assert(subject->person != SQ_UNDEFINED);
-	return sq_value_clone(subject->person);
+	return subject->person;
 }
 
 bool sq_kingdom_set_attr(struct sq_kingdom *kingdom, const char *name, sq_value value) {
 	struct sq_kingdom_subject *subject = get_subject(kingdom, name);
 
 	if (subject != NULL) {
-		sq_value_free(subject->person);
 		subject->person = value;
 		return true;
 	}

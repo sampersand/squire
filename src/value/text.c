@@ -11,7 +11,7 @@ static struct sq_text *allocate_text(unsigned length) {
 	assert(length != 0);
 	struct sq_text *text = sq_malloc_single(struct sq_text);
 
-	text->refcount = 1;
+	text->basic = SQ_BASIC_DEFAULT;
 	text->length = length;
 
 	return text;
@@ -43,11 +43,8 @@ struct sq_text *sq_text_allocate(unsigned length) {
 	return text;
 }
 
-void sq_text_dealloc(struct sq_text *text) {
-	assert(!text->refcount);
-
+void sq_text_deallocate(struct sq_text *text) {
 	free(text->ptr);
-	free(text);
 }
 
 

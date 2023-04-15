@@ -10,7 +10,6 @@ struct sq_pattern_helper {
 };
 
 void sq_pattern_helper_dump(FILE *out, const struct sq_pattern_helper *pattern_helper);
-void sq_pattern_helper_deallocate(struct sq_pattern_helper *pattern_helper);
 bool sq_pattern_helper_matches(const struct sq_pattern_helper *pattern_helper, sq_value to_check);
 
 #endif /* !SQ_PATTERN_HELPER_H */

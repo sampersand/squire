@@ -31,7 +31,7 @@ void sq_scroll_init(struct sq_scroll *scroll, const char *filename, const char *
 	struct sq_other *other;
 #define NEW_JOURNEY(_name, _nargs) \
 	_name##_journey = sq_value_new_other(other = sq_malloc_single(struct sq_other)); \
-	other->refcount = 1; \
+	other->basic = SQ_BASIC_DEFAULT; \
 	other->kind = SQ_OK_BUILTIN_JOURNEY; \
 	other->builtin_journey.name = "Scroll."#_name; \
 	other->builtin_journey.nargs = _nargs; \
@@ -89,7 +89,7 @@ struct sq_text *sq_scroll_read(struct sq_scroll *scroll, size_t length) {
 		position += nread;
 
 	if (ferror(scroll->file)) {
-		sq_text_free(text);
+		// sq_text_free(text);
 		sq_throw_io("unable to read %zu bytes from '%s'", length, scroll->filename);
 	}
 

@@ -1,3 +1,4 @@
+proclaim(10);
 journey fibonacci(n) {
 	if (n <= I) { reward n; }
 	reward fibonacci(n - I) + fibonacci(n - II);

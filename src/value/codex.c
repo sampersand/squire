@@ -7,9 +7,9 @@
 struct sq_codex *sq_codex_new(unsigned length, unsigned capacity, struct sq_codex_page *pages) {
 	struct sq_codex *codex = sq_malloc_single(struct sq_codex);
 
+	codex->basic = SQ_BASIC_DEFAULT;
 	codex->length = length;
 	codex->capacity = capacity;
-	codex->refcount = 1;
 
 	codex->pages = pages;
 	return codex;
@@ -20,7 +20,7 @@ struct sq_codex *sq_codex_allocate(unsigned capacity) {
 
 	codex->length = 0;
 	codex->capacity = capacity;
-	codex->refcount = 1;
+	codex->basic = SQ_BASIC_DEFAULT;
 
 	codex->pages = sq_malloc_vec(struct sq_codex_page, capacity);
 	return codex;
@@ -40,17 +40,18 @@ void sq_codex_dump(FILE *out, const struct sq_codex *codex) {
 	fputc('}', out);
 }
 
-void sq_codex_deallocate(struct sq_codex *codex) {
-	assert(!codex->refcount);
+void sq_codex_mark(struct sq_codex *codex) {
+	SQ_GUARD_MARK(codex);
 
-	// double frees suck
 	for (unsigned i = 0; i < codex->length; ++i) {
-		sq_value_free(codex->pages[i].key);
-		sq_value_free(codex->pages[i].value);
+		sq_value_mark(codex->pages[i].key);
+		sq_value_mark(codex->pages[i].value);
 	}
+}
 
+void sq_codex_deallocate(struct sq_codex *codex) {
 	free(codex->pages);
-	free(codex);
+	// free(codex);
 }
 
 struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
@@ -75,7 +76,6 @@ struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 		len += key->length;
 		str[len++] = ':';
 		str[len++] = ' ';
-		sq_text_free(key);
 
 		struct sq_text *value = sq_value_to_text(codex->pages[i].value);
 	
@@ -84,7 +84,6 @@ struct sq_text *sq_codex_to_text(const struct sq_codex *codex) {
 	
 		memcpy(str + len, value->ptr, value->length);
 		len += value->length;
-		sq_text_free(value);
 	}
 
 	str = sq_realloc(str, len + 2);

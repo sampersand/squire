@@ -37,8 +37,37 @@ void sq_other_dump(FILE *out, const struct sq_other *other) {
 	}
 }
 
+void sq_other_mark(struct sq_other *other) {
+	SQ_GUARD_MARK(other);
+
+	switch (other->kind) {
+	case SQ_OK_SCROLL:
+	case SQ_OK_ENVOY:
+	case SQ_OK_BUILTIN_JOURNEY:
+		break;
+
+	case SQ_OK_EXTERNAL:
+		if (sq_other_as_external(other)->form->mark != NULL)
+			sq_other_as_external(other)->form->mark(sq_other_as_external(other));
+		break;
+
+	case SQ_OK_KINGDOM:
+		for (unsigned i = 0; i < sq_other_as_kingdom(other)->nsubjects; ++i)
+			sq_value_mark(sq_other_as_kingdom(other)->subjects[i].person);
+		break;
+
+	case SQ_OK_CITATION:
+		sq_value_mark(*sq_other_as_citation(other));
+		break;
+
+	case SQ_OK_PAT_HELPER:
+		sq_value_mark(sq_other_as_pattern_helper(other)->left);
+		sq_value_mark(sq_other_as_pattern_helper(other)->right);
+		break;
+	}
+}
+
 void sq_other_deallocate(struct sq_other *other) {
-	assert(!other->refcount);
 	switch (other->kind) {
 	case SQ_OK_SCROLL:
 		sq_scroll_deallocate(sq_other_as_scroll(other));
@@ -61,10 +90,7 @@ void sq_other_deallocate(struct sq_other *other) {
 		break;
 
 	case SQ_OK_CITATION:
-		break;
-
 	case SQ_OK_PAT_HELPER:
-		sq_pattern_helper_deallocate(sq_other_as_pattern_helper(other));
 		break;
 	}
 

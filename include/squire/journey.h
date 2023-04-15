@@ -37,8 +37,8 @@ struct sq_journey_pattern {
 
 struct sq_journey {
 	struct sq_basic basic;
+	unsigned npatterns;
 	char *name;
-	unsigned refcount, npatterns;
 	struct sq_program *program;
 	bool is_method;
 
@@ -46,24 +46,8 @@ struct sq_journey {
 };
 SQ_VALUE_ASSERT_SIZE(struct sq_journey);
 
+void sq_journey_mark(struct sq_journey *journey);
 void sq_journey_deallocate(struct sq_journey *journey);
-
-static inline struct sq_journey *sq_journey_clone(struct sq_journey *journey) {
-	assert(journey->refcount);
-
-	++journey->refcount;
-
-	return journey;
-}
-
-static inline void sq_journey_free(struct sq_journey *journey) {
-	if(1)return;//todo
-
-	assert(journey->refcount);
-
-	if (!--journey->refcount)
-		sq_journey_deallocate(journey);
-}
 
 sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args);
 

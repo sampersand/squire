@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <setjmp.h>
 
-#define SQ_USE_COMPUTED_GOTOS
+#define SQ_USE_COMPUTED_GOTOS // todo: make this programatically enabled
 #ifdef SQ_USE_COMPUTED_GOTOS
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wgnu-label-as-value"
@@ -47,15 +47,23 @@ static void deallocate_pattern(struct sq_journey_pattern *pattern) {
 	free(pattern->code.bytecode);
 }
 
-void sq_journey_deallocate(struct sq_journey *journey) {
-	assert(!journey->refcount);
+void sq_journey_mark(struct sq_journey *journey) {
+	SQ_GUARD_MARK(journey);
 
+	for (unsigned i = 0; i < journey->npatterns; ++i) {
+		struct sq_journey_pattern pattern = journey->patterns[i];
+
+		for (unsigned i = 0; i < pattern.code.nconsts; ++i)
+			sq_value_mark(pattern.code.consts[i]);
+	}
+}
+
+void sq_journey_deallocate(struct sq_journey *journey) {
 	for (unsigned i = 0; i < journey->npatterns; ++i)
 		deallocate_pattern(&journey->patterns[i]);
 
 	free(journey->name);
 	free(journey->patterns);
-	free(journey);
 }
 
 void sq_journey_dump(FILE *out, const struct sq_journey *journey) {
@@ -456,7 +464,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 			sq_throw_io("proclaimnl");
 		fflush(stdout);
 
-		sq_text_free(text);
 		set_next_local(sf, SQ_NI);
 		return;
 
@@ -467,7 +474,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 			sq_throw_io("proclaim");
 		fflush(stdout);
 
-		sq_text_free(text);
 		set_next_local(sf, SQ_NI);
 		return;
 
@@ -509,8 +515,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 		if (stream == NULL)
 			sq_throw_io("opening `hex` stream");
-
-		sq_text_free(text);
 
 		size_t tmp;
 		size_t capacity = 2048;
@@ -662,13 +666,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		set_next_local(sf, 
 			sq_value_new_text(do_babel(executable, stdin, amnt, (const struct sq_text **) &*args))
 		);
-
-		sq_text_free(executable);
-		sq_text_free(stdin);
-		for (unsigned i = 0; i < amnt; ++i)
-			sq_text_free(args[i]);
 		return;
-
 	}
 
 	// [A,DST] DST <- A.to_numeral().arabic()
@@ -684,13 +682,11 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	// temporary hacks until we get kingdoms working.
 	VM_CASE(SQ_INT_FOPEN) {
 		other = sq_malloc_single(struct sq_other);
-		other->refcount = 1;
+		other->basic = SQ_BASIC_DEFAULT;
 		other->kind = SQ_OK_SCROLL;
 		struct sq_text *filename = sq_value_to_text(operands[0]);
 		struct sq_text *mode = sq_value_to_text(operands[1]);
 		sq_scroll_init(&other->scroll, filename->ptr, mode->ptr);
-		sq_text_free(filename);
-		sq_text_free(mode);
 
 		set_next_local(sf, sq_value_new_other(other));
 		return;
@@ -725,7 +721,9 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		[SQ_OC_JMP] = &&VM_CASE_NAME(SQ_OC_JMP),
 		[SQ_OC_JMP_FALSE] = &&VM_CASE_NAME(SQ_OC_JMP_FALSE),
 		[SQ_OC_JMP_TRUE] = &&VM_CASE_NAME(SQ_OC_JMP_TRUE),
+#ifndef SQ_NMOON_JOKE
 		[SQ_OC_WERE_JMP] = &&VM_CASE_NAME(SQ_OC_WERE_JMP),
+#endif
 		[SQ_OC_COMEFROM] = &&VM_CASE_NAME(SQ_OC_COMEFROM),
 		[SQ_OC_CALL] = &&VM_CASE_NAME(SQ_OC_CALL),
 		[SQ_OC_RETURN] = &&VM_CASE_NAME(SQ_OC_RETURN),
@@ -875,7 +873,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 	/** Misc **/
 		VM_CASE(SQ_OC_CITE) {
 			struct sq_other *ptr = sq_malloc_single(struct sq_other);
-			ptr->refcount = 1;
+			ptr->basic = SQ_BASIC_DEFAULT;
 			ptr->kind = SQ_OK_CITATION;
 			ptr->citation = next_local(sf);
 			SET_RESULT(sq_value_new_other(ptr));
@@ -911,7 +909,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		VM_CASE(SQ_OC_PAT_OR)
 		VM_CASE(SQ_OC_PAT_AND) {
 			struct sq_other *helper = sq_malloc_single(struct sq_other);
-			helper->refcount = 1;
+			helper->basic = SQ_BASIC_DEFAULT;
 			helper->kind = SQ_OK_PAT_HELPER;
 			helper->helper.left = sq_value_clone(operands[0]);
 

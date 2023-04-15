@@ -42,12 +42,9 @@
  */
 struct sq_form {
 	struct sq_basic basic;
-	char *name;
-
 	unsigned nessences, nrecollections, nmatter, nchanges, nparents;
-	unsigned refcount;
 
-	struct sq_journey **recollections;
+	char *name;
 	struct sq_essence {
 		char *name;
 		sq_value value;
@@ -58,7 +55,7 @@ struct sq_form {
 		char *name;
 		sq_value genus; // may be SQ_UNDEFINED.
 	} *matter;
-	struct sq_journey **changes, *imitate;
+	struct sq_journey **changes, **recollections, *imitate; // imitate may be null
 	struct sq_form **parents;
 };
 
@@ -70,7 +67,6 @@ struct sq_imitation {
 	struct sq_basic basic;
 	struct sq_form *form;
 	sq_value *matter;
-	unsigned refcount;
 };
 SQ_VALUE_ASSERT_SIZE(struct sq_imitation);
 
@@ -80,28 +76,8 @@ SQ_VALUE_ASSERT_SIZE(struct sq_imitation);
  */
 struct sq_form *sq_form_new(char *name);
 
-// Simply increases the refcount of `form`; it shouldn't have a zero refcount.
-static inline struct sq_form *sq_form_clone(struct sq_form *form) {
-	assert(form->refcount);
-
-	++form->refcount;
-
-	return form;
-}
-
-/** Releases all resources associated with `form`.
- * 
- * Note that `form` must have a zero refcount.
- */
+void sq_form_mark(struct sq_form *form);
 void sq_form_deallocate(struct sq_form *form);
-
-// Reduces refcount of `form`, deallocating it if it was one. The refcount shouldn't be zero.
-static inline void sq_form_free(struct sq_form *form) {
-	assert(form->refcount);
-
-	if (!--form->refcount)
-		sq_form_deallocate(form);
-}
 
 /** Prints a debug representation of `form` to `out`. */
 void sq_form_dump(FILE *out, const struct sq_form *form);
@@ -163,31 +139,8 @@ struct sq_journey *sq_imitation_lookup_change(struct sq_imitation *imitation, co
  */
 sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name);
 bool sq_imitation_set_attr(struct sq_imitation *imitation, const char *name, sq_value value);
-
-// Simply increases the refcount of `imitation`; it shouldn't have a zero refcount.
-static inline struct sq_imitation *sq_imitation_clone(struct sq_imitation *imitation) {
-	assert(imitation->refcount);
-
-	++imitation->refcount;
-
-	return imitation;
-}
-
-/** Releases all resources associated with `imitation`.
- * 
- * Note that `imitation` must have a zero refcount.
- */
+void sq_imitation_mark(struct sq_imitation *imitation);
 void sq_imitation_deallocate(struct sq_imitation *imitation);
-
-// Reduces refcount of `imitation`, deallocating it if it was one. The refcount shouldn't be zero.
-static inline void sq_imitation_free(struct sq_imitation *imitation) {
-    if(1)return;//todo
-
-	assert(imitation->refcount);
-
-	if (!--imitation->refcount)
-		sq_imitation_deallocate(imitation);
-}
 
 /** Prints a debug representation of `imitation` to `out`. */
 void sq_imitation_dump(FILE *, const struct sq_imitation *imitation);

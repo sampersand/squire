@@ -13,13 +13,6 @@ void sq_pattern_helper_dump(FILE *out, const struct sq_pattern_helper *helper) {
 	sq_value_dump(out, helper->right);
 }
 
-void sq_pattern_helper_deallocate(struct sq_pattern_helper *helper) {
-	sq_value_free(helper->left);
-	
-	if (helper->kind != SQ_PH_NOT)
-		sq_value_free(helper->right);
-}
-
 bool sq_pattern_helper_matches(const struct sq_pattern_helper *helper, sq_value to_check) {
 	bool left_matches = sq_value_matches(helper->left, to_check);
 

@@ -12,10 +12,10 @@ struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
 
 	struct sq_book *book = sq_malloc_single(struct sq_book);
 
+	book->basic = SQ_BASIC_DEFAULT;
 	book->capacity = capacity;
 	book->length = length;
 	book->pages = pages;
-	book->refcount = 1;
 
 	return book;
 }
@@ -33,14 +33,16 @@ void sq_book_dump(FILE *out, const struct sq_book *book) {
 	fputc(']', out);
 }
 
-void sq_book_deallocate(struct sq_book *book) {
-	assert(!book->refcount);
+void sq_book_mark(struct sq_book *book) {
+	SQ_GUARD_MARK(book);
 
 	for (size_t i = 0; i < book->length; ++i)
-		sq_value_free(book->pages[i]);
+		sq_value_mark(book->pages[i]);
+}
 
+void sq_book_deallocate(struct sq_book *book) {
 	free(book->pages);
-	free(book);
+	// free(book);
 }
 
 size_t sq_book_fix_index(const struct sq_book *book, ssize_t index) {
@@ -135,7 +137,6 @@ struct sq_text *sq_book_to_text(const struct sq_book *book) {
 	
 		memcpy(str + len, inner->ptr, inner->length);
 		len += inner->length;
-		sq_text_free(inner);
 	}
 
 	str = sq_realloc(str, len + 2);
@@ -179,7 +180,6 @@ struct sq_text *sq_book_join(const struct sq_book *book, const struct sq_text *s
 
 		memcpy(str + len, text->ptr, text->length);
 		len += text->length;
-		sq_text_free(text);
 	}
 
 	str = sq_realloc(str, len + 1);

@@ -10,48 +10,48 @@ struct sq_form *sq_form_new(char *name) {
 
 	struct sq_form *form = sq_calloc(1, sizeof(struct sq_form));
 
-	form->refcount = 1;
+	form->basic = SQ_BASIC_DEFAULT;
 	form->name = name;
 
 	return form;
 }
 
-void sq_form_deallocate(struct sq_form *form) {
-	assert(!form->refcount);
+void sq_form_mark(struct sq_form *form) {
+	SQ_GUARD_MARK(form);
 
 	for (unsigned i = 0; i < form->nessences; ++i) {
-		free(form->essences[i].name);
-		sq_value_free(form->essences[i].value);
+		sq_value_mark(form->essences[i].value);
+
+		if (form->essences[i].genus != SQ_UNDEFINED)
+			sq_value_mark(form->essences[i].genus);
 	}
 
-	free(form->essences);
-
-	for (unsigned i = 0; i < form->nrecollections; ++i)
-		sq_journey_free(form->recollections[i]);
-
-	free(form->recollections);
-
-	for (unsigned i = 0; i < form->nmatter; ++i) {
-		if (form->matter[i].genus != SQ_UNDEFINED)
-			sq_value_free(form->matter[i].genus);
-		free(form->matter[i].name);
-	}
-
-	free(form->matter);
+	for (unsigned i = 0; i < form->nrecollections; ++i) 
+		sq_journey_mark(form->recollections[i]);
 
 	for (unsigned i = 0; i < form->nchanges; ++i)
-		sq_journey_free(form->changes[i]);
+		sq_journey_mark(form->recollections[i]);
+
+	if (form->imitate != NULL)
+		sq_journey_mark(form->imitate);
 
 	for (unsigned i = 0; i < form->nparents; ++i)
-		sq_form_free(form->parents[i]);
+		sq_form_mark(form->parents[i]);
+}
 
-	if (form->imitate)
-		sq_journey_free(form->imitate);
+void sq_form_deallocate(struct sq_form *form) {
+	for (unsigned i = 0; i < form->nessences; ++i)
+		free(form->essences[i].name);
 
-	free(form->changes);
-	free(form->parents);
+	for (unsigned i = 0; i < form->nmatter; ++i)
+		free(form->matter[i].name);
+
 	free(form->name);
-	free(form);
+	free(form->essences);
+	free(form->matter);
+	free(form->changes);
+	free(form->recollections);
+	free(form->parents);
 }
 
 struct sq_journey *sq_form_lookup_recollection(struct sq_form *form, const char *name) {
@@ -85,11 +85,11 @@ sq_value sq_form_get_attr(struct sq_form *form, const char *attr) {
 	struct sq_journey *recall = sq_form_lookup_recollection(form, attr);
 
 	if (recall != NULL)
-		return sq_value_new_journey(sq_journey_clone(recall));
+		return sq_value_new_journey(recall);
 
 	struct sq_essence *essence = sq_form_lookup_essence(form, attr);
 	if (essence != NULL)
-		return sq_value_clone(essence->value);
+		return essence->value;
 
 	return SQ_UNDEFINED;
 }
@@ -151,8 +151,8 @@ void sq_form_dump(FILE *out, const struct sq_form *form) {
 struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) {
 	struct sq_imitation *imitation = sq_malloc_single(struct sq_imitation);
 
-	imitation->form = sq_form_clone(form);
-	imitation->refcount = 1;
+	imitation->form = form;
+	imitation->basic = SQ_BASIC_DEFAULT;
 
 	if (!form->imitate) {
 		if (args.pargc != form->nmatter)
@@ -170,7 +170,7 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 			imitation->matter[i]=  SQ_NI;
 
 		sq_value fn_args[args.pargc + 1];
-		fn_args[0] = sq_value_new_imitation(sq_imitation_clone(imitation));
+		fn_args[0] = sq_value_new_imitation(imitation);
 		memcpy(fn_args + 1, args.pargv, sq_sizeof_array(sq_value, args.pargc));
 
 		sq_value_free(sq_journey_run_deprecated(form->imitate, args.pargc + 1, fn_args));
@@ -181,12 +181,11 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 
 struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
 	assert(form != NULL);
-	assert(form->refcount != 0);
 	assert(form->nmatter == 0 || matter != NULL);
 
 	struct sq_imitation *imitation = sq_malloc_single(struct sq_imitation);
 
-	imitation->refcount = 1;
+	imitation->basic = SQ_BASIC_DEFAULT;
 	imitation->form = form;
 	imitation->matter = matter;
 
@@ -231,11 +230,11 @@ sq_value sq_imitation_get_attr(struct sq_imitation *imitation, const char *name)
 	struct sq_journey *change = sq_imitation_lookup_change(imitation, name);
 
 	if (change != NULL)
-		return sq_value_new_journey(sq_journey_clone(change));
+		return sq_value_new_journey(change);
 
 	sq_value *matter = sq_imitation_lookup_matter(imitation, name);
 	if (matter != NULL)
-		return sq_value_clone(*matter);
+		return *matter;
 
 	return SQ_UNDEFINED;
 }
@@ -254,15 +253,16 @@ bool sq_imitation_set_attr(struct sq_imitation *imitation, const char *attr, sq_
 	return true;
 }
 
-void sq_imitation_deallocate(struct sq_imitation *imitation) {
-	assert(!imitation->refcount);
+void sq_imitation_mark(struct sq_imitation *imitation) {
+	SQ_GUARD_MARK(imitation);
 
+	sq_form_mark(imitation->form);
 	for (unsigned i = 0; i < imitation->form->nmatter; ++i)
-		sq_value_free(imitation->matter[i]);
-	free(imitation->matter);
+		sq_value_mark(imitation->matter[i]);
+}
 
-	sq_form_free(imitation->form);
-	free(imitation);
+void sq_imitation_deallocate(struct sq_imitation *imitation) {
+	free(imitation->matter);
 }
 
 void sq_imitation_dump(FILE *out, const struct sq_imitation *imitation) {

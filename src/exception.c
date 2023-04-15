@@ -18,7 +18,7 @@ struct sq_form sq_exception_form, sq_io_exception_form;
 
 void sq_exception_init(struct sq_program *program) {
 	sq_exception_form.name = "Rock";
-	sq_exception_form.refcount = 1;
+	sq_exception_form.basic = SQ_BASIC_DEFAULT;
 
 	sq_exception_form.nmatter = 1;
 	sq_exception_form.matter = sq_malloc_single(struct sq_form_matter);
@@ -71,7 +71,6 @@ void sq_throw_value(sq_value value)  {
 		exit(1);
 	}
 
-	sq_value_free(exception);
 	exception = value;
 
 	longjmp(exception_handlers[--current_exception_handler], 1);

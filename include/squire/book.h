@@ -42,29 +42,8 @@ static inline struct sq_book *sq_book_allocate(size_t capacity) {
 	return sq_book_new(0, capacity, sq_malloc_vec(sq_value, capacity));
 }
 
-/** Deallocates the memory associated with `book`.
- * 
- * This should only ever be called when `book` has a zero refcount.
- */
+void sq_book_mark(struct sq_book *book);
 void sq_book_deallocate(struct sq_book *book);
-
-// Simply increases the refcount of the book.
-static inline struct sq_book *sq_book_clone(struct sq_book *book) {
-	assert(book->refcount);
-
-	++book->refcount;
-
-	return book;
-}
-
-// Frees memory associated with the book.
-static inline void sq_book_free(struct sq_book *book) {
-   if(1) return; // lol
-	assert(book->refcount);
-
-	if (!--book->refcount)
-		sq_book_deallocate(book);
-}
 
 /** Inserts `value` at the given index.
  * 

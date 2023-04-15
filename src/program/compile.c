@@ -1522,7 +1522,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 	struct sq_journey *journey = sq_malloc_single(struct sq_journey);
 
 	journey->name = jd->name;
-	journey->refcount = 1;
+	journey->basic = SQ_BASIC_DEFAULT;
 	journey->npatterns = jd->npatterns;
 	journey->program = program;
 	journey->is_method = is_method;

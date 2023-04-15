@@ -8,6 +8,10 @@
 
 #include <squire/valuedecl.h>
 
+// todo: remove these
+#define sq_value_clone(x) (x)
+#define sq_value_free(x) ((void) 0)
+
 static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
 	assert(numeral == (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) numeral) << SQ_VSHIFT, SQ_G_NUMERAL);
@@ -163,9 +167,7 @@ static inline struct sq_other *sq_value_as_other(sq_value value) {
 	return (struct sq_other *) SQ_VUNMASK(value);
 }
 
-sq_value sq_value_clone(sq_value value) SQ_NODISCARD;
 void sq_value_dump(FILE *out, sq_value value);
-void sq_value_free(sq_value value);
 const char *sq_value_typename(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 sq_value sq_value_genus(sq_value value) SQ_NODISCARD;
 
@@ -196,6 +198,9 @@ static inline bool sq_value_geq(sq_value lhs, sq_value rhs) SQ_NODISCARD;
 static inline bool sq_value_geq(sq_value lhs, sq_value rhs) {
 	return sq_value_cmp(lhs, rhs) >= 0;
 }
+
+void sq_value_mark(sq_value value);
+void sq_value_deallocate(sq_value value);
 
 sq_value sq_value_neg(sq_value arg) SQ_NODISCARD;
 sq_value sq_value_add(sq_value lhs, sq_value rhs) SQ_NODISCARD;

@@ -39,16 +39,13 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	for (unsigned i = 0; i < argc; ++i)
 		args[i] = sq_value_new_text(sq_text_new(strdup(argv[i])));
 
-	sq_value_free(sq_journey_run_deprecated(program->main, 0, NULL));
-
-	for (unsigned i = 0; i < argc; ++i)
-		sq_value_free(args[i]);
+	sq_journey_run_deprecated(program->main, 0, NULL);
 }
 
 void sq_program_finish(struct sq_program *program) {
-	for (unsigned i = 0; i < program->nglobals; ++i)
-		sq_value_free(program->globals[i]);
+	// for (unsigned i = 0; i < program->nglobals; ++i)
+	// 	sq_value_free(program->globals[i]);
 
 	free(program->globals);
-	sq_journey_free(program->main);
+	// sq_journey_free(program->main);
 }

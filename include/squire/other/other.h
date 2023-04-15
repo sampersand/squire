@@ -13,7 +13,7 @@
 #include <assert.h>
 
 struct sq_other {
-	int refcount;
+	struct sq_basic basic;
 
 	enum sq_other_kind {
 		SQ_OK_SCROLL,
@@ -35,6 +35,8 @@ struct sq_other {
 		struct sq_pattern_helper helper;
 	};
 };
+
+SQ_VALUE_ASSERT_SIZE(struct sq_other);
 
 static inline enum sq_other_kind sq_other_kindof(const struct sq_other *other) {
 	assert(((char) (size_t) other & 7) <= SQ_OK_CITATION);
@@ -77,6 +79,7 @@ static inline struct sq_pattern_helper *sq_other_as_pattern_helper(struct sq_oth
 }
 
 void sq_other_dump(FILE *out, const struct sq_other *other);
+void sq_other_mark(struct sq_other *other);
 void sq_other_deallocate(struct sq_other *other);
 const char *sq_other_typename(const struct sq_other *other);
 sq_value sq_other_genus(const struct sq_other *other);
@@ -87,23 +90,5 @@ sq_value sq_other_get_attr(const struct sq_other *other, const char *attr);
 bool sq_other_set_attr(struct sq_other *other, const char *attr, sq_value value);
 bool sq_other_matches(const struct sq_other *formlike, sq_value to_check);
 sq_value sq_other_call(struct sq_other *other, struct sq_args args);
-
-static inline struct sq_other *sq_other_clone(struct sq_other *other) {
-	assert(other->refcount);
-
-	if (0 < other->refcount)
-		other->refcount++;
-
-	return other;
-}
-
-static inline void sq_other_free(struct sq_other *other) {
-	// hahaha... freaking double frees suck.
-	if(1)return;
-	assert(other->refcount);
-
-	if (0 < other->refcount && !--other->refcount)
-		sq_other_deallocate(other);
-}
 
 #endif /* ! SQ_OTHER_H */
