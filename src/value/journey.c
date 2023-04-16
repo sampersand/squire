@@ -21,12 +21,14 @@
 # endif /* defined(__clang__) */
 # define VM_SWITCH(oc, labels) goto *(labels)[oc];
 # define VM_CASE_NAME(oc) vm_case_##oc
-# define VM_CASE(oc) SQ_UNREACHABLE /* no fallthroughs */; VM_CASE_NAME(oc):
+# define VM_CASE(oc) SQ_UNREACHABLE /* no fallthroughs */; VM_CASE_FT(oc)
+# define VM_CASE_FT(oc) VM_CASE_NAME(oc):
 # define VM_SWITCH_END
 # define VM_DEFAULT if (0) 
 #else
 # define VM_SWITCH(oc, _labels) switch (oc) {
-# define VM_CASE(oc) SQ_UNREACHABLE /* no fallthroughs */; case oc :
+# define VM_CASE(oc) SQ_UNREACHABLE /* no fallthroughs */; VM_CASE_FT(oc)
+# define VM_CASE_FT(oc) case oc:
 # define VM_SWITCH_END }
 # define VM_DEFAULT default:
 #endif /* defined(SQ_USE_COMPUTED_GOTOS) */
@@ -60,7 +62,6 @@ found:
 
 void sq_journey_mark(struct sq_journey *journey) {
 	SQ_GUARD_MARK(journey);
-	printf("marking: %s (%d)\n", journey->name, journey->npatterns);
 
 	for (unsigned i = 0; i < journey->npatterns; ++i) {
 		struct sq_journey_pattern pattern = journey->patterns[i];
@@ -252,7 +253,7 @@ bool sq_moon_joke_does_were_flip() {
 
 static inline union sq_bytecode next_bytecode(struct sq_stackframe *sf) {
 	union sq_bytecode bc = sf->pattern->code.bytecode[sf->ip++];
-	sq_log("runtime[%d]=%u\n", sf->ip-1, bc.index);
+	sq_log_old("runtime[%d]=%u\n", sf->ip-1, bc.index);
 	return bc;
 }
 
@@ -488,8 +489,6 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	VM_CASE(SQ_INT_DUMP)
 		sq_value_dump(stdout, operands[0]);
 		set_next_local(sf, operands[0]);
-		sq_gc_start();
-		#warning gc start in dump
 		return;
 
 	// [DST] DST <- next line from stdin
@@ -814,9 +813,9 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			continue;
 
 		VM_CASE(SQ_OC_JMP_FALSE)
-		VM_CASE(SQ_OC_JMP_TRUE)
+		VM_CASE_FT(SQ_OC_JMP_TRUE)
 #ifndef SQ_NMOON_JOKE
-		VM_CASE(SQ_OC_WERE_JMP)
+		VM_CASE_FT(SQ_OC_WERE_JMP)
 #endif /* SQ_NMOON_JOKE */
 			index = next_index(sf);
 			bool should_jump = sq_value_to_veracity(operands[0]) == (opcode == SQ_OC_JMP_TRUE);
@@ -912,8 +911,8 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			SET_RESULT(sq_value_new_veracity(sq_value_matches(operands[0], operands[1])));
 
 		VM_CASE(SQ_OC_PAT_NOT)
-		VM_CASE(SQ_OC_PAT_OR)
-		VM_CASE(SQ_OC_PAT_AND) {
+		VM_CASE_FT(SQ_OC_PAT_OR)
+		VM_CASE_FT(SQ_OC_PAT_AND) {
 			struct sq_other *helper = sq_mallocv(struct sq_other);
 			helper->kind = SQ_OK_PAT_HELPER;
 			helper->helper.left = operands[0];

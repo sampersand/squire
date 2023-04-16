@@ -12,7 +12,7 @@ static void extend_bytecode_cap(struct sq_compiler *compiler) {
 }
 
 void sq_compiler_set_opcode(struct sq_compiler *compiler, enum sq_opcode opcode) {
-	sq_log("bytecode[%d].opcode=%s\n", compiler->code.len, sq_opcode_repr(opcode));
+	sq_log_old("bytecode[%d].opcode=%s\n", compiler->code.len, sq_opcode_repr(opcode));
 
 	extend_bytecode_cap(compiler);
 
@@ -20,7 +20,7 @@ void sq_compiler_set_opcode(struct sq_compiler *compiler, enum sq_opcode opcode)
 }
 
 void sq_compiler_set_index(struct sq_compiler *compiler, unsigned index) {
-	sq_log("bytecode[%d].index=%d\n", compiler->code.len, index);
+	sq_log_old("bytecode[%d].index=%d\n", compiler->code.len, index);
 
 	extend_bytecode_cap(compiler);
 
@@ -28,7 +28,7 @@ void sq_compiler_set_index(struct sq_compiler *compiler, unsigned index) {
 }
 
 void sq_compiler_set_interrupt(struct sq_compiler *compiler, enum sq_interrupt interrupt) {
-	sq_log("bytecode[%d].interrupt=%s\n", compiler->code.len, sq_interrupt_repr(interrupt));
+	sq_log_old("bytecode[%d].interrupt=%s\n", compiler->code.len, sq_interrupt_repr(interrupt));
 
 	extend_bytecode_cap(compiler);
 
@@ -36,7 +36,7 @@ void sq_compiler_set_interrupt(struct sq_compiler *compiler, enum sq_interrupt i
 }
 
 void sq_compiler_set_count(struct sq_compiler *compiler, unsigned count) {
-	sq_log("bytecode[%d].count=%d\n", compiler->code.len, count);
+	sq_log_old("bytecode[%d].count=%d\n", compiler->code.len, count);
 
 	extend_bytecode_cap(compiler);
 
@@ -68,7 +68,7 @@ unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value con
 	printf("consts[%d]=", index); 
 	sq_value_dump(stdout, constant);
 	putchar('\n');
-#endif /* sq_log */
+#endif /* sq_log_old */
 
 	compiler->consts.ary[index] = constant;
 
@@ -124,7 +124,7 @@ unsigned sq_compiler_global_declare(struct sq_globals *globals, char *name, sq_v
 
 	index = globals->len++;
 
-	sq_log("global[%d]: %s\n", index, name);
+	sq_log_old("global[%d]: %s\n", index, name);
 
 	// initialize the global
 	globals->ary[index].name = strdup(name);
@@ -168,7 +168,7 @@ unsigned sq_compiler_variable_declare(struct sq_compiler *compiler, char *name) 
 	unsigned variable_index = compiler->variables.len++;
 	unsigned local_index = sq_compiler_next_local(compiler);
 
-	sq_log("locals[%d]: %s (variables[%d])\n", local_index, name, variable_index);
+	sq_log_old("locals[%d]: %s (variables[%d])\n", local_index, name, variable_index);
 
 	compiler->variables.ary[variable_index].name = name;
 	compiler->variables.ary[variable_index].index = local_index;

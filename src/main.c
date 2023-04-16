@@ -16,7 +16,7 @@ int main(int argc, const char **argv) {
 
 	struct sq_program program;
 #ifndef SQ_GC_HEAP_SIZE
-# define SQ_GC_HEAP_SIZE 100000000
+// # define SQ_GC_HEAP_SIZE 100000000
 #endif
 	sq_gc_init(SQ_GC_HEAP_SIZE, &program);
 

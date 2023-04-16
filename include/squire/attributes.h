@@ -85,11 +85,12 @@
 #endif /* SQ_HAS_ATTRIBUTE(nonnull) */
 
 #if SQ_HAS_BUILTIN(__builtin_expect)
-# define SQ_LIKELY(x) (__builtin_expect(1, !!(x)))
+# define SQ_LIKELY(x) (__builtin_expect(!!(x), 1))
+# define SQ_UNLIKELY(x) (__builtin_expect(!!(x), 0))
 #else
 # define SQ_LIKELY(x) (!!(x))
+# define SQ_UNLIKELY(x) (!!(x))
 #endif /* SQ_HAS_BUILTIN(__builtin_expect) */
-#define SQ_UNLIKELY(x) (!SQ_LIKELY(!(x)))
 
 #if SQ_HAS_BUILTIN(__builtin_unreachable)
 # define SQ_UNREACHABLE __builtin_unreachable()

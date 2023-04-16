@@ -7,9 +7,9 @@
 #include <stdlib.h>
 
 #ifdef SQ_LOG
-#define sq_log printf
+#define sq_log_old printf
 #else
-#define sq_log(...) ((void) 0)
+#define sq_log_old(...) ((void) 0)
 #endif /* SQ_LOG */
 
 

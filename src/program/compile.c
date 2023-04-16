@@ -64,32 +64,32 @@ static void extend_bytecode_cap(struct sq_code *code) {
 }
 
 static void set_opcode(struct sq_code *code, enum sq_opcode opcode) {
-	sq_log("bytecode[%d].opcode=%s\n", code->codelen, sq_opcode_repr(opcode));
+	sq_log_old("bytecode[%d].opcode=%s\n", code->codelen, sq_opcode_repr(opcode));
 	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].opcode = opcode;
 }
 
 static void set_index(struct sq_code *code, unsigned index) {
-	sq_log("bytecode[%d].index=%d\n", code->codelen, index);
+	sq_log_old("bytecode[%d].index=%d\n", code->codelen, index);
 	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].index = index;
 }
 
 static void set_interrupt(struct sq_code *code, enum sq_interrupt interrupt) {
-	sq_log("bytecode[%d].interrupt=%s\n", code->codelen, sq_interrupt_repr(interrupt));
+	sq_log_old("bytecode[%d].interrupt=%s\n", code->codelen, sq_interrupt_repr(interrupt));
 	extend_bytecode_cap(code);
 	code->bytecode[code->codelen++].interrupt = interrupt;
 }
 
 static void set_count(struct sq_code *code, unsigned count) {
-	sq_log("bytecode[%d].count=%d\n", code->codelen, count);
+	sq_log_old("bytecode[%d].count=%d\n", code->codelen, count);
 
 	RESIZE(codecap, codelen, bytecode, union sq_bytecode);
 	code->bytecode[code->codelen++].count = count;
 }
 
 static void set_target_to_codelen(struct sq_code *code, unsigned target) {
-	sq_log("bytecode[%d].index=%d [update]\n", target, code->codelen);
+	sq_log_old("bytecode[%d].index=%d [update]\n", target, code->codelen);
 
 	code->bytecode[target].index = code->codelen;
 }
@@ -108,7 +108,7 @@ static unsigned declare_constant(struct sq_code *code, sq_value value) {
 	printf("consts[%d]=", code->consts.len); 
 	sq_value_dump(stdout, value);
 	putchar('\n');
-#endif /* sq_log */
+#endif /* sq_log_old */
 
 	code->consts.ary[code->consts.len] = value;
 	return code->consts.len++;
@@ -171,7 +171,7 @@ static unsigned declare_global_variable(const char *name, sq_value value) {
 		globals.ary = sq_realloc_vec(struct global, globals.ary, globals.cap);
 	}
 
-	sq_log("global[%d]: %s\n", globals.len, name);
+	sq_log_old("global[%d]: %s\n", globals.len, name);
 
 	// initialize the global
 	globals.ary[globals.len].name = strdup(name);
@@ -191,7 +191,7 @@ static unsigned declare_local_variable(struct sq_code *code, const char *name) {
 	// reallocate if necessary
 	RESIZE(vars.cap, vars.len, vars.ary, struct local);
 
-	sq_log("local[%d]: %s\n", globals.len, name);
+	sq_log_old("local[%d]: %s\n", globals.len, name);
 
 	code->vars.ary[code->vars.len].name = strdup(name);
 	return code->vars.ary[code->vars.len++].index = next_local(code);
