@@ -14,7 +14,6 @@
 	SQ_STATIC_ASSERT(sizeof(type) <= SQ_VALUE_SIZE, \
 		"type '" #type "' is too large (" SQ_TO_STRING_(SQ_VALUE_SIZE))
 
-enum foo { x };
 struct sq_basic {
 	SQ_ALIGNAS(SQ_VALUE_ALIGNMENT) char _blank;
 	int marked: 1;
