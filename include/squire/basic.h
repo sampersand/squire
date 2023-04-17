@@ -12,9 +12,10 @@
 
 #define SQ_VALUE_ASSERT_SIZE(type) \
 	SQ_STATIC_ASSERT(sizeof(type) <= SQ_VALUE_SIZE, \
-		"type '" #type "' is too large (" SQ_TO_STRING_(SQ_VALUE_SIZE))
+		"type '" #type "' is too large (" SQ_TO_STRING_(SQ_VALUE_SIZE) "max)")
 
 struct sq_basic {
+	// this field's here since we need alignment but c doesn't let you align bitfields
 	SQ_ALIGNAS(SQ_VALUE_ALIGNMENT) char _blank;
 	int marked: 1;
 	int in_use: 1;

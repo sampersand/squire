@@ -38,12 +38,13 @@ struct sq_journey_pattern {
 struct sq_journey {
 	struct sq_basic basic;
 	unsigned npatterns;
-	char *name;
 	struct sq_program *program;
-	bool is_method;
-
+	char *name;
 	struct sq_journey_pattern *patterns;
+	bool is_method;
 };
+
+SQ_VALUE_ASSERT_SIZE(struct sq_journey);
 
 struct sq_stackframe {
 	unsigned ip;
@@ -57,9 +58,6 @@ struct sq_stackframe {
 #endif
 extern struct sq_stackframe sq_stackframes[SQ_MAX_STACKFRAME_COUNT];
 extern unsigned sq_current_stackframe;
-
-
-SQ_VALUE_ASSERT_SIZE(struct sq_journey);
 
 void sq_stackframe_mark(struct sq_stackframe *stackframe);
 void sq_journey_mark(struct sq_journey *journey);
