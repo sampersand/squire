@@ -11,8 +11,6 @@
 #else
 #define sq_log_old(...) ((void) 0)
 #endif /* SQ_LOG */
-
-
 // #pragma unroll 16
 
 #include <squire/exception.h>

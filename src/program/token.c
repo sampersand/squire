@@ -319,11 +319,13 @@ static struct sq_token parse_identifier(void) {
 			++sq_stream;
 			token.identifier[len++] = '_';
 		} else if (*sq_stream == ' ' && strncmp(sq_stream, " N.B. ", 6) && (
-			_sq_do_not_allow_space_if_in_identifiers && strncmp(sq_stream, " if", 3))) {
+			!_sq_do_not_allow_space_if_in_identifiers && strncmp(sq_stream, " if", 3))) {
 			while (*++sq_stream == ' ' || sq_stream[-1] == '\t');
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
-		} else break;
+		} else {
+			break;
+		}
 	}
 
 	token.identifier = sq_realloc_vec(char, token.identifier, len + 1);
@@ -351,9 +353,15 @@ struct sq_token next_non_macro_token() {
 struct sq_token sq_next_token() {
 	struct sq_token token = next_macro_token();
 
-	if (token.kind != SQ_TK_UNDEFINED)
-		return token;
-	return next_non_macro_token();
+	if (token.kind == SQ_TK_UNDEFINED)
+		token = next_non_macro_token();
+
+#ifdef SQ_LOG_TOKEN
+	printf("token=");
+	sq_token_dump(&token);
+	putchar('\n');
+#endif
+	return token;
 }
 
 static struct sq_token next_normal_token(void) {

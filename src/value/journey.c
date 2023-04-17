@@ -357,7 +357,7 @@ struct sq_text *do_babel(
 	close(in_fds[1]);
 
 	char *c_args[nargs + 2];
-	c_args[0] = sq_text_to_c_str(executable);
+	c_args[0] = sq_text_to_c_str(executable);	
 	for (unsigned i = 0; i < nargs; ++i)
 		c_args[i + 1] = sq_text_to_c_str(args[i]);
 	c_args[nargs + 1] = 0;
@@ -422,6 +422,9 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	struct sq_other *other;
 	unsigned arity = sq_interrupt_arity(interrupt);
 
+#ifdef __clang__
+# pragma clang loop unroll_count(SQ_INTERRUPT_MAX_ARITY)
+#endif
 	for (unsigned i = 0; i < arity; ++i)
 		operands[i] = *next_local(sf);
 
@@ -782,6 +785,9 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		opcode = next_bytecode(sf).opcode;
 		arity = sq_opcode_arity(opcode);
 
+#ifdef __clang__
+# pragma clang loop unroll_count(SQ_OPCODE_MAX_ARITY)
+#endif
 		for (unsigned i = 0; i < arity; ++i)
 			operands[i] = *next_local(sf); // note we do not clone it!
 

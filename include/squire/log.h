@@ -4,8 +4,8 @@
 #include <squire/attributes.h>
 
 #ifdef SQ_LOG_ALL
-# define SQ_LOG_GC
-# define SQ_LOG_PARSE
+# define SQ_LOG_GC 1
+# define SQ_LOG_PARSE 1
 #endif
 
 void sq_log_fn(const char *category, const char *fmt, ...) SQ_NONNULL SQ_ATTR_PRINTF(2, 3);
@@ -23,6 +23,12 @@ void sq_log_fn(const char *category, const char *fmt, ...) SQ_NONNULL SQ_ATTR_PR
 # define sq_log_gc_1(...) sq_log_fn("GC[1]", __VA_ARGS__)
 #else
 # define sq_log_gc_1(...)
+#endif
+
+#if SQ_LOG_TOKEN >= 1
+# define sq_log_token_1(...) sq_log_fn("TOKEN[1]", __VA_ARGS__)
+#else
+# define sq_log_token_1(...)
 #endif
 
 // #if SQ_LOG_PARSE >= 1
