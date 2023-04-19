@@ -3,7 +3,6 @@
 #include <squire/value.h>
 #include <squire/shared.h>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdalign.h>
 

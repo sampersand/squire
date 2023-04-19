@@ -104,7 +104,7 @@ struct journey_argument {
 #define SQ_JOURNEY_MAX_PATTERNS 255
 struct journey_declaration {
 	char *name;
-	unsigned short npatterns;
+	unsigned npatterns;
 	struct journey_pattern {
 		unsigned pargc, kwargc;
 		struct journey_argument pargv[SQ_JOURNEY_MAX_ARGC], kwargv[SQ_JOURNEY_MAX_ARGC];

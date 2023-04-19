@@ -6,8 +6,6 @@
 #include <squire/program.h>
 #include <squire/shared.h>
 
-#include <assert.h>
-
 struct sq_args {
 	unsigned pargc, kwargc;
 	sq_value *pargv;
@@ -37,7 +35,7 @@ struct sq_journey_pattern {
 
 struct sq_journey {
 	SQ_BASIC_DECLARATION basic;
-	unsigned short npatterns;
+	unsigned npatterns;
 	struct sq_program  *program;
 	char *name;
 	struct sq_journey_pattern *patterns;

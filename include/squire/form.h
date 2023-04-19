@@ -4,8 +4,6 @@
 #include <squire/value.h>
 #include <squire/journey.h>
 #include <squire/shared.h>
-
-#include <assert.h>
 #include <stddef.h>
 
 // TODO: use `participates in` for `instanceof`
