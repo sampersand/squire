@@ -5,11 +5,11 @@
 #include <squire/value.h>
 
 struct sq_text {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 	char *ptr;
 	unsigned length;
 };
-SQ_VALUE_ASSERT_SIZE(struct sq_basic);
+SQ_VALUE_ASSERT_SIZE(struct sq_text);
 
 extern struct sq_text sq_text_empty;
 

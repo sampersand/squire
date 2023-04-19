@@ -5,9 +5,9 @@
 #include <squire/attributes.h>
 
 struct sq_envoy {
+	unsigned symlen, symcap;
 	void *dyllib;
 	char *filename;
-	unsigned symlen, symcap;
 	struct sq_envoy_sym {
 		char *name;
 		void *ptr;

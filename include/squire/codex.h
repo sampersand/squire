@@ -3,7 +3,7 @@
 #include <squire/value.h>
 
 struct sq_codex {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 	struct sq_codex_page *pages;
 	unsigned length, capacity;
 };

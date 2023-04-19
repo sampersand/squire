@@ -41,7 +41,7 @@
  * `parents` (TODO: describe aristotle)
  */
 struct sq_form {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 	struct sq_form_vtable *vt;
 };
 
@@ -67,7 +67,7 @@ SQ_VALUE_ASSERT_SIZE(struct sq_form);
 
 /** An instance of a `sq_form`. */
 struct sq_imitation {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 	struct sq_form *form;
 	sq_value *matter;
 };

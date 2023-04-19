@@ -13,7 +13,7 @@
  * to `sq_book_deallocate` to free its resources.
  */
 struct sq_book {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 
 	/* The pages associated with this book. */
 	sq_value *pages;

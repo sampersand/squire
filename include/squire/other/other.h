@@ -13,7 +13,7 @@
 #include <assert.h>
 
 struct sq_other {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 
 	enum sq_other_kind {
 		SQ_OK_SCROLL,
@@ -30,7 +30,7 @@ struct sq_other {
 		struct sq_builtin_journey builtin_journey;
 		struct sq_external external;
 		struct sq_kingdom kingdom;
-		struct sq_envoy envoy;
+		struct sq_envoy *envoy;
 		sq_citation citation;
 		struct sq_pattern_helper helper;
 	};
@@ -65,7 +65,7 @@ static inline struct sq_kingdom *sq_other_as_kingdom(struct sq_other *other) {
 
 static inline struct sq_envoy *sq_other_as_envoy(struct sq_other *other) {
 	assert(other->kind == SQ_OK_ENVOY);
-	return &other->envoy;
+	return other->envoy;
 }
 
 static inline sq_citation sq_other_as_citation(struct sq_other *other) {

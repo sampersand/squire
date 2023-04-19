@@ -36,14 +36,13 @@ struct sq_journey_pattern {
 };
 
 struct sq_journey {
-	struct sq_basic basic;
-	unsigned npatterns;
-	struct sq_program *program;
+	SQ_BASIC_DECLARATION basic;
+	unsigned short npatterns;
+	struct sq_program  *program;
 	char *name;
 	struct sq_journey_pattern *patterns;
-	bool is_method;
 };
-
+#define sq_journey_is_method basic.user1
 SQ_VALUE_ASSERT_SIZE(struct sq_journey);
 
 struct sq_stackframe {

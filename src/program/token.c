@@ -323,9 +323,7 @@ static struct sq_token parse_identifier(void) {
 			while (*++sq_stream == ' ' || sq_stream[-1] == '\t');
 			if (isalnum(*sq_stream) || *sq_stream == '_') token.identifier[len++] = '_';
 			else break;
-		} else {
-			break;
-		}
+		} else break;
 	}
 
 	token.identifier = sq_realloc_vec(char, token.identifier, len + 1);

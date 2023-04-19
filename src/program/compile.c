@@ -1524,7 +1524,7 @@ static struct sq_journey *compile_journey(struct journey_declaration *jd, bool i
 	journey->name = jd->name;
 	journey->npatterns = jd->npatterns;
 	journey->program = program;
-	journey->is_method = is_method;
+	journey->sq_journey_is_method = is_method;
 	journey->patterns = sq_malloc_vec(struct sq_journey_pattern, jd->npatterns);
 
 	for (unsigned i = 0; i < jd->npatterns; ++i)

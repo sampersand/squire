@@ -5,7 +5,7 @@
 #include <sys/mman.h>
 
 struct anyvalue {
-	struct sq_basic basic;
+	SQ_BASIC_DECLARATION basic;
 	SQ_ALIGNAS(SQ_VALUE_ALIGNMENT) char _ignored[SQ_VALUE_SIZE - SQ_VALUE_ALIGNMENT];
 };
 
