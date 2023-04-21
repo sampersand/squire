@@ -28,19 +28,20 @@ objects:=$(sources:$(srcdir)/%.c=$(OBJDIR)/%.o)
 ## Custom logic
 ifdef optimized
 	COMPILER_C_FLAGS+=-flto -O3 -DNDEBUG -DSQ_RELEASE_FAST
-else ifdef debug
-	COMPILER_C_FLAGS+=-g -fsanitize=address,undefined -DSQ_LOG
-	njoke:=1
 else
-	COMPILER_C_FLAGS+=-g -O1
+	COMPILER_C_FLAGS+=-g
+	ANNOYING_FLAGS:=-Wno-covered-switch-default -Wno-switch-enum -Wno-comma
+	ifdef debug
+		COMPILER_C_FLAGS+=-fsanitize=address,undefined -DSQ_LOG
+		njoke:=1
+	endif
 endif
 
 ifdef njoke
 	COMPILER_C_FLAGS+=-DSQ_NMOON_JOKE
 endif
 
-CFLAGS+=-Wno-switch-enum
-
+override CFLAGS+=$(ANNOYING_FLAGS)
 override cflags:=$(COMPILER_C_FLAGS) $(CFLAGS) $(required_compiler_flags)
 ## end custom logic
 

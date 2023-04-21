@@ -6,8 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define ERROR(msg) (perror(msg),exit(1))
-
 int main(int argc, const char **argv) {
 	if (argc < 3 || (strcmp(argv[1], "-e") && strcmp(argv[1], "-f"))) {
 		fprintf(stderr, "usage: %s (-e 'expr' | -f 'filename')\n", argv[0]);
