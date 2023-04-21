@@ -181,8 +181,9 @@ sq_numeral sq_other_to_numeral(const struct sq_other *other) {
 			return 1; // Samperland's #1 LOL.
 		// else fallthrough
 
-	case SQ_OK_CITATION:
-		return (sq_numeral) sq_other_as_citation((struct sq_other *) other);
+	case SQ_OK_CITATION:;
+		sq_citation c = sq_other_as_citation((struct sq_other *) other);
+		return (sq_numeral) c; // To appease `-Wbad-function-cast`...	
 
 	case SQ_OK_SCROLL:
 	case SQ_OK_ENVOY:
