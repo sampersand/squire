@@ -74,8 +74,8 @@ static inline void sq_compiler_set_jmp_dst(
 	unsigned codepos,
 	unsigned dst
 ) {
-	assert(codepos <= compiler->code.len);
-	assert(dst <= compiler->code.len);
+	sq_assert_le(codepos, compiler->code.len);
+	sq_assert_le(dst, compiler->code.len);
 
 	compiler->code.ary[codepos].index = dst;
 }

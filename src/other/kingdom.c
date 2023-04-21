@@ -44,7 +44,7 @@ sq_value sq_kingdom_get_attr(const struct sq_kingdom *kingdom, const char *name)
 
 	if (subject == NULL) return SQ_UNDEFINED;
 
-	assert(subject->person != SQ_UNDEFINED);
+	sq_assert_nundefined(subject->person);
 	return subject->person;
 }
 

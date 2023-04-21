@@ -80,7 +80,7 @@ static struct sq_token next_macro_token(void) {
 	}
 
 	if ((token = exp->tokens[exp->pos++]).kind == SQ_TK_MACRO_VAR) {
-		assert(!is_in_macro_declaration);
+		sq_assert(!is_in_macro_declaration);
 		parse_macro_identifier(token.identifier);
 		return next_macro_token();
 	}

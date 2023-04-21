@@ -18,7 +18,7 @@
 
 #define sq_sizeof_array(kind, length) (sizeof(kind) * (length))
 #define sq_mallocz(kind) ((kind *) sq_calloc(1, sizeof(kind)))
-#define sq_mallocv(kind) (assert(sizeof(kind) <= SQ_VALUE_SIZE),\
+#define sq_mallocv(kind) (sq_assert(sizeof(kind) <= SQ_VALUE_SIZE),\
 	(kind *) sq_gc_malloc( \
 	SQ_TAG_FOR(kind) \
 ))

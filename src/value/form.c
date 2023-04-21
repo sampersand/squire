@@ -6,7 +6,7 @@
 #include <assert.h>
 
 struct sq_form *sq_form_new(char *name) {
-	assert(name != NULL);
+	sq_assert_nn(name);
 
 	struct sq_form *form = sq_mallocv(struct sq_form);
 
@@ -179,8 +179,8 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 }
 
 struct sq_imitation *sq_imitation_new(struct sq_form *form, sq_value *matter) {
-	assert(form != NULL);
-	assert(form->vt->nmatter == 0 || matter != NULL);
+	sq_assert_n(form);
+	sq_assert(form->vt->nmatter == 0 || matter != NULL);
 
 	struct sq_imitation *imitation = sq_mallocv(struct sq_imitation);
 

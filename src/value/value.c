@@ -70,7 +70,7 @@ void sq_value_dump(FILE *out, sq_value value) {
 }
 
 void sq_value_mark(sq_value value) {
-	assert(value != SQ_UNDEFINED);
+	sq_assert_nundefined(value);
 
 	if (sq_value_is_numeral(value)) return;
 
@@ -89,7 +89,7 @@ void sq_value_mark(sq_value value) {
 }
 
 void sq_value_deallocate(sq_value value) {
-	assert(value != SQ_UNDEFINED);
+	sq_assert_nundefined(value);
 
 	switch (SQ_VTAG(value)) {
 	case SQ_G_TEXT: sq_text_deallocate(AS_TEXT(value)); return;
@@ -103,7 +103,7 @@ void sq_value_deallocate(sq_value value) {
 }
 
 const char *sq_value_typename(sq_value value) {
-	assert(value != SQ_UNDEFINED);
+	sq_assert_nundefined(value);
 
 	switch (SQ_VTAG(value)) {
 	case SQ_G_OTHER:
@@ -572,7 +572,7 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 
 
 sq_value sq_value_call(sq_value tocall, struct sq_args args) {
-	assert(tocall != SQ_UNDEFINED);
+	sq_assert_nundefined(tocall);
 
 	switch (sq_value_genus_tag(tocall)) {
 	case SQ_G_FORM:

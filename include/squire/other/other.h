@@ -39,42 +39,42 @@ struct sq_other {
 SQ_VALUE_ASSERT_SIZE(struct sq_other);
 
 static inline enum sq_other_kind sq_other_kindof(const struct sq_other *other) {
-	assert(((char) (size_t) other & 7) <= SQ_OK_CITATION);
+	sq_assert_le((char) (size_t) other & 7, SQ_OK_CITATION);
 	return (enum sq_other_kind) ((char) (size_t) other & 7);
 }
 
 static inline struct sq_scroll *sq_other_as_scroll(struct sq_other *other) {
-	assert(other->kind == SQ_OK_SCROLL);
+	sq_assert_eq(other->kind, SQ_OK_SCROLL);
 	return &other->scroll;
 }
 
 static inline struct sq_builtin_journey *sq_other_as_builtin_journey(struct sq_other *other) {
-	assert(other->kind == SQ_OK_BUILTIN_JOURNEY);
+	sq_assert_eq(other->kind, SQ_OK_BUILTIN_JOURNEY);
 	return &other->builtin_journey;
 }
 
 static inline struct sq_external *sq_other_as_external(struct sq_other *other) {
-	assert(other->kind == SQ_OK_EXTERNAL);
+	sq_assert_eq(other->kind, SQ_OK_EXTERNAL);
 	return &other->external;
 }
 
 static inline struct sq_kingdom *sq_other_as_kingdom(struct sq_other *other) {
-	assert(other->kind == SQ_OK_KINGDOM);
+	sq_assert_eq(other->kind, SQ_OK_KINGDOM);
 	return &other->kingdom;
 }
 
 static inline struct sq_envoy *sq_other_as_envoy(struct sq_other *other) {
-	assert(other->kind == SQ_OK_ENVOY);
+	sq_assert_eq(other->kind, SQ_OK_ENVOY);
 	return other->envoy;
 }
 
 static inline sq_citation sq_other_as_citation(struct sq_other *other) {
-	assert(other->kind == SQ_OK_CITATION);
+	sq_assert_eq(other->kind, SQ_OK_CITATION);
 	return other->citation;
 }
 
 static inline struct sq_pattern_helper *sq_other_as_pattern_helper(struct sq_other *other) {
-	assert(other->kind == SQ_OK_PAT_HELPER);
+	sq_assert_eq(other->kind, SQ_OK_PAT_HELPER);
 	return &other->helper;
 }
 

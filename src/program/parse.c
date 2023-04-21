@@ -12,7 +12,7 @@ struct sq_token last;
 bool rewound;
 
 static void untake() {
-	assert(!rewound);
+	sq_assert(!rewound);
 	rewound = true;
 }
 
@@ -920,13 +920,13 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 			if (stage == STAGE_KW_ONLY) {
 				sq_throw("duplicate splat argument encountered");
 			} else if (take().kind == SQ_TK_COMMA || last.kind == SQ_TK_RPAREN) {
-				assert(!jp->splat);
+				sq_assert_n(jp->splat);
 				jp->splat = strdup(""); // make it empty, so it still registers, but isn't accessible
 				untake();
 			} else if (last.kind != SQ_TK_IDENT) {
 				sq_throw("expected name (or nothing) after '*'");
 			} else {
-				assert(!jp->splat);
+				sq_assert_n(jp->splat);
 				jp->splat = last.identifier;
 			}
 
@@ -938,7 +938,7 @@ static void parse_journey_pattern(bool is_method, struct journey_pattern *jp) {
 				untake();
 				jp->splatsplat = strdup(""); // make it empty, so it still registers, but isn't accessible
 			} else if (last.kind == SQ_TK_IDENT) {
-				assert(!jp->splatsplat);
+				sq_assert_n(jp->splatsplat);
 				jp->splatsplat = last.identifier;
 			} else {
 				sq_throw("expected name after '**'");

@@ -1,7 +1,6 @@
 #ifndef SQ_VALUE_H
 #define SQ_VALUE_H
 
-#include <assert.h>
 #include <stdio.h>
 #include <squire/numeral.h>
 #include <squire/basic.h>
@@ -9,12 +8,12 @@
 #include <squire/valuedecl.h>
 
 static inline sq_value sq_value_new_ptr_unchecked(void *ptr, enum sq_genus_tag tag) {
-	assert(tag != SQ_G_NUMERAL);
+	sq_assert_ne(tag, SQ_G_NUMERAL);
 	return ((sq_value) ptr) | tag;
 }
 
 static inline sq_value sq_value_new_numeral(sq_numeral numeral) {
-	assert(numeral == (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
+	sq_assert_eq(numeral, (((sq_numeral) (((sq_value) numeral << SQ_VSHIFT)) >> SQ_VSHIFT)));
 	return SQ_VMASK(((sq_value) numeral) << SQ_VSHIFT, SQ_G_NUMERAL);
 }
 
@@ -24,43 +23,43 @@ static inline sq_value sq_value_new_veracity(sq_veracity veracity) {
 
 static inline sq_value sq_value_new_text(struct sq_text *text) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_text(struct sq_text *text) {
-	assert(!SQ_VTAG((sq_value) text));
+	sq_assert_z(SQ_VTAG((sq_value) text), "pointer %p is misaligned", text);
 	return SQ_VMASK((sq_value) text, SQ_G_TEXT);
 }
 
 static inline sq_value sq_value_new_form(struct sq_form *form) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_form(struct sq_form *form) {
-	assert(!SQ_VTAG((sq_value) form));
+	sq_assert_z(SQ_VTAG((sq_value) form), "pointer %p is misaligned", form);
 	return SQ_VMASK((sq_value) form, SQ_G_FORM);
 }
 
 static inline sq_value sq_value_new_imitation(struct sq_imitation *imitation) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_imitation(struct sq_imitation *imitation) {
-	assert(!SQ_VTAG((sq_value) imitation));
+	sq_assert_z(SQ_VTAG((sq_value) imitation), "pointer %p is misaligned", imitation);
 	return SQ_VMASK((sq_value) imitation, SQ_G_IMITATION);
 }
 
 static inline sq_value sq_value_new_journey(struct sq_journey *journey) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_journey(struct sq_journey *journey) {
-	assert(!SQ_VTAG((sq_value) journey));
+	sq_assert_z(SQ_VTAG((sq_value) journey), "pointer %p is misaligned", journey);
 	return SQ_VMASK((sq_value) journey, SQ_G_JOURNEY);
 }
 
 static inline sq_value sq_value_new_book(struct sq_book *book) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_book(struct sq_book *book) {
-	assert(!SQ_VTAG((sq_value) book));
+	sq_assert_z(SQ_VTAG((sq_value) book), "pointer %p is misaligned", book);
 	return SQ_VMASK((sq_value) book, SQ_G_BOOK);
 }
 
 static inline sq_value sq_value_new_codex(struct sq_codex *dict) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_codex(struct sq_codex *dict) {
-	assert(!SQ_VTAG((sq_value) dict));
+	sq_assert_z(SQ_VTAG((sq_value) dict), "pointer %p is misaligned", dict);
 	return SQ_VMASK((sq_value) dict, SQ_G_CODEX);
 }
 
 static inline sq_value sq_value_new_other(struct sq_other *other) SQ_NONNULL SQ_NODISCARD;
 static inline sq_value sq_value_new_other(struct sq_other *other) {
-	assert(!SQ_VTAG((sq_value) other));
+	sq_assert_z(SQ_VTAG((sq_value) other), "pointer %p is misaligned", other);
 	return SQ_VMASK((sq_value) other, SQ_G_OTHER);
 }
 
@@ -116,55 +115,55 @@ static inline bool sq_value_is_other(sq_value value) {
 
 static inline sq_numeral sq_value_as_numeral(sq_value value) SQ_NODISCARD;
 static inline sq_numeral sq_value_as_numeral(sq_value value) {
-	assert(sq_value_is_numeral(value));
+	sq_assert(sq_value_is_numeral(value), "value isn't a 'numeral' (it's '%d')", SQ_VTAG(value));
 	return ((sq_numeral) value) >> SQ_VSHIFT;
 }
 
 static inline bool sq_value_as_veracity(sq_value value) SQ_NODISCARD;
 static inline bool sq_value_as_veracity(sq_value value) {
-	assert(sq_value_is_veracity(value));
+	sq_assert(sq_value_is_veracity(value), "value isn't a 'veracity' (it's '%d')", SQ_VTAG(value));
 	return value == SQ_YEA;
 }
 
 static inline struct sq_text *sq_value_as_text(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_text *sq_value_as_text(sq_value value) {
-	assert(sq_value_is_text(value));
+	sq_assert(sq_value_is_text(value), "value isn't a 'text' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_text *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_form *sq_value_as_form(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_form *sq_value_as_form(sq_value value) {
-	assert(sq_value_is_form(value));
+	sq_assert(sq_value_is_form(value), "value isn't a 'form' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_form *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_imitation *sq_value_as_imitation(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_imitation *sq_value_as_imitation(sq_value value) {
-	assert(sq_value_is_imitation(value));
+	sq_assert(sq_value_is_imitation(value), "value isn't a 'imitation' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_imitation *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_journey *sq_value_as_journey(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_journey *sq_value_as_journey(sq_value value) {
-	assert(sq_value_is_journey(value));
+	sq_assert(sq_value_is_journey(value), "value isn't a 'journey' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_journey *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_book *sq_value_as_book(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_book *sq_value_as_book(sq_value value) {
-	assert(sq_value_is_book(value));
+	sq_assert(sq_value_is_book(value), "value isn't a 'book' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_book *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_codex *sq_value_as_codex(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_codex *sq_value_as_codex(sq_value value) {
-	assert(sq_value_is_codex(value));
+	sq_assert(sq_value_is_codex(value), "value isn't a 'codex' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_codex *) SQ_VUNMASK(value);
 }
 
 static inline struct sq_other *sq_value_as_other(sq_value value) SQ_NODISCARD SQ_RETURNS_NONNULL;
 static inline struct sq_other *sq_value_as_other(sq_value value) {
-	assert(sq_value_is_other(value));
+	sq_assert(sq_value_is_other(value), "value isn't a 'other' (it's '%d')", SQ_VTAG(value));
 	return (struct sq_other *) SQ_VUNMASK(value);
 }
 

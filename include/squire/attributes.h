@@ -23,7 +23,6 @@
 #if __STDC_VERSION__ >= 201112L
 # define SQ_NORETURN _Noreturn
 # define SQ_ALIGNAS(...) _Alignas(__VA_ARGS__)
-# define SQ_STATIC_ASSERT(...) _Static_assert(__VA_ARGS__)
 #else
 # if SQ_HAS_ATTRIBUTE(noreturn)
 #  define SQ_NORETURN SQ_ATTR(noreturn)
@@ -31,7 +30,6 @@
 #  define SQ_NORETURN
 # endif
 # define SQ_ALIGNAS(...)
-# define SQ_STATIC_ASSERT(...) void sq_doesntexist(void)
 #endif
 
 #if SQ_HAS_ATTRIBUTE(cold)

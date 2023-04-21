@@ -2,13 +2,12 @@
 #define SQ_BASIC_H
 
 #include <squire/attributes.h>
+#include <squire/sqassert.h>
+#include <squire/utils.h>
 #include <squire/valuedecl.h>
 
 #define SQ_VALUE_SIZE 32
 #define SQ_VALUE_ALIGNMENT 8
-
-#define SQ_TO_STRING_(x) #x
-#define SQ_TO_STRING(x) SQ_TO_STRING_(x)
 
 #define SQ_VALUE_ASSERT_SIZE(type) \
 	SQ_STATIC_ASSERT(sizeof(type) <= SQ_VALUE_SIZE, \

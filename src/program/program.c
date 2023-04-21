@@ -39,8 +39,8 @@ sq_value create_argv(unsigned argc, const char **argv) {
 }
 
 void sq_program_run(struct sq_program *program, unsigned argc, const char **argv) {
-	assert(program->main->npatterns == 1);
-	assert(program->main->patterns[0].pargc == 0);
+	sq_assert_eq(1, program->main->npatterns);
+	sq_assert_z(program->main->patterns[0].pargc);
 	srand(time(NULL));
 
 	program->globals[0] = create_argv(argc, argv);

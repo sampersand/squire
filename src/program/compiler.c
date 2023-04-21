@@ -55,7 +55,7 @@ int sq_compiler_constant_lookup(struct sq_compiler *compiler, sq_value constant)
 
 unsigned sq_compiler_constant_declare(struct sq_compiler *compiler, sq_value constant) {
 	// make sure the constant doesnt already exist
-	assert(sq_compiler_constant_lookup(compiler, constant) == SQ_COMPILER_NOT_FOUND);
+	sq_assert_eq(sq_compiler_constant_lookup(compiler, constant), SQ_COMPILER_NOT_FOUND);
 
 	if (compiler->consts.len >= compiler->consts.cap) {
 		compiler->consts.cap *= 2;
@@ -156,7 +156,7 @@ int sq_compiler_variable_lookup(struct sq_compiler *compiler, const char *name) 
 }
 
 unsigned sq_compiler_variable_declare(struct sq_compiler *compiler, char *name) {
-	assert(sq_compiler_variable_lookup(compiler, name) == SQ_COMPILER_NOT_FOUND);
+	sq_assert_eq(sq_compiler_variable_lookup(compiler, name), SQ_COMPILER_NOT_FOUND);
 
 	if (compiler->variables.cap <= compiler->variables.len) {
 		compiler->variables.cap *= 2;

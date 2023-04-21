@@ -2,6 +2,7 @@
 #define SQ_BYTECODE_H
 
 #include <squire/attributes.h>
+#include <squire/sqassert.h>
 
 #define SQ_INTERRUPT_MAX_ARITY 3 // the max amount of operands (3) is from INDEX_ASSIGN
 #define SQ_INTERRUPT_SHIFT_AMOUNT 2

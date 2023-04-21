@@ -17,7 +17,6 @@ static void memory_error(const char *fmt, ...) {
 	abort();
 }
 
-
 void *sq_malloc_heap(size_t size) {
 	void *ptr = malloc(size);
 

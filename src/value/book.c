@@ -7,8 +7,8 @@
 #include <squire/journey.h>
 
 struct sq_book *sq_book_new(size_t length, size_t capacity, sq_value *pages) {
-	assert(length <= capacity);
-	assert(!(length != 0 && pages == NULL));
+	sq_assert_le(length, capacity);
+	sq_assert(length == 0 || pages == NULL);
 
 	struct sq_book *book = sq_mallocv(struct sq_book);
 

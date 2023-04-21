@@ -1,6 +1,10 @@
 #ifdef SQ_NMOON_JOKE
 struct _ignored;
 #else
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Weverything"
+# endif
+
 /*
 (From https://github.com/cerkit/pebble-moon-phase, with the required license:)
 MIT License

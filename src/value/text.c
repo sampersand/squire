@@ -8,7 +8,7 @@
 struct sq_text sq_text_empty = SQ_TEXT_STATIC("");
 
 static struct sq_text *allocate_text(unsigned length) {
-	assert(length != 0);
+	sq_assert_nz(length);
 	struct sq_text *text = sq_mallocv(struct sq_text);
 
 	text->length = length;
@@ -17,8 +17,8 @@ static struct sq_text *allocate_text(unsigned length) {
 }
 
 struct sq_text *sq_text_new2(char *ptr, unsigned length) {
-	assert(ptr != NULL);
-	assert(strlen(ptr) == length);
+	sq_assert_nn(ptr);
+	sq_assert_eq(length, strlen(ptr));
 
 	if (length == 0) {
 		free(ptr);

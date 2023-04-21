@@ -51,7 +51,7 @@ void sq_stackframe_mark(struct sq_stackframe *stackframe) {
 	for (unsigned i = 0; i < stackframe->journey->npatterns; ++i)
 		if (&stackframe->journey->patterns[i] == stackframe->pattern)
 			goto found;
-	assert(0); // uh oh, the stackframe wasn't a part of the current journey
+	SQ_UNREACHABLE;
 found:
 #endif
 	
@@ -66,8 +66,8 @@ void sq_journey_mark(struct sq_journey *journey) {
 	for (unsigned i = 0; i < journey->npatterns; ++i) {
 		struct sq_journey_pattern pattern = journey->patterns[i];
 
-		for (unsigned i = 0; i < pattern.code.nconsts; ++i)
-			sq_value_mark(pattern.code.consts[i]);
+		for (unsigned j = 0; j < pattern.code.nconsts; ++j)
+			sq_value_mark(pattern.code.consts[j]);
 	}
 }
 
@@ -115,7 +115,7 @@ static int assign_positional_arguments(
 			return -1;
 
 		for (; i < pattern->pargc; ++i) {
-			assert(0 <= pattern->pargv[i].default_start);
+			sq_assert_le(0, pattern->pargv[i].default_start);
 
 			sf->ip = pattern->pargv[i].default_start;
 			sf->locals[i] = sq_run_stackframe(sf);
@@ -123,7 +123,7 @@ static int assign_positional_arguments(
 	}
 
 	// make sure all the non-splat parameters match
-	assert(i == pattern->pargc);
+	sq_assert_eq(i, pattern->pargc);
 
 	for (unsigned j = 0; j < i; ++j) {
 		if (pattern->pargv[j].genus_start < 0)
@@ -270,7 +270,7 @@ static inline sq_value *next_local(struct sq_stackframe *sf) {
 }
 
 static void set_local(struct sq_stackframe *sf, unsigned index, sq_value value) {
-	assert(index <= sf->pattern->code.nlocals);
+	sq_assert_le(index, sf->pattern->code.nlocals);
 
 	sf->locals[index] = value;
 }
@@ -936,52 +936,55 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 	/*** Interpreter Stuff ***/
 		VM_CASE(SQ_OC_CLOAD)
 			index = next_index(sf);
-			assert(index < code->nconsts);
+			sq_assert_lt(index, code->nconsts);
 
 			SET_RESULT(code->consts[index]);
 
 		VM_CASE(SQ_OC_GLOAD)
 			index = next_index(sf);
-			assert(index < sf->journey->program->nglobals);
+			sq_assert_lt(index, sf->journey->program->nglobals);
 
 			SET_RESULT(sf->journey->program->globals[index]);
 
 		VM_CASE(SQ_OC_GSTORE)
 			index = next_index(sf);
-			assert(index < sf->journey->program->nglobals);
+			sq_assert_lt(index, sf->journey->program->nglobals);
 
 			sf->journey->program->globals[index] = operands[0];
 			continue;
 
 		VM_CASE(SQ_OC_ILOAD)
 			index = next_index(sf);
-			assert(index < code->nconsts);
-			assert(sq_value_is_text(operands[1] = code->consts[index]));
+			sq_assert_lt(index, code->nconsts);
+
+			operands[1] = code->consts[index];
+			sq_assert(sq_value_is_text(operands[1]));
 
 			SET_RESULT(sq_value_get_attr(operands[0], sq_value_as_text(operands[1])->ptr));
 
 		VM_CASE(SQ_OC_ISTORE)
 			index = next_index(sf);
+			sq_assert_lt(index, code->nconsts);
 
-			assert(index < code->nconsts);
-			assert(sq_value_is_text(operands[2] = code->consts[index]));
+			operands[2] = code->consts[index];
+			sq_assert(sq_value_is_text(operands[2]));
 
 			sq_value_set_attr(operands[0], sq_value_as_text(operands[2])->ptr, operands[1]);
 			continue;
 
 		VM_CASE(SQ_OC_FEGENUS_STORE)
 			index = next_index(sf);
-			assert(sq_value_is_form(operands[0]));
-			assert(index < sq_value_as_form(operands[0])->vt->nessences);
-			assert(sq_value_as_form(operands[0])->vt->essences[index].genus == SQ_UNDEFINED);
+			sq_assert(sq_value_is_form(operands[0]));
+			sq_assert_lt(index, sq_value_as_form(operands[0])->vt->nessences);
+			sq_assert(sq_value_as_form(operands[0])->vt->essences[index].genus == SQ_UNDEFINED);
 			sq_value_as_form(operands[0])->vt->essences[index].genus = operands[1];
 			continue;
 
 		VM_CASE(SQ_OC_FMGENUS_STORE)
 			index = next_index(sf);
-			assert(sq_value_is_form(operands[0]));
-			assert(index < sq_value_as_form(operands[0])->vt->nmatter);
-			assert(sq_value_as_form(operands[0])->vt->matter[index].genus == SQ_UNDEFINED);
+			sq_assert(sq_value_is_form(operands[0]));
+			sq_assert_lt(index, sq_value_as_form(operands[0])->vt->nmatter);
+			sq_assert(sq_value_as_form(operands[0])->vt->matter[index].genus == SQ_UNDEFINED);
 			sq_value_as_form(operands[0])->vt->matter[index].genus = operands[1];
 			continue;
 		VM_SWITCH_END
@@ -990,7 +993,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 
 	push_result:
 
-		assert(result != SQ_UNDEFINED);
+		sq_assert_nundefined(result);
 		set_next_local(sf, result);
 	}
 

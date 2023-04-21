@@ -90,11 +90,11 @@ struct sq_text *sq_numeral_to_arabic(sq_numeral numeral) {
 
 
 static sq_numeral unicode_roman(const uint8_t *input, const char **output) {
-	assert(input[0] == 0xE2);
+	sq_assert_eq(input[0], 0xE2);
 	sq_numeral result;
 
 	if (input[1] == 0x85) {
-		assert(0xA0 <= input[2] && input[2] <= 0xBF);
+		sq_assert(0xA0 <= input[2] && input[2] <= 0xBF);
 		uint8_t which = (input[2] - 0xA0) % 16; // % 16 because the `B` range is lowercase.
 
 		switch (which) {
@@ -105,8 +105,8 @@ static sq_numeral unicode_roman(const uint8_t *input, const char **output) {
 		default: result = which + 1; break; // all else
 		}
 	} else {
-		assert(input[1] == 0x86);
-		assert(0x80 <= input[2] && input[2] <= 0x88);
+		sq_assert_eq(input[1], 0x86);
+		sq_assert(0x80 <= input[2] && input[2] <= 0x88);
 
 		switch (input[2]) {
 		case 0: result = 1000; break;

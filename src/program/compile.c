@@ -426,7 +426,7 @@ static void compile_kingdom_declaration(struct sq_code *code, struct kingdom_dec
 }
 
 static void compile_journey_declaration(struct journey_declaration *jd) {
-	assert(jd->name != NULL);
+	sq_assert_nn(jd->name);
 
 	declare_global_variable(strdup(jd->name), SQ_NI);
 
@@ -1483,8 +1483,8 @@ static void compile_journey_pattern(
 		code.vars.ary[code.vars.len].name = strdup(jp->pargv[i].name);
 		code.vars.ary[code.vars.len].index = local_index++;
 
-		assert(jp->kwargv[i].genus == NULL); // todo
-		assert(jp->kwargv[i].default_ == NULL); // todo
+		sq_assert_n(jp->kwargv[i].genus); // todo
+		sq_assert_n(jp->kwargv[i].default_); // todo
 		// todo: use `i` when compiling default.
 	}
 
@@ -1502,7 +1502,7 @@ static void compile_journey_pattern(
 		pattern->condition_start = -1;
 	}
 
-	assert(jp->body != NULL);
+	sq_assert_nn(jp->body);
 
 	pattern->start_index = code.codelen;
 	compile_statements(&code, jp->body);
