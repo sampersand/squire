@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-static void memory_error(const char *fmt, ...) {
+static void SQ_NORETURN memory_error(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
