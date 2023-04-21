@@ -906,6 +906,32 @@ done:
 	return result;
 }
 
+// static unsigned compile_mul(struct sq_code *code, struct mul_expression *mul) {
+// 	unsigned lhs, rhs, result;
+
+// 	lhs = compile_pow(code, mul->lhs);
+
+// 	if (mul->kind != SQ_PS_MPOW)
+// 		rhs = compile_mul(code, mul->rhs);
+
+// 	switch (mul->kind) {
+// 	case SQ_PS_MMUL: set_opcode(code, SQ_OC_MUL); break;
+// 	case SQ_PS_MDIV: set_opcode(code, SQ_OC_DIV); break;
+// 	case SQ_PS_MMOD: set_opcode(code, SQ_OC_MOD); break;
+// 	case SQ_PS_MPOW: result = lhs; goto done;
+// 	default: sq_bug("unknown mul kind '%d'", mul->kind);
+// 	}
+
+// 	set_index(code, lhs);
+// 	set_index(code, rhs);
+// 	set_index(code, result = next_local(code));
+
+// done:
+
+// 	free(mul);
+// 	return result;
+// }
+
 static unsigned compile_add(struct sq_code *code, struct add_expression *add) {
 	unsigned lhs, rhs, result;
 

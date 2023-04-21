@@ -5,8 +5,18 @@
 
 #ifdef SQ_LOG_ALL
 # define SQ_LOG_GC 1
-# define SQ_LOG_PARSE 1
+# define SQ_LOG_TOKEN 1
 #endif
+
+#ifndef SQ_LOG_GC
+# define SQ_LOG_GC 0
+#endif
+
+#ifndef SQ_LOG_TOKEN
+# define SQ_LOG_TOKEN 0
+#endif
+
+
 
 void sq_log_fn(const char *category, const char *fmt, ...) SQ_NONNULL SQ_ATTR_PRINTF(2, 3);
 
@@ -31,7 +41,7 @@ void sq_log_fn(const char *category, const char *fmt, ...) SQ_NONNULL SQ_ATTR_PR
 # define sq_log_token_1(...)
 #endif
 
-// #if SQ_LOG_PARSE >= 1
+// #if SQ_LOG_TOKEN >= 1
 // # define sq_log_parse(...) sq_log_fn("PARSE", __VA_ARGS__)
 // #else
 // # define sq_log_parse(...)
