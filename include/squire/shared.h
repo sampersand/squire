@@ -55,15 +55,13 @@ void *sq_calloc(size_t count, size_t size)
 void *sq_realloc(void *ptr, size_t size) SQ_NODISCARD;
 void *sq_memdup(void *ptr, size_t size) SQ_NODISCARD;
 
-SQ_NORETURN void sq_bug_fn(const char *file, const char *fn, size_t line, const char *fmt, ...)
+SQ_NORETURN void sq_internal_bug_fn(const char *file, const char *fn, size_t line, const char *fmt, ...)
 	SQ_COLD SQ_ATTR_PRINTF(4, 5) SQ_NONNULL;
-
-#define sq_bug_fn(...) (sq_bug_fn(__VA_ARGS__),SQ_UNREACHABLE)
 
 #ifdef SQ_RELEASE_FAST
 # define sq_bug(...) SQ_UNREACHABLE
 #else
-# define sq_bug(...) sq_bug_fn(__FILE__, __func__, __LINE__, __VA_ARGS__)
+# define sq_bug(...) (sq_internal_bug_fn(__FILE__, __func__, __LINE__, __VA_ARGS__),SQ_UNREACHABLE)
 #endif /* defined(SQ_RELEASE_FAST) */
 
 char *sq_read_file(const char *filename) SQ_NONNULL SQ_RETURNS_NONNULL ;

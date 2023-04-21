@@ -53,8 +53,7 @@ void *sq_memdup(void *ptr, size_t size) {
 	return ptr;
 }
 
-#undef sq_bug_fn
-void sq_bug_fn(const char *file, const char *function, size_t line, const char *fmt, ...) {
+void sq_internal_bug_fn(const char *file, const char *function, size_t line, const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
