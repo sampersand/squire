@@ -84,7 +84,16 @@ void sq_throw2(struct sq_form *form, const char *fmt, ...) {
 	char *message;
 	va_list args;
 	va_start(args, fmt);
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
 	vasprintf(&message, fmt, args);
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
+
 	va_end(args);
 
 	sq_throw_value(sq_value_new_text(sq_text_new(message)));

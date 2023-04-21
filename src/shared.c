@@ -11,7 +11,16 @@ static void SQ_NORETURN memory_error(const char *fmt, ...) {
 	va_start(args, fmt);
 
 	fprintf(stderr, "memory error: ");
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
 	vfprintf(stderr, fmt, args);
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
+
 	putc('\n', stderr);
 
 	abort();
@@ -58,7 +67,16 @@ void sq_internal_bug_fn(const char *file, const char *function, size_t line, con
 	va_start(args, fmt);
 
 	fprintf(stderr, "bug at %s:%zu (%s): ", file, line, function);
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
 	vfprintf(stderr, fmt, args);
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
+
 	putc('\n', stderr);
 
 #if SQ_HAS_BUILTIN(__builtin_debugtrap)
