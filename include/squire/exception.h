@@ -14,7 +14,7 @@
 
 // jmp_buf redo_location;
 extern jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
-extern sq_value exception;
+extern sq_value sq_current_exception;
 extern unsigned current_exception_handler;
 extern struct sq_form sq_exception_form, sq_io_exception_form;
 

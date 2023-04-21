@@ -567,25 +567,21 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 		return;
 
 	// [A,DST] DST <- *A
-	VM_CASE(SQ_INT_PTR_GET) {
-		struct sq_other *other;
+	VM_CASE(SQ_INT_PTR_GET)
 		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
 			sq_throw("can only read citations");
 
 		set_next_local(sf, *other->citation);
 		return;
-	}
 
 
 	// [A,B,DST] DST <- *A = B
-	VM_CASE(SQ_INT_PTR_SET) {
-		struct sq_other *other;
+	VM_CASE(SQ_INT_PTR_SET)
 		if (!sq_value_is_other(operands[0]) || SQ_OK_CITATION != (other = sq_value_as_other(operands[0]))->kind)
 			sq_throw("can only addend citations");
 
 		set_next_local(sf, *other->citation = operands[1]);
 		return;
-	}
 
 	// [A,B,C,DST] DST <- A[B..B+C]
 	VM_CASE(SQ_INT_SUBSTR) {
@@ -876,8 +872,8 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 			if (!setjmp(exception_handlers[current_exception_handler++]))
 				continue;
 
-			sf->locals[exception_index] = exception;
-			exception = SQ_NI;
+			sf->locals[exception_index] = sq_current_exception;
+			sq_current_exception = SQ_NI;
 			sf->ip = catch_index;
 			continue;
 		}

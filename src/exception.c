@@ -11,7 +11,7 @@
 
 // jmp_buf redo_location;
 jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
-sq_value exception;
+sq_value sq_current_exception;
 unsigned current_exception_handler;
 
 // very basics of an exception with a form. todo: that
@@ -74,7 +74,7 @@ void sq_throw_value(sq_value value)  {
 		exit(1);
 	}
 
-	exception = value;
+	sq_current_exception = value;
 
 	longjmp(exception_handlers[--current_exception_handler], 1);
 }
