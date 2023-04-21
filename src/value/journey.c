@@ -227,7 +227,7 @@ sq_value sq_journey_run(const struct sq_journey *journey, struct sq_args args) {
 #ifndef SQ_NMOON_JOKE
 #include <time.h>
 
-bool sq_moon_joke_does_were_flip() {
+static bool sq_moon_joke_does_were_flip() {
 	extern double moon_phase2(int year,int month,int day, double hour);
 	static time_t last_check; // cache it so we don't always recalculate
 	static bool should_flip;

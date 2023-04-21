@@ -342,8 +342,7 @@ static struct sq_token parse_identifier(void) {
 	return token;
 }
 
-
-struct sq_token next_non_macro_token() {
+static struct sq_token next_non_macro_token() {
 	return interpolation_length ? next_interpolation_token() : next_normal_token();
 }
 

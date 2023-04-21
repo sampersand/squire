@@ -670,7 +670,7 @@ static struct statements *parse_brace_statements(char *);
 char *kingdoms[MAX_KINGDOMS];
 unsigned current_kingdom;
 
-struct kingdom_declaration *parse_kingdom_declaration() {
+static struct kingdom_declaration *parse_kingdom_declaration() {
 	GUARD(SQ_TK_KINGDOM);
 
 	if (MAX_KINGDOMS <= current_kingdom)
