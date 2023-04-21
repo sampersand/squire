@@ -552,7 +552,15 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 	case SQ_G_NUMERAL: {
 		sq_numeral rnum = sq_value_to_numeral(rhs);
 		if (!rnum) return sq_value_new_numeral(1);
-		return sq_value_new_numeral(pow(AS_NUMBER(lhs), rnum));
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wbad-function-cast"
+#endif
+		return sq_value_new_numeral((sq_numeral) pow(AS_NUMBER(lhs), rnum));
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 	}
 
 	case SQ_G_IMITATION: {
