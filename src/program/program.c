@@ -38,6 +38,7 @@ static sq_value create_argv(unsigned argc, const char **argv) {
 	return sq_value_new_book(sq_book_new2(argc, args));
 }
 
+#define SQ_PROGRAM_ALLOCA_MAX_ARGC 16
 void sq_program_run(struct sq_program *program, unsigned argc, const char **argv) {
 	sq_assert_eq(1, program->main->npatterns);
 	sq_assert_z(program->main->patterns[0].pargc);
@@ -47,12 +48,13 @@ void sq_program_run(struct sq_program *program, unsigned argc, const char **argv
 	sq_exception_init(program);
 	sq_io_startup(program);
 
-	sq_value args[argc];
+	SQ_ALLOCA(sq_value, args, argc, SQ_PROGRAM_ALLOCA_MAX_ARGC);
 
 	for (unsigned i = 0; i < argc; ++i)
 		args[i] = sq_value_new_text(sq_text_new(strdup(argv[i])));
 
 	sq_journey_run_deprecated(program->main, 0, NULL);
+	SQ_ALLOCA_FREE(args, argc, SQ_PROGRAM_ALLOCA_MAX_ARGC);
 }
 
 void sq_program_finish(struct sq_program *program) {

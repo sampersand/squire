@@ -341,14 +341,18 @@ static void parse_macro_statement(char *name) {
 	free(name);
 }
 
+struct macro_args {
+	struct sq_token *args;
+	unsigned len;
+};
+
+#define SQ_MACRO_ALLOCA_MAX_LEN 16
 static void	parse_macro_identifier_invocation(struct expansion *exp, struct macro_variable *var) {
 	if (sq_next_token().kind != SQ_TK_LPAREN)
 		sq_throw("expected '(' after macro function '%s'", var->name);
 
-	struct {
-		struct sq_token *args;
-		unsigned len;
-	} args[var->arglen];
+	char *msg = 0;
+	SQ_ALLOCA(struct macro_args, args, var->arglen, SQ_MACRO_ALLOCA_MAX_LEN);
 	struct sq_token *arg, token;
 	unsigned cap, len, paren_depth;
 
@@ -380,8 +384,10 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 
 			case SQ_TK_RPAREN:
 				if (!is_verbatim && !paren_depth--) {
-					if (i != var->arglen - 1)
-						sq_throw("unexpected `)`; too few arguments");
+					if (i != var->arglen - 1) {
+						msg = "unexpected `)`; too few arguments";
+						goto error;
+					}
 					goto next_arg;
 				}
 				break;
@@ -405,8 +411,10 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 		args[i].len = len;
 	}
 
-	if (!var->arglen && sq_next_token().kind != SQ_TK_RPAREN)
-		sq_throw("missing closing ')'");
+	if (!var->arglen && sq_next_token().kind != SQ_TK_RPAREN) {
+		msg = "missing closing ')'";
+		goto error;
+	}
 
 	// expand them out and make the resulting array
 	len = 0;
@@ -441,6 +449,11 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 
 	exp->tokens = sq_realloc_vec(struct sq_token, tokens, len);
 	exp->len = len;
+
+error:
+	SQ_ALLOCA_FREE(args, var->arglen, SQ_MACRO_ALLOCA_MAX_LEN);
+	
+	if (msg) sq_throw(msg);
 }
 
 static bool parse_macro_identifier(char *name) {

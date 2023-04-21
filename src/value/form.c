@@ -168,11 +168,12 @@ struct sq_imitation *sq_form_imitate(struct sq_form *form, struct sq_args args) 
 		for (unsigned i = 0; i < form->vt->nmatter; ++i)
 			imitation->matter[i]=  SQ_NI;
 
-		sq_value fn_args[args.pargc + 1];
+		sq_value *fn_args = sq_malloc_vec(sq_value, args.pargc + 1);
 		fn_args[0] = sq_value_new_imitation(imitation);
 		memcpy(fn_args + 1, args.pargv, sq_sizeof_array(sq_value, args.pargc));
 
 		sq_journey_run_deprecated(form->vt->imitate, args.pargc + 1, fn_args);
+		free(fn_args);
 	}
 
 	return imitation;

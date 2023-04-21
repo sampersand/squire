@@ -338,6 +338,7 @@ struct sq_text *do_babel2(
 	return sq_text_new(result);
 }*/
 
+#define SQ_JOURNEY_MAX_ARGC_FOR_ALLOCA 16
 static struct sq_text *do_babel(
 	const struct sq_text *executable,
 	const struct sq_text *executable_stdin,
@@ -356,7 +357,7 @@ static struct sq_text *do_babel(
 	}
 	close(in_fds[1]);
 
-	char *c_args[nargs + 2];
+	SQ_ALLOCA(char *, c_args, nargs + 2, SQ_JOURNEY_MAX_ARGC_FOR_ALLOCA);
 	c_args[0] = sq_text_to_c_str(executable);	
 	for (unsigned i = 0; i < nargs; ++i)
 		c_args[i + 1] = sq_text_to_c_str(args[i]);
@@ -378,6 +379,8 @@ static struct sq_text *do_babel(
 
 	for (unsigned i = 0; i <= nargs; ++i)
 		free(c_args[i]);
+
+	SQ_ALLOCA_FREE(c_args, nargs + 2, SQ_JOURNEY_MAX_ARGC_FOR_ALLOCA);
 	return sq_text_new(result);
 }
 
@@ -844,13 +847,15 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 
 		VM_CASE(SQ_OC_CALL) {
 			unsigned pargc = next_count(sf);
-			sq_value pargv[pargc];
+			SQ_ALLOCA(sq_value, pargv, pargc, SQ_JOURNEY_MAX_ARGC_FOR_ALLOCA);
 			struct sq_args args = { .pargc = pargc, .pargv = pargv };
 
 			for (unsigned i = 0; i < pargc; ++i)
 				args.pargv[i] = *next_local(sf);
 
-			SET_RESULT(sq_value_call(operands[0], args));
+			result = sq_value_call(operands[0], args);
+			SQ_ALLOCA_FREE(pargv, pargc, SQ_JOURNEY_MAX_ARGC_FOR_ALLOCA);
+			goto push_result;
 		}
 
 		VM_CASE(SQ_OC_RETURN)
