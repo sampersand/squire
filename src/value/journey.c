@@ -338,7 +338,7 @@ struct sq_text *do_babel2(
 	return sq_text_new(result);
 }*/
 
-struct sq_text *do_babel(
+static struct sq_text *do_babel(
 	const struct sq_text *executable,
 	const struct sq_text *executable_stdin,
 	unsigned nargs,

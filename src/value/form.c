@@ -208,7 +208,7 @@ struct sq_journey *sq_imitation_lookup_change(struct sq_imitation *imitation, co
 	return sq_form_lookup_change(imitation->form, name);
 }
 
-int sq_imitation_lookup_matter_index(struct sq_imitation *imitation, const char *name) {
+static int sq_imitation_lookup_matter_index(struct sq_imitation *imitation, const char *name) {
 	// note that we don't ask parents for matter. this is intentional, as only the base form can
 	// have matter.
 	for (unsigned i = 0; i < imitation->form->vt->nmatter; ++i)

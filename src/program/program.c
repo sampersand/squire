@@ -29,7 +29,7 @@ void sq_program_mark(struct sq_program *program) {
 }
 
 
-sq_value create_argv(unsigned argc, const char **argv) {
+static sq_value create_argv(unsigned argc, const char **argv) {
 	sq_value *args = sq_malloc_vec(sq_value, argc);
 
 	for (unsigned i = 0; i < argc; ++i)
