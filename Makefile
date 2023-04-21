@@ -28,6 +28,7 @@ objects:=$(sources:$(srcdir)/%.c=$(OBJDIR)/%.o)
 ## Custom logic
 ifdef optimized
 	COMPILER_C_FLAGS+=-flto -O3 -DNDEBUG -DSQ_RELEASE_FAST
+	# SQ_USE_ALLOCA
 else
 	COMPILER_C_FLAGS+=-g
 	ANNOYING_FLAGS:=-Wno-covered-switch-default -Wno-switch-enum -Wno-comma -Wno-padded

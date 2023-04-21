@@ -54,7 +54,7 @@ static struct sq_text *parse_fraktur_bareword(void) {
 
 		if ((fraktur_len = fraktur_length(sq_stream, &fraktur_pos))) {
 			sq_stream += fraktur_len;
-			fraktur[len++] = (fraktur_pos < 26) ? ('A' + fraktur_pos) : ('a' + (fraktur_pos - 26));
+			fraktur[len++] = (fraktur_pos < 26) ? ('A' + (char) fraktur_pos) : ('a' + (char) (fraktur_pos - 26));
 			continue;
 		}
 
@@ -279,7 +279,7 @@ static struct sq_token parse_text(void) {
 			if (sq_stream[0] == quote || sq_stream[0] == '\0' || sq_stream[1] == quote)
 				sq_throw("unterminated escape sequence");
 
-			c = tohex(sq_stream[0]) * 16 + tohex(sq_stream[1]);
+			c = (char) (tohex(sq_stream[0]) * 16 + tohex(sq_stream[1]));
 			sq_stream += 2;
 			break;
 		}
