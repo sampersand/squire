@@ -39,6 +39,8 @@ ifdef njoke
 	COMPILER_C_FLAGS+=-DSQ_NMOON_JOKE
 endif
 
+CFLAGS+=-Wno-switch-enum
+
 override cflags:=$(COMPILER_C_FLAGS) $(CFLAGS) $(required_compiler_flags)
 ## end custom logic
 
