@@ -518,12 +518,10 @@ for each body:
 alas:
 
 */
-#define ALLOCA_MAX_LEN 16
-
 static void compile_switch_statement(struct sq_code *code, struct switch_statement *sw) {
 	unsigned condition_index = compile_expression(code, sw->cond);
-	SQ_ALLOCA(unsigned, jump_to_body_indices, sw->ncases, ALLOCA_MAX_LEN);
-	SQ_ALLOCA(int, jump_to_end_indices, sw->ncases + 1, ALLOCA_MAX_LEN);
+	SQ_ALLOCA(unsigned, jump_to_body_indices, sw->ncases);
+	SQ_ALLOCA(int, jump_to_end_indices, sw->ncases + 1);
 
 	for (unsigned i = 0; i < sw->ncases; ++i) {
 		unsigned case_index = compile_expression(code, sw->cases[i].expr);
@@ -583,12 +581,12 @@ static void compile_switch_statement(struct sq_code *code, struct switch_stateme
 
 	free(sw->cases);
 	free(sw);
-	SQ_ALLOCA_FREE(jump_to_body_indices, sw->ncases, ALLOCA_MAX_LEN);
-	SQ_ALLOCA_FREE(jump_to_end_indices, sw->ncases + 1, ALLOCA_MAX_LEN);
+	SQ_ALLOCA_FREE(jump_to_body_indices);
+	SQ_ALLOCA_FREE(jump_to_end_indices);
 }
 
 static unsigned compile_book(struct sq_code *code, struct book *book) {
-	SQ_ALLOCA(unsigned, indices, book->npages, ALLOCA_MAX_LEN);
+	SQ_ALLOCA(unsigned, indices, book->npages);
 
 	for (unsigned i = 0; i < book->npages; ++i)
 		indices[i] = compile_expression(code, book->pages[i]);
@@ -603,13 +601,13 @@ static unsigned compile_book(struct sq_code *code, struct book *book) {
 	unsigned index = next_local(code);
 	set_index(code, index);
 
-	SQ_ALLOCA_FREE(indices, book->npages, ALLOCA_MAX_LEN);
+	SQ_ALLOCA_FREE(indices);
 	return index;
 }
 
 static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
-	SQ_ALLOCA(unsigned, keys, dict->neles, ALLOCA_MAX_LEN);
-	SQ_ALLOCA(unsigned, vals, dict->neles, ALLOCA_MAX_LEN);
+	SQ_ALLOCA(unsigned, keys, dict->neles);
+	SQ_ALLOCA(unsigned, vals, dict->neles);
 
 	for (unsigned i = 0; i < dict->neles; ++i) {
 		keys[i] = compile_expression(code, dict->keys[i]);
@@ -628,8 +626,8 @@ static unsigned compile_codex(struct sq_code *code, struct dict *dict) {
 	unsigned index = next_local(code);
 	set_index(code, index);
 
-	SQ_ALLOCA_FREE(keys, dict->neles, ALLOCA_MAX_LEN);
-	SQ_ALLOCA_FREE(vals, dict->neles, ALLOCA_MAX_LEN);
+	SQ_ALLOCA_FREE(keys);
+	SQ_ALLOCA_FREE(vals);
 
 	return index;
 }
@@ -682,7 +680,7 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 	soul = compile_primary(code, fncall->soul);
 
 compile_arguments:;
-	SQ_ALLOCA(unsigned, args, fncall->argc, ALLOCA_MAX_LEN);
+	SQ_ALLOCA(unsigned, args, fncall->argc);
 
 	for (unsigned i = 0; i < fncall->argc; ++i)
 		args[i] = compile_expression(code, fncall->args[i]);
@@ -720,7 +718,7 @@ assign_arguments:
 	unsigned result;
 	set_index(code, result = next_local(code));
 
-	SQ_ALLOCA_FREE(args, fncall->argc, ALLOCA_MAX_LEN);
+	SQ_ALLOCA_FREE(args);
 	return result;
 }
 
@@ -1054,7 +1052,7 @@ done:
 }
 
 static unsigned compile_function_call_old(struct sq_code *code, struct function_call_old *fncall) {
-	SQ_ALLOCA(unsigned, args, fncall->arglen, ALLOCA_MAX_LEN);
+	SQ_ALLOCA(unsigned, args, fncall->arglen);
 
 	for (unsigned i = 0; i < fncall->arglen; ++i)
 		args[i] = compile_expression(code, fncall->args[i]);
@@ -1122,7 +1120,7 @@ arguments:
 	unsigned result;
 	set_index(code, result = next_local(code));
 
-	SQ_ALLOCA_FREE(args, fncall->arglen, ALLOCA_MAX_LEN);
+	SQ_ALLOCA_FREE(args);
 	return result;
 
 }

@@ -13,6 +13,16 @@
 #endif /* SQ_LOG */
 // #pragma unroll 16
 
+#ifdef SQ_USE_ALLOCA
+# pragma clang diagnostic ignored "-Wvla"
+# define SQ_ALLOCA(type, name, amnt) type name[amnt];
+# define SQ_ALLOCA_FREE(name)
+#else
+# define SQ_ALLOCA(type, name, amnt) type *name = sq_malloc_vec(type, amnt);
+# define SQ_ALLOCA_FREE(name) free(name)
+#endif
+
+
 #include <squire/exception.h>
 #define sq_todo(...) (fprintf(stderr, __VA_ARGS__), exit(1))
 

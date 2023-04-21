@@ -346,13 +346,12 @@ struct macro_args {
 	unsigned len;
 };
 
-#define SQ_MACRO_ALLOCA_MAX_LEN 16
 static void	parse_macro_identifier_invocation(struct expansion *exp, struct macro_variable *var) {
 	if (sq_next_token().kind != SQ_TK_LPAREN)
 		sq_throw("expected '(' after macro function '%s'", var->name);
 
 	char *msg = 0;
-	SQ_ALLOCA(struct macro_args, args, var->arglen, SQ_MACRO_ALLOCA_MAX_LEN);
+	SQ_ALLOCA(struct macro_args, args, var->arglen);
 	struct sq_token *arg, token;
 	unsigned cap, len, paren_depth;
 
@@ -451,7 +450,7 @@ static void	parse_macro_identifier_invocation(struct expansion *exp, struct macr
 	exp->len = len;
 
 error:
-	SQ_ALLOCA_FREE(args, var->arglen, SQ_MACRO_ALLOCA_MAX_LEN);
+	SQ_ALLOCA_FREE(args);
 	
 	if (msg) sq_throw(msg);
 }

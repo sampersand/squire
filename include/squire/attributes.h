@@ -114,17 +114,4 @@
 # define SQ_NULLABLE 
 #endif /* SQ_HAS_ATTRIBUTE(nonnull) */
 
-#if SQ_HAS_BUILTIN(__builtin_alloca)
-# define SQ_ALLOCA(type, name, amnt, max) \
-	type *name = (\
-	(amnt) <= (max) \
-		? (type *) __builtin_alloca(sizeof(type) * (amnt)) \
-		: sq_malloc_vec(type, amnt))
-# define SQ_ALLOCA_FREE(ptr, amnt, max) do {\
-	if ((max) < (amnt)) free(ptr); } while (0)
-#else
-# define SQ_ALLOCA(type, amnt, _max) sq_malloc_vec(type, amnt)
-# define SQ_ALLOCA_FREE(ptr, _amnt, max) do { (void) max; free(ptr); } while(0)
-#endif
-
 #endif /* !defined(SQ_ATTRIBUTES_H) */
