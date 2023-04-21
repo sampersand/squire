@@ -179,7 +179,7 @@ sq_numeral sq_other_to_numeral(const struct sq_other *other) {
 	case SQ_OK_KINGDOM:
 		if (!strcmp(sq_other_as_kingdom((struct sq_other *) other)->name, "Samperland"))
 			return 1; // Samperland's #1 LOL.
-		// else fallthrough
+		SQ_FALLTHROUGH
 
 	case SQ_OK_CITATION:;
 		sq_citation c = sq_other_as_citation((struct sq_other *) other);

@@ -157,7 +157,7 @@ static sq_value read_func(struct sq_args args) {
 	case SQ_G_OTHER:
 		if (arg == SQ_NI)
 			return sq_value_new_text(sq_scroll_read_all(scroll));
-		// else, fallthrough
+		SQ_FALLTHROUGH
 
 	default:
 		sq_throw("invalid read arugment kind '%s'", sq_value_typename(arg));

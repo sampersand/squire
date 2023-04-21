@@ -77,7 +77,7 @@
 #endif /* SQ_HAS_ATTRIBUTE(noescape) */
 
 #if SQ_HAS_ATTRIBUTE(fallthrough)
-# define SQ_FALLTHROUGH SQ_ATTR(fallthrough)
+# define SQ_FALLTHROUGH SQ_ATTR(fallthrough);
 #else
 # define SQ_FALLTHROUGH
 #endif /* SQ_HAS_ATTRIBUTE(nonnull) */

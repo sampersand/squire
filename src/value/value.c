@@ -209,7 +209,8 @@ bool sq_value_eql(sq_value lhs, sq_value rhs) {
 
 		if (eql != NULL)
 			return sq_value_to_veracity(sq_journey_run_deprecated(eql, 2, args));
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -236,7 +237,8 @@ sq_numeral sq_value_cmp(sq_value lhs, sq_value rhs) {
 
 		if (cmp != NULL)
 			return sq_value_to_numeral(sq_journey_run_deprecated(cmp, 2, args));
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -258,7 +260,8 @@ sq_value sq_value_neg(sq_value arg) {
 
 		if (neg != NULL)
 			return sq_journey_run_deprecated(neg, 1, &arg);
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -296,7 +299,8 @@ sq_value sq_value_index(sq_value value, sq_value key) {
 
 		if (index != NULL)
 			return sq_journey_run_deprecated(index, 2, args);
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -324,7 +328,7 @@ void sq_value_index_assign(sq_value value, sq_value key, sq_value val) {
 			return;
 		}
 
-		// fallthrough
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -395,7 +399,8 @@ sq_value sq_value_add(sq_value lhs, sq_value rhs) {
 
 		if (add != NULL)
 			return sq_journey_run_deprecated(add, 2, args);
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -421,7 +426,8 @@ sq_value sq_value_sub(sq_value lhs, sq_value rhs) {
 
 		if (sub != NULL)
 			return sq_journey_run_deprecated(sub, 2, args);
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -481,7 +487,8 @@ sq_value sq_value_mul(sq_value lhs, sq_value rhs) {
 
 		if (mul != NULL)
 			return sq_journey_run_deprecated(mul, 2, args);
-		// fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -505,7 +512,7 @@ sq_value sq_value_div(sq_value lhs, sq_value rhs) {
 		if (div != NULL)
 			return sq_journey_run_deprecated(div, 2, args);
 
-		// fallthrough
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -537,7 +544,7 @@ sq_value sq_value_mod(sq_value lhs, sq_value rhs) {
 		if (mod != NULL)
 			return sq_journey_run_deprecated(mod, 2, args);
 
-		// fallthrough
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -570,7 +577,7 @@ sq_value sq_value_pow(sq_value lhs, sq_value rhs) {
 		if (pow != NULL)
 			return sq_journey_run_deprecated(pow, 2, args);
 
-		// fallthrough
+		SQ_FALLTHROUGH
 	}
 
 	default:
@@ -600,7 +607,7 @@ sq_value sq_value_call(sq_value tocall, struct sq_args args) {
 				return result;
 		}
 
-		// else fallthrough
+		SQ_FALLTHROUGH
 
 	default:
 		sq_throw("cannot call '%s'.", TYPENAME(tocall));
@@ -645,7 +652,8 @@ struct sq_text *sq_value_to_text(sq_value value) {
 				sq_throw("to_text for an imitation of '%s' didn't return a text", AS_IMITATION(value)->form->vt->name);
 			return AS_TEXT(text);
 		}
-		// else fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	case SQ_G_JOURNEY:
@@ -685,7 +693,8 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 				sq_throw("to_numeral for an imitation of '%s' didn't return a numeral", AS_IMITATION(value)->form->vt->name);
 			return AS_NUMBER(numeral);
 		}
-		// else fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	case SQ_G_FORM:
@@ -727,7 +736,8 @@ bool sq_value_to_veracity(sq_value value) {
 				sq_throw("to_veracity for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->vt->name);
 			return AS_VERACITY(veracity);
 		}
-		// else fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	case SQ_G_FORM:
@@ -759,7 +769,8 @@ size_t sq_value_length(sq_value value) {
 				sq_throw("length for an imitation of '%s' didn't return a veracity", AS_IMITATION(value)->form->vt->name);
 			return AS_NUMBER(veracity);
 		}
-		// else fallthrough
+
+		SQ_FALLTHROUGH
 	}
 
 	case SQ_G_OTHER:
@@ -837,7 +848,7 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 	case SQ_G_OTHER:
 		if (sq_value_is_other(soul))
 			result = sq_other_get_attr(AS_OTHER(soul), attr);
-		// else, fallthrough
+		SQ_FALLTHROUGH
 
 	case SQ_G_TEXT:
 		if (!strcmp(attr, "verso"))
@@ -887,7 +898,7 @@ void sq_value_set_attr(sq_value soul, const char *attr, sq_value value) {
 	case SQ_G_OTHER:
 		if (sq_value_is_other(soul) && sq_other_set_attr(AS_OTHER(soul), attr, value))
 			return;
-		// else, fallthrough
+		SQ_FALLTHROUGH
 
 	case SQ_G_NUMERAL:
 	case SQ_G_TEXT:
@@ -925,12 +936,13 @@ bool sq_value_matches(sq_value formlike, sq_value to_check) {
 		if (!strcmp(AS_TEXT(formlike)->ptr, "Journey") && sq_value_is_journey(to_check)) return true;
 		if (!strcmp(AS_TEXT(formlike)->ptr, "Book") && sq_value_is_book(to_check)) return true;
 		if (!strcmp(AS_TEXT(formlike)->ptr, "Codex") && sq_value_is_codex(to_check)) return true;
-		// fallthrough
+		SQ_FALLTHROUGH
 
 	case SQ_G_OTHER:
 		if (sq_value_is_other(formlike))
 			return sq_other_matches(AS_OTHER(formlike), to_check);
-		// else, fallthrough
+		SQ_FALLTHROUGH
+	
 	case SQ_G_NUMERAL:
 		return sq_value_eql(formlike, to_check);
 

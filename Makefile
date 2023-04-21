@@ -31,7 +31,11 @@ ifdef optimized
 	# SQ_USE_ALLOCA
 else
 	COMPILER_C_FLAGS+=-g
-	ANNOYING_FLAGS:=-Wno-covered-switch-default -Wno-switch-enum -Wno-comma -Wno-padded
+	COMPILER_C_FLAGS+=\
+		-Weverything -Wno-covered-switch-default \
+		-Wno-switch-enum -Wno-comma -Wno-padded -Wno-poison-system-directories \
+		-Wno-shorten-64-to-32 -Wno-cast-qual \
+		-Wno-conditional-uninitialized -Wno-sign-conversion
 	ifdef debug
 		COMPILER_C_FLAGS+=-fsanitize=address,undefined -DSQ_LOG
 		njoke:=1
