@@ -8,10 +8,10 @@
 #include <string.h>
 #include <errno.h>
 
-struct sq_program *program;
+static struct sq_program *program;
 
 #define CURRENT_INDEX_PTR(code) (&(code)->bytecode[(code)->codelen].index)
-struct {
+static struct {
 	unsigned len, cap;
 	struct global {
 		char *name;

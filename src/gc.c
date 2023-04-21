@@ -11,10 +11,9 @@ struct anyvalue {
 
 SQ_STATIC_ASSERT(sizeof(struct anyvalue) == SQ_VALUE_SIZE, "size isnt equal");
 
-struct sq_program *program;
-struct anyvalue *heap_start, *heap;
-long long heap_size;
-
+static struct sq_program *program;
+static struct anyvalue *heap_start, *heap;
+static long long heap_size;
 
 void sq_gc_init(long long heap_size_, struct sq_program *program_) {
 	heap_size = heap_size_ * SQ_VALUE_SIZE;

@@ -8,8 +8,8 @@
 #include <string.h>
 
 #define parse_error sq_throw
-struct sq_token last;
-bool rewound;
+static struct sq_token last;
+static bool rewound;
 
 static void untake() {
 	sq_assert(!rewound);
@@ -667,8 +667,8 @@ static struct statements *parse_brace_statements(char *);
 
 #define MAX_KINGDOMS 255
 
-char *kingdoms[MAX_KINGDOMS];
-unsigned current_kingdom;
+static char *kingdoms[MAX_KINGDOMS];
+static unsigned current_kingdom;
 
 static struct kingdom_declaration *parse_kingdom_declaration() {
 	GUARD(SQ_TK_KINGDOM);

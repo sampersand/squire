@@ -61,9 +61,14 @@ static struct expansion {
 	unsigned len, pos;
 } expansions[MAX_EXPANSIONS];
 
-const struct sq_token UNDEFINED = { .kind = SQ_TK_UNDEFINED };
-
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wmissing-variable-declarations"  // it's already cursed enough
+#endif
 bool is_in_macro_declaration;
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 static struct sq_token next_macro_token(void) {
 	struct sq_token token;

@@ -17,6 +17,7 @@ extern jmp_buf exception_handlers[SQ_NUM_EXCEPTION_HANDLERS];
 extern sq_value sq_current_exception;
 extern unsigned current_exception_handler;
 extern struct sq_form sq_exception_form, sq_io_exception_form;
+extern struct sq_form_vtable sq_exception_form_vtable, sq_io_exception_form_vtable;
 
 struct sq_program;
 void sq_exception_init(struct sq_program *program);

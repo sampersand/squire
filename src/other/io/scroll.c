@@ -8,11 +8,11 @@
 #include <string.h>
 #include <errno.h>
 
-static struct sq_kingdom scroll_kingdom = {
-	.name = "IO",
-	.nsubjects = 1
-};
-struct sq_kingdom *sq_scroll_kingdom = &scroll_kingdom;
+// static struct sq_kingdom scroll_kingdom = {
+// 	.name = "IO",
+// 	.nsubjects = 1
+// };
+// struct sq_kingdom *sq_scroll_kingdom = &scroll_kingdom;
 
 static sq_value write_journey, write_func(struct sq_args);
 static sq_value read_journey, read_func(struct sq_args);
