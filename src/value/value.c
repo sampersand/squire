@@ -674,7 +674,7 @@ sq_numeral sq_value_to_numeral(sq_value value) {
 			return strtoll(AS_STR(value), NULL, 10);
 
 	case SQ_G_BOOK:
-		return sq_value_new_text(sq_book_to_text(AS_BOOK(value)));
+		return AS_BOOK(value)->length;
 
 	case SQ_G_IMITATION: {
 		struct sq_journey *to_numeral = sq_imitation_lookup_change(AS_IMITATION(value), "to_numeral");
