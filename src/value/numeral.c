@@ -6,6 +6,7 @@
 #include <string.h>
 
 enum roman_numeral {
+	SQ_TK_ROMAN_N = 0,
 	SQ_TK_ROMAN_I = 1,
 	SQ_TK_ROMAN_V = 5,
 	SQ_TK_ROMAN_X = 10,
@@ -133,8 +134,8 @@ sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
 	if (strpbrk(input, "NIVXLCDM") == NULL)
 		return unicode_roman((const uint8_t *) input, output);
 
-	sq_numeral numeral = 0;
-	enum roman_numeral stage = 0, parsed;
+	sq_numeral numeral = SQ_TK_ROMAN_N;
+	enum roman_numeral stage = SQ_TK_ROMAN_N, parsed;
 
 	// ie if the input is just `N` (ie `0`).
 	if (input[0] == 'N' && !isalnum(input[1])) {
@@ -161,7 +162,7 @@ sq_numeral sq_roman_to_numeral(const char *input, const char **output) {
 
 		numeral += parsed;
 
-		if (stage == 0 || parsed <= stage) stage = parsed;
+		if (stage == SQ_TK_ROMAN_N || parsed <= stage) stage = parsed;
 		else numeral -= stage * 2;
 
 		++input;
