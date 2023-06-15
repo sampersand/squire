@@ -222,7 +222,8 @@ static struct primary *parse_primary() {
 
 	case SQ_TK_CITE:
 		primary.kind = SQ_PS_PCITE;
-		primary.expr = parse_expression();
+		if (!(primary.expr = parse_expression()))
+			parse_error("expected primary after cite");
 		break;
 
 	case SQ_TK_BABEL:

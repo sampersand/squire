@@ -750,6 +750,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 
 	switch (primary->kind) {
 	case SQ_PS_PPAREN:
+		if (!primary->expr) goto ni;
 		result = compile_expression(code, primary->expr);
 		break;
 
@@ -782,6 +783,7 @@ static unsigned compile_primary(struct sq_code *code, struct primary *primary) {
 		break;
 
 	case SQ_PS_PNI:
+		ni:
 		result = load_constant(code, SQ_NI);
 		break;
 
