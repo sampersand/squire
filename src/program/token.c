@@ -80,23 +80,15 @@ static bool strip_whitespace_maybe_ignore_slash(bool ignore_slash) <%
 	bool had_a_newline = false;
 
 	// strip whitespace
-	while ((c = *sq_stream)) {
-		if (c == '#' || !strncmp(sq_stream, "N.B. ", 5)) { // single line
-			do {
-				c = *++sq_stream;
-			} while (c && c != '\n');
-		} else if (c == '/' && sq_stream[1] == '*') { // multiline
-			sq_stream += 2;
-
-			while (true) {
+	while ((c = *sq_stream))
+		if (c == '#' || !strncmp(sq_stream, "N.B. ", 5)) // single line
+			do c = *++sq_stream; while (c && c != '\n');
+		else if (c == '/' && sq_stream[1] == '*') // multiline
+			for (sq_stream += 2; true;) 
 				if (sq_stream[0] == '*' && sq_stream[1] == '/') {
 					sq_stream += 2;
 					break;
-				}
-
-				if (!*sq_stream++) sq_throw("unterminated block comment");
-			}
-		}
+				} else {if (!*sq_stream++) sq_throw("unterminated block comment");}
 #if 0
 		else if (*sq_stream == '\\') { // i forget why this is here
 			++sq_stream;
@@ -110,14 +102,12 @@ static bool strip_whitespace_maybe_ignore_slash(bool ignore_slash) <%
 		}
 #endif
 		else if (!isspace(c)) break; // nonspace = exit out
-		else for (; isspace(c); c = *++sq_stream) { // space
+		else for (; isspace(c); c = *++sq_stream) // space
 			// note that this implementation won't throw an exception on spaces on the first line.
 			// but oh well whatever.
 			if (c == '\n') had_a_newline = true;
 			else if (c == ' ' && had_a_newline)
 				sq_throw("THOU SHALT NOT INDENT WITH SPACES!");
-		}
-	}
 
 	return had_a_newline;
 %>
