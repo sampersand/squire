@@ -80,7 +80,11 @@ struct sq_text *sq_numeral_to_roman(sq_numeral numeral) {
 // note that this returns an owned text.
 struct sq_text *sq_numeral_to_arabic(sq_numeral numeral) {
 	if (!numeral)
+#if 0 /* This doesn't work for some reason... but for some reason the roman does?? TODO: FIXME */
 		return &sq_text_zero_arabic;
+#else
+		return sq_text_new2(strdup("0"), 1);
+#endif
 
 	struct sq_text *buf = sq_text_allocate(40);
 	snprintf(buf->ptr, 40, "%"PRId64, numeral);
