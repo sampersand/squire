@@ -8,7 +8,7 @@ form Function {
 		path I:   reward (soul.func)(a[I])
 		path II:  reward (soul.func)(a[I], a[II])
 		path III: reward (soul.func)(a[I], a[II], a[III])
-		alas: $bug("invalid arg length")
+		alas: $bug(𝔦𝔫𝔳𝔞𝔩𝔦𝔡 𝔞𝔯𝔤 𝔩𝔢𝔫𝔤𝔱𝔥)
 		}
 	}
 }
@@ -26,7 +26,7 @@ form AlwaysRunFunction {
 		path II:  reward (soul.func)(run(a[I]), run(a[II]))
 		path III: reward (soul.func)(run(a[I]), run(a[II]), run(a[III]))
 		path IV:  reward (soul.func)(run(a[I]), run(a[II]), run(a[III]), run(a[IV]))
-		alas: $bug("invalid arg length")
+		alas: $bug(𝔦𝔫𝔳𝔞𝔩𝔦𝔡 𝔞𝔯𝔤 𝔩𝔢𝔫𝔤𝔱𝔥)
 		}
 	}
 }
@@ -43,13 +43,14 @@ journey join (ary: [], sep) => '', (ary, sep) {
 }
 
 journey to-numeral
-	(x: Text) if ('N' | 'I' | 'V' | 'X' | 'L' | 'C' | 'D' | 'M') ~~ substr(x, I, I) => 0,
+	N.B. text->numeral conversion in squire allows for roman numerals, this disallows it.
+	(x: Text) if (𝔑 | ℑ | 𝔙 | 𝔛 | 𝔏 | ℭ | 𝔇 | 𝔐) ~~ substr(x, I, I) => N,
 	(x) => tally(x);
 
 journey to text
 	(x: Numeral) => arabic(x),
-	(x: yea) => 'true',
-	(x: nay) => 'false',
+	(x: yea) => 𝔱𝔯𝔲𝔢,
+	(x: nay) => 𝔣𝔞𝔩𝔰𝔢,
 	(x: ni) => '',
 	(x: Book) => join(x, "\n"),
 	(x) => prose(x);
@@ -104,10 +105,6 @@ journey dump-out
 			dump-out(b[i = i + I])
 		}
 		proclaimn(']');
-	},
-	(other) {
-		dump(other)
-		dismount(0)
 	};
 
 journey cmp
@@ -131,7 +128,7 @@ journey cmp
 journey eql(x,y) => x == y;
 
 renowned not-always-run-functions = {
-	'B': \(arg) => arg,
+	𝔅: \(arg) => arg,
 	'&': (journey	(x, y) if !(x=run(x)) => x,
 						(x, y) => run(y)),
 	'|': (journey	(x, y) if veracity(x=run(x)) => x,
@@ -140,30 +137,30 @@ renowned not-always-run-functions = {
 		var.assign(ran = run(val));
 		reward ran;
 	},
-	'W': \(cond, body) {
+	𝔚: \(cond, body) {
 		whilst run(cond) {
 			run(body);
 		}
 		# IMPLICIT NI REWARD
 	},
-	'I': (journey	(cond, ift, _) if veracity(run(cond)) => run(ift),
+	ℑ: (journey	(cond, ift, _) if veracity(run(cond)) => run(ift),
 						(cond, _, iff) => run(iff)),
 }
 
 renowned always-run-functions = {
 	# Nullary
-	'R': \() => gamble() % 4294967295, N.B. Far too large to represent with roman numerals
-	'P': \() => inquire(),
+	ℜ: \() => gamble() % 4294967295, N.B. Far too large to represent with roman numerals
+	𝔓: \() => inquire(),
 
 	# UNARY
-	'C': \(arg) => run(arg),
-	'Q': \(arg) => dismount(arg),
-	'D': \(val) {
+	ℭ: \(arg) => run(arg),
+	𝔔: \(arg) => dismount(arg),
+	𝔇: \(val) {
 		nigh ran;
 		dump-out(ran = val)
 		reward ran;
 	},
-	'O': \(x) {
+	𝔒: \(x) {
 		nigh str = to-text(x);
 		if str.length && substr(str, str.length, I) == '\\' {
 			proclaimn(substr(str, I, str.length - I))
@@ -171,10 +168,10 @@ renowned always-run-functions = {
 			proclaim(str)
 		}
 	},
-	'L': \(x) => to-book(x).length,
+	𝔏: \(x) => to-book(x).length,
 	'!': \(x) => !x,
 	'~': \(x) => -to-numeral(x),
-	'A': \(x) => ascii(x),
+	𝔄: \(x) => ascii(x),
 	',': \(x) => [x],
 	'[': (journey	(x: Text) => substr(x, I, I),
 						(x: Book) => x.verso),
@@ -203,7 +200,7 @@ renowned always-run-functions = {
 	';': \(x, y) => y,
 
 	# TERNARY
-	'G': \(coll, start, len) {
+	𝔊: \(coll, start, len) {
 		if Text ~~ coll {
 			reward substr(coll, I + to-numeral(start), to-numeral(len))
 		}
@@ -220,7 +217,7 @@ renowned always-run-functions = {
 	},
 
 	# QUATERNARY
-	'S': \(coll, start, len, repl) {
+	𝔖: \(coll, start, len, repl) {
 		if Text ~~ coll {
 			start = to-numeral(start)
 			reward substr(coll, I, start) + to-text(repl) +

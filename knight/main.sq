@@ -21,7 +21,7 @@ path '-f':
 
 alas:
 	whence usage
-	proclaim("usage: ./main.sq (-e expr | -f file)")
+	proclaim(𝔲𝔰𝔞𝔤𝔢\: \.\/𝔪𝔞𝔦𝔫\.𝔰𝔮 \(\-𝔢 𝔢𝔵𝔭𝔯 \| \-𝔣 𝔣𝔦𝔩𝔢\))
 	dismount(2);
 }
 
