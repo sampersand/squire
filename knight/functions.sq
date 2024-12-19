@@ -16,6 +16,22 @@ form Function {
 	}
 }
 
+
+journey to int
+	(x: Numeral) => x,
+	(_) { catapult "TODO" } ;
+journey to str
+	(x: Numeral) => x,
+	(_) { catapult "TODO"} ;
+
+journey to list
+	(x: Numeral) => x,
+	(_) { catapult "TODO"} ;
+
+journey to bool
+	(x: Numeral) => x,
+	(_) { catapult "TODO"} ;
+
 journey run
 	(x: Numeral | Text | Veracity | ni | Book) => x,
 	(other) => other.run();
@@ -40,15 +56,56 @@ journey dump-kn
 	};
 
 renowned functions = {
+	# Nullary
+	'R': (\() => gamble() % 4294967295), N.B. Far too large to represent with roman numerals
+	'P': (\() { catapult "TODO" }),
+
+	# Unary
+	'B': (\(arg) => arg),
+	'C': (\(arg) => run(run(arg))),
+	'Q': (\(arg) => dismount(to int(run(arg)))),
+	'D': (\(val) {
+		nigh ran;
+		dump kn(ran = run(val))
+		reward ran;
+	}),
+	'O': (\(x) { catapult "TODO" }),
+	'L': (\(x) { catapult "TODO" }),
+	'!': (\(x) { catapult "TODO" }),
+	'~': (\(x) { catapult "TODO" }),
+	'A': (\(x) { catapult "TODO" }),
+	',': (\(x) { catapult "TODO" }),
+	'[': (\(x) { catapult "TODO" }),
+	']': (\(x) { catapult "TODO" }),
+
+	# Binary
 	'+': (\(x, y) => run(x) + run(y)),
+	'-': (\(x, y) { catapult "TODO" }),
+	'*': (\(x, y) { catapult "TODO" }),
+	'/': (\(x, y) { catapult "TODO" }),
+	'%': (\(x, y) { catapult "TODO" }),
+	'^': (\(x, y) { catapult "TODO" }),
+	'<': (\(x, y) { catapult "TODO" }),
+	'>': (\(x, y) { catapult "TODO" }),
+	'?': (\(x, y) { catapult "TODO" }),
+	'&': (\(x, y) { catapult "TODO" }),
+	'|': (\(x, y) { catapult "TODO" }),
 	';': (\(x, y) { run(x); reward run(y)}),
 	'=': (\(var, val) {
 		var.assign(ran = run(val));
 		reward ran;
 	}),
-	'D': \(val) {
-		nigh ran;
-		dump kn(ran = run(val))
-		reward ran;
-	}
+	'W': (\(cond, body) {
+		whilst to bool(run(cond)) {
+			run(body);
+		}
+		# IMPLICIT NI REWARD
+	}),
+
+	# TERNARY
+	'I': (\(cond, ift, iff) { catapult "TODO" }),
+	'G': (\(coll, start, len) { catapult "TODO" }),
+
+	# QUATERNARY
+	'S': (\(coll, start, len, repl) { catapult "TODO" })
 };

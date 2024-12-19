@@ -12,10 +12,6 @@
 
 
 
-Variable.lookup("v").assign(34);
-p = Parser("  #lol
-	; = x 3
-	: DUMP @+ x 5
-	x");
+p = Parser(ARGV[II]);
 p.next().run()
 #proclaim(p.take_whilst((journey(c) => '0' <= c && c <= '9')));

@@ -1,6 +1,7 @@
 journey isdigit(c) => '0' <= c && c <= '9';
 journey islower(c) => c == '_' || 'a' <= c && c <= 'z';
 journey isupper(c) => c == '_' || 'A' <= c && c <= 'Z';
+journey isspace(c: ' ' | "\t" | "\n" | "\r" | '(' | ')' | ':') => yea, (_) => nay
 
 form Parser {
 	matter stream;
@@ -34,7 +35,7 @@ form Parser {
 		nigh c
 
 		fork c = soul.peek() {
-			path [' ', "\t", "\n", "\r", '(', ')', '[', ']', '{', '}', ':']:
+			path isspace:
 				whence next;
 				soul.advance();
 				reward soul.next();
