@@ -5,68 +5,119 @@ form Function {
 		nigh a = soul.args;
 
 		fork a.length {
-		path N: reward (soul.func)()
-		path I: reward (soul.func)(a[I])
-		path II: reward (soul.func)(a[I], a[II])
+		path I:   reward (soul.func)(a[I])
+		path II:  reward (soul.func)(a[I], a[II])
 		path III: reward (soul.func)(a[I], a[II], a[III])
-		path IV: reward (soul.func)(a[I], a[II], a[III], a[IV])
-		alas:
-			$bug("invalid arg length")
+		alas: $bug("invalid arg length")
+		}
+	}
+}
+
+form AlwaysRunFunction {
+	matter func, args;
+
+	change run() {
+		renowned run;
+		nigh a = soul.args;
+
+		fork a.length {
+		path N:   reward (soul.func)()
+		path I:   reward (soul.func)(run(a[I]))
+		path II:  reward (soul.func)(run(a[I]), run(a[II]))
+		path III: reward (soul.func)(run(a[I]), run(a[II]), run(a[III]))
+		path IV:  reward (soul.func)(run(a[I]), run(a[II]), run(a[III]), run(a[IV]))
+		alas: $bug("invalid arg length")
 		}
 	}
 }
 
 
-journey to int
+journey to numeral
 	(x: Numeral) => x,
 	(_) { catapult "TODO" } ;
-journey to str
+
+journey to text
 	(x: Numeral) => x,
 	(_) { catapult "TODO"} ;
 
-journey to list
-	(x: Numeral) => x,
-	(_) { catapult "TODO"} ;
-
-journey to bool
-	(x: Numeral) => x,
-	(_) { catapult "TODO"} ;
+journey to-book
+	(_: nay) => [],
+	(x: yea | N) => [x],
+	(x: Numeral) {
+		nigh b = [x % 10];
+		whilst x = x / 10 {
+			b = b + [x % 10]
+		}
+		reward b
+	},
+	(x) => book(x);
 
 journey run
 	(x: Numeral | Text | Veracity | ni | Book) => x,
 	(other) => other.run();
 
-journey dump-kn
+journey dump-out
 	(_: yea) => proclaimn(𝔱𝔯𝔲𝔢),
 	(_: nay) => proclaimn(𝔣𝔞𝔩𝔰𝔢),
 	(_: ni) => proclaimn(𝔫𝔲𝔩𝔩),
 	(num: Numeral) => proclaimn(arabic(num)),
-	(txt: Text) => proclaimn(txt), N.B. TODO
-	(val: Book) {
+	(txt: Text) => proclaimn("\"{txt}\""), N.B. TODO
+	(b: Book) {
 		proclaimn('[');
-		nigh i = I;
-		whilst i <= val.length {
-			if i != I {
+		if b.length {
+			nigh i = N;
+			start:
+			whilst i < b.length {
 				proclaimn(', ');
+				whence start;
+				dump-out(b[i = i + I])
 			}
-
-			dumpkn(i);
 		}
 		proclaimn(']');
 	};
 
-renowned functions = {
+renowned not-always-run-functions = {
+	'B': \(arg) => arg,
+	'&': \(x, y) {
+		nigh ran = run(x);
+		if x {
+			reward run(y);
+		} alas {
+			reward x;
+		}
+	},
+	'|': (\(x, y) {
+		nigh ran = run(x);
+		if x{
+			reward x;
+		} alas {
+			reward run(y);
+		}
+	}),
+	'=': \(var, val) {
+		var.assign(ran = run(val));
+		reward ran;
+	},
+	'W': \(cond, body) {
+		whilst run(cond) {
+			run(body);
+		}
+		# IMPLICIT NI REWARD
+	},
+	'I': (\(cond, ift, iff) { catapult "TODO" }),
+}
+
+renowned always-run-functions = {
 	# Nullary
 	'R': (\() => gamble() % 4294967295), N.B. Far too large to represent with roman numerals
 	'P': (\() { catapult "TODO" }),
 
-	# Unary
-	'B': (\(arg) => arg),
+	# UNARY
 	'C': (\(arg) => run(run(arg))),
 	'Q': (\(arg) => dismount(to int(run(arg)))),
 	'D': (\(val) {
 		nigh ran;
-		dump kn(ran = run(val))
+		dump-out(ran = run(val))
 		reward ran;
 	}),
 	'O': (\(x) { catapult "TODO" }),
@@ -74,12 +125,14 @@ renowned functions = {
 	'!': (\(x) { catapult "TODO" }),
 	'~': (\(x) { catapult "TODO" }),
 	'A': (\(x) { catapult "TODO" }),
-	',': (\(x) { catapult "TODO" }),
+	',': (\(x) => [x]),
 	'[': (\(x) { catapult "TODO" }),
 	']': (\(x) { catapult "TODO" }),
 
-	# Binary
-	'+': (\(x, y) => run(x) + run(y)),
+	# BINARY
+	'+': (journey	(x: Numeral, y) => x + to_numeral(y),
+						(x: Text, y)    => x + to-text(y),
+						(x: Book, y)    => x + to book(y)),
 	'-': (\(x, y) { catapult "TODO" }),
 	'*': (\(x, y) { catapult "TODO" }),
 	'/': (\(x, y) { catapult "TODO" }),
@@ -88,22 +141,9 @@ renowned functions = {
 	'<': (\(x, y) { catapult "TODO" }),
 	'>': (\(x, y) { catapult "TODO" }),
 	'?': (\(x, y) { catapult "TODO" }),
-	'&': (\(x, y) { catapult "TODO" }),
-	'|': (\(x, y) { catapult "TODO" }),
 	';': (\(x, y) { run(x); reward run(y)}),
-	'=': (\(var, val) {
-		var.assign(ran = run(val));
-		reward ran;
-	}),
-	'W': (\(cond, body) {
-		whilst to bool(run(cond)) {
-			run(body);
-		}
-		# IMPLICIT NI REWARD
-	}),
 
 	# TERNARY
-	'I': (\(cond, ift, iff) { catapult "TODO" }),
 	'G': (\(coll, start, len) { catapult "TODO" }),
 
 	# QUATERNARY

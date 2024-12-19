@@ -71,7 +71,7 @@ form Parser {
 				reward ni;
 
 			path '@':
-				soul.strip_keyword();
+				soul.advance();
 				reward [];
 
 			path isupper:
@@ -83,9 +83,16 @@ form Parser {
 
 		whence upper;
 		nigh func;
+		nigh cls;
 
-		if (func = functions[c]) == ni {
-			catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + ' ' + c
+		if (func = not-always-run-functions[c]) == ni {
+			if (func = always-run-functions[c]) == ni {
+				catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + ' ' + c
+			}
+
+			cls = AlwaysRunFunction
+		} alas {
+			cls = Function
 		}
 
 		args = [];
@@ -93,6 +100,6 @@ form Parser {
 			args = args + [soul.next()]
 		}
 
-		reward Function(func, args);
+		reward cls(func, args);
 	}
 }

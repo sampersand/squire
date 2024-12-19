@@ -803,6 +803,34 @@ struct sq_book *sq_value_to_book(sq_value value) {
 		return book;
 	}
 
+	case SQ_G_NUMERAL: {
+		sq_todo("make numeral -> book use roman numerals");
+		sq_numeral numeral = AS_NUMBER(value);
+		if (numeral == 0) {
+			struct sq_book *book = sq_book_allocate(1);
+			book->pages[book->length++] = value;
+			return book;
+		}
+
+		struct sq_book *book = sq_book_allocate(40); // eh, 40's enough memory right?
+
+		for (; numeral; numeral /= 10) {
+			book->pages[book->length++] = sq_value_new_numeral(numeral % 10);
+		}
+
+		sq_value tmp;
+		for (unsigned i = 0; i < book->length / 2; ++i)
+			tmp = book->pages[i],
+			book->pages[i] = book->pages[book->length - i - 1],
+			book->pages[book->length - i - 1] = tmp;
+
+		return book;
+	}
+
+	case SQ_G_OTHER:
+		if (value == SQ_NI)
+			return sq_book_new2(0, NULL);
+		SQ_FALLTHROUGH
 	default:
 		sq_todo("others to book");
 	}

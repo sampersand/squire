@@ -654,7 +654,8 @@ static unsigned compile_function_call(struct sq_code *code, struct function_call
 
 		CHECK_FOR_BUILTIN("tally",     SQ_INT_TONUMERAL, 1);
 		CHECK_FOR_BUILTIN("numeral",   SQ_INT_TONUMERAL, 1);
-		CHECK_FOR_BUILTIN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
+		CHECK_FOR_BUILTIN("prose",     SQ_INT_TOTEXT, 1);
+		CHECK_FOR_BUILTIN("text",      SQ_INT_TOTEXT, 1);
 		CHECK_FOR_BUILTIN("veracity",  SQ_INT_TOVERACITY, 1);
 		CHECK_FOR_BUILTIN("book",      SQ_INT_TOBOOK, 1);
 		CHECK_FOR_BUILTIN("codex",     SQ_INT_TOCODEX, 1);
