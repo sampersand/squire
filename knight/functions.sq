@@ -40,13 +40,15 @@ journey to text
 	(x: Numeral) => x,
 	(_) { catapult "TODO"} ;
 
-journey to-book
-	(_: nay) => [],
+journey to book
+	(_: nay)     => [],
 	(x: yea | N) => [x],
 	(x: Numeral) {
-		nigh b = [x % 10];
-		whilst x = x / 10 {
-			b = b + [x % 10]
+		nigh b = [];
+		start:
+		whilst x = x / X {
+			whence start;
+			b = [x % X] + b
 		}
 		reward b
 	},
@@ -77,7 +79,10 @@ journey dump-out
 	};
 
 journey cmp
-	(x: Numeral) => x <=>
+	(x, y) => x <=> y,
+	(*x) { catapult "TODO" };
+
+journey eql(x,y) => x == y;
 
 renowned not-always-run-functions = {
 	'B': \(arg) => arg,
@@ -125,11 +130,11 @@ renowned always-run-functions = {
 	},
 	'O': \(x) { catapult "TODO" },
 	'L': \(x) { catapult "TODO" },
-	'!': \(x) { catapult "TODO" },
+	'!': \(x) => !x,
 	'~': \(x) { catapult "TODO" },
 	'A': \(x) { catapult "TODO" },
 	',': \(x) => [x],
-	'[': \(x) { catapult "TODO" },
+	'[': \(x) => to-book(x)[I],
 	']': \(x) { catapult "TODO" },
 
 	# BINARY
@@ -142,8 +147,8 @@ renowned always-run-functions = {
 	'%': \(x, y) => x % y,
 	'^': (journey	(x: Book, y) => x * to-text(y),
 						(x, y) => x ^ y),
-	'<': \(x, y) => cmp(x, y) < 0,
-	'>': \(x, y) => cmp(x, y) > 0,
+	'<': \(x, y) => cmp(x, y) < N,
+	'>': \(x, y) => cmp(x, y) > N,
 	'?': \(x, y) => eql(x, y),
 	';': \(x, y) { run(x); reward run(y)},
 
