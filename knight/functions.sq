@@ -37,8 +37,8 @@ journey to numeral
 	(_) { catapult "TODO" } ;
 
 journey to text
-	(x: Numeral) => x,
-	(_) { catapult "TODO"} ;
+	(x: Book) => x,
+	(x) => prose(x);
 
 journey to book
 	(_: nay)     => [],

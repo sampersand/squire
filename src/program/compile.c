@@ -1090,6 +1090,7 @@ static unsigned compile_function_call_old(struct sq_code *code, struct function_
 	BUILTIN_FN("tally",     SQ_INT_TONUMERAL, 1);
 	BUILTIN_FN("numeral",   SQ_INT_TONUMERAL, 1);
 	BUILTIN_FN("text",      SQ_INT_TOTEXT, 1); // `prose` ?
+	BUILTIN_FN("prose",     SQ_INT_TOTEXT, 1); // `prose` ?
 	BUILTIN_FN("veracity",  SQ_INT_TOVERACITY, 1);
 	BUILTIN_FN("book",      SQ_INT_TOBOOK, 1);
 	BUILTIN_FN("codex",     SQ_INT_TOCODEX, 1);
