@@ -33,7 +33,7 @@ form AlwaysRunFunction {
 
 journey join (ary: [], sep) => '', (ary, sep) {
 	renowned to-text
-	nigh result = to-text(ary[I])
+	nigh result = to-text(ary.verso)
 	nigh i = II;
 	whilst i <= ary.length {
 		result = result + "\n" + to-text(ary[i])
@@ -78,7 +78,7 @@ journey dump-out
 	(_: ni) => proclaimn(𝔫𝔲𝔩𝔩),
 	(num: Numeral) => proclaimn(arabic(num)),
 	(txt: Text) => proclaimn("\"{txt}\""), N.B. TODO
-	(b: []) => proclaimn('[]'),
+	(b: \(x) => x == []) => proclaimn('[]'), N.B. Cant use `[]` directly because its overloaded as old syntax for `|`
 	(b: Book) {
 		proclaimn('[');
 		nigh i = N;

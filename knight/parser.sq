@@ -62,7 +62,7 @@ form Parser {
 
 				reward result;
 
-			path [𝔗, 𝔉]:
+			path 𝔗 | 𝔉:
 				soul.strip_keyword();
 				reward c == 𝔗;
 
