@@ -42,9 +42,9 @@ journey join (ary: [], sep) => '', (ary, sep) {
 	reward result
 }
 
-journey to numeral
-	(x) => tally(x),
-	(_) { catapult "TODO" } ;
+journey to-numeral
+	(x: Text) if ('N' | 'I' | 'V' | 'X' | 'L' | 'C' | 'D' | 'M') ~~ substr(x, I, I) => 0,
+	(x) => tally(x);
 
 journey to text
 	(x: Numeral) => arabic(x),
@@ -77,7 +77,22 @@ journey dump-out
 	(_: nay) => proclaimn(𝔣𝔞𝔩𝔰𝔢),
 	(_: ni) => proclaimn(𝔫𝔲𝔩𝔩),
 	(num: Numeral) => proclaimn(arabic(num)),
-	(txt: Text) => proclaimn("\"{txt}\""), N.B. TODO
+	(txt: Text) {
+		nigh i = N;
+		nigh c
+		proclaimn('"');
+		whilst i < txt.length {
+			fork c = txt[i = i + I]{
+			path "\n": proclaimn('\n')
+			path "\r": proclaimn('\r')
+			path "\t": proclaimn('\t')
+			path "\\": proclaimn('\\\\')
+			path "\"": proclaimn('\\"')
+			alas: proclaimn(c)
+			}
+		}
+		proclaimn('"');
+	},
 	(b: \(x) => x == []) => proclaimn('[]'), N.B. Cant use `[]` directly because its overloaded as old syntax for `|`
 	(b: Book) {
 		proclaimn('[');
@@ -110,7 +125,7 @@ journey cmp
 		}
 		reward x.length <=> y.length;
 	},
-	(x: Numeral, y) => x <=> tally(y),
+	(x: Numeral, y) => x <=> to-numeral(y),
 	(x: Text, y) => x <=> to-text(y);
 
 journey eql(x,y) => x == y;
@@ -131,7 +146,8 @@ renowned not-always-run-functions = {
 		}
 		# IMPLICIT NI REWARD
 	},
-	'I': (\(cond, ift, iff) { catapult "TODO" }),
+	'I': (journey	(cond, ift, _) if veracity(run(cond)) => run(ift),
+						(cond, _, iff) => run(iff)),
 }
 
 renowned always-run-functions = {
@@ -157,30 +173,73 @@ renowned always-run-functions = {
 	},
 	'L': \(x) => to-book(x).length,
 	'!': \(x) => !x,
-	'~': \(x) => -tally(x),
+	'~': \(x) => -to-numeral(x),
 	'A': \(x) => ascii(x),
 	',': \(x) => [x],
-	'[': \(x) => to-book(x)[I],
-	']': \(x) { catapult "TODO" },
+	'[': (journey	(x: Text) => substr(x, I, I),
+						(x: Book) => x.verso),
+	']': (journey	(x: Text) => substr(x, II, x.length),
+						(x: Book) {
+							nigh ret = [];
+							whilst I + ret < x {
+								ret = ret + [x[ret.length + II]];
+							}
+							reward ret;x
+						}),
 
 	# BINARY
-	'+': (journey	(x: Numeral, y) => x + tally(y),
+	'+': (journey	(x: Numeral, y) => x + to-numeral(y),
 						(x: Text, y)    => x + to-text(y),
 						(x: Book, y)    => x + to book(y)),
-	'-': \(x, y) => x - y,
-	'*': \(x, y) => x * tally(y), N.B. LOL this happens to work for all the overrides
-	'/': \(x, y) => x / y,
-	'%': \(x, y) => x % y,
+	'-': \(x, y) => x - to-numeral(y),
+	'*': \(x, y) => x * to-numeral(y), N.B. LOL this happens to work for all the overrides
+	'/': \(x, y) => x / to-numeral(y),
+	'%': \(x, y) => x % to-numeral(y),
 	'^': (journey	(x: Book, y) => join(x, to-text(y)),
-						(x, y) => x ^ y),
+						(x, y) => x ^ to-numeral(y)),
 	'<': \(x, y) => cmp(x, y) < N,
 	'>': \(x, y) => cmp(x, y) > N,
 	'?': \(x, y) => eql(x, y),
 	';': \(x, y) => y,
 
 	# TERNARY
-	'G': \(coll, start, len) { catapult "TODO" },
+	'G': \(coll, start, len) {
+		if Text ~~ coll {
+			reward substr(coll, I + to-numeral(start), to-numeral(len))
+		}
+
+		nigh acc = [];
+		len = to-numeral(len)
+		start = to-numeral(start)
+
+		whilst len {
+			acc = acc + [coll[start = I + start]]
+			len = len - I
+		}
+		reward acc
+	},
 
 	# QUATERNARY
-	'S': \(coll, start, len, repl) { catapult "TODO" }
+	'S': \(coll, start, len, repl) {
+		if Text ~~ coll {
+			start = to-numeral(start)
+			reward substr(coll, I, start) + to-text(repl) +
+				substr(coll, start + I + to-numeral(len),coll.length);
+		}
+
+		nigh acc = [];
+		start = to-numeral(start)
+		len = to-numeral(len)
+
+		whilst acc.length < start {
+			acc = acc + [coll[acc.length + I]]
+		}
+		acc = acc + to-book(repl)
+		start = start + len
+		whilst (start = start + I) <= coll.length {
+			acc = acc + [coll[start]]
+		}
+
+		reward acc
+	}
 };

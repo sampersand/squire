@@ -273,6 +273,12 @@ sq_value sq_other_call(struct sq_other *tocall, struct sq_args args) {
 	case SQ_OK_BUILTIN_JOURNEY:
 		return sq_builtin_journey_call(&tocall->builtin_journey, args);
 
+	case SQ_OK_PAT_HELPER:
+		if (args.pargc != 1 || args.kwargc)
+			sq_throw("can only call patterns with exactly one argument");
+		return sq_value_new_veracity(sq_pattern_helper_matches(
+			sq_other_as_pattern_helper((struct sq_other *) tocall), args.pargv[0]));
+
 	default:
 		return SQ_UNDEFINED;
 	}

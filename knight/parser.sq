@@ -48,7 +48,7 @@ form Parser {
 				reward numeral(soul.take_whilst(isdigit));
 
 			path islower:
-				reward Variable.lookup(soul.take_whilst(islower));
+				reward Variable.lookup(soul.take_whilst(islower | isdigit));
 
 			path '\'':
 			path '\"':
