@@ -33,7 +33,7 @@ form AlwaysRunFunction {
 
 
 journey to numeral
-	(x: Numeral) => x,
+	(x) => tally(x),
 	(_) { catapult "TODO" } ;
 
 journey to text
@@ -76,24 +76,27 @@ journey dump-out
 		proclaimn(']');
 	};
 
+journey cmp
+	(x: Numeral) => x <=>
+
 renowned not-always-run-functions = {
 	'B': \(arg) => arg,
 	'&': \(x, y) {
 		nigh ran = run(x);
-		if x {
+		if ran {
 			reward run(y);
 		} alas {
 			reward x;
 		}
 	},
-	'|': (\(x, y) {
+	'|': \(x, y) {
 		nigh ran = run(x);
-		if x{
+		if ran {
 			reward x;
 		} alas {
 			reward run(y);
 		}
-	}),
+	},
 	'=': \(var, val) {
 		var.assign(ran = run(val));
 		reward ran;
@@ -109,43 +112,44 @@ renowned not-always-run-functions = {
 
 renowned always-run-functions = {
 	# Nullary
-	'R': (\() => gamble() % 4294967295), N.B. Far too large to represent with roman numerals
-	'P': (\() { catapult "TODO" }),
+	'R': \() => gamble() % 4294967295, N.B. Far too large to represent with roman numerals
+	'P': \() { catapult "TODO" },
 
 	# UNARY
-	'C': (\(arg) => run(run(arg))),
-	'Q': (\(arg) => dismount(to int(run(arg)))),
-	'D': (\(val) {
+	'C': \(arg) => run(run(arg)),
+	'Q': \(arg) => dismount(to int(run(arg))),
+	'D': \(val) {
 		nigh ran;
 		dump-out(ran = run(val))
 		reward ran;
-	}),
-	'O': (\(x) { catapult "TODO" }),
-	'L': (\(x) { catapult "TODO" }),
-	'!': (\(x) { catapult "TODO" }),
-	'~': (\(x) { catapult "TODO" }),
-	'A': (\(x) { catapult "TODO" }),
-	',': (\(x) => [x]),
-	'[': (\(x) { catapult "TODO" }),
-	']': (\(x) { catapult "TODO" }),
+	},
+	'O': \(x) { catapult "TODO" },
+	'L': \(x) { catapult "TODO" },
+	'!': \(x) { catapult "TODO" },
+	'~': \(x) { catapult "TODO" },
+	'A': \(x) { catapult "TODO" },
+	',': \(x) => [x],
+	'[': \(x) { catapult "TODO" },
+	']': \(x) { catapult "TODO" },
 
 	# BINARY
-	'+': (journey	(x: Numeral, y) => x + to_numeral(y),
+	'+': (journey	(x: Numeral, y) => x + tally(y),
 						(x: Text, y)    => x + to-text(y),
 						(x: Book, y)    => x + to book(y)),
-	'-': (\(x, y) { catapult "TODO" }),
-	'*': (\(x, y) { catapult "TODO" }),
-	'/': (\(x, y) { catapult "TODO" }),
-	'%': (\(x, y) { catapult "TODO" }),
-	'^': (\(x, y) { catapult "TODO" }),
-	'<': (\(x, y) { catapult "TODO" }),
-	'>': (\(x, y) { catapult "TODO" }),
-	'?': (\(x, y) { catapult "TODO" }),
-	';': (\(x, y) { run(x); reward run(y)}),
+	'-': \(x, y) => x - y,
+	'*': \(x, y) => x * tally(y), N.B. LOL this happens to work for all the overrides
+	'/': \(x, y) => x / y,
+	'%': \(x, y) => x % y,
+	'^': (journey	(x: Book, y) => x * to-text(y),
+						(x, y) => x ^ y),
+	'<': \(x, y) => cmp(x, y) < 0,
+	'>': \(x, y) => cmp(x, y) > 0,
+	'?': \(x, y) => eql(x, y),
+	';': \(x, y) { run(x); reward run(y)},
 
 	# TERNARY
-	'G': (\(coll, start, len) { catapult "TODO" }),
+	'G': \(coll, start, len) { catapult "TODO" },
 
 	# QUATERNARY
-	'S': (\(coll, start, len, repl) { catapult "TODO" })
+	'S': \(coll, start, len, repl) { catapult "TODO" }
 };

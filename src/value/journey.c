@@ -898,7 +898,7 @@ static sq_value sq_run_stackframe(struct sq_stackframe *sf) {
 		VM_CASE(SQ_OC_GTH) SET_RESULT(sq_value_new_veracity(sq_value_gth(operands[0], operands[1])));
 		VM_CASE(SQ_OC_LEQ) SET_RESULT(sq_value_new_veracity(sq_value_leq(operands[0], operands[1])));
 		VM_CASE(SQ_OC_GEQ) SET_RESULT(sq_value_new_veracity(sq_value_geq(operands[0], operands[1])));
-		VM_CASE(SQ_OC_CMP) SET_RESULT(sq_value_new_veracity(sq_value_cmp(operands[0], operands[1])));
+		VM_CASE(SQ_OC_CMP) SET_RESULT(sq_value_new_numeral(sq_value_cmp(operands[0], operands[1])));
 
 	/** Math **/
 		VM_CASE(SQ_OC_NEG) SET_RESULT(sq_value_neg(operands[0]));
