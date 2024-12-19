@@ -4,14 +4,30 @@
 @transcribe "env.sq"
 @transcribe "functions.sq"
 @transcribe "parser.sq"
-#@transcribe "value.sq"
 
-#@transcribe "value.sq"
-#ARGV[1]=1;
-#proclaim("a\(ARGV)")
+if ARGV.length != II {
+	usage:
+	N.B. oops
+}
 
+fork ARGV[I] {
+path '-e':
+	src = ARGV[II]
 
+path '-f':
+	scroll = Scroll(ARGV[II], 'r')
+	source = scroll.readall()
+	scroll.close()
 
-p = Parser(ARGV[II]);
-p.next().run()
-#proclaim(p.take_whilst((journey(c) => '0' <= c && c <= '9')));
+alas:
+	whence usage
+	proclaim("usage: ./main.sq (-e expr | -f file)")
+	dismount(2);
+}
+
+attempt {
+	Parser(src).next().run()
+} alas err{
+	proclaim("failure! {err}")
+	dismount(1)
+}

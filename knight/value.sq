@@ -1,3 +1,0 @@
-form Null {
-	essence INSTANCE = Null();
-}
