@@ -122,16 +122,17 @@ renowned always-run-functions = {
 
 	# UNARY
 	'C': \(arg) => run(run(arg)),
-	'Q': \(arg) => dismount(to int(run(arg))),
+	'Q': \(arg) => dismount(arg),
 	'D': \(val) {
 		nigh ran;
 		dump-out(ran = run(val))
 		reward ran;
 	},
 	'O': \(x) { catapult "TODO" },
-	'L': \(x) { catapult "TODO" },
+	'L': foo,
+	'L': \(x) => to-book(x).length,
 	'!': \(x) => !x,
-	'~': \(x) { catapult "TODO" },
+	'~': \(x) => -tally(x),
 	'A': \(x) { catapult "TODO" },
 	',': \(x) => [x],
 	'[': \(x) => to-book(x)[I],
