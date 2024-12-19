@@ -118,7 +118,7 @@ renowned not-always-run-functions = {
 renowned always-run-functions = {
 	# Nullary
 	'R': \() => gamble() % 4294967295, N.B. Far too large to represent with roman numerals
-	'P': \() { catapult "TODO" },
+	'P': \() => inquire(),
 
 	# UNARY
 	'C': \(arg) => run(run(arg)),

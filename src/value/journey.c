@@ -503,9 +503,8 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 
 		if ((length = getline(&line, &cap, stdin)) == (size_t) -1) {
 			free(line);
-			line = strdup("");
-			cap = 0;
-			length = 0;
+			set_next_local(sf, SQ_NI);
+			return;
 		}
 
 		if (length && line[length-1] == '\n') {
