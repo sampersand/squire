@@ -35,7 +35,9 @@ else
 		-Weverything -Wno-covered-switch-default \
 		-Wno-switch-enum -Wno-comma -Wno-padded -Wno-poison-system-directories \
 		-Wno-shorten-64-to-32 -Wno-cast-qual \
-		-Wno-conditional-uninitialized -Wno-sign-conversion
+		-Wno-conditional-uninitialized -Wno-sign-conversion \
+		-Wno-declaration-after-statement \
+		-Wno-strict-prototypes
 	ifdef debug
 		COMPILER_C_FLAGS+=-fsanitize=address,undefined -DSQ_LOG
 		njoke:=1
@@ -47,7 +49,7 @@ ifdef njoke
 endif
 
 override CFLAGS+=$(ANNOYING_FLAGS)
-override cflags:=$(COMPILER_C_FLAGS) $(CFLAGS) $(required_compiler_flags)
+override cflags:=$(COMPILER_C_FLAGS) $(required_compiler_flags) $(CFLAGS) 
 ## end custom logic
 
 .PHONY: all

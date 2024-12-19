@@ -1,0 +1,97 @@
+journey isdigit(c) => '0' <= c && c <= '9';
+journey islower(c) => c == '_' || 'a' <= c && c <= 'z';
+journey isupper(c) => c == '_' || 'A' <= c && c <= 'Z';
+
+form Parser {
+	matter stream;
+
+	change peek() => soul.stream[I];
+	change advance
+		() if (!soul.stream) { catapult 𝔢𝔪𝔭𝔱𝔵 𝔰𝔱𝔯𝔢𝔞𝔪 },
+		() => soul.stream = substr(soul.stream, II, length(soul.stream));
+
+	change peek_advance() {
+		nigh peeked = soul.peek();
+		soul.advance();
+		reward peeked;
+	}
+
+	change strip_keyword() => soul.take_whilst(isupper);
+
+	change take_whilst(cond): Text {
+		nigh acc = "";
+		nigh chr;
+
+		whilst (chr = soul.peek()) != ni && cond(chr) {
+			acc = acc + chr;
+			soul.advance();
+		}
+
+		reward acc;
+	}
+
+	change next(): Value {
+		nigh c
+
+		fork c = soul.peek() {
+			path [' ', "\t", "\n", "\r", '(', ')', '[', ']', '{', '}', ':']:
+				whence next;
+				soul.advance();
+				reward soul.next();
+
+			path '#':
+				soul.take_whilst(journey(c) => c != "\n")
+				next:
+
+			path isdigit:
+				reward numeral(soul.take_whilst(isdigit));
+
+			path islower:
+				reward Variable.lookup(soul.take_whilst(islower));
+
+			path '\'':
+			path '\"':
+				# noncapturing lambdas go brr
+				renowned quote = soul.peek_advance();
+				nigh result = soul.take_whilst(journey(c) => c != quote);
+
+				if soul.peek_advance() != quote {
+					catapult 𝔪𝔦𝔰𝔰𝔦𝔫𝔤 𝔠𝔩𝔬𝔰𝔦𝔫𝔤 𝔮𝔲𝔬𝔱𝔢
+				}
+
+				reward result;
+
+			path [𝔗, 𝔉]:
+				soul.strip_keyword();
+				reward c == 𝔗;
+
+			path 𝔑:
+				soul.strip_keyword();
+				reward ni;
+
+			path '@':
+				soul.strip_keyword();
+				reward [];
+
+			path isupper:
+				soul.strip_keyword();
+
+			alas:
+				soul.advance();
+		}
+
+		whence upper;
+		nigh func;
+
+		if (func = functions[c]) == ni {
+			catapult 𝔲𝔫𝔨𝔫𝔬𝔴𝔫 𝔱𝔬𝔨𝔢𝔫 𝔰𝔱𝔞𝔯𝔱\: + ' ' + c
+		}
+
+		args = [];
+		whilst args.length < func.arity {
+			args = args + [soul.next()]
+		}
+
+		reward Function(func, args);
+	}
+}

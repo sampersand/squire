@@ -1,0 +1,54 @@
+form Function {
+	matter func, args;
+
+	change run() {
+		nigh a = soul.args;
+
+		fork a.length {
+		path N: reward (soul.func)()
+		path I: reward (soul.func)(a[I])
+		path II: reward (soul.func)(a[I], a[II])
+		path III: reward (soul.func)(a[I], a[II], a[III])
+		path IV: reward (soul.func)(a[I], a[II], a[III], a[IV])
+		alas:
+			$bug("invalid arg length")
+		}
+	}
+}
+
+journey run
+	(x: Numeral | Text | Veracity | ni | Book) => x,
+	(other) => other.run();
+
+journey dump-kn
+	(_: yea) => proclaimn(𝔱𝔯𝔲𝔢),
+	(_: nay) => proclaimn(𝔣𝔞𝔩𝔰𝔢),
+	(_: ni) => proclaimn(𝔫𝔲𝔩𝔩),
+	(num: Numeral) => proclaimn(arabic(num)),
+	(txt: Text) => proclaimn(txt), N.B. TODO
+	(val: Book) {
+		proclaimn('[');
+		nigh i = I;
+		whilst i <= val.length {
+			if i != I {
+				proclaimn(', ');
+			}
+
+			dumpkn(i);
+		}
+		proclaimn(']');
+	};
+
+renowned functions = {
+	'+': (\(x, y) => run(x) + run(y)),
+	';': (\(x, y) { run(x); reward run(y)}),
+	'=': (\(var, val) {
+		var.assign(ran = run(val));
+		reward ran;
+	}),
+	'D': \(val) {
+		nigh ran;
+		dump kn(ran = run(val))
+		reward ran;
+	}
+};

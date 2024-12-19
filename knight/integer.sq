@@ -1,0 +1,6 @@
+form Lol {
+	change doit(){reward 1};
+}
+
+n = Lol();
+proclaim(n.doit())

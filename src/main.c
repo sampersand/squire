@@ -26,9 +26,9 @@ int main(int argc, const char **argv) {
 		free(contents);
 	}
 	sq_program_run(&program, argc - 3, argv + 3);
-	sq_gc_start();
-	sq_program_finish(&program);
-	sq_gc_teardown();
+	// sq_gc_start();
+	// sq_program_finish(&program);
+	// sq_gc_teardown();
 
 	return 0;
 }
