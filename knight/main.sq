@@ -16,7 +16,7 @@ path '-e':
 
 path '-f':
 	scroll = Scroll(ARGV[II], 'r')
-	source = scroll.readall()
+	src = scroll.readall()
 	scroll.close()
 
 alas:

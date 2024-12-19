@@ -17,7 +17,7 @@ void SQ_NORETURN sq_assert_failed(
 #define SQ_STATIC_ASSERT _Static_assert
 
 #ifdef SQ_NDEBUG
-# define sq_assert_internal(cond, ...)
+# define sq_assert_internal(cond, ...) ((void) 0)
 #else
 # define sq_assert_internal(cond, ...) \
 	(SQ_LIKELY(cond) \
