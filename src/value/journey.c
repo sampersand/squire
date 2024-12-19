@@ -473,7 +473,7 @@ static void handle_interrupt(struct sq_stackframe *sf) {
 	// [A,DST] Print `A`, DST <- ni
 	VM_CASE(SQ_INT_PRINT)
 		text = sq_value_to_text(operands[0]);
-		if (!fputs(text->ptr, stdout))
+		if (fputs(text->ptr, stdout) == EOF)
 			sq_throw_io("proclaimnl");
 		fflush(stdout);
 

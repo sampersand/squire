@@ -862,7 +862,7 @@ sq_value sq_value_get_attr(sq_value soul, const char *attr) {
 
 	case SQ_G_BOOK:
 		if (!strcmp(attr, "verso"))
-			result = sq_book_index(AS_BOOK(soul), 1);
+			result = sq_book_index(AS_BOOK(soul), 0);
 		else if (!strcmp(attr, "recto"))
 			result = sq_book_index2(AS_BOOK(soul), -1);
 		break;
