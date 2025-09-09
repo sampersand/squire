@@ -408,6 +408,7 @@ static struct sq_token next_normal_token(void) {
 	if (*sq_stream == '\\')
 		return ++sq_stream, token.kind = SQ_TK_LAMBDA, token;
 	CHECK_FOR_START_KW("journey",      SQ_TK_FUNC);
+	CHECK_FOR_START_KW("quest",        SQ_TK_FUNC); // alias for journey, as you go on quests
 	CHECK_FOR_START_KW("renowned",     SQ_TK_GLOBAL);
 	CHECK_FOR_START_KW("nigh",         SQ_TK_LOCAL);
 
